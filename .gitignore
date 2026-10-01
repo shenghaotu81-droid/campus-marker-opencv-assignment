@@ -21,3 +21,7 @@ results/
 *.mp4
 *.mkv
 
+# 自己加的规则
+build-*/
+*.o
+*.avi
