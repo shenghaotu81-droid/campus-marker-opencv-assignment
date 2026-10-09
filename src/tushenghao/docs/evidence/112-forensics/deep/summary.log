@@ -1,0 +1,143 @@
+{
+  "sample": {
+    "failed_frames": 112,
+    "adjacent_successful_frames": 181,
+    "shadow_corner_calls": 1176,
+    "shadow_failed_corner_calls": 116,
+    "first_failure_calls": 112
+  },
+  "baseline_replay_mismatches": [],
+  "residual_ablation_chosen_support_max_distribution": {
+    "n": 115,
+    "min": 0.5000001411513577,
+    "p50": 0.5283984050176452,
+    "p95": 0.5881851927617592,
+    "max": 0.6037560241146678
+  },
+  "noisy_support_orientation": {
+    "vertical": 114,
+    "horizontal": 1
+  },
+  "photometric_refit": {
+    "tested": 115,
+    "local_quality_pass": 41,
+    "unique_crossing_for_all_points": 74,
+    "corner_change": {
+      "n": 115,
+      "min": 0.1289117005966231,
+      "p50": 0.8180146996884219,
+      "p95": 1.1530921546693824,
+      "max": 1.3893673644192868
+    },
+    "refined_max_residual": {
+      "n": 115,
+      "min": 0.24358466270672544,
+      "p50": 0.4906311425946585,
+      "p95": 0.5768971033543552,
+      "max": 0.6222881683336785
+    }
+  },
+  "periodic_model": {
+    "tested": 115,
+    "both_residual_pass": 98,
+    "row_offset_difference": {
+      "n": 115,
+      "min": 0.09583333333333428,
+      "p50": 1.0394626364399402,
+      "p95": 1.333333333333299,
+      "max": 1.3444444444444665
+    },
+    "note": "非生产误差模型的支持弧层级验证；不是检出数，不证明视频是隔行扫描。"
+  },
+  "envelope": {
+    "both_residual_pass": 0,
+    "tested": 115
+  },
+  "scanline_median": {
+    "both_residual_pass": 13,
+    "tested": 115
+  },
+  "pipeline_positionfit": {
+    "completed_frames": 293,
+    "expected_frames": 293,
+    "recovered_target_ids": [
+      784
+    ],
+    "recovered_target_count": 1,
+    "old_detected_frames_lost": [],
+    "old_raw_detection_corners_changed": [],
+    "new_other_ids": [],
+    "statuses": {
+      "3": 182,
+      "2": 111
+    }
+  },
+  "pipeline_cascade": {
+    "completed_frames": 293,
+    "expected_frames": 293,
+    "recovered_target_ids": [
+      150,
+      177,
+      193,
+      300,
+      332,
+      366,
+      376,
+      383,
+      409,
+      422,
+      480,
+      511,
+      565,
+      678,
+      695,
+      784,
+      984,
+      1029,
+      1043,
+      1132
+    ],
+    "recovered_target_count": 20,
+    "old_detected_frames_lost": [],
+    "old_raw_detection_corners_changed": [],
+    "new_other_ids": [],
+    "statuses": {
+      "3": 201,
+      "2": 92
+    }
+  },
+  "pipeline_cascade-full": {
+    "completed_frames": 1676,
+    "expected_frames": 1676,
+    "recovered_target_ids": [
+      150,
+      177,
+      193,
+      300,
+      332,
+      366,
+      376,
+      383,
+      409,
+      422,
+      480,
+      511,
+      565,
+      678,
+      695,
+      784,
+      984,
+      1029,
+      1043,
+      1132
+    ],
+    "recovered_target_count": 20,
+    "old_detected_frames_lost": [],
+    "old_raw_detection_corners_changed": [],
+    "new_other_ids": [],
+    "statuses": {
+      "3": 996,
+      "2": 680
+    }
+  }
+}

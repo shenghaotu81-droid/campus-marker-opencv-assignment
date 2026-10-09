@@ -1,0 +1,601 @@
+diff --git a/src/tushenghao/lib/corners/corner_edge_fit.cpp b/src/tushenghao/lib/corners/corner_edge_fit.cpp
+index b0e6026..3869579 100644
+--- a/src/tushenghao/lib/corners/corner_edge_fit.cpp
++++ b/src/tushenghao/lib/corners/corner_edge_fit.cpp
+@@ -1,12 +1,15 @@
+ // 完整轮廓上分段并保留原始索引；联合验证两条指定外边及其凸转折连接弧。
+ // 不允许独立挑两条方向最近的无限线，也不使用预测交点补观测。
+ #include "corners/corner_edge_fit.hpp"
++#include "corners/sandbox_profile.hpp"
++#include "corners/sandbox_periodic.hpp"
+ #include "core/observed_geometry_utils.hpp"
+ #include "core/corner_budget.hpp"
+ #include <opencv2/imgproc.hpp>
+ #include <set>
+ #include <map>
+ #include <sstream>
++#include <cstdlib>
+ 
+ namespace mark
+ {
+@@ -15,52 +18,64 @@ namespace mark
+         struct Arc
+         {
+             size_t begin, end;
++            size_t source_front=0,source_back=0;
++            unsigned position_mask=3;
+             std::vector<cv::Point2d> points;
+             cv::Vec4d line;
+             double mean, maximum;
++            double model_mean=0,model_max=0,model_coefficient=0;
++            int model_kind=0,model_axis=1;
++            double min_x=INFINITY,max_x=-INFINITY,min_y=INFINITY,max_y=-INFINITY;
+             unsigned edge_mask = 0;
+             std::set<std::pair<double, double>> support;
+         };
+ 
+         // 普通L2拟合；支持点来自连续弧，至少三个去重点且具有预算要求的实际跨度。
+-        bool fitArc(Arc &arc, const CornerConfig &config)
++        bool fitArc(Arc &arc, const CornerConfig &config, int model_kind)
+         {
++            sandbox::Scope profile(sandbox::ArcFit);
+             for (auto p : arc.points)
+                 arc.support.emplace(p.x, p.y);
+             if (arc.support.size() < static_cast<size_t>(config.min_line_points_))
+                 return false;
+-            cv::fitLine(arc.points, arc.line, cv::DIST_L2, 0, 0.01, 0.01);
++            arc.model_kind=model_kind;
++            if(model_kind==1||model_kind==3||model_kind==4){auto f=model_kind==4?sandbox::fitPeriodicLAD(arc.points):model_kind==3?sandbox::fitPeriodicMedian(arc.points):sandbox::fitPeriodic(arc.points);if(!f.valid)return false;arc.line=f.line;arc.model_axis=f.axis;arc.model_coefficient=f.coefficient;}
++            else if(model_kind==2){std::vector<cv::Point2d>corrected;corrected.reserve(arc.points.size());arc.model_coefficient=sandbox::frame_shift;for(auto p:arc.points)corrected.emplace_back(p.x-arc.model_coefficient*sandbox::phase(p,1),p.y);cv::fitLine(corrected,arc.line,cv::DIST_L2,0,.01,.01);}
++            else cv::fitLine(arc.points, arc.line, cv::DIST_L2, 0, 0.01, 0.01);
+             double line_norm = std::hypot(arc.line[0], arc.line[1]);
+             if (!(line_norm > 0))
+                 return false;
+             arc.line[0] /= line_norm;
+             arc.line[1] /= line_norm;
+             cv::Point2d v{arc.line[0], arc.line[1]}, origin{arc.line[2], arc.line[3]};
+-            double lo = INFINITY, hi = -INFINITY, sum = 0;
++            double lo = INFINITY, hi = -INFINITY, sum = 0,model_sum=0;
+             arc.maximum = 0;
+             for (auto p : arc.points)
+             {
++                arc.min_x=std::min(arc.min_x,p.x);arc.max_x=std::max(arc.max_x,p.x);arc.min_y=std::min(arc.min_y,p.y);arc.max_y=std::max(arc.max_y,p.y);
+                 double t = (p - origin).dot(v);
+                 lo = std::min(lo, t);
+                 hi = std::max(hi, t);
+                 double d = std::abs(v.x * (p.y - origin.y) - v.y * (p.x - origin.x));
+                 sum += d;
++                double corrected=sandbox::correctedDistance(p,arc.line,arc.model_kind,arc.model_axis,arc.model_coefficient);
++                model_sum+=corrected;arc.model_max=std::max(arc.model_max,corrected);
+                 arc.maximum = std::max(arc.maximum, d);
+             }
+-            arc.mean = sum / arc.points.size();
++            arc.mean = sum / arc.points.size();arc.model_mean=model_sum/arc.points.size();
+             return hi - lo >= config.observation_budget_->min_support_span_px &&
+-                   arc.mean <= config.max_line_fit_error_;
++                   arc.model_mean <= config.max_line_fit_error_;
+         }
+ 
+         // 指定有限模型边的方向与位置共同限制候选；内侧平行边不能仅凭方向获选。
+         bool matches(const Arc &arc, const std::array<cv::Point2d, 2> &edge,
+-                     const CornerObservationBudget &budget)
++                     const CornerObservationBudget &budget, bool fitted_position)
+         {
+             if (observed::angleDeg({arc.line[0], arc.line[1]}, edge[1] - edge[0]) >
+                 budget.max_edge_direction_diff_deg)
+                 return false;
+             for (auto p : arc.points)
+-                if (observed::segmentDistance(p, edge[0], edge[1]) >
++                if (observed::segmentDistance(fitted_position ? cv::Point2d(arc.line[2],arc.line[3])+cv::Point2d(arc.line[0],arc.line[1])*((p-cv::Point2d(arc.line[2],arc.line[3])).dot(cv::Point2d(arc.line[0],arc.line[1]))) : p, edge[0], edge[1]) >
+                     budget.max_edge_position_distance_px)
+                     return false;
+             return true;
+@@ -81,13 +96,22 @@ namespace mark
+         }
+     }
+ 
+-    EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
++    static EdgePairFitResult fitObservedEdgePairImpl(const std::vector<cv::Point> &contour,
+                                           const std::array<std::array<cv::Point2d, 2>, 2> &edges,
+-                                          const CornerConfig &config)
++                                          const CornerConfig &config, bool all_endpoints, bool fitted_position, int model_kind=0)
+     {
++        sandbox::Scope profile(sandbox::Fit);
+         EdgePairFitResult result;
+         validateCornerObservationBudget(config);
+         const auto &budget = *config.observation_budget_;
++        // 沙盒性能：前缀只是必要条件过滤器；近预算处仍执行原逐段加法。
++        std::vector<double> walk_prefix(contour.size()+1,0);
++        std::map<std::pair<int,int>,size_t> first_pixel;
++        for(size_t k=0;k<contour.size();++k){first_pixel.emplace(std::make_pair(contour[k].x,contour[k].y),k);walk_prefix[k+1]=walk_prefix[k]+cv::norm(contour[(k+1)%contour.size()]-contour[k]);}
++        std::vector<unsigned> pixel_mask(contour.size(),3);
++        if(!fitted_position)for(size_t k=0;k<contour.size();++k)for(unsigned e=0;e<2;++e)
++          if(observed::segmentDistance(contour[k],edges[e][0],edges[e][1])>budget.max_edge_position_distance_px)pixel_mask[k]&=~(1u<<e);
++        const double prefix_roundoff=64*std::numeric_limits<double>::epsilon()*contour.size()*std::max(1.,walk_prefix.back());
+         std::vector<cv::Point> polygon;
+         cv::approxPolyDP(contour, polygon, config.approximation_epsilon_, true);
+         if (polygon.size() < 3)
+@@ -126,15 +150,19 @@ namespace mark
+                     previous = current;
+                 }
+             }
++        // 沙盒A：失败后枚举全部真实端点，不删区间中的像素。
++        if(all_endpoints){indices.clear();for(size_t k=0;k<contour.size();++k)indices.push_back(k);}
+         std::sort(indices.begin(), indices.end());
+         indices.erase(std::unique(indices.begin(), indices.end()), indices.end());
+         std::vector<Arc> arcs;
++        std::set<std::vector<std::pair<double,double>>> distinct_support;
+         std::map<std::string, size_t> rejected;
+         // 简化只用于标记真实轮廓上的转折，支持点仍来自CHAIN_APPROX_NONE连续弧。
+         // 栅格圆角会在一条直边末端插入额外简化顶点，原单段实现误当缺边。
+         // 实拍栅格边界可能将一条外边拆成多个简化段，不能把相邻段数固定为两段。
+         // 枚举当前闭轮廓上的全部非整圈连续区间：P个简化顶点至多P(P-1)候选，
+         // 没有任意子集、跨点拼接或误差裁点；所有预算保持不变。
++        { sandbox::Scope profile(sandbox::ArcGeneration);
+         for (size_t i = 0; i < indices.size(); ++i)
+             for (size_t segments = 1; segments < indices.size(); ++segments)
+             {
+@@ -153,34 +181,28 @@ namespace mark
+                             continuous = false;
+                         started = true;
+                         arc.points.push_back(p);
++                        if(!fitted_position){arc.position_mask&=pixel_mask[k];if(!arc.position_mask)break;}
+                     }
+                     else if (started)
+                         ended = true;
+                     if (k == arc.end)
+                         break;
+                 }
++                if(!arc.position_mask){++rejected["direction_or_position_arc"];continue;}
+                 if (!continuous)
+                     ++rejected["discontinuous_arc"];
+                 else
+                 {
++                    // 沙盒A：只有完整有序支持序列相同才去重，避免回走路径误合并。
++                    if(all_endpoints&&!arc.points.empty()){std::vector<std::pair<double,double>> key;for(auto q:arc.points)key.emplace_back(q.x,q.y);if(!distinct_support.insert(key).second)continue;}
+                     // 有限模型边的位置检查无需拟合，先排除跨过其他外边的长区间。
+-                    unsigned position_mask = 3;
+-                    for (auto p : arc.points)
+-                    {
+-                        for (unsigned edge = 0; edge < 2; ++edge)
+-                            if ((position_mask & (1u << edge)) &&
+-                                observed::segmentDistance(p, edges[edge][0], edges[edge][1]) >
+-                                    budget.max_edge_position_distance_px)
+-                                position_mask &= ~(1u << edge);
+-                        if (!position_mask)
+-                            break;
+-                    }
++                    unsigned position_mask = arc.position_mask;
+                     if (!position_mask)
+                     {
+                         ++rejected["direction_or_position_arc"];
+                         continue;
+                     }
+-                    if (!fitArc(arc, config))
++                    if (!fitArc(arc, config, model_kind))
+                     {
+                         ++rejected["short_or_residual_arc"];
+                         continue;
+@@ -188,15 +210,20 @@ namespace mark
+                     // 两条指定有限边已在配对前可知；先剔除不属于任一指定边的连续弧，
+                     // 避免细碎轮廓将大量无关短边带入二次配对，不改变最终匹配条件。
+                     for (unsigned edge = 0; edge < 2; ++edge)
+-                        if ((position_mask & (1u << edge)) && matches(arc, edges[edge], budget))
++                        if ((position_mask & (1u << edge)) && matches(arc, edges[edge], budget, fitted_position))
+                             arc.edge_mask |= 1u << edge;
+-                    if (arc.edge_mask)
++                    if (arc.edge_mask){
++                        arc.source_front=first_pixel.at({cvRound(arc.points.front().x),cvRound(arc.points.front().y)});
++                        arc.source_back=first_pixel.at({cvRound(arc.points.back().x),cvRound(arc.points.back().y)});
+                         arcs.push_back(std::move(arc));
++                    }
+                     else
+                         ++rejected["direction_or_position_arc"];
+                 }
+             }
++        }
+         const double winding = cv::contourArea(contour, true);
++        { sandbox::Scope profile(sandbox::Pairs);
+         for (size_t i = 0; i < arcs.size(); ++i)
+             for (size_t j = 0; j < arcs.size(); ++j)
+             {
+@@ -209,8 +236,12 @@ namespace mark
+                 bool reverse = (a.edge_mask & 2) && (b.edge_mask & 1);
+                 if (!direct && !reverse)
+                     continue;
++                // 先按有序轮廓真实弧长做保守排除，避免对数百万不邻接弧对做set交集。
++                const size_t start_index=a.source_back,stop_index=b.source_front;
++                const double connection_estimate=stop_index>=start_index?walk_prefix[stop_index]-walk_prefix[start_index]:walk_prefix.back()-walk_prefix[start_index]+walk_prefix[stop_index];
++                if(connection_estimate-prefix_roundoff>budget.max_turn_connection_length_px){++rejected["connection"];continue;}
+                 bool shared = false;
+-                for (auto p : b.points)
++                if(!(a.max_x<b.min_x||b.max_x<a.min_x||a.max_y<b.min_y||b.max_y<a.min_y))for (auto p : b.points)
+                     if (a.support.count({p.x, p.y}))
+                     {
+                         shared = true;
+@@ -223,10 +254,7 @@ namespace mark
+                 }
+                 // 相邻支持弧之间允许圆角连接，连接长度受独立预算约束。
+                 std::vector<cv::Point2d> connector;
+-                auto begin = std::find(contour.begin(), contour.end(), cv::Point(a.points.back()));
+-                auto end = std::find(contour.begin(), contour.end(), cv::Point(b.points.front()));
+-                size_t k = static_cast<size_t>(begin - contour.begin()),
+-                       stop = static_cast<size_t>(end - contour.begin());
++                size_t k=start_index,stop=stop_index;
+                 double length = 0;
+                 for (;;)
+                 {
+@@ -273,6 +301,18 @@ namespace mark
+                     ++rejected["corner_or_extension"];
+                     continue;
+                 }
++                // 所有门控均执行后，歧义检查仍无条件覆盖低分候选；只延迟深拷贝。
++                const double candidate_error=first.mean+second.mean;
++                if(result.evidence){
++                    double delta=cv::norm(result.evidence->intersection_-intersection);
++                    if(delta*delta>config.semantic_geometry_threshold_){result.evidence.reset();result.reason="AMBIGUOUS_EDGE_PAIR: 外边观测解几何冲突";return result;}
++                    if(candidate_error>result.evidence->error_)continue;
++                    if(candidate_error==result.evidence->error_){
++                        std::array<int,2>new_begin{{int(first.begin),int(second.begin)}},new_end{{int(first.end),int(second.end)}};
++                        std::array<int,2>old_begin{{result.evidence->observed_segment_ids_[0],result.evidence->observed_segment_ids_[1]}};
++                        if(!(std::tie(new_begin,new_end)<std::tie(old_begin,result.evidence->observed_segment_end_ids_)))continue;
++                    }
++                }
+                 CornerEvidence evidence{};
+                 evidence.original_observation_ = true;
+                 evidence.truncated_ = false;
+@@ -288,26 +328,18 @@ namespace mark
+                 evidence.line_b_ = second.line;
+                 evidence.intersection_ = intersection;
+                 evidence.line_mean_residual_px_ = {first.mean, second.mean};
++                evidence.sandbox_model_kind_={first.model_kind,second.model_kind};
++                evidence.sandbox_model_axis_={first.model_axis,second.model_axis};
++                evidence.sandbox_model_coefficient_={first.model_coefficient,second.model_coefficient};
++                evidence.sandbox_model_mean_={first.model_mean,second.model_mean};
++                evidence.sandbox_model_max_={first.model_max,second.model_max};
+                 evidence.line_max_residual_px_ = {first.maximum, second.maximum};
+                 evidence.support_extension_px_ = {ea, eb};
+                 evidence.corner_error_px_ = corner_error;
+                 evidence.error_ = first.mean + second.mean;
+-                if (result.evidence &&
+-                    cv::norm(result.evidence->intersection_ - intersection) *
+-                            cv::norm(result.evidence->intersection_ - intersection) >
+-                        config.semantic_geometry_threshold_)
+-                {
+-                    result.evidence.reset();
+-                    result.reason = "AMBIGUOUS_EDGE_PAIR: 外边观测解几何冲突";
+-                    return result;
+-                }
+-                if (!result.evidence || evidence.error_ < result.evidence->error_ ||
+-                    (evidence.error_ == result.evidence->error_ &&
+-                     std::tie(evidence.observed_segment_ids_, evidence.observed_segment_end_ids_) <
+-                         std::tie(result.evidence->observed_segment_ids_,
+-                                  result.evidence->observed_segment_end_ids_)))
+-                    result.evidence = std::move(evidence);
++                result.evidence = std::move(evidence);
+             }
++        }
+         if (!result.evidence)
+         {
+             std::ostringstream reason;
+@@ -319,4 +351,23 @@ namespace mark
+         }
+         return result;
+     }
++    // 沙盒路由由环境变量选择，仅供比较；正式实施应使用实例内策略而非全局开关。
++    EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point>&contour,
++      const std::array<std::array<cv::Point2d,2>,2>&edges,const CornerConfig&config){
++        auto r=fitObservedEdgePairImpl(contour,edges,config,false,false);
++        const char*route=std::getenv("MARK_SANDBOX_ROUTE");
++        if(!route||std::string(route)=="baseline"||r.evidence)return r;
++        r=fitObservedEdgePairImpl(contour,edges,config,false,true);
++        if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,true,false);
++        int model=sandbox::modelMode();
++        if(!r.evidence&&model){r=fitObservedEdgePairImpl(contour,edges,config,false,false,model);
++          if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,false,true,model);
++          if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,true,false,model);
++          if(!r.evidence&&model==3){r=fitObservedEdgePairImpl(contour,edges,config,false,false,4);
++            if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,false,true,4);
++            if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,true,false,4);}
++        }
++        return r;
++    }
++
+ }
+diff --git a/src/tushenghao/lib/corners/corner_evidence_validation.cpp b/src/tushenghao/lib/corners/corner_evidence_validation.cpp
+index c488f4a..25c0b61 100644
+--- a/src/tushenghao/lib/corners/corner_evidence_validation.cpp
++++ b/src/tushenghao/lib/corners/corner_evidence_validation.cpp
+@@ -1,5 +1,7 @@
+ // 旧Validator只看凸四点即可放行；这里要求四角真实来源并复算证据，失败给明确原因。
+ #include "corners/corner_evidence_validation.hpp"
++#include "corners/sandbox_profile.hpp"
++#include "corners/sandbox_periodic.hpp"
+ #include "core/observed_geometry_utils.hpp"
+ #include <set>
+ 
+@@ -19,6 +21,7 @@ namespace mark
+     bool validateCornerEvidence(const CornerEvidence &e, cv::Point2d corner, int index,
+                                 const CornerConfig &config, std::string &reason)
+     {
++        sandbox::Scope profile(sandbox::Evidence);
+         auto fail = [&](const char *text)
+         {
+             reason = text;
+@@ -44,6 +47,8 @@ namespace mark
+         for (int edge = 0; edge < 2; ++edge)
+         {
+             const auto &line = lines[edge];
++            if(e.sandbox_model_kind_[edge]<0||e.sandbox_model_kind_[edge]>4||e.sandbox_model_axis_[edge]<0||e.sandbox_model_axis_[edge]>1||!std::isfinite(e.sandbox_model_coefficient_[edge]))return fail("SANDBOX_MODEL_INVALID");
++            if(e.sandbox_model_kind_[edge]==2&&!same(e.sandbox_model_coefficient_[edge],sandbox::frame_shift))return fail("SANDBOX_FRAME_MODEL_MISMATCH");
+             const auto &support = e.original_support_arcs_[edge];
+             for (double value : line.val)
+                 if (!std::isfinite(value))
+@@ -53,7 +58,7 @@ namespace mark
+                 return fail("DEGENERATE_FIT_LINE");
+             cv::Point2d direction{line[0] / norm, line[1] / norm}, origin{line[2], line[3]};
+             std::set<std::pair<double, double>> unique;
+-            double sum = 0, maximum = 0, lo = INFINITY, hi = -INFINITY;
++            double sum = 0, maximum = 0, lo = INFINITY, hi = -INFINITY, model_sum=0,model_max=0;
+             for (size_t pixel = 0; pixel < support.size(); ++pixel)
+             {
+                 auto p = support[pixel];
+@@ -70,6 +75,8 @@ namespace mark
+                 double d =
+                     std::abs(direction.x * (p.y - origin.y) - direction.y * (p.x - origin.x));
+                 sum += d;
++                double corrected=sandbox::correctedDistance(p,line,e.sandbox_model_kind_[edge],e.sandbox_model_axis_[edge],e.sandbox_model_coefficient_[edge]);
++                model_sum+=corrected;model_max=std::max(model_max,corrected);
+                 maximum = std::max(maximum, d);
+             }
+             if (unique.size() < static_cast<size_t>(config.min_line_points_) ||
+@@ -82,9 +89,14 @@ namespace mark
+             if (!same(mean, e.line_mean_residual_px_[edge]) ||
+                 !same(maximum, e.line_max_residual_px_[edge]) ||
+                 !same(extension, e.support_extension_px_[edge]) ||
+-                mean > config.max_line_fit_error_ ||
++                ((e.sandbox_model_kind_[edge]==0?mean:model_sum/support.size()) > config.max_line_fit_error_) ||
+                 extension > config.observation_budget_->max_support_extension_px)
+                 return fail("INVALID_EVIDENCE_ERROR: 误差/有限支持延伸不合格");
++            // 沙盒C：复算模型参数和校正残差，不允许把任意小残差写进内部证据。
++            if(e.sandbox_model_kind_[edge]){
++                if(!same(model_sum/support.size(),e.sandbox_model_mean_[edge])||!same(model_max,e.sandbox_model_max_[edge]))return fail("SANDBOX_MODEL_RESIDUAL_MISMATCH");
++                if(e.sandbox_model_kind_[edge]==1||e.sandbox_model_kind_[edge]==3||e.sandbox_model_kind_[edge]==4){auto fitted=e.sandbox_model_kind_[edge]==4?sandbox::fitPeriodicLAD(support):e.sandbox_model_kind_[edge]==3?sandbox::fitPeriodicMedian(support):sandbox::fitPeriodic(support);if(!fitted.valid||fitted.axis!=e.sandbox_model_axis_[edge]||!same(fitted.coefficient,e.sandbox_model_coefficient_[edge]))return fail("SANDBOX_MODEL_PARAMETER_MISMATCH");double norm=std::hypot(fitted.line[0],fitted.line[1]);fitted.line[0]/=norm;fitted.line[1]/=norm;for(int k=0;k<4;++k)if(!same(fitted.line[k],line[k]))return fail("SANDBOX_MODEL_LINE_MISMATCH");}
++            }
+             // 无限线交点必须确实在两条拟合线上，不能只写一个任意凸四点。
+             double line_distance =
+                 std::abs(direction.x * (corner.y - origin.y) - direction.y * (corner.x - origin.x));
+diff --git a/src/tushenghao/lib/corners/corner_observation.cpp b/src/tushenghao/lib/corners/corner_observation.cpp
+index ee3cb0b..94f063d 100644
+--- a/src/tushenghao/lib/corners/corner_observation.cpp
++++ b/src/tushenghao/lib/corners/corner_observation.cpp
+@@ -1,6 +1,8 @@
+ // 输入assignment已确定的工作图组件，仅从当前原图量测；多来源不能排除时拒绝。
+ // 原实现裁ROI再closed=true会造边；这里从原图完整轮廓取证，无ROI人工闭合边。
+ #include "corners/corner_observation.hpp"
++#include "corners/sandbox_profile.hpp"
++#include "corners/sandbox_periodic.hpp"
+ #include "core/observed_geometry_utils.hpp"
+ #include <opencv2/imgproc.hpp>
+ #include <stdexcept>
+@@ -9,22 +11,31 @@ namespace mark
+ {
+     OriginalContourResult observeOriginalContour(const PreparedFrame &frame,
+                                                  const WhiteComponent &component,
+-                                                 const CornerObservationBudget &budget)
++                                                 const CornerObservationBudget &budget, OriginalContourIndex &index)
+     {
++        sandbox::Scope profile(sandbox::Observe);
+         OriginalContourResult result;
++        if(auto it=index.matched.find(component.component_id_);it!=index.matched.end())return it->second;
++        if(!index.ready){
+         cv::Mat gray, mask;
+-        cv::cvtColor(frame.original_image_, gray, cv::COLOR_BGR2GRAY);
++        {sandbox::Scope profile(sandbox::Gray);cv::cvtColor(frame.original_image_, gray, cv::COLOR_BGR2GRAY);}
+         // threshold写独立图，严禁修改浅引用原图。
+-        cv::threshold(gray, mask, frame.original_white_threshold_, 255, cv::THRESH_BINARY);
+-        std::vector<std::vector<cv::Point>> contours;
+-        cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
++        {sandbox::Scope profile(sandbox::Threshold);cv::threshold(gray, mask, frame.original_white_threshold_, 255, cv::THRESH_BINARY);}
++        auto &contours=index.contours;
++        {sandbox::Scope profile(sandbox::Contours);cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);}
++        // 沙盒C2：每帧原图入口估计一次，绝不在失败角上重新拟合偏移。
++        if(sandbox::modelMode()==2)index.parity_shift=sandbox::estimateFrameShift(contours);
++        index.ready=true;
++        }
++        const auto &contours=index.contours;
++        sandbox::Scope mapping_profile(sandbox::Mapping);
+         std::vector<cv::Point2d> mapped;
+         for (auto p : component.contour_)
+             mapped.push_back(frame.workToOriginal(p));
+         if (mapped.size() < 3)
+         {
+             result.reason = "MISSING_COMPONENT_SUPPORT: 工作图轮廓无有效边界";
+-            return result;
++            index.matched[component.component_id_]=result;return result;
+         }
+         size_t matches = 0;
+         for (const auto &contour : contours)
+@@ -59,7 +70,7 @@ namespace mark
+             result.contour.clear();
+             result.reason = matches ? "AMBIGUOUS_COMPONENT_SUPPORT: 原图来源不唯一"
+                                     : "MISSING_ORIGINAL_SUPPORT: 没有相符的原图轮廓";
+-            return result;
++            index.matched[component.component_id_]=result;return result;
+         }
+         for (auto p : result.contour)
+             if (p.x == 0 || p.y == 0 || p.x == frame.original_image_.cols - 1 ||
+@@ -67,8 +78,12 @@ namespace mark
+             {
+                 result.contour.clear();
+                 result.reason = "TRUNCATED_ORIGINAL_SUPPORT: 必要片真实原图边界截断";
+-                return result;
++                index.matched[component.component_id_]=result;return result;
+             }
+-        return result;
++        index.matched[component.component_id_]=result;return result;
+     }
++    // 历史内部入口保持语义：每次单独调用都用新索引，fixture改图/预算不会命中旧缓存。
++    OriginalContourResult observeOriginalContour(const PreparedFrame &frame,const WhiteComponent &component,
++      const CornerObservationBudget &budget){OriginalContourIndex index;return observeOriginalContour(frame,component,budget,index);}
++
+ }
+diff --git a/src/tushenghao/lib/corners/corner_observation.hpp b/src/tushenghao/lib/corners/corner_observation.hpp
+index 58e57d6..9314245 100644
+--- a/src/tushenghao/lib/corners/corner_observation.hpp
++++ b/src/tushenghao/lib/corners/corner_observation.hpp
+@@ -3,11 +3,21 @@
+ #include "core/prepared_frame.hpp"
+ #include "mark/detector_config.hpp"
+ #include <string>
++#include <map>
+ namespace mark {
+ struct OriginalContourResult {
+     std::vector<cv::Point> contour;
+     std::string reason;
+ };
++// 沙盒性能实验：该索引只活在一次decode调用中；不使用static或跨帧缓存。
++struct OriginalContourIndex {
++    bool ready=false;
++    double parity_shift=0;
++    std::vector<std::vector<cv::Point>> contours;
++    std::map<size_t,OriginalContourResult> matched;
++};
++OriginalContourResult observeOriginalContour(const PreparedFrame&, const WhiteComponent&,
++                                            const CornerObservationBudget&, OriginalContourIndex&);
+ OriginalContourResult observeOriginalContour(const PreparedFrame&, const WhiteComponent&,
+                                             const CornerObservationBudget&);
+ }
+diff --git a/src/tushenghao/lib/corners/corner_resolver.cpp b/src/tushenghao/lib/corners/corner_resolver.cpp
+index 89867ce..4595854 100644
+--- a/src/tushenghao/lib/corners/corner_resolver.cpp
++++ b/src/tushenghao/lib/corners/corner_resolver.cpp
+@@ -3,6 +3,7 @@
+ #include "corners/corner_resolver.hpp"
+ #include "corners/corner_observation.hpp"
+ #include "corners/corner_edge_fit.hpp"
++#include "corners/sandbox_periodic.hpp"
+ #include "core/corner_budget.hpp"
+ #include "core/observed_geometry_utils.hpp"
+ #include <map>
+@@ -12,7 +13,7 @@ namespace mark
+ {
+     CornerResolution resolveObservedCorners(const PreparedFrame &frame,
+                                             const GeometryHypothesis &hypothesis,
+-                                            const MarkerGeometry &model, const CornerConfig &config)
++                                            const MarkerGeometry &model, const CornerConfig &config, OriginalContourIndex &index)
+     {
+         validateCornerObservationBudget(config);
+         CornerResolution result{};
+@@ -91,7 +92,7 @@ namespace mark
+                 return result;
+             }
+             auto contour = observeOriginalContour(frame, *components.at(assignment->second),
+-                                                  *config.observation_budget_);
++                                                  *config.observation_budget_, index);
+             if (!contour.reason.empty())
+             {
+                 result.rejection_reason_ = contour.reason + ": P" + std::to_string(i);
+@@ -111,6 +112,7 @@ namespace mark
+                         return result;
+                     }
+                 }
++            sandbox::frame_shift=index.parity_shift;
+             auto fit = fitObservedEdgePair(contour.contour, edges, config);
+             if (!fit.evidence)
+             {
+@@ -144,4 +146,8 @@ namespace mark
+         result.measurement_ = std::move(measurement);
+         return result;
+     }
++    // 内部旧入口仍可用；正式decode把同帧索引在全部父假设间共享。
++    CornerResolution resolveObservedCorners(const PreparedFrame&frame,const GeometryHypothesis&hypothesis,
++      const MarkerGeometry&model,const CornerConfig&config){OriginalContourIndex index;return resolveObservedCorners(frame,hypothesis,model,config,index);}
++
+ }
+diff --git a/src/tushenghao/lib/corners/corner_resolver.hpp b/src/tushenghao/lib/corners/corner_resolver.hpp
+index d29d425..9509d22 100644
+--- a/src/tushenghao/lib/corners/corner_resolver.hpp
++++ b/src/tushenghao/lib/corners/corner_resolver.hpp
+@@ -8,6 +8,8 @@
+ 
+ namespace mark
+ {
++    struct OriginalContourIndex;
++    CornerResolution resolveObservedCorners(const PreparedFrame&,const GeometryHypothesis&,const MarkerGeometry&,const CornerConfig&,OriginalContourIndex&);
+ 
+     /**
+      * @brief 根据当前几何假设恢复四个物理角
+diff --git a/src/tushenghao/lib/corners/corner_types.hpp b/src/tushenghao/lib/corners/corner_types.hpp
+index 0255a37..7784844 100644
+--- a/src/tushenghao/lib/corners/corner_types.hpp
++++ b/src/tushenghao/lib/corners/corner_types.hpp
+@@ -127,6 +127,9 @@ namespace mark
+      */
+     struct CornerEvidence
+     {
++        // 沙盒C实验：0=原单线，1=逐弧周期，2=当前帧统一校正；仅内部证据扩展。
++        std::array<int,2> sandbox_model_kind_{{0,0}}, sandbox_model_axis_{{1,1}};
++        std::array<double,2> sandbox_model_coefficient_{{0,0}}, sandbox_model_mean_{{0,0}}, sandbox_model_max_{{0,0}};
+         /**
+          * @brief 当前证据对应的物理角
+          *
+diff --git a/src/tushenghao/lib/pipeline/decode_stage.cpp b/src/tushenghao/lib/pipeline/decode_stage.cpp
+index c4c58f5..f0a1f62 100644
+--- a/src/tushenghao/lib/pipeline/decode_stage.cpp
++++ b/src/tushenghao/lib/pipeline/decode_stage.cpp
+@@ -7,6 +7,8 @@
+ #include "geometry/geometry_validation.hpp"
+ #include "geometry/geometry_assignment_completion.hpp"
+ #include "corners/corner_resolver.hpp"
++#include "corners/corner_observation.hpp"
++#include "corners/sandbox_profile.hpp"
+ #include "corners/semantic_resolver.hpp"
+ #include "corners/detection_validator.hpp"
+ #include "corners/detection_publication.hpp"
+@@ -46,6 +48,8 @@ namespace mark
+             validateCornerObservationBudget(config);
+             result.status = Status::NOT_DETECTED;
+             bool unresolved = false;
++            // 沙盒：一次decode的显式索引，不跨帧复用，不在无角点假设时提取原图。
++            OriginalContourIndex original_index;
+             for (size_t h = 0; h < batch.hypotheses_.size(); ++h)
+             {
+                 const auto &hypothesis = batch.hypotheses_[h];
+@@ -77,7 +81,7 @@ namespace mark
+                     continue;
+                 }
+ 
+-                auto corner = resolveObservedCorners(frame, hypothesis, model, config);
++                auto corner = resolveObservedCorners(frame, hypothesis, model, config, original_index);
+                 if (!corner.measurement_)
+                 {
+                     log("corner", corner.rejection_reason_);
+@@ -230,7 +234,7 @@ namespace mark
+         auto components = extractWhiteComponents(prepared, config.geometry_);
+         prepared.components_ = components;
+         auto observations = observeShapes(components, config.geometry_);
+-        auto batch = generateGeometryHypotheses(observations, model, config.geometry_);
++        auto batch = [&]{sandbox::Scope scope(sandbox::GeometryGenerate);return generateGeometryHypotheses(observations, model, config.geometry_);}();
+         if (context)
+         {
+             context->record.counts.components = components.size();
+@@ -243,7 +247,7 @@ namespace mark
+                 context->details->generated = batch;
+             }
+         }
+-        batch = validateGeometryBatch(batch, model, components, config.geometry_);
++        batch = [&]{sandbox::Scope scope(sandbox::GeometryValidate);return validateGeometryBatch(batch, model, components, config.geometry_);}();
+         if (context)
+         {
+             context->record.counts.validated = batch.hypotheses_.size();
+@@ -271,8 +275,7 @@ namespace mark
+                       << "/completeness=" << int(h.completeness_);
+                 batch.diagnostics_.push_back(trace.str());
+             }
+-        batch =
+-            completeSegmentedAssignments(batch, components, model, *config.assignment_completion_);
++        batch = [&]{sandbox::Scope scope(sandbox::Completion);return completeSegmentedAssignments(batch, components, model, *config.assignment_completion_);}();
+         if (context)
+         {
+             context->record.counts.completed = batch.hypotheses_.size();

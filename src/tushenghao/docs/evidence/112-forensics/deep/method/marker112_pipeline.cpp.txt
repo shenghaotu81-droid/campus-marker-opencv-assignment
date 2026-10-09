@@ -1,0 +1,13 @@
+// 中文用途：仅在独立程序中改变位置门控谓词，原生产解码/验证/发布全链运行；不改源码/YAML。
+#include "config/config.hpp"
+#include "pipeline/decode_stage.hpp"
+#include <opencv2/videoio.hpp>
+#include <opencv2/imgproc.hpp>
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <map>
+#include <iomanip>
+namespace mark {extern std::string probe_mode;extern bool collect_metrics;}
+int main(int argc,char**argv){auto c=mark::loadConfig(argv[1]).detector_config;auto model=mark::loadMarkerGeometry("src/tushenghao/config/marker_geometry.yaml");mark::probe_mode=argv[3];mark::collect_metrics=false;std::set<int> ids;std::ifstream fs(argv[2]);int id;while(fs>>id)ids.insert(id);
+cv::VideoCapture cap("data/raw/marker_video.avi");cv::Mat img;int fid=0;std::cout<<std::setprecision(17);while(cap.read(img)){if(ids.count(fid)){mark::FrameInput input;input.frame_id=fid;input.image=img;input.timestamp_us=0;input.time_source=mark::TimestampSource::Unknown;auto r=mark::runDecodePipeline(input,c,model);std::cout<<"{\"frame\":"<<fid<<",\"status\":"<<int(r.status)<<",\"measurement_count\":"<<r.measurements.size()<<",\"detections\":[";bool first=true;for(auto &d:r.detections){if(!first)std::cout<<",";first=false;std::cout<<"[";for(int i=0;i<4;++i){if(i)std::cout<<",";std::cout<<"["<<d.corners[i].x<<","<<d.corners[i].y<<"]";}std::cout<<"]";}std::cout<<"],\"diagnostics\":[";first=true;for(auto&s:r.diagnostics){if(!first)std::cout<<",";first=false;std::cout<<std::quoted(s);}std::cout<<"]}\n";}++fid;}}

@@ -1,0 +1,27 @@
+# 中文用途：扫描行按不重叠行分组交叉验证，检验奇偶周期模型的改善是否仅是增加参数的过拟合。
+import json,math,statistics,random,pathlib
+exec(pathlib.Path('/tmp/marker112_periodic.py').read_text().split('rows=[]')[0])
+p=pathlib.Path('docs/evidence/112-forensics/deep');out=[]
+def calc(train,test,axis,labels=None,periodic=True):
+ orth=1-axis;origin=sum(q[axis] for q in train)/len(train)
+ def vec(q):return [q[axis]-origin,1,(1 if int(q[axis])%2 else -1) if labels is None else labels[int(q[axis])]]
+ xs=[vec(q) for q in train];ys=[q[orth] for q in train]
+ if periodic:
+  coeff=solve([[sum(x[i]*x[j] for x in xs) for j in range(3)] for i in range(3)],[sum(x[i]*y for x,y in zip(xs,ys)) for i in range(3)])
+ else:
+  xx=sum(x[0]**2 for x in xs);slope=sum(x[0]*y for x,y in zip(xs,ys))/xx;coeff=[slope,sum(ys)/len(ys),0]
+ errors=[abs(q[orth]-sum(a*b for a,b in zip(vec(q),coeff)))/math.sqrt(1+coeff[0]**2) for q in test]
+ return sum(errors)/len(errors)
+for r in map(json.loads,(p/'probe-residual-evidence.jsonl').open()):
+ if not r['success']:continue
+ k=max(range(2),key=lambda k:r['support_mean'][k]);a=r['support_arcs'][k];axis=1 if max(y for x,y in a)-min(y for x,y in a)>max(x for x,y in a)-min(x for x,y in a) else 0
+ groups=[[q for q in a if (int(q[axis])//2)%2==i] for i in [0,1]];lin=[];per=[]
+ for i in [0,1]:lin.append(calc(groups[i],groups[1-i],axis,periodic=False));per.append(calc(groups[i],groups[1-i],axis))
+ rng=random.Random(112+r['frame']*4+r['physical']);rand=[];coords=sorted({int(q[axis]) for q in a})
+ for trial in range(100):
+  labels={y:rng.choice([-1,1]) for y in coords}
+  try:rand.append(statistics.mean(calc(groups[i],groups[1-i],axis,labels=labels) for i in [0,1]))
+  except ZeroDivisionError:pass
+ meanlin=statistics.mean(lin);meanper=statistics.mean(per)
+ out.append({'frame':r['frame'],'hypothesis':r['hypothesis'],'physical':r['physical'],'axis':axis,'heldout_linear_mean':meanlin,'heldout_periodic_mean':meanper,'improvement':meanlin-meanper,'random_label_median':statistics.median(rand),'random_label_empirical_tail':(1+sum(x<=meanper for x in rand))/(1+len(rand)),'random_label_trials':len(rand)})
+(p/'periodic-heldout.json').write_text(json.dumps(out,indent=2)+'\n');print('heldout improved',sum(r['improvement']>0 for r in out),'/',len(out));print('median heldout linear/periodic',statistics.median(r['heldout_linear_mean'] for r in out),statistics.median(r['heldout_periodic_mean'] for r in out));print('random tail <=.05',sum(r['random_label_empirical_tail']<=.05 for r in out));print('median improvement',statistics.median(r['improvement'] for r in out))

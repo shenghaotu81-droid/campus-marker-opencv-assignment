@@ -1,0 +1,14 @@
+// 中文用途：生成原图裁剪与模型边/连续弧对照，记录像素证据，不修改图像输入。
+#include <opencv2/opencv.hpp>
+#include <fstream>
+#include <sstream>
+#include <map>
+#include <iomanip>
+struct Item{int f,h,p,c;std::vector<cv::Point> ring;std::array<std::array<cv::Point2d,2>,2> edges;std::string json;};
+int main(int argc,char**argv){std::map<int,std::vector<Item>> items;std::ifstream in(argv[1]);std::string line;while(std::getline(in,line)){std::istringstream s(line);Item x;int n;s>>x.f>>x.h>>x.p>>x.c>>n;for(auto &e:x.edges)for(auto &q:e)s>>q.x>>q.y;x.ring.resize(n);for(auto &q:x.ring)s>>q.x>>q.y;items[x.f].push_back(x);}
+std::ifstream ev(argv[2]);while(std::getline(ev,line)){cv::FileStorage fs(line,cv::FileStorage::READ|cv::FileStorage::MEMORY|cv::FileStorage::FORMAT_JSON);int f=fs["frame"],h=fs["hypothesis"],p=fs["physical"];for(auto &x:items[f])if(x.h==h&&x.p==p)x.json=line;}
+cv::VideoCapture cap("data/raw/marker_video.avi");cv::Mat img;int fid=0;while(cap.read(img)){for(auto &x:items[fid]){cv::Rect box=cv::boundingRect(x.ring);box.x-=18;box.y-=18;box.width+=36;box.height+=36;box&=cv::Rect(0,0,img.cols,img.rows);cv::Mat crop=img(box).clone();auto pt=[&](cv::Point2d q){return cv::Point(cvRound(q.x)-box.x,cvRound(q.y)-box.y);};for(int e=0;e<2;++e)cv::line(crop,pt(x.edges[e][0]),pt(x.edges[e][1]),cv::Scalar(255,80,0),1,cv::LINE_AA);for(auto q:x.ring)cv::circle(crop,pt(q),0,cv::Scalar(130,130,130),-1);
+if(!x.json.empty()){cv::FileStorage fs(x.json,cv::FileStorage::READ|cv::FileStorage::MEMORY|cv::FileStorage::FORMAT_JSON);auto arcs=fs["support_arcs"];int e=0;for(auto a:arcs){for(auto q:a){auto it=q.begin();double qx=*it;++it;double qy=*it;cv::circle(crop,pt({qx,qy}),0,e?cv::Scalar(0,190,255):cv::Scalar(0,255,0),-1);}++e;}auto c=fs["corner"];if(!c.empty()){auto it=c.begin();double qx=*it;++it;double qy=*it;cv::drawMarker(crop,pt({qx,qy}),cv::Scalar(0,0,255),cv::MARKER_CROSS,7,1);}}
+cv::Mat a,b,canvas;cv::resize(img(box),a,{},4,4,cv::INTER_NEAREST);cv::resize(crop,b,{},4,4,cv::INTER_NEAREST);cv::hconcat(a,b,canvas);cv::copyMakeBorder(canvas,canvas,32,0,0,0,cv::BORDER_CONSTANT,cv::Scalar(25,25,25));cv::putText(canvas,"frame="+std::to_string(fid)+" h="+std::to_string(x.h)+" P"+std::to_string(x.p)+" raw | model blue/support green+yellow",{6,22},cv::FONT_HERSHEY_SIMPLEX,.45,{255,255,255},1);cv::imwrite(std::string(argv[3])+"/f"+std::to_string(fid)+"-h"+std::to_string(x.h)+"-p"+std::to_string(x.p)+".png",canvas);}
+++fid;}
+}

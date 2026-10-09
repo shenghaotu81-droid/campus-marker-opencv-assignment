@@ -1,0 +1,3452 @@
+[
+  {
+    "frame": 4,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 502.4516129032258,
+        "slope": -0.054732041049027416,
+        "intercept_at_origin": 1079.5704932504505,
+        "parity_coefficient": 0.4857468643101707,
+        "parity_offset_difference": 0.9714937286203414,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.3941575626029209,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 1043.5,
+        "slope": 0.020022246941045603,
+        "intercept_at_origin": 515.3333333333334,
+        "parity_coefficient": -0.010011123470522802,
+        "parity_offset_difference": 0.020022246941045603,
+        "raw_mean": 0.26359344440509064,
+        "periodic_mean": 0.2634745691797126,
+        "n": 60
+      }
+    ]
+  },
+  {
+    "frame": 7,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 480.75206611570246,
+        "slope": 0.0006586843877148026,
+        "intercept_at_origin": 1113.6869416011673,
+        "parity_coefficient": 0.6537715780126496,
+        "parity_offset_difference": 1.3075431560252992,
+        "raw_mean": 0.5038516948552183,
+        "periodic_mean": 0.3535472824898391,
+        "n": 121
+      },
+      {
+        "axis": 0,
+        "origin": 1082.5,
+        "slope": -0.001984126984126984,
+        "intercept_at_origin": 515.9814814814815,
+        "parity_coefficient": -0.017526455026455025,
+        "parity_offset_difference": 0.03505291005291005,
+        "raw_mean": 0.04625923330001501,
+        "periodic_mean": 0.04840280497972228,
+        "n": 54
+      }
+    ]
+  },
+  {
+    "frame": 14,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 362.34166666666664,
+        "slope": 0.0024291260541672373,
+        "intercept_at_origin": 1001.2623885141838,
+        "parity_coefficient": 0.6118383052077722,
+        "parity_offset_difference": 1.2236766104155443,
+        "raw_mean": 0.5307918274410569,
+        "periodic_mean": 0.39667671605624744,
+        "n": 120
+      },
+      {
+        "axis": 0,
+        "origin": 1037.0,
+        "slope": 0.0,
+        "intercept_at_origin": 328.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 67
+      }
+    ]
+  },
+  {
+    "frame": 17,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 504.96,
+        "slope": -0.07439198855507419,
+        "intercept_at_origin": 1228.1289720008174,
+        "parity_coefficient": 0.3432454526875654,
+        "parity_offset_difference": 0.6864909053751308,
+        "raw_mean": 0.5321203512099996,
+        "periodic_mean": 0.49871592700878564,
+        "n": 25
+      },
+      {
+        "axis": 0,
+        "origin": 1194.5,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 56
+      }
+    ]
+  },
+  {
+    "frame": 21,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1254.5,
+        "slope": 0.0,
+        "intercept_at_origin": 328.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 22
+      },
+      {
+        "axis": 1,
+        "origin": 344.4878048780488,
+        "slope": -0.013995334888369347,
+        "intercept_at_origin": 1271.9705653917283,
+        "parity_coefficient": 0.43193783890208776,
+        "parity_offset_difference": 0.8638756778041755,
+        "raw_mean": 0.5967762120148663,
+        "periodic_mean": 0.5517372043136111,
+        "n": 41
+      }
+    ]
+  },
+  {
+    "frame": 21,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 481.5242718446602,
+        "slope": -0.0073704232049438415,
+        "intercept_at_origin": 1079.1896661618898,
+        "parity_coefficient": 0.5619513198910908,
+        "parity_offset_difference": 1.1239026397821816,
+        "raw_mean": 0.5530491040771763,
+        "periodic_mean": 0.4402652773273934,
+        "n": 103
+      },
+      {
+        "axis": 0,
+        "origin": 1115.0,
+        "slope": 0.0,
+        "intercept_at_origin": 516.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 67
+      }
+    ]
+  },
+  {
+    "frame": 22,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 483.12380952380954,
+        "slope": 0.00465099420247327,
+        "intercept_at_origin": 1283.78926602779,
+        "parity_coefficient": 0.5711189623929637,
+        "parity_offset_difference": 1.1422379247859273,
+        "raw_mean": 0.5487282562434594,
+        "periodic_mean": 0.4364620123322339,
+        "n": 105
+      },
+      {
+        "axis": 0,
+        "origin": 1245.5,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 64
+      }
+    ]
+  },
+  {
+    "frame": 25,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 500.2708333333333,
+        "slope": -0.0017102262760926984,
+        "intercept_at_origin": 1317.7097445370582,
+        "parity_coefficient": 0.6332846464183072,
+        "parity_offset_difference": 1.2665692928366143,
+        "raw_mean": 0.5000001411513577,
+        "periodic_mean": 0.36671481728475847,
+        "n": 48
+      },
+      {
+        "axis": 0,
+        "origin": 1279.5,
+        "slope": 0.0124633431085044,
+        "intercept_at_origin": 517.25,
+        "parity_coefficient": -0.0062316715542522,
+        "parity_offset_difference": 0.0124633431085044,
+        "raw_mean": 0.296800870499911,
+        "periodic_mean": 0.29680612760250963,
+        "n": 64
+      }
+    ]
+  },
+  {
+    "frame": 32,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 502.4,
+        "slope": 0.04510507432085353,
+        "intercept_at_origin": 1203.418349564326,
+        "parity_coefficient": 0.5094823167607386,
+        "parity_offset_difference": 1.0189646335214773,
+        "raw_mean": 0.529064863138897,
+        "periodic_mean": 0.3924252073390152,
+        "n": 35
+      },
+      {
+        "axis": 0,
+        "origin": 1235.0,
+        "slope": 0.0,
+        "intercept_at_origin": 518.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 129,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 482.3738317757009,
+        "slope": -0.004440808045656596,
+        "intercept_at_origin": 1211.2243020577155,
+        "parity_coefficient": 0.568633728932758,
+        "parity_offset_difference": 1.137267457865516,
+        "raw_mean": 0.5504421050120725,
+        "periodic_mean": 0.43693006531931955,
+        "n": 107
+      },
+      {
+        "axis": 0,
+        "origin": 1249.0,
+        "slope": -0.0015864621893178213,
+        "intercept_at_origin": 517.983870967742,
+        "parity_coefficient": -0.016129032258063964,
+        "parity_offset_difference": 0.03225806451612793,
+        "raw_mean": 0.04127407321621485,
+        "periodic_mean": 0.043345906908958,
+        "n": 61
+      }
+    ]
+  },
+  {
+    "frame": 134,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1330.0,
+        "slope": 0.0,
+        "intercept_at_origin": 330.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 347.1470588235294,
+        "slope": -0.041365345675432694,
+        "intercept_at_origin": 1347.5309431843318,
+        "parity_coefficient": 0.49566097772637113,
+        "parity_offset_difference": 0.9913219554527423,
+        "raw_mean": 0.547555957080566,
+        "periodic_mean": 0.401501154005455,
+        "n": 34
+      }
+    ]
+  },
+  {
+    "frame": 148,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1174.5,
+        "slope": 0.03021978021978022,
+        "intercept_at_origin": 329.15384615384613,
+        "parity_coefficient": -0.015109890109890112,
+        "parity_offset_difference": 0.030219780219780223,
+        "raw_mean": 0.230466187459065,
+        "periodic_mean": 0.23066392960460874,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 345.8666666666667,
+        "slope": -0.011953023780670391,
+        "intercept_at_origin": 1191.9187423712938,
+        "parity_coefficient": 0.4556101732513157,
+        "parity_offset_difference": 0.9112203465026314,
+        "raw_mean": 0.5881851927617592,
+        "periodic_mean": 0.5347645592854153,
+        "n": 45
+      }
+    ]
+  },
+  {
+    "frame": 148,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 504.4516129032258,
+        "slope": -0.054732041049039726,
+        "intercept_at_origin": 1191.5704932504507,
+        "parity_coefficient": 0.48574686431009684,
+        "parity_offset_difference": 0.9714937286201937,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.3941575626029446,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 1154.0,
+        "slope": 0.01651305683563748,
+        "intercept_at_origin": 517.2540322580646,
+        "parity_coefficient": -0.004032258064517017,
+        "parity_offset_difference": 0.008064516129034034,
+        "raw_mean": 0.2666808553113109,
+        "periodic_mean": 0.2666108132762906,
+        "n": 63
+      }
+    ]
+  },
+  {
+    "frame": 150,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 364.75,
+        "slope": 2.200930410145574e-17,
+        "intercept_at_origin": 977.3333333333334,
+        "parity_coefficient": 0.666666666666682,
+        "parity_offset_difference": 1.333333333333364,
+        "raw_mean": 0.5064729857946416,
+        "periodic_mean": 0.333333333333341,
+        "n": 112
+      },
+      {
+        "axis": 0,
+        "origin": 1013.5,
+        "slope": 0.0,
+        "intercept_at_origin": 328.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 64
+      }
+    ]
+  },
+  {
+    "frame": 153,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 503.82142857142856,
+        "slope": -0.053633217993082266,
+        "intercept_at_origin": 1136.155578898226,
+        "parity_coefficient": 0.36437908496738364,
+        "parity_offset_difference": 0.7287581699347673,
+        "raw_mean": 0.5886317406995405,
+        "periodic_mean": 0.5509739290795846,
+        "n": 28
+      },
+      {
+        "axis": 0,
+        "origin": 1099.5,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 60
+      }
+    ]
+  },
+  {
+    "frame": 154,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1108.0,
+        "slope": 0.0,
+        "intercept_at_origin": 329.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      },
+      {
+        "axis": 1,
+        "origin": 344.6511627906977,
+        "slope": -0.017469843722148347,
+        "intercept_at_origin": 1125.927546112315,
+        "parity_coefficient": 0.47738336296785605,
+        "parity_offset_difference": 0.9547667259357121,
+        "raw_mean": 0.6037560241146678,
+        "periodic_mean": 0.5289957734738039,
+        "n": 43
+      }
+    ]
+  },
+  {
+    "frame": 177,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 502.4516129032258,
+        "slope": -0.05473204104902735,
+        "intercept_at_origin": 919.5704932504506,
+        "parity_coefficient": 0.4857468643101707,
+        "parity_offset_difference": 0.9714937286203414,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.39415756260292456,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 895.0,
+        "slope": 0.0,
+        "intercept_at_origin": 515.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 37
+      }
+    ]
+  },
+  {
+    "frame": 193,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 499.4516129032258,
+        "slope": 0.048232611174458165,
+        "intercept_at_origin": 605.4097528230405,
+        "parity_coefficient": 0.5155644241733921,
+        "parity_offset_difference": 1.0311288483467842,
+        "raw_mean": 0.5187285237772943,
+        "periodic_mean": 0.37170163104907367,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 636.0,
+        "slope": -0.0249546279491833,
+        "intercept_at_origin": 511.3860837438424,
+        "parity_coefficient": 0.006773399014778518,
+        "parity_offset_difference": 0.013546798029557036,
+        "raw_mean": 0.21782117209090687,
+        "periodic_mean": 0.21792723371113884,
+        "n": 57
+      }
+    ]
+  },
+  {
+    "frame": 206,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 695.5,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 22
+      },
+      {
+        "axis": 1,
+        "origin": 340.9761904761905,
+        "slope": -0.004427792915530669,
+        "intercept_at_origin": 713.721479587624,
+        "parity_coefficient": 0.6348928659895853,
+        "parity_offset_difference": 1.2697857319791706,
+        "raw_mean": 0.5128189591269471,
+        "periodic_mean": 0.3796363932197786,
+        "n": 42
+      }
+    ]
+  },
+  {
+    "frame": 207,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 683.0,
+        "slope": -0.021774193548387097,
+        "intercept_at_origin": 323.7083333333333,
+        "parity_coefficient": -0.04166666666666732,
+        "parity_offset_difference": 0.08333333333333463,
+        "raw_mean": 0.3393328516157213,
+        "periodic_mean": 0.3397391040828411,
+        "n": 31
+      },
+      {
+        "axis": 1,
+        "origin": 339.2040816326531,
+        "slope": -0.0031516388522013355,
+        "intercept_at_origin": 701.7171250478821,
+        "parity_coefficient": 0.6344349061512333,
+        "parity_offset_difference": 1.2688698123024666,
+        "raw_mean": 0.5087424693446957,
+        "periodic_mean": 0.38049882780607097,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 215,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 340.125,
+        "slope": 0.07897727272727267,
+        "intercept_at_origin": 468.933695211039,
+        "parity_coefficient": 0.44086850649350523,
+        "parity_offset_difference": 0.8817370129870105,
+        "raw_mean": 0.5313098413521474,
+        "periodic_mean": 0.4525950129673754,
+        "n": 24
+      },
+      {
+        "axis": 0,
+        "origin": 482.0,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      }
+    ]
+  },
+  {
+    "frame": 226,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 581.0,
+        "slope": 0.0,
+        "intercept_at_origin": 324.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 23
+      },
+      {
+        "axis": 1,
+        "origin": 338.7857142857143,
+        "slope": -0.03638399104394162,
+        "intercept_at_origin": 599.5639118787734,
+        "parity_coefficient": 0.5197313182199701,
+        "parity_offset_difference": 1.0394626364399402,
+        "raw_mean": 0.5412892769098396,
+        "periodic_mean": 0.3896239795402099,
+        "n": 42
+      }
+    ]
+  },
+  {
+    "frame": 228,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 557.5,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      },
+      {
+        "axis": 1,
+        "origin": 342.8,
+        "slope": -0.06180180180180284,
+        "intercept_at_origin": 573.7951981981982,
+        "parity_coefficient": 0.4495045045045062,
+        "parity_offset_difference": 0.8990090090090124,
+        "raw_mean": 0.5535696462380781,
+        "periodic_mean": 0.44390981620658393,
+        "n": 40
+      }
+    ]
+  },
+  {
+    "frame": 234,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 477.6703296703297,
+        "slope": -0.02508366331734614,
+        "intercept_at_origin": 301.3235067956328,
+        "parity_coefficient": 0.40126188395434076,
+        "parity_offset_difference": 0.8025237679086815,
+        "raw_mean": 0.5458489142031162,
+        "periodic_mean": 0.4638764271453677,
+        "n": 91
+      },
+      {
+        "axis": 0,
+        "origin": 329.5,
+        "slope": 0.0,
+        "intercept_at_origin": 511.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 52
+      }
+    ]
+  },
+  {
+    "frame": 239,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 419.0,
+        "slope": 0.0,
+        "intercept_at_origin": 325.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 19
+      },
+      {
+        "axis": 1,
+        "origin": 341.3125,
+        "slope": -0.011370436864153358,
+        "intercept_at_origin": 433.79640859589244,
+        "parity_coefficient": 0.5805630635074206,
+        "parity_offset_difference": 1.1611261270148412,
+        "raw_mean": 0.5445956964641963,
+        "periodic_mean": 0.43560485542921157,
+        "n": 48
+      }
+    ]
+  },
+  {
+    "frame": 245,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 363.0,
+        "slope": 0.0,
+        "intercept_at_origin": 327.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 23
+      },
+      {
+        "axis": 1,
+        "origin": 341.81081081081084,
+        "slope": -0.0271496692816486,
+        "intercept_at_origin": 377.94677360794117,
+        "parity_coefficient": 0.468786853304586,
+        "parity_offset_difference": 0.937573706609172,
+        "raw_mean": 0.5660873978460093,
+        "periodic_mean": 0.5014068171532312,
+        "n": 37
+      }
+    ]
+  },
+  {
+    "frame": 246,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 353.0,
+        "slope": 0.0,
+        "intercept_at_origin": 327.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 23
+      },
+      {
+        "axis": 1,
+        "origin": 341.81081081081084,
+        "slope": -0.027149669281648605,
+        "intercept_at_origin": 367.94677360794117,
+        "parity_coefficient": 0.468786853304586,
+        "parity_offset_difference": 0.937573706609172,
+        "raw_mean": 0.5660873978460093,
+        "periodic_mean": 0.5014068171532312,
+        "n": 37
+      }
+    ]
+  },
+  {
+    "frame": 261,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 196.5,
+        "slope": 0.0,
+        "intercept_at_origin": 325.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 22
+      },
+      {
+        "axis": 1,
+        "origin": 339.35,
+        "slope": -0.06987075928917542,
+        "intercept_at_origin": 208.35735345026538,
+        "parity_coefficient": 0.30882183244865397,
+        "parity_offset_difference": 0.6176436648973079,
+        "raw_mean": 0.520444914469726,
+        "periodic_mean": 0.48350849495249815,
+        "n": 20
+      }
+    ]
+  },
+  {
+    "frame": 278,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 494.3939393939394,
+        "slope": -0.05582922824302195,
+        "intercept_at_origin": 200.21713710244447,
+        "parity_coefficient": 0.2949596630256286,
+        "parity_offset_difference": 0.5899193260512572,
+        "raw_mean": 0.5206328063590038,
+        "periodic_mean": 0.509000087966163,
+        "n": 33
+      },
+      {
+        "axis": 0,
+        "origin": 192.0,
+        "slope": -0.07857142857142857,
+        "intercept_at_origin": 507.7321428571429,
+        "parity_coefficient": 0.017857142857141843,
+        "parity_offset_difference": 0.035714285714283686,
+        "raw_mean": 0.24811789245813434,
+        "periodic_mean": 0.24685823415121716,
+        "n": 15
+      }
+    ]
+  },
+  {
+    "frame": 280,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 476.8125,
+        "slope": -0.026383742304437893,
+        "intercept_at_origin": 33.21233542073936,
+        "parity_coefficient": 0.3995611219716214,
+        "parity_offset_difference": 0.7991222439432428,
+        "raw_mean": 0.5559257545382629,
+        "periodic_mean": 0.4666714220538799,
+        "n": 96
+      },
+      {
+        "axis": 0,
+        "origin": 62.5,
+        "slope": -0.024725274725274724,
+        "intercept_at_origin": 511.3333333333333,
+        "parity_coefficient": 0.01236263736263736,
+        "parity_offset_difference": 0.02472527472527472,
+        "raw_mean": 0.2312686409924968,
+        "periodic_mean": 0.23124122536410943,
+        "n": 54
+      }
+    ]
+  },
+  {
+    "frame": 291,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 267.0,
+        "slope": 0.0,
+        "intercept_at_origin": 327.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 19
+      },
+      {
+        "axis": 1,
+        "origin": 341.2857142857143,
+        "slope": -0.007137322076756758,
+        "intercept_at_origin": 279.7583200783066,
+        "parity_coefficient": 0.5936926465190343,
+        "parity_offset_difference": 1.1873852930380686,
+        "raw_mean": 0.5343032007630951,
+        "periodic_mean": 0.4155280531936039,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 297,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 310.5,
+        "slope": -0.0521978021978022,
+        "intercept_at_origin": 323.34615384615387,
+        "parity_coefficient": 0.06456043956043957,
+        "parity_offset_difference": 0.12912087912087913,
+        "raw_mean": 0.23095481475555027,
+        "periodic_mean": 0.2266567766643654,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 338.8510638297872,
+        "slope": -0.014692207550678182,
+        "intercept_at_origin": 329.93279005231415,
+        "parity_coefficient": 0.4837555972017376,
+        "parity_offset_difference": 0.9675111944034752,
+        "raw_mean": 0.5679444158115929,
+        "periodic_mean": 0.5043416039836499,
+        "n": 47
+      }
+    ]
+  },
+  {
+    "frame": 299,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 336.0,
+        "slope": 0.0,
+        "intercept_at_origin": 323.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 21
+      },
+      {
+        "axis": 1,
+        "origin": 333.79411764705884,
+        "slope": 0.02878103837471771,
+        "intercept_at_origin": 350.10122101374924,
+        "parity_coefficient": 0.3798737943771751,
+        "parity_offset_difference": 0.7597475887543502,
+        "raw_mean": 0.5914881411435878,
+        "periodic_mean": 0.5359075397380987,
+        "n": 34
+      }
+    ]
+  },
+  {
+    "frame": 300,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 485.25,
+        "slope": 2.42861286636753e-17,
+        "intercept_at_origin": 361.6666666666667,
+        "parity_coefficient": 0.6666666666666703,
+        "parity_offset_difference": 1.3333333333333406,
+        "raw_mean": 0.5134195276778257,
+        "periodic_mean": 0.3333333333333428,
+        "n": 52
+      },
+      {
+        "axis": 0,
+        "origin": 333.5,
+        "slope": -0.023675213675213677,
+        "intercept_at_origin": 507.71153846153845,
+        "parity_coefficient": -0.007393162393162392,
+        "parity_offset_difference": 0.014786324786324785,
+        "raw_mean": 0.2446272512834708,
+        "periodic_mean": 0.24435296102048787,
+        "n": 52
+      }
+    ]
+  },
+  {
+    "frame": 305,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 399.5,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      },
+      {
+        "axis": 1,
+        "origin": 338.74074074074076,
+        "slope": -0.0368852459016375,
+        "intercept_at_origin": 413.8339773614363,
+        "parity_coefficient": 0.5755854800936986,
+        "parity_offset_difference": 1.1511709601873972,
+        "raw_mean": 0.5225333911816843,
+        "periodic_mean": 0.4119152190217775,
+        "n": 27
+      }
+    ]
+  },
+  {
+    "frame": 307,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 412.0,
+        "slope": 0.051892551892551896,
+        "intercept_at_origin": 325.3708791208791,
+        "parity_coefficient": -0.013736263736264126,
+        "parity_offset_difference": 0.027472527472528253,
+        "raw_mean": 0.22021326357448512,
+        "periodic_mean": 0.2196655459434124,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 341.0487804878049,
+        "slope": -0.03951067548058669,
+        "intercept_at_origin": 425.57432065544725,
+        "parity_coefficient": 0.49722665450956055,
+        "parity_offset_difference": 0.9944533090191211,
+        "raw_mean": 0.5186886756858443,
+        "periodic_mean": 0.3931839671577706,
+        "n": 41
+      }
+    ]
+  },
+  {
+    "frame": 322,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 474.8349514563107,
+        "slope": 0.0062110317479284,
+        "intercept_at_origin": 529.830025967088,
+        "parity_coefficient": 0.5409658242844267,
+        "parity_offset_difference": 1.0819316485688535,
+        "raw_mean": 0.5617007149345628,
+        "periodic_mean": 0.4631322408380546,
+        "n": 103
+      },
+      {
+        "axis": 0,
+        "origin": 514.0,
+        "slope": -0.010869565217391304,
+        "intercept_at_origin": 507.9583333333333,
+        "parity_coefficient": -0.041666666666666775,
+        "parity_offset_difference": 0.08333333333333355,
+        "raw_mean": 0.09927833271286134,
+        "periodic_mean": 0.10207336540935177,
+        "n": 23
+      }
+    ]
+  },
+  {
+    "frame": 332,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 489.25,
+        "slope": -8.586881206085195e-17,
+        "intercept_at_origin": 653.6666666666666,
+        "parity_coefficient": 0.6666666666666495,
+        "parity_offset_difference": 1.333333333333299,
+        "raw_mean": 0.5117370230355729,
+        "periodic_mean": 0.33333333333332477,
+        "n": 60
+      },
+      {
+        "axis": 0,
+        "origin": 624.0,
+        "slope": 0.0,
+        "intercept_at_origin": 513.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 366,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 475.74545454545455,
+        "slope": -0.0003323731442510627,
+        "intercept_at_origin": 675.3353937110971,
+        "parity_coefficient": 0.6646908929757743,
+        "parity_offset_difference": 1.3293817859515487,
+        "raw_mean": 0.5044632604060054,
+        "periodic_mean": 0.3303970165788938,
+        "n": 110
+      },
+      {
+        "axis": 0,
+        "origin": 693.5,
+        "slope": 0.0,
+        "intercept_at_origin": 512.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 32
+      }
+    ]
+  },
+  {
+    "frame": 369,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 878.5,
+        "slope": 0.0,
+        "intercept_at_origin": 322.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 18
+      },
+      {
+        "axis": 1,
+        "origin": 336.77777777777777,
+        "slope": 0.047938732921212965,
+        "intercept_at_origin": 893.3194449913157,
+        "parity_coefficient": 0.31249753907941447,
+        "parity_offset_difference": 0.6249950781588289,
+        "raw_mean": 0.5539770007654735,
+        "periodic_mean": 0.46787650076244996,
+        "n": 36
+      }
+    ]
+  },
+  {
+    "frame": 369,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 481.9879518072289,
+        "slope": 0.007616629999436032,
+        "intercept_at_origin": 895.8451513396777,
+        "parity_coefficient": 0.5346779181218538,
+        "parity_offset_difference": 1.0693558362437077,
+        "raw_mean": 0.5594887335624541,
+        "periodic_mean": 0.4697215129313594,
+        "n": 83
+      },
+      {
+        "axis": 0,
+        "origin": 860.5,
+        "slope": -0.023588709677419353,
+        "intercept_at_origin": 510.1774193548387,
+        "parity_coefficient": -0.00433467741935484,
+        "parity_offset_difference": 0.00866935483870968,
+        "raw_mean": 0.2739772597640559,
+        "periodic_mean": 0.2739872591620005,
+        "n": 62
+      }
+    ]
+  },
+  {
+    "frame": 373,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 920.0,
+        "slope": -0.013431013431013432,
+        "intercept_at_origin": 322.85164835164835,
+        "parity_coefficient": 0.005494505494505651,
+        "parity_offset_difference": 0.010989010989011302,
+        "raw_mean": 0.23343005406065315,
+        "periodic_mean": 0.2336876014024739,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 333.7857142857143,
+        "slope": 0.06768272697476535,
+        "intercept_at_origin": 936.0753441494592,
+        "parity_coefficient": 0.40753031792855016,
+        "parity_offset_difference": 0.8150606358571003,
+        "raw_mean": 0.5527636135004996,
+        "periodic_mean": 0.4910979571833201,
+        "n": 28
+      }
+    ]
+  },
+  {
+    "frame": 374,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 933.0,
+        "slope": 0.0,
+        "intercept_at_origin": 323.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      },
+      {
+        "axis": 1,
+        "origin": 333.4074074074074,
+        "slope": 0.043143297380588044,
+        "intercept_at_origin": 947.9774052062188,
+        "parity_coefficient": 0.4315430332379432,
+        "parity_offset_difference": 0.8630860664758864,
+        "raw_mean": 0.5726687518193073,
+        "periodic_mean": 0.5206918818955031,
+        "n": 27
+      }
+    ]
+  },
+  {
+    "frame": 376,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 957.0,
+        "slope": 0.00282258064516129,
+        "intercept_at_origin": 324.5145833333333,
+        "parity_coefficient": -0.04791666666666714,
+        "parity_offset_difference": 0.09583333333333428,
+        "raw_mean": 0.5342392365929064,
+        "periodic_mean": 0.5326374897688188,
+        "n": 31
+      },
+      {
+        "axis": 1,
+        "origin": 339.5,
+        "slope": 0.0,
+        "intercept_at_origin": 975.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 1.7484555314695156e-07,
+        "periodic_mean": 0.0,
+        "n": 16
+      }
+    ]
+  },
+  {
+    "frame": 377,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 480.20754716981133,
+        "slope": -0.00542763314454283,
+        "intercept_at_origin": 795.2164881609312,
+        "parity_coefficient": 0.5789549011741968,
+        "parity_offset_difference": 1.1579098023483936,
+        "raw_mean": 0.5498848084894826,
+        "periodic_mean": 0.43018191954010604,
+        "n": 106
+      },
+      {
+        "axis": 0,
+        "origin": 831.0,
+        "slope": 0.0,
+        "intercept_at_origin": 513.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 67
+      }
+    ]
+  },
+  {
+    "frame": 382,
+    "hypothesis": 1,
+    "physical": 2,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 499.6,
+        "slope": -0.04704952060887655,
+        "intercept_at_origin": 1048.2957907862624,
+        "parity_coefficient": 0.2941469423133663,
+        "parity_offset_difference": 0.5882938846267326,
+        "raw_mean": 0.5468672645044428,
+        "periodic_mean": 0.5384313884850298,
+        "n": 35
+      },
+      {
+        "axis": 0,
+        "origin": 1017.0,
+        "slope": 0.0,
+        "intercept_at_origin": 515.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 383,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 483.25,
+        "slope": -4.662069341687669e-17,
+        "intercept_at_origin": 1059.6666666666667,
+        "parity_coefficient": 0.6666666666666448,
+        "parity_offset_difference": 1.3333333333332895,
+        "raw_mean": 0.5078180241261547,
+        "periodic_mean": 0.33333333333337123,
+        "n": 92
+      },
+      {
+        "axis": 0,
+        "origin": 1023.5,
+        "slope": 0.0,
+        "intercept_at_origin": 515.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 62
+      }
+    ]
+  },
+  {
+    "frame": 384,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1054.0,
+        "slope": 0.0,
+        "intercept_at_origin": 327.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 21
+      },
+      {
+        "axis": 1,
+        "origin": 340.48275862068965,
+        "slope": 0.00499999999999998,
+        "intercept_at_origin": 1071.6599137931034,
+        "parity_coefficient": 0.6575000000000015,
+        "parity_offset_difference": 1.315000000000003,
+        "raw_mean": 0.5067411178173369,
+        "periodic_mean": 0.33240963800891604,
+        "n": 29
+      }
+    ]
+  },
+  {
+    "frame": 394,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 485.41052631578947,
+        "slope": -0.003910295948887542,
+        "intercept_at_origin": 993.2413732566546,
+        "parity_coefficient": 0.5942650932380369,
+        "parity_offset_difference": 1.1885301864760738,
+        "raw_mean": 0.5372971673671905,
+        "periodic_mean": 0.4142548761378249,
+        "n": 95
+      },
+      {
+        "axis": 0,
+        "origin": 1028.5,
+        "slope": 0.0,
+        "intercept_at_origin": 515.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 66
+      }
+    ]
+  },
+  {
+    "frame": 395,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 481.44347826086954,
+        "slope": 0.0015978877237631244,
+        "intercept_at_origin": 1197.7086066668908,
+        "parity_coefficient": 0.6405304089045374,
+        "parity_offset_difference": 1.2810608178090748,
+        "raw_mean": 0.5079335483599206,
+        "periodic_mean": 0.37061077046756885,
+        "n": 115
+      },
+      {
+        "axis": 0,
+        "origin": 1166.0,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 47
+      }
+    ]
+  },
+  {
+    "frame": 408,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 504.2903225806452,
+        "slope": -0.0515754694173632,
+        "intercept_at_origin": 1292.3444752637915,
+        "parity_coefficient": 0.21102425658794385,
+        "parity_offset_difference": 0.4220485131758877,
+        "raw_mean": 0.5075710394846317,
+        "periodic_mean": 0.5217847017606965,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 1257.0,
+        "slope": 0.020941300898995242,
+        "intercept_at_origin": 517.3935483870968,
+        "parity_coefficient": -0.006451612903225959,
+        "parity_offset_difference": 0.012903225806451918,
+        "raw_mean": 0.2523839830720267,
+        "periodic_mean": 0.2523499409365487,
+        "n": 61
+      }
+    ]
+  },
+  {
+    "frame": 409,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1279.5,
+        "slope": 0.0,
+        "intercept_at_origin": 328.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      },
+      {
+        "axis": 1,
+        "origin": 342.42105263157896,
+        "slope": 0.02189500640204599,
+        "intercept_at_origin": 1295.4439820742637,
+        "parity_coefficient": 0.4128681177977205,
+        "parity_offset_difference": 0.825736235595441,
+        "raw_mean": 0.564036078209786,
+        "periodic_mean": 0.38805983537752287,
+        "n": 38
+      }
+    ]
+  },
+  {
+    "frame": 422,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 481.25,
+        "slope": 1.0256552551712872e-16,
+        "intercept_at_origin": 1241.3333333333333,
+        "parity_coefficient": 0.6666666666665952,
+        "parity_offset_difference": 1.3333333333331905,
+        "raw_mean": 0.5064729857946414,
+        "periodic_mean": 0.33333333333337123,
+        "n": 112
+      },
+      {
+        "axis": 0,
+        "origin": 1272.0,
+        "slope": 0.0,
+        "intercept_at_origin": 518.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 51
+      }
+    ]
+  },
+  {
+    "frame": 472,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1402.5,
+        "slope": 0.0,
+        "intercept_at_origin": 330.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 340.1923076923077,
+        "slope": 0.04935275080905769,
+        "intercept_at_origin": 1420.2992697701436,
+        "parity_coefficient": 0.2773732470333912,
+        "parity_offset_difference": 0.5547464940667824,
+        "raw_mean": 0.5847650021386681,
+        "periodic_mean": 0.5695913704189294,
+        "n": 26
+      }
+    ]
+  },
+  {
+    "frame": 478,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 483.6796116504854,
+        "slope": -0.006420114732088245,
+        "intercept_at_origin": 1159.188892575568,
+        "parity_coefficient": 0.5603252098674859,
+        "parity_offset_difference": 1.1206504197349718,
+        "raw_mean": 0.5522342636062043,
+        "periodic_mean": 0.44443596985512845,
+        "n": 103
+      },
+      {
+        "axis": 0,
+        "origin": 1193.5,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 64
+      }
+    ]
+  },
+  {
+    "frame": 480,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 504.96153846153845,
+        "slope": -0.03441455696202236,
+        "intercept_at_origin": 1330.4529982148654,
+        "parity_coefficient": 0.15275580168772704,
+        "parity_offset_difference": 0.3055116033754541,
+        "raw_mean": 0.5577156210489697,
+        "periodic_mean": 0.5639918196070903,
+        "n": 26
+      },
+      {
+        "axis": 0,
+        "origin": 1293.5,
+        "slope": 0.02681992337164751,
+        "intercept_at_origin": 518.5,
+        "parity_coefficient": -0.013409961685823755,
+        "parity_offset_difference": 0.02681992337164751,
+        "raw_mean": 0.20816883962769478,
+        "periodic_mean": 0.20791647789322654,
+        "n": 56
+      }
+    ]
+  },
+  {
+    "frame": 511,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 340.5483870967742,
+        "slope": -0.054732041049027264,
+        "intercept_at_origin": 957.4295067495494,
+        "parity_coefficient": 0.48574686431024466,
+        "parity_offset_difference": 0.9714937286204893,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.39415756260294127,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 996.0,
+        "slope": 0.015254237288135594,
+        "intercept_at_origin": 326.89827586206894,
+        "parity_coefficient": 0.0017241379310348095,
+        "parity_offset_difference": 0.003448275862069619,
+        "raw_mean": 0.25032605791230716,
+        "periodic_mean": 0.2503309595330003,
+        "n": 59
+      }
+    ]
+  },
+  {
+    "frame": 512,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 502.1081081081081,
+        "slope": -0.04623513870542025,
+        "intercept_at_origin": 1137.563693812703,
+        "parity_coefficient": 0.4762219286657837,
+        "parity_offset_difference": 0.9524438573315674,
+        "raw_mean": 0.5019440188733928,
+        "periodic_mean": 0.3937384000471077,
+        "n": 37
+      },
+      {
+        "axis": 0,
+        "origin": 1106.0,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 51
+      }
+    ]
+  },
+  {
+    "frame": 515,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 504.18518518518516,
+        "slope": -0.07165706973768458,
+        "intercept_at_origin": 1102.2122580033647,
+        "parity_coefficient": 0.29718490083181087,
+        "parity_offset_difference": 0.5943698016636217,
+        "raw_mean": 0.5067702937054251,
+        "periodic_mean": 0.4947386538526128,
+        "n": 27
+      },
+      {
+        "axis": 0,
+        "origin": 1076.0,
+        "slope": 0.0,
+        "intercept_at_origin": 517.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 35
+      }
+    ]
+  },
+  {
+    "frame": 533,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 884.5,
+        "slope": 0.01510989010989011,
+        "intercept_at_origin": 327.15384615384613,
+        "parity_coefficient": -0.007554945054945056,
+        "parity_offset_difference": 0.015109890109890112,
+        "raw_mean": 0.23665571210849892,
+        "periodic_mean": 0.23687067938230358,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 342.26666666666665,
+        "slope": -0.004926108374388772,
+        "intercept_at_origin": 901.7214808180325,
+        "parity_coefficient": 0.6318853560233054,
+        "parity_offset_difference": 1.2637707120466108,
+        "raw_mean": 0.5091702512415494,
+        "periodic_mean": 0.3832565331336849,
+        "n": 45
+      }
+    ]
+  },
+  {
+    "frame": 538,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 359.1454545454545,
+        "slope": 0.0012757239323046231,
+        "intercept_at_origin": 657.3118923042401,
+        "parity_coefficient": 0.6538546938225694,
+        "parity_offset_difference": 1.3077093876451389,
+        "raw_mean": 0.5044797906266161,
+        "periodic_mean": 0.3519515850181488,
+        "n": 110
+      },
+      {
+        "axis": 0,
+        "origin": 693.0,
+        "slope": -0.02086499123319696,
+        "intercept_at_origin": 325.7120689655173,
+        "parity_coefficient": 0.012068965517241738,
+        "parity_offset_difference": 0.024137931034483476,
+        "raw_mean": 0.24469813469537743,
+        "periodic_mean": 0.2445217631861045,
+        "n": 59
+      }
+    ]
+  },
+  {
+    "frame": 538,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 480.3644859813084,
+        "slope": 0.0020384999130407906,
+        "intercept_at_origin": 847.7355673672586,
+        "parity_coefficient": 0.5940057196732456,
+        "parity_offset_difference": 1.1880114393464911,
+        "raw_mean": 0.5327573044334294,
+        "periodic_mean": 0.40597446485366523,
+        "n": 107
+      },
+      {
+        "axis": 0,
+        "origin": 830.0,
+        "slope": 0.0,
+        "intercept_at_origin": 510.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 27
+      }
+    ]
+  },
+  {
+    "frame": 565,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 494.1136363636364,
+        "slope": -0.04658914728682212,
+        "intercept_at_origin": 647.5416437632135,
+        "parity_coefficient": 0.4537596899224478,
+        "parity_offset_difference": 0.9075193798448956,
+        "raw_mean": 0.5070793675223878,
+        "periodic_mean": 0.41148460566798756,
+        "n": 44
+      },
+      {
+        "axis": 0,
+        "origin": 609.0,
+        "slope": 0.0,
+        "intercept_at_origin": 511.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 61
+      }
+    ]
+  },
+  {
+    "frame": 579,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 481.0,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 19
+      },
+      {
+        "axis": 1,
+        "origin": 341.07142857142856,
+        "slope": -0.010260611735328664,
+        "intercept_at_origin": 497.7647821513692,
+        "parity_coefficient": 0.5939574821245883,
+        "parity_offset_difference": 1.1879149642491766,
+        "raw_mean": 0.5434986003564355,
+        "periodic_mean": 0.4191408069820647,
+        "n": 42
+      }
+    ]
+  },
+  {
+    "frame": 610,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 220.5,
+        "slope": -0.05769230769230769,
+        "intercept_at_origin": 323.5,
+        "parity_coefficient": -0.009615384615384618,
+        "parity_offset_difference": 0.019230769230769235,
+        "raw_mean": 0.20753353998729107,
+        "periodic_mean": 0.2067567926547173,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 338.22641509433964,
+        "slope": -0.0030173943911973025,
+        "intercept_at_origin": 233.7132309639845,
+        "parity_coefficient": 0.6369910706971328,
+        "parity_offset_difference": 1.2739821413942656,
+        "raw_mean": 0.5081345747108555,
+        "periodic_mean": 0.3770661891437095,
+        "n": 53
+      }
+    ]
+  },
+  {
+    "frame": 614,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 344.64102564102564,
+        "slope": -0.03763230105840869,
+        "intercept_at_origin": 65.40982420167053,
+        "parity_coefficient": 0.5284202273618098,
+        "parity_offset_difference": 1.0568404547236196,
+        "raw_mean": 0.5426612759423995,
+        "periodic_mean": 0.3885518711744689,
+        "n": 39
+      },
+      {
+        "axis": 0,
+        "origin": 103.0,
+        "slope": -0.025343531241897848,
+        "intercept_at_origin": 327.5966748768473,
+        "parity_coefficient": -0.0104679802955668,
+        "parity_offset_difference": 0.0209359605911336,
+        "raw_mean": 0.2148427739795337,
+        "periodic_mean": 0.21496038368446785,
+        "n": 57
+      }
+    ]
+  },
+  {
+    "frame": 620,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 473.1504424778761,
+        "slope": 0.0038981688864576816,
+        "intercept_at_origin": 283.7809355108115,
+        "parity_coefficient": 0.5773506777873202,
+        "parity_offset_difference": 1.1547013555746404,
+        "raw_mean": 0.5458802499661319,
+        "periodic_mean": 0.4308686027810066,
+        "n": 113
+      },
+      {
+        "axis": 0,
+        "origin": 274.0,
+        "slope": -0.025,
+        "intercept_at_origin": 507.0625,
+        "parity_coefficient": 0.06250000000000025,
+        "parity_offset_difference": 0.1250000000000005,
+        "raw_mean": 0.14012166539587992,
+        "periodic_mean": 0.13995627049713877,
+        "n": 15
+      }
+    ]
+  },
+  {
+    "frame": 623,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 363.76635514018693,
+        "slope": 0.005483765168908001,
+        "intercept_at_origin": 127.17749154929682,
+        "parity_coefficient": 0.550848893362435,
+        "parity_offset_difference": 1.10169778672487,
+        "raw_mean": 0.5517442230456867,
+        "periodic_mean": 0.4509943608116303,
+        "n": 107
+      },
+      {
+        "axis": 0,
+        "origin": 146.5,
+        "slope": 0.0,
+        "intercept_at_origin": 328.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      }
+    ]
+  },
+  {
+    "frame": 635,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 496.4516129032258,
+        "slope": -0.05473204104903108,
+        "intercept_at_origin": 443.57049325045057,
+        "parity_coefficient": 0.4857468643101338,
+        "parity_offset_difference": 0.9714937286202676,
+        "raw_mean": 0.5073736170548857,
+        "periodic_mean": 0.3941575626029251,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 413.5,
+        "slope": -0.008205128205128205,
+        "intercept_at_origin": 510.0769230769231,
+        "parity_coefficient": 0.0041025641025641026,
+        "parity_offset_difference": 0.008205128205128205,
+        "raw_mean": 0.15524793851000301,
+        "periodic_mean": 0.1552610458699843,
+        "n": 52
+      }
+    ]
+  },
+  {
+    "frame": 648,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 556.5,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 30
+      },
+      {
+        "axis": 1,
+        "origin": 339.25,
+        "slope": -3.677613769070831e-16,
+        "intercept_at_origin": 571.6666666666666,
+        "parity_coefficient": 0.6666666666666403,
+        "parity_offset_difference": 1.3333333333332806,
+        "raw_mean": 0.5188156521093423,
+        "periodic_mean": 0.33333333333332016,
+        "n": 36
+      }
+    ]
+  },
+  {
+    "frame": 659,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 599.5,
+        "slope": 0.02727272727272727,
+        "intercept_at_origin": 326.9,
+        "parity_coefficient": -0.013636363636363636,
+        "parity_offset_difference": 0.02727272727272727,
+        "raw_mean": 0.18502399296310762,
+        "periodic_mean": 0.18538561320738145,
+        "n": 20
+      },
+      {
+        "axis": 1,
+        "origin": 345.23809523809524,
+        "slope": -0.0022222222222226602,
+        "intercept_at_origin": 609.6716931216931,
+        "parity_coefficient": 0.6722222222222333,
+        "parity_offset_difference": 1.3444444444444665,
+        "raw_mean": 0.5113156385028307,
+        "periodic_mean": 0.3460308916355433,
+        "n": 42
+      }
+    ]
+  },
+  {
+    "frame": 661,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 581.0,
+        "slope": 0.0,
+        "intercept_at_origin": 327.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 341.85714285714283,
+        "slope": -0.01640591047370466,
+        "intercept_at_origin": 599.80411467064,
+        "parity_coefficient": 0.568176879617541,
+        "parity_offset_difference": 1.136353759235082,
+        "raw_mean": 0.5471531077435255,
+        "periodic_mean": 0.43104855292878586,
+        "n": 42
+      }
+    ]
+  },
+  {
+    "frame": 678,
+    "hypothesis": 0,
+    "physical": 3,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 473.20652173913044,
+        "slope": -0.02381782523425617,
+        "intercept_at_origin": 231.30859975390874,
+        "parity_coefficient": 0.41303924532015557,
+        "parity_offset_difference": 0.8260784906403111,
+        "raw_mean": 0.5232724887766345,
+        "periodic_mean": 0.4424575034687254,
+        "n": 92
+      },
+      {
+        "axis": 0,
+        "origin": 268.0,
+        "slope": -0.020192307692307693,
+        "intercept_at_origin": 507.6770833333333,
+        "parity_coefficient": 0.010416666666666411,
+        "parity_offset_difference": 0.020833333333332822,
+        "raw_mean": 0.2347948782279685,
+        "periodic_mean": 0.23466616868506693,
+        "n": 65
+      }
+    ]
+  },
+  {
+    "frame": 679,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 471.65811965811963,
+        "slope": 0.0009815156724178602,
+        "intercept_at_origin": 411.68758343559495,
+        "parity_coefficient": 0.6534362378879591,
+        "parity_offset_difference": 1.3068724757759183,
+        "raw_mean": 0.5039542170916116,
+        "periodic_mean": 0.35393538329249336,
+        "n": 117
+      },
+      {
+        "axis": 0,
+        "origin": 394.5,
+        "slope": 0.0,
+        "intercept_at_origin": 506.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 26
+      }
+    ]
+  },
+  {
+    "frame": 695,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 537.5,
+        "slope": 0.05856643356643357,
+        "intercept_at_origin": 325.375,
+        "parity_coefficient": 0.01238344988344988,
+        "parity_offset_difference": 0.02476689976689976,
+        "raw_mean": 0.2189919421512229,
+        "periodic_mean": 0.21958779005524665,
+        "n": 24
+      },
+      {
+        "axis": 1,
+        "origin": 339.2916666666667,
+        "slope": -0.09322541966426731,
+        "intercept_at_origin": 552.0570204550645,
+        "parity_coefficient": 0.4631509078451805,
+        "parity_offset_difference": 0.926301815690361,
+        "raw_mean": 0.5148433201992316,
+        "periodic_mean": 0.41798744379472796,
+        "n": 24
+      }
+    ]
+  },
+  {
+    "frame": 704,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 580.5,
+        "slope": 0.054945054945054944,
+        "intercept_at_origin": 326.38461538461536,
+        "parity_coefficient": -0.027472527472527476,
+        "parity_offset_difference": 0.05494505494505495,
+        "raw_mean": 0.21770880969064976,
+        "periodic_mean": 0.21776114442843963,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 342.25,
+        "slope": 2.0296264668928643e-16,
+        "intercept_at_origin": 593.6666666666666,
+        "parity_coefficient": 0.6666666666666846,
+        "parity_offset_difference": 1.3333333333333692,
+        "raw_mean": 0.5171922884302115,
+        "periodic_mean": 0.3333333333333423,
+        "n": 40
+      }
+    ]
+  },
+  {
+    "frame": 710,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 573.5,
+        "slope": 0.0,
+        "intercept_at_origin": 324.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      },
+      {
+        "axis": 1,
+        "origin": 340.0344827586207,
+        "slope": -0.06366723259762054,
+        "intercept_at_origin": 588.0688996545871,
+        "parity_coefficient": 0.38476230899827907,
+        "parity_offset_difference": 0.7695246179965581,
+        "raw_mean": 0.5468150664200015,
+        "periodic_mean": 0.4919785370551024,
+        "n": 29
+      }
+    ]
+  },
+  {
+    "frame": 716,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 502.41379310344826,
+        "slope": -0.019354838709673326,
+        "intercept_at_origin": 597.7505164468457,
+        "parity_coefficient": 0.6156682027649115,
+        "parity_offset_difference": 1.231336405529823,
+        "raw_mean": 0.5129939358360427,
+        "periodic_mean": 0.3963027042597511,
+        "n": 29
+      },
+      {
+        "axis": 0,
+        "origin": 561.5,
+        "slope": 0.0,
+        "intercept_at_origin": 511.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 64
+      }
+    ]
+  },
+  {
+    "frame": 720,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 592.0,
+        "slope": 0.0,
+        "intercept_at_origin": 325.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 23
+      },
+      {
+        "axis": 1,
+        "origin": 342.52,
+        "slope": -0.015082854244166152,
+        "intercept_at_origin": 609.9017250108701,
+        "parity_coefficient": 0.4960795207497551,
+        "parity_offset_difference": 0.9921590414995102,
+        "raw_mean": 0.5882065745763544,
+        "periodic_mean": 0.5110942910713114,
+        "n": 50
+      }
+    ]
+  },
+  {
+    "frame": 754,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 639.0,
+        "slope": 0.06225296442687747,
+        "intercept_at_origin": 328.3901515151515,
+        "parity_coefficient": -0.026515151515152484,
+        "parity_offset_difference": 0.05303030303030497,
+        "raw_mean": 0.216223380811931,
+        "periodic_mean": 0.21485588368111555,
+        "n": 23
+      },
+      {
+        "axis": 1,
+        "origin": 343.2857142857143,
+        "slope": -0.0044965129083564155,
+        "intercept_at_origin": 653.7169083159998,
+        "parity_coefficient": 0.6348597006403099,
+        "parity_offset_difference": 1.2697194012806199,
+        "raw_mean": 0.5085233272099333,
+        "periodic_mean": 0.3794045533292126,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 763,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 500.4516129032258,
+        "slope": -0.0547320410490319,
+        "intercept_at_origin": 579.5704932504506,
+        "parity_coefficient": 0.4857468643101338,
+        "parity_offset_difference": 0.9714937286202676,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.3941575626029251,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 546.5,
+        "slope": 0.025123152709359605,
+        "intercept_at_origin": 513.4137931034483,
+        "parity_coefficient": -0.012561576354679803,
+        "parity_offset_difference": 0.025123152709359605,
+        "raw_mean": 0.2133528575109479,
+        "periodic_mean": 0.2133520782815354,
+        "n": 58
+      }
+    ]
+  },
+  {
+    "frame": 984,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 477.85714285714283,
+        "slope": -0.03022228989037763,
+        "intercept_at_origin": 340.0421524273534,
+        "parity_coefficient": 0.3785018270401846,
+        "parity_offset_difference": 0.7570036540803692,
+        "raw_mean": 0.5036965811668688,
+        "periodic_mean": 0.4496815777750595,
+        "n": 98
+      },
+      {
+        "axis": 0,
+        "origin": 305.0,
+        "slope": 0.0,
+        "intercept_at_origin": 509.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 57
+      }
+    ]
+  },
+  {
+    "frame": 1029,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 481.7456140350877,
+        "slope": 0.0003094059405924288,
+        "intercept_at_origin": 847.6646799548377,
+        "parity_coefficient": 0.6647586633663145,
+        "parity_offset_difference": 1.329517326732629,
+        "raw_mean": 0.5043163598837088,
+        "periodic_mean": 0.330499810478716,
+        "n": 114
+      },
+      {
+        "axis": 0,
+        "origin": 811.5,
+        "slope": 0.021169354838709676,
+        "intercept_at_origin": 518.6774193548387,
+        "parity_coefficient": 0.010584677419354838,
+        "parity_offset_difference": 0.021169354838709676,
+        "raw_mean": 0.23501000334668037,
+        "periodic_mean": 0.23498897504107108,
+        "n": 62
+      }
+    ]
+  },
+  {
+    "frame": 1039,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 492.6969696969697,
+        "slope": -0.02544406032067709,
+        "intercept_at_origin": 958.235795398101,
+        "parity_coefficient": 0.41319465140765466,
+        "parity_offset_difference": 0.8263893028153093,
+        "raw_mean": 0.5047011366601359,
+        "periodic_mean": 0.4149385300530877,
+        "n": 66
+      },
+      {
+        "axis": 0,
+        "origin": 927.983606557377,
+        "slope": 0.003997528363742916,
+        "intercept_at_origin": 521.0823214837922,
+        "parity_coefficient": -0.021610511319750874,
+        "parity_offset_difference": 0.04322102263950175,
+        "raw_mean": 0.173279931092449,
+        "periodic_mean": 0.17494812972778598,
+        "n": 61
+      }
+    ]
+  },
+  {
+    "frame": 1041,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 512.8,
+        "slope": -0.06666666666666128,
+        "intercept_at_origin": 979.5799999999999,
+        "parity_coefficient": 0.500000000000065,
+        "parity_offset_difference": 1.00000000000013,
+        "raw_mean": 0.5182247150640349,
+        "periodic_mean": 0.393792542300746,
+        "n": 25
+      },
+      {
+        "axis": 0,
+        "origin": 944.0,
+        "slope": 0.023665514592933947,
+        "intercept_at_origin": 521.5398185483871,
+        "parity_coefficient": -0.008568548387096631,
+        "parity_offset_difference": 0.017137096774193263,
+        "raw_mean": 0.20931783479595115,
+        "periodic_mean": 0.2094480985815444,
+        "n": 63
+      }
+    ]
+  },
+  {
+    "frame": 1043,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 510.8,
+        "slope": -0.0549999999999991,
+        "intercept_at_origin": 1001.6035,
+        "parity_coefficient": 0.5374999999999578,
+        "parity_offset_difference": 1.0749999999999156,
+        "raw_mean": 0.5292399651334047,
+        "periodic_mean": 0.36345069591995277,
+        "n": 25
+      },
+      {
+        "axis": 0,
+        "origin": 963.5,
+        "slope": 0.029926108374384235,
+        "intercept_at_origin": 521.8793103448276,
+        "parity_coefficient": -0.00227832512315271,
+        "parity_offset_difference": 0.00455665024630542,
+        "raw_mean": 0.27306404118461675,
+        "periodic_mean": 0.2730983934174824,
+        "n": 58
+      }
+    ]
+  },
+  {
+    "frame": 1047,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1028.5,
+        "slope": 0.0,
+        "intercept_at_origin": 338.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 347.9655172413793,
+        "slope": 0.04138370118845973,
+        "intercept_at_origin": 1045.8885347754815,
+        "parity_coefficient": 0.5563455008488857,
+        "parity_offset_difference": 1.1126910016977714,
+        "raw_mean": 0.525393204605974,
+        "periodic_mean": 0.4041385969529058,
+        "n": 29
+      }
+    ]
+  },
+  {
+    "frame": 1059,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": false,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1160.5,
+        "slope": 0.062062937062937064,
+        "intercept_at_origin": 341.5416666666667,
+        "parity_coefficient": -0.010635198135198132,
+        "parity_offset_difference": 0.021270396270396265,
+        "raw_mean": 0.20864379357889226,
+        "periodic_mean": 0.20941157208251412,
+        "n": 24
+      },
+      {
+        "axis": 1,
+        "origin": 352.1923076923077,
+        "slope": 0.04935275080905769,
+        "intercept_at_origin": 1176.2992697701436,
+        "parity_coefficient": 0.2773732470333912,
+        "parity_offset_difference": 0.5547464940667824,
+        "raw_mean": 0.5847650021386681,
+        "periodic_mean": 0.5695913704189294,
+        "n": 26
+      }
+    ]
+  },
+  {
+    "frame": 1062,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 492.7345132743363,
+        "slope": 0.0012893691139537371,
+        "intercept_at_origin": 1207.7061877463502,
+        "parity_coefficient": 0.6351014853059157,
+        "parity_offset_difference": 1.2702029706118314,
+        "raw_mean": 0.5164797302649932,
+        "periodic_mean": 0.3717150215073134,
+        "n": 113
+      },
+      {
+        "axis": 0,
+        "origin": 1173.0,
+        "slope": 0.022686409307244845,
+        "intercept_at_origin": 525.639247311828,
+        "parity_coefficient": 0.0059139784946245725,
+        "parity_offset_difference": 0.011827956989249145,
+        "raw_mean": 0.22321318006412919,
+        "periodic_mean": 0.22330023783514483,
+        "n": 61
+      }
+    ]
+  },
+  {
+    "frame": 1098,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 512.4516129032259,
+        "slope": -0.05473204104902399,
+        "intercept_at_origin": 1201.5704932504505,
+        "parity_coefficient": 0.4857468643101707,
+        "parity_offset_difference": 0.9714937286203414,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.394157562602921,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 1179.5,
+        "slope": 0.0,
+        "intercept_at_origin": 526.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 36
+      }
+    ]
+  },
+  {
+    "frame": 1108,
+    "hypothesis": 0,
+    "physical": 0,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 349.94871794871796,
+        "slope": -0.04034299714168997,
+        "intercept_at_origin": 907.4596433918606,
+        "parity_coefficient": 0.4617394855042739,
+        "parity_offset_difference": 0.9234789710085478,
+        "raw_mean": 0.5094041758034573,
+        "periodic_mean": 0.405947593731189,
+        "n": 39
+      },
+      {
+        "axis": 0,
+        "origin": 938.5,
+        "slope": 0.0,
+        "intercept_at_origin": 336.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 58
+      }
+    ]
+  },
+  {
+    "frame": 1111,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1044.0,
+        "slope": 0.07894736842105263,
+        "intercept_at_origin": 338.52777777777777,
+        "parity_coefficient": -0.02777777777777857,
+        "parity_offset_difference": 0.05555555555555714,
+        "raw_mean": 0.20726290165227917,
+        "periodic_mean": 0.20864596524603254,
+        "n": 19
+      },
+      {
+        "axis": 1,
+        "origin": 355.19565217391306,
+        "slope": -0.006079766536965289,
+        "intercept_at_origin": 1061.8101514983916,
+        "parity_coefficient": 0.5866515536992466,
+        "parity_offset_difference": 1.1733031073984932,
+        "raw_mean": 0.5283984050176452,
+        "periodic_mean": 0.4384767112096242,
+        "n": 46
+      }
+    ]
+  },
+  {
+    "frame": 1122,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 506.25714285714287,
+        "slope": -0.03781056396500248,
+        "intercept_at_origin": 942.0057400158761,
+        "parity_coefficient": 0.4532732962891562,
+        "parity_offset_difference": 0.9065465925783124,
+        "raw_mean": 0.563071408500062,
+        "periodic_mean": 0.4680172901965665,
+        "n": 35
+      },
+      {
+        "axis": 0,
+        "origin": 911.0,
+        "slope": 0.017900338655055636,
+        "intercept_at_origin": 521.2264957264957,
+        "parity_coefficient": -0.004273504273503585,
+        "parity_offset_difference": 0.00854700854700717,
+        "raw_mean": 0.26510950606818956,
+        "periodic_mean": 0.2650152198428259,
+        "n": 53
+      }
+    ]
+  },
+  {
+    "frame": 1132,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 482.25,
+        "slope": 2.200930410145574e-17,
+        "intercept_at_origin": 833.6666666666666,
+        "parity_coefficient": 0.666666666666682,
+        "parity_offset_difference": 1.333333333333364,
+        "raw_mean": 0.5064729857946416,
+        "periodic_mean": 0.333333333333341,
+        "n": 112
+      },
+      {
+        "axis": 0,
+        "origin": 806.5,
+        "slope": 0.0,
+        "intercept_at_origin": 519.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 44
+      }
+    ]
+  },
+  {
+    "frame": 1150,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 628.5,
+        "slope": 0.0,
+        "intercept_at_origin": 324.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 30
+      },
+      {
+        "axis": 1,
+        "origin": 340.1509433962264,
+        "slope": -0.0031556802244056877,
+        "intercept_at_origin": 643.751762315855,
+        "parity_coefficient": 0.5983924910993929,
+        "parity_offset_difference": 1.1967849821987857,
+        "raw_mean": 0.5333973435894074,
+        "periodic_mean": 0.41225059717889834,
+        "n": 53
+      }
+    ]
+  },
+  {
+    "frame": 1156,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 475.1,
+        "slope": 0.003841172202910285,
+        "intercept_at_origin": 617.7732460186228,
+        "parity_coefficient": 0.5930442458082945,
+        "parity_offset_difference": 1.186088491616589,
+        "raw_mean": 0.5366746200985691,
+        "periodic_mean": 0.4194063794800616,
+        "n": 120
+      },
+      {
+        "axis": 0,
+        "origin": 582.5,
+        "slope": 0.0,
+        "intercept_at_origin": 511.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 62
+      }
+    ]
+  },
+  {
+    "frame": 1160,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 589.0,
+        "slope": 0.0,
+        "intercept_at_origin": 326.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 343.7631578947368,
+        "slope": -0.06003732890916341,
+        "intercept_at_origin": 604.0544940553563,
+        "parity_coefficient": 0.43307661852872387,
+        "parity_offset_difference": 0.8661532370574477,
+        "raw_mean": 0.5340788089365484,
+        "periodic_mean": 0.46358669843441697,
+        "n": 38
+      }
+    ]
+  },
+  {
+    "frame": 1399,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 256.5,
+        "slope": 0.0,
+        "intercept_at_origin": 320.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      },
+      {
+        "axis": 1,
+        "origin": 336.9767441860465,
+        "slope": -0.048256407178441,
+        "intercept_at_origin": 273.76783677112115,
+        "parity_coefficient": 0.41076581422299596,
+        "parity_offset_difference": 0.8215316284459919,
+        "raw_mean": 0.5685147718343568,
+        "periodic_mean": 0.4679822387483969,
+        "n": 43
+      }
+    ]
+  },
+  {
+    "frame": 1406,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 343.5,
+        "slope": 0.0,
+        "intercept_at_origin": 322.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 16
+      },
+      {
+        "axis": 1,
+        "origin": 335.40909090909093,
+        "slope": -0.07973537604457073,
+        "intercept_at_origin": 354.0938483522049,
+        "parity_coefficient": 0.4919170314365406,
+        "parity_offset_difference": 0.9838340628730812,
+        "raw_mean": 0.5264784002661816,
+        "periodic_mean": 0.3788035306412683,
+        "n": 22
+      }
+    ]
+  },
+  {
+    "frame": 1414,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 429.0,
+        "slope": 0.05372405372405373,
+        "intercept_at_origin": 323.52197802197804,
+        "parity_coefficient": 0.09340659340659396,
+        "parity_offset_difference": 0.18681318681318793,
+        "raw_mean": 0.2188341404671256,
+        "periodic_mean": 0.2144061313550008,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 338.45714285714286,
+        "slope": -0.017738659444820504,
+        "intercept_at_origin": 445.8563233065738,
+        "parity_coefficient": 0.5310990747009595,
+        "parity_offset_difference": 1.062198149401919,
+        "raw_mean": 0.5485051937559532,
+        "periodic_mean": 0.47056078565232967,
+        "n": 35
+      }
+    ]
+  },
+  {
+    "frame": 1442,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 739.5,
+        "slope": 0.08104395604395605,
+        "intercept_at_origin": 330.61538461538464,
+        "parity_coefficient": -0.0364010989010989,
+        "parity_offset_difference": 0.0728021978021978,
+        "raw_mean": 0.26437516816299766,
+        "periodic_mean": 0.2626637445252301,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 346.26666666666665,
+        "slope": -0.004926108374381553,
+        "intercept_at_origin": 753.7214808180325,
+        "parity_coefficient": 0.6318853560233054,
+        "parity_offset_difference": 1.2637707120466108,
+        "raw_mean": 0.5091702512415494,
+        "periodic_mean": 0.38325653313368996,
+        "n": 45
+      }
+    ]
+  },
+  {
+    "frame": 1455,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 884.5,
+        "slope": 0.057692307692307696,
+        "intercept_at_origin": 334.34615384615387,
+        "parity_coefficient": -0.06730769230769232,
+        "parity_offset_difference": 0.13461538461538464,
+        "raw_mean": 0.2729649678042245,
+        "periodic_mean": 0.2687838304511255,
+        "n": 26
+      },
+      {
+        "axis": 1,
+        "origin": 350.575,
+        "slope": -0.04207119741100707,
+        "intercept_at_origin": 899.5340614886732,
+        "parity_coefficient": 0.47411003236242044,
+        "parity_offset_difference": 0.9482200647248409,
+        "raw_mean": 0.5015151638040535,
+        "periodic_mean": 0.392856362142059,
+        "n": 40
+      }
+    ]
+  },
+  {
+    "frame": 1462,
+    "hypothesis": 0,
+    "physical": 2,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 1,
+        "origin": 508.4516129032258,
+        "slope": -0.05473204104903209,
+        "intercept_at_origin": 973.5704932504506,
+        "parity_coefficient": 0.4857468643101707,
+        "parity_offset_difference": 0.9714937286203414,
+        "raw_mean": 0.5073667438988446,
+        "periodic_mean": 0.3941575626029318,
+        "n": 31
+      },
+      {
+        "axis": 0,
+        "origin": 940.5,
+        "slope": 0.02586206896551724,
+        "intercept_at_origin": 521.4827586206897,
+        "parity_coefficient": -0.012931034482758619,
+        "parity_offset_difference": 0.025862068965517238,
+        "raw_mean": 0.20843774220290198,
+        "periodic_mean": 0.2080160585765635,
+        "n": 58
+      }
+    ]
+  },
+  {
+    "frame": 1488,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1020.0,
+        "slope": 0.0,
+        "intercept_at_origin": 338.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      },
+      {
+        "axis": 1,
+        "origin": 354.3018867924528,
+        "slope": -0.006502890173406778,
+        "intercept_at_origin": 1035.7512605183015,
+        "parity_coefficient": 0.5993775011117065,
+        "parity_offset_difference": 1.198755002223413,
+        "raw_mean": 0.5322223898450696,
+        "periodic_mean": 0.4097164141069933,
+        "n": 53
+      }
+    ]
+  },
+  {
+    "frame": 1489,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1020.0,
+        "slope": 0.0,
+        "intercept_at_origin": 338.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      },
+      {
+        "axis": 1,
+        "origin": 354.3018867924528,
+        "slope": -0.006502890173406778,
+        "intercept_at_origin": 1035.7512605183015,
+        "parity_coefficient": 0.5993775011117065,
+        "parity_offset_difference": 1.198755002223413,
+        "raw_mean": 0.5322223898450696,
+        "periodic_mean": 0.4097164141069933,
+        "n": 53
+      }
+    ]
+  },
+  {
+    "frame": 1490,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1020.0,
+        "slope": 0.0,
+        "intercept_at_origin": 338.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      },
+      {
+        "axis": 1,
+        "origin": 354.70588235294116,
+        "slope": -0.06945522272232939,
+        "intercept_at_origin": 1036.0946092886945,
+        "parity_coefficient": 0.4130917274561459,
+        "parity_offset_difference": 0.8261834549122918,
+        "raw_mean": 0.5165097097752421,
+        "periodic_mean": 0.4651893012697126,
+        "n": 34
+      }
+    ]
+  },
+  {
+    "frame": 1491,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 1020.0,
+        "slope": 0.0,
+        "intercept_at_origin": 338.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 25
+      },
+      {
+        "axis": 1,
+        "origin": 354.70588235294116,
+        "slope": -0.06945522272232939,
+        "intercept_at_origin": 1036.0946092886945,
+        "parity_coefficient": 0.4130917274561459,
+        "parity_offset_difference": 0.8261834549122918,
+        "raw_mean": 0.5165097097752421,
+        "periodic_mean": 0.4651893012697126,
+        "n": 34
+      }
+    ]
+  },
+  {
+    "frame": 1500,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 999.0,
+        "slope": 0.0,
+        "intercept_at_origin": 338.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 353.2040816326531,
+        "slope": -0.005002601352707863,
+        "intercept_at_origin": 1015.7586640971672,
+        "parity_coefficient": 0.5930183695522352,
+        "parity_offset_difference": 1.1860367391044704,
+        "raw_mean": 0.5351650276780668,
+        "periodic_mean": 0.41726727066291414,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 1528,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 715.0,
+        "slope": 0.07142857142857142,
+        "intercept_at_origin": 330.4423076923077,
+        "parity_coefficient": -0.057692307692307224,
+        "parity_offset_difference": 0.11538461538461445,
+        "raw_mean": 0.32273530865513084,
+        "periodic_mean": 0.3182774198890151,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 348.3888888888889,
+        "slope": -0.016960651289007356,
+        "intercept_at_origin": 729.7850595507311,
+        "parity_coefficient": 0.6086160108548258,
+        "parity_offset_difference": 1.2172320217096515,
+        "raw_mean": 0.5241585621533045,
+        "periodic_mean": 0.4125895375802387,
+        "n": 36
+      }
+    ]
+  },
+  {
+    "frame": 1536,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 625.5,
+        "slope": 0.04196428571428572,
+        "intercept_at_origin": 328.26666666666665,
+        "parity_coefficient": -0.04568452380952381,
+        "parity_offset_difference": 0.09136904761904761,
+        "raw_mean": 0.28814981422441066,
+        "periodic_mean": 0.287802256950507,
+        "n": 30
+      },
+      {
+        "axis": 1,
+        "origin": 343.2916666666667,
+        "slope": -0.09322541966427064,
+        "intercept_at_origin": 642.0570204550645,
+        "parity_coefficient": 0.4631509078451805,
+        "parity_offset_difference": 0.926301815690361,
+        "raw_mean": 0.5148433201992316,
+        "periodic_mean": 0.41798744379471847,
+        "n": 24
+      }
+    ]
+  },
+  {
+    "frame": 1552,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 446.0,
+        "slope": 0.0,
+        "intercept_at_origin": 324.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 27
+      },
+      {
+        "axis": 1,
+        "origin": 339.1224489795918,
+        "slope": -0.0029645440531246214,
+        "intercept_at_origin": 463.7588863720515,
+        "parity_coefficient": 0.592582710779074,
+        "parity_offset_difference": 1.185165421558148,
+        "raw_mean": 0.535986951839174,
+        "periodic_mean": 0.41839091880164014,
+        "n": 49
+      }
+    ]
+  },
+  {
+    "frame": 1573,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 212.5,
+        "slope": 0.0,
+        "intercept_at_origin": 320.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 30
+      },
+      {
+        "axis": 1,
+        "origin": 335.0487804878049,
+        "slope": -0.03951067548058722,
+        "intercept_at_origin": 229.57432065544725,
+        "parity_coefficient": 0.4972266545095467,
+        "parity_offset_difference": 0.9944533090190933,
+        "raw_mean": 0.5186886756858443,
+        "periodic_mean": 0.3931839671577737,
+        "n": 41
+      }
+    ]
+  },
+  {
+    "frame": 1666,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 216.5,
+        "slope": 0.030357142857142857,
+        "intercept_at_origin": 319.7,
+        "parity_coefficient": 0.018154761904761906,
+        "parity_offset_difference": 0.03630952380952381,
+        "raw_mean": 0.30764160096056675,
+        "periodic_mean": 0.3077153870091787,
+        "n": 30
+      },
+      {
+        "axis": 1,
+        "origin": 333.2439024390244,
+        "slope": -0.005360249201019352,
+        "intercept_at_origin": 231.72697653330755,
+        "parity_coefficient": 0.6282839111614665,
+        "parity_offset_difference": 1.256567822322933,
+        "raw_mean": 0.5099524216763917,
+        "periodic_mean": 0.38784577982626195,
+        "n": 41
+      }
+    ]
+  },
+  {
+    "frame": 1669,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 248.5,
+        "slope": 0.0,
+        "intercept_at_origin": 320.0,
+        "parity_coefficient": 0.0,
+        "parity_offset_difference": 0.0,
+        "raw_mean": 0,
+        "periodic_mean": 0.0,
+        "n": 28
+      },
+      {
+        "axis": 1,
+        "origin": 333.2439024390244,
+        "slope": -0.008495489299729306,
+        "intercept_at_origin": 265.7767175244874,
+        "parity_coefficient": 0.578789595048365,
+        "parity_offset_difference": 1.15757919009673,
+        "raw_mean": 0.5398910104812278,
+        "periodic_mean": 0.4304308802652941,
+        "n": 41
+      }
+    ]
+  },
+  {
+    "frame": 1673,
+    "hypothesis": 0,
+    "physical": 1,
+    "both_periodic_residual_pass": true,
+    "arcs": [
+      {
+        "axis": 0,
+        "origin": 294.0,
+        "slope": 0.07894736842105263,
+        "intercept_at_origin": 320.52777777777777,
+        "parity_coefficient": -0.02777777777777857,
+        "parity_offset_difference": 0.05555555555555714,
+        "raw_mean": 0.20726290165227917,
+        "periodic_mean": 0.20864596524603254,
+        "n": 19
+      },
+      {
+        "axis": 1,
+        "origin": 336.0869565217391,
+        "slope": -0.009136167186388813,
+        "intercept_at_origin": 311.7565910750517,
+        "parity_coefficient": 0.599855024891962,
+        "parity_offset_difference": 1.199710049783924,
+        "raw_mean": 0.5398735259237109,
+        "periodic_mean": 0.4122651237779073,
+        "n": 46
+      }
+    ]
+  }
+]

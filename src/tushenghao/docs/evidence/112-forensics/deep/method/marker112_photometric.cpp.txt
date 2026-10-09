@@ -1,0 +1,26 @@
+// 中文用途：对消融找到的原始支持弧复核灰度等值边界；保持200/0.5，输出量测证据而非生产Detection。
+#include <opencv2/opencv.hpp>
+#include "core/observed_geometry_utils.hpp"
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <map>
+struct E{int f,h,p;std::vector<cv::Point2d> raw[2],turn;cv::Point2d corner;double mean[2];};
+double grayAt(const cv::Mat&m,cv::Point2d p){if(p.x<1||p.y<1||p.x>=m.cols-2||p.y>=m.rows-2)return NAN;int x=int(p.x),y=int(p.y);double a=p.x-x,b=p.y-y;return (1-a)*(1-b)*m.at<uchar>(y,x)+a*(1-b)*m.at<uchar>(y,x+1)+(1-a)*b*m.at<uchar>(y+1,x)+a*b*m.at<uchar>(y+1,x+1);}
+cv::Point2d refine(const cv::Mat&g,cv::Point2d p,cv::Point2d normal,bool &ok){std::vector<double>cross;
+ double prev=grayAt(g,p-normal*2)-200;
+ for(int i=1;i<=32;++i){double t=-2+i*.125,v=grayAt(g,p+normal*t)-200;if((prev<0&&v>=0)||(prev>=0&&v<0)){double root=t-.125+.125*(-prev)/(v-prev);if(cross.empty()||std::abs(root-cross.back())>.001)cross.push_back(root);}prev=v;}
+ ok=cross.size()==1;return ok?p+normal*cross[0]:p;}
+cv::Vec4d fit(const std::vector<cv::Point2d>&a){cv::Vec4d l;cv::fitLine(a,l,cv::DIST_L2,0,.01,.01);double n=std::hypot(l[0],l[1]);l[0]/=n;l[1]/=n;return l;}
+double mean(const std::vector<cv::Point2d>&a,cv::Vec4d l){double sum=0;for(auto q:a)sum+=std::abs(l[0]*(q.y-l[3])-l[1]*(q.x-l[2]));return sum/a.size();}
+int main(int argc,char**argv){std::ifstream f(argv[1]);std::string line;std::map<int,std::vector<E>>rows;while(std::getline(f,line)){cv::FileStorage fs(line,cv::FileStorage::READ|cv::FileStorage::MEMORY|cv::FileStorage::FORMAT_JSON);if(int(fs["success"])!=1)continue;E e;e.f=fs["frame"];e.h=fs["hypothesis"];e.p=fs["physical"];int side=0;for(auto a:fs["support_arcs"]){for(auto q:a){auto it=q.begin();double x=*it;++it;double y=*it;e.raw[side].emplace_back(x,y);}++side;}for(auto q:fs["turn_arc"]){auto it=q.begin();double x=*it;++it;e.turn.emplace_back(x,double(*it));}auto it=fs["corner"].begin();e.corner.x=*it;++it;e.corner.y=*it;rows[e.f].push_back(e);}
+ cv::VideoCapture cap("data/raw/marker_video.avi");cv::Mat img,g;int fid=0;std::cout<<std::setprecision(17);
+ while(cap.read(img)){if(rows.count(fid)){cv::cvtColor(img,g,cv::COLOR_BGR2GRAY);for(auto&e:rows[fid]){cv::Vec4d ls[2];std::vector<cv::Point2d>a[2];int unresolved=0;double maxshift=0;for(int j=0;j<2;++j){auto l=fit(e.raw[j]);cv::Point2d normal{-l[1],l[0]};for(auto p:e.raw[j]){bool ok;auto q=refine(g,p,normal,ok);if(!ok)++unresolved;maxshift=std::max(maxshift,cv::norm(q-p));a[j].push_back(q);}ls[j]=fit(a[j]);}
+ cv::Point2d v{ls[0][0],ls[0][1]},w{ls[1][0],ls[1][1]},p{ls[0][2],ls[0][3]},q{ls[1][2],ls[1][3]},d=q-p;double cross=v.x*w.y-v.y*w.x;auto corner=p+v*((d.x*w.y-d.y*w.x)/cross);
+ double means[]={mean(a[0],ls[0]),mean(a[1],ls[1])};double span[2],ext[2];for(int j=0;j<2;++j){double lo=INFINITY,hi=-INFINITY;cv::Point2d v{ls[j][0],ls[j][1]};for(auto p:a[j]){double t=(p-corner).dot(v);lo=std::min(lo,t);hi=std::max(hi,t);}span[j]=hi-lo;ext[j]=lo>0?lo:hi<0?-hi:0;}
+ double length=0;for(size_t k=1;k<e.turn.size();++k)length+=cv::norm(e.turn[k]-e.turn[k-1]);double ce=mark::observed::boundaryDistance(corner,e.turn,false);
+ bool eligible=!unresolved&&means[0]<=.5&&means[1]<=.5&&span[0]>=14&&span[1]>=14&&ext[0]<=9.5&&ext[1]<=9.5&&length<=13.5&&ce<=4.131595359474918&&mark::observed::angleDeg(v,w)>=5;
+ std::cout<<"{\"frame\":"<<fid<<",\"hypothesis\":"<<e.h<<",\"physical\":"<<e.p<<",\"unresolved_crossings\":"<<unresolved<<",\"max_normal_shift\":"<<maxshift<<",\"raw_mean\":["<<mean(e.raw[0],fit(e.raw[0]))<<","<<mean(e.raw[1],fit(e.raw[1]))<<"],\"refined_mean\":["<<means[0]<<","<<means[1]<<"],\"refined_span\":["<<span[0]<<","<<span[1]<<"],\"refined_extension\":["<<ext[0]<<","<<ext[1]<<"],\"corner\":["<<corner.x<<","<<corner.y<<"],\"corner_delta\":"<<cv::norm(corner-e.corner)<<",\"raw_turn_length\":"<<length<<",\"corner_to_raw_turn\":"<<ce<<",\"local_quality_pass\":"<<eligible<<",\"refined_arcs\":[";
+ for(int j=0;j<2;++j){if(j)std::cout<<",";std::cout<<"[";bool first=true;for(auto p:a[j]){if(!first)std::cout<<",";first=false;std::cout<<"["<<p.x<<","<<p.y<<"]";}std::cout<<"]";}std::cout<<"]}\n";
+ }}++fid;}
+}

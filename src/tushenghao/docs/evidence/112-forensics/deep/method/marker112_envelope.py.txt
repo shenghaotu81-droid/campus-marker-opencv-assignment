@@ -1,0 +1,20 @@
+# 中文用途：以组件外侧方向预先决定每扫描行/列唯一外边像素，核对轮廓回走表示是否导致残差；不按残差挑点。
+import shlex,json,math,statistics,pathlib
+p=pathlib.Path('docs/evidence/112-forensics/deep');rings={}
+for line in (p/'failed_corner_inputs.txt').read_text().splitlines():
+ t=shlex.split(line);n=int(t[4]);ring=[tuple(map(int,t[13+2*i:15+2*i])) for i in range(n)];rings[tuple(map(int,t[:3]))]=ring
+
+def fit(a):
+ cx=sum(x for x,y in a)/len(a);cy=sum(y for x,y in a)/len(a);xx=sum((x-cx)**2 for x,y in a);yy=sum((y-cy)**2 for x,y in a);xy=sum((x-cx)*(y-cy) for x,y in a);ang=.5*math.atan2(2*xy,xx-yy);v=(math.cos(ang),math.sin(ang));mean=sum(abs(v[0]*(y-cy)-v[1]*(x-cx)) for x,y in a)/len(a);return {'line':[v[0],v[1],cx,cy],'mean':mean}
+rows=[]
+for r in map(json.loads,(p/'probe-residual-evidence.jsonl').open()):
+ if not r['success']:continue
+ ring=rings[r['frame'],r['hypothesis'],r['physical']];center=[(min(q[k] for q in ring)+max(q[k] for q in ring))/2 for k in [0,1]];arcs=[];fits=[]
+ for i,a in enumerate(r['support_arcs']):
+  xr=max(x for x,y in a)-min(x for x,y in a);yr=max(y for x,y in a)-min(y for x,y in a);axis=1 if yr>xr else 0;orth=1-axis;outward=1 if sum(q[orth] for q in a)/len(a)>center[orth] else -1;groups={}
+  for q in a:groups.setdefault(q[axis],[]).append(q)
+  env=[max(qs,key=lambda q:outward*q[orth]) for _,qs in sorted(groups.items())];f=fit(env);fits.append(f);arcs.append({'axis':axis,'outward_sign':outward,'raw_count':len(a),'unique_pixel_count':len(set(map(tuple,a))),'scanline_count':len(env),'raw_mean':r['support_mean'][i],'envelope_mean':f['mean'],'canonical_points':env,'line':f['line']})
+ l,m=[f['line'] for f in fits];v=l[:2];w=m[:2];d=(m[2]-l[2],m[3]-l[3]);cross=v[0]*w[1]-v[1]*w[0];t=(d[0]*w[1]-d[1]*w[0])/cross;corner=[l[2]+v[0]*t,l[3]+v[1]*t];delta=math.dist(corner,r['corner'])
+ rows.append({'frame':r['frame'],'hypothesis':r['hypothesis'],'physical':r['physical'],'both_envelope_residual_pass':all(f['mean']<=.5 for f in fits),'corner':corner,'corner_delta':delta,'arcs':arcs})
+(p/'envelope-refit.json').write_text(json.dumps(rows,indent=2)+'\n')
+print('pass',sum(r['both_envelope_residual_pass'] for r in rows),'/',len(rows));print('max envelope residual median max',statistics.median(max(a['envelope_mean'] for a in r['arcs']) for r in rows),max(max(a['envelope_mean'] for a in r['arcs']) for r in rows));print('fail',[(r['frame'],r['physical'],[a['envelope_mean'] for a in r['arcs']]) for r in rows if not r['both_envelope_residual_pass']]);print('corner delta median max',statistics.median(r['corner_delta'] for r in rows),max(r['corner_delta'] for r in rows))

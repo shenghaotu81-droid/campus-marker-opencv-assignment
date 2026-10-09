@@ -1,0 +1,343 @@
+{
+  "baseline-threads1": {
+    "detected": 976,
+    "ms": {
+      "mean": 76.97848077446301,
+      "p50": 79.700684,
+      "p95": 194.556989,
+      "p99": 253.957214,
+      "max": 339.47796,
+      "over33": 1056
+    }
+  },
+  "baseline-repeat": {
+    "detected": 976,
+    "ms": {
+      "mean": 76.7913838627685,
+      "p50": 79.312708,
+      "p95": 192.636026,
+      "p99": 253.466198,
+      "max": 333.602321,
+      "over33": 1057
+    }
+  },
+  "ab-naive-threads1": {
+    "detected": 996,
+    "ms": {
+      "mean": 97.88280749940334,
+      "p50": 80.743418,
+      "p95": 225.050931,
+      "p99": 896.970044,
+      "max": 1137.638574,
+      "over33": 1082
+    }
+  },
+  "ab-optimized-threads1": {
+    "detected": 996,
+    "ms": {
+      "mean": 34.33458684606205,
+      "p50": 29.334113,
+      "p95": 70.525052,
+      "p99": 337.931824,
+      "max": 474.701531,
+      "over33": 717
+    }
+  },
+  "c1-threads1": {
+    "detected": 1082,
+    "ms": {
+      "mean": 37.3601152297136,
+      "p50": 29.638097,
+      "p95": 76.489313,
+      "p99": 381.275861,
+      "max": 901.610689,
+      "over33": 733
+    }
+  },
+  "c2-threads1": {
+    "detected": 1074,
+    "ms": {
+      "mean": 37.83314947136038,
+      "p50": 29.527366,
+      "p95": 76.259017,
+      "p99": 397.369418,
+      "max": 896.123866,
+      "over33": 731
+    }
+  },
+  "c1median-threads1": {
+    "detected": 1087,
+    "ms": {
+      "mean": 37.45319056980907,
+      "p50": 29.594611,
+      "p95": 77.389943,
+      "p99": 392.829255,
+      "max": 583.886402,
+      "over33": 735
+    }
+  },
+  "c1median-fast-threads1": {
+    "detected": 1087,
+    "ms": {
+      "mean": 31.126693553699283,
+      "p50": 22.943425,
+      "p95": 62.630709,
+      "p99": 378.899313,
+      "max": 543.127264,
+      "over33": 469
+    }
+  },
+  "final-first": {
+    "detected": 1088,
+    "ms": {
+      "mean": 35.89652262350835,
+      "p50": 22.865569,
+      "p95": 62.771535,
+      "p99": 373.755666,
+      "max": 8671.996924,
+      "over33": 463
+    }
+  },
+  "lad-dedup-exploratory": {
+    "detected": 1088,
+    "ms": {
+      "mean": 34.06209938245823,
+      "p50": 23.136394,
+      "p95": 64.220024,
+      "p99": 384.688809,
+      "max": 4798.276787,
+      "over33": 488
+    }
+  },
+  "final-repeat1": {
+    "detected": 1088,
+    "ms": {
+      "mean": 34.11185527804296,
+      "p50": 23.268035,
+      "p95": 64.597174,
+      "p99": 378.182723,
+      "max": 4984.286175,
+      "over33": 478
+    }
+  },
+  "final-repeat2": {
+    "detected": 1088,
+    "ms": {
+      "mean": 33.93217228699284,
+      "p50": 23.067881,
+      "p95": 62.314811,
+      "p99": 376.045101,
+      "max": 4988.655623,
+      "over33": 476
+    }
+  },
+  "final-profile": {
+    "detected": 1088,
+    "ms": {
+      "mean": 34.06573134606205,
+      "p50": 23.131969,
+      "p95": 63.998721,
+      "p99": 378.510233,
+      "max": 4964.104754,
+      "over33": 478
+    }
+  }
+}
+{
+  "independent-calibration": {
+    "positive_count": 25,
+    "accepted": 24,
+    "rejected_ids": [
+      2
+    ],
+    "max_truth_error": 1.4972196277587357,
+    "errors_over2_ids": [],
+    "negative_count": 0,
+    "negative_accepted_ids": [],
+    "tamper_not_rejected_ids": [],
+    "tamper_checked_count": 11,
+    "by_perturbation": {
+      "(0, 0)": {
+        "total": 6,
+        "accepted": 6
+      },
+      "(0, 1)": {
+        "total": 6,
+        "accepted": 6
+      },
+      "(1, 0)": {
+        "total": 6,
+        "accepted": 6
+      },
+      "(1, 1)": {
+        "total": 6,
+        "accepted": 6
+      },
+      "(2, 0)": {
+        "total": 1,
+        "accepted": 0
+      },
+      "(2, 1)": {
+        "total": 0,
+        "accepted": 0
+      }
+    }
+  },
+  "independent-test-c1": {
+    "positive_count": 68,
+    "accepted": 67,
+    "rejected_ids": [
+      2
+    ],
+    "max_truth_error": 1.4011579371366418,
+    "errors_over2_ids": [],
+    "negative_count": 20,
+    "negative_accepted_ids": [],
+    "tamper_not_rejected_ids": [],
+    "tamper_checked_count": 25,
+    "by_perturbation": {
+      "(0, 0)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(0, 1)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(1, 0)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(1, 1)": {
+        "total": 16,
+        "accepted": 16
+      },
+      "(2, 0)": {
+        "total": 1,
+        "accepted": 0
+      },
+      "(2, 1)": {
+        "total": 0,
+        "accepted": 0
+      }
+    }
+  },
+  "independent-test-c2": {
+    "positive_count": 68,
+    "accepted": 52,
+    "rejected_ids": [
+      2,
+      4,
+      7,
+      10,
+      16,
+      22,
+      28,
+      34,
+      37,
+      40,
+      46,
+      61,
+      64,
+      70,
+      82,
+      88
+    ],
+    "max_truth_error": 1.2243585052215673,
+    "errors_over2_ids": [],
+    "negative_count": 20,
+    "negative_accepted_ids": [],
+    "tamper_not_rejected_ids": [],
+    "tamper_checked_count": 10,
+    "by_perturbation": {
+      "(0, 0)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(0, 1)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(1, 0)": {
+        "total": 17,
+        "accepted": 14
+      },
+      "(1, 1)": {
+        "total": 16,
+        "accepted": 4
+      },
+      "(2, 0)": {
+        "total": 1,
+        "accepted": 0
+      },
+      "(2, 1)": {
+        "total": 0,
+        "accepted": 0
+      }
+    }
+  },
+  "independent-test-baseline": {
+    "positive_count": 68,
+    "accepted": 42,
+    "rejected_ids": [
+      2,
+      4,
+      7,
+      10,
+      13,
+      16,
+      19,
+      22,
+      25,
+      28,
+      31,
+      34,
+      37,
+      40,
+      43,
+      46,
+      49,
+      55,
+      61,
+      64,
+      70,
+      73,
+      82,
+      85,
+      88,
+      97
+    ],
+    "max_truth_error": 0.8875876964896425,
+    "errors_over2_ids": [],
+    "negative_count": 20,
+    "negative_accepted_ids": [],
+    "tamper_not_rejected_ids": [],
+    "tamper_checked_count": 0,
+    "by_perturbation": {
+      "(0, 0)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(0, 1)": {
+        "total": 17,
+        "accepted": 17
+      },
+      "(1, 0)": {
+        "total": 17,
+        "accepted": 4
+      },
+      "(1, 1)": {
+        "total": 16,
+        "accepted": 4
+      },
+      "(2, 0)": {
+        "total": 1,
+        "accepted": 0
+      },
+      "(2, 1)": {
+        "total": 0,
+        "accepted": 0
+      }
+    }
+  }
+}

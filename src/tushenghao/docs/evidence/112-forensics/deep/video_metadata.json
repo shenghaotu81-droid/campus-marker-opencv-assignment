@@ -1,0 +1,17 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "codec_name": "h264",
+            "width": 1440,
+            "height": 1080,
+            "pix_fmt": "yuv420p",
+            "field_order": "progressive",
+            "r_frame_rate": "4400521/62500",
+            "avg_frame_rate": "4400521/62500",
+            "nb_frames": "1676"
+        }
+    ]
+}

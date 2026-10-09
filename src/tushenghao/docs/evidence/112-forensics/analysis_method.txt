@@ -1,0 +1,44 @@
+# 中文用途：只读取本次逐帧证据，统计指定112帧；不修改检测器或阈值。
+import json,csv,re,collections,hashlib,pathlib
+root=pathlib.Path.cwd(); out=root/'docs/evidence/112-forensics'
+selpath=root/'src/tushenghao/docs/evidence/final-fixes/fix2-sweep/flicker_sequence.json'
+sel=json.loads(selpath.read_text()); ids={i for r in sel['runs'] for i in range(r['first'],r['last']+1)}
+rows=[json.loads(l) for l in (out/'run/frames.jsonl').open()]; chosen=[r for r in rows if int(r['frame_id']) in ids]
+assert len(rows)==1676 and len(ids)==len(chosen)==112
+C=lambda k:sum(int(r['counts'][k]) for r in chosen)
+stages=[('geometry_validation',C('generated'),C('generated')-C('validated'),C('validated'))]
+# 补全可分支，不能将输出数之差误称拒绝数；根据逐假设assignment事件计数。
+reject=collections.Counter();frames=collections.defaultdict(set);gates=collections.Counter();corners=collections.Counter(); primary=collections.Counter()
+for r in chosen:
+ ds=r['result']['diagnostics']; fid=int(r['frame_id'])
+ for s in ds:
+  m=re.match(r'(corner|assignment|screen|validator)/(\d+)/(.*)',s)
+  if m:
+   stage,_,detail=m.groups();reason=detail.split(':')[0];reject[stage+'/'+reason]+=1;frames[stage+'/'+reason].add(fid)
+   p=re.search(r': P(\d)',detail)
+   if p:corners[p[1]]+=1
+   if reason=='NO_VALID_ADJACENT_EDGES':
+    for k,v in re.findall(r'([a-z_]+)=(\d+)',detail):
+     if k not in ('polygon','eligible_arcs'):gates[k]+=int(v)
+  elif s.startswith('hypothesis rejected:') or s.startswith('UNRESOLVED_COMPETING'):
+   reject[s]+=1;frames[s].add(fid)
+ primary[next((s.split(':')[0] for s in ds if s.startswith('corner/')),next((s for s in ds if s.startswith('UNRESOLVED_COMPETING')),'other'))]+=1
+cornerfail=sum(v for k,v in reject.items() if k.startswith('corner/'))
+assignmentfail=sum(v for k,v in reject.items() if k.startswith('assignment/'))
+validatorfail=sum(v for k,v in reject.items() if k.startswith(('validator/','screen/')))
+stages += [('assignment_admission',C('completed'),assignmentfail,C('completed')-assignmentfail),('corner_resolution',C('completed')-assignmentfail,cornerfail,C('completed')-assignmentfail-cornerfail),('screen_and_evidence_validation',C('completed')-assignmentfail-cornerfail,validatorfail,C('measurements')),('semantic_and_publication',C('measurements'),C('measurements')-C('detections'),C('detections'))]
+assert all(a==b+c and min(a,b,c)>=0 for _,a,b,c in stages)
+with (out/'forensics_summary.csv').open('w') as f:
+ w=csv.writer(f);w.writerow(['stage','entered','rejected','passed']);w.writerows(stages)
+def dist(v):
+ v=sorted(v);return {'n':len(v),'min':v[0] if v else None,'median':v[len(v)//2] if v else None,'max':v[-1] if v else None,'values':v}
+nums={}
+for k in gates:
+ nums[k]={'actual_value_distribution':None,'threshold':None,'note':'需进一步取证：日志仅有门控计数，合并原因且没有被拒候选的实际值。'}
+data={'total_frames':len(rows),'selected_frames':len(chosen),'selected_ids':sorted(ids),'statuses_all':dict(collections.Counter(str(r['result_status']) for r in rows)),'statuses_selected':dict(collections.Counter(str(r['result_status']) for r in chosen)),'counts_selected':{k:C(k) for k in ['components','observations','generated','validated','completed','measurements','detections','tracks']},'candidate_rejections':[{'reason':k,'occurrences':v,'frame_count':len(frames[k]),'frame_ids':sorted(frames[k])} for k,v in reject.most_common()],'failed_corner_counts':dict(corners),'internal_gate_rejections_failed_calls_only':dict(gates.most_common()),'numeric_rejected_values':nums,'production_thresholds':{'max_line_fit_error':0.5,'max_edge_position_distance_px':9.0},'timings_selected_us':{s:dist([t['elapsed_us'] for r in chosen for t in r['timings'] if t['stage']==s and t['status']=='MEASURED']) for s in ['preprocess','detect','decode','stabilize','process_total']},'truncated_selected':sum(bool(r['counts']['truncated']) for r in chosen),'notes':['仅使用result.diagnostics一次；不重复累加events和details内相同诊断。','角点按首次失败短路；后续角没有执行，不计为通过或拒绝。','内部弧/弧对次数不是假设数，更不是失败帧数。','preprocess以帧为单位；components→observations→generated的单位不同，不能相减得候选拒绝数。','assignment completion可产生分支，validated与completed差额不代表拒绝数。']}
+(out/'rejection_distribution.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+with (out/'selected_frames.jsonl').open('w') as f:
+ for r in chosen:f.write(json.dumps(r,ensure_ascii=False,separators=(',',':'))+'\n')
+manifest={'git_head':None,'sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [selpath,root/'data/raw/marker_video.avi',out/'run/frames.jsonl']}}
+(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+print(json.dumps({k:v for k,v in data.items() if k not in ['timings_selected_us','selected_ids','numeric_rejected_values']},ensure_ascii=False,indent=2))

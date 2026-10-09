@@ -1,0 +1,16 @@
+## debug/112-forensics...origin/debug/112-forensics
+ M src/tushenghao/lib/corners/corner_edge_fit.cpp
+ M src/tushenghao/lib/corners/corner_evidence_validation.cpp
+ M src/tushenghao/lib/corners/corner_observation.cpp
+ M src/tushenghao/lib/corners/corner_observation.hpp
+ M src/tushenghao/lib/corners/corner_resolver.cpp
+ M src/tushenghao/lib/corners/corner_resolver.hpp
+ M src/tushenghao/lib/corners/corner_types.hpp
+ M src/tushenghao/lib/pipeline/decode_stage.cpp
+?? docs/evidence/
+?? src/tushenghao/docs/ref/codex-112-forensics-prompt.md
+?? src/tushenghao/docs/ref/codex-112-sandbox-prompt.md
+?? src/tushenghao/docs/ref/codex-112-worstframe-prompt.md
+?? src/tushenghao/lib/corners/sandbox_periodic.hpp
+?? src/tushenghao/lib/corners/sandbox_profile.hpp
+?? src/tushenghao/tools/validation/sandbox_model_verify.cpp
