@@ -1,0 +1,20 @@
+# 中文用途：拟合扫描行奇偶周期项，保留全部支持像素；验证结构性噪声模型，绝非提高残差阈值。
+import json,math,statistics,pathlib
+p=pathlib.Path('docs/evidence/112-forensics/deep')
+def solve(a,b):
+ a=[row[:]+[v] for row,v in zip(a,b)]
+ for i in range(3):
+  k=max(range(i,3),key=lambda k:abs(a[k][i]));a[i],a[k]=a[k],a[i];z=a[i][i];a[i]=[x/z for x in a[i]]
+  for k in range(3):
+   if k!=i:
+    z=a[k][i];a[k]=[x-z*y for x,y in zip(a[k],a[i])]
+ return [row[-1] for row in a]
+rows=[]
+for r in map(json.loads,(p/'probe-residual-evidence.jsonl').open()):
+ if not r['success']:continue
+ arcs=[]
+ for k,a in enumerate(r['support_arcs']):
+  axis=1 if max(y for x,y in a)-min(y for x,y in a)>max(x for x,y in a)-min(x for x,y in a) else 0;orth=1-axis;origin=sum(q[axis] for q in a)/len(a);xs=[[q[axis]-origin,1,1 if q[axis]%2 else -1] for q in a];ys=[q[orth] for q in a];mat=[[sum(x[i]*x[j] for x in xs) for j in range(3)] for i in range(3)];rhs=[sum(x[i]*y for x,y in zip(xs,ys)) for i in range(3)];slope,b,c=solve(mat,rhs);err=[abs(y-slope*x[0]-b-c*x[2])/math.sqrt(1+slope*slope) for x,y in zip(xs,ys)];arcs.append({'axis':axis,'origin':origin,'slope':slope,'intercept_at_origin':b,'parity_coefficient':c,'parity_offset_difference':2*abs(c),'raw_mean':r['support_mean'][k],'periodic_mean':sum(err)/len(err),'n':len(a)})
+ rows.append({'frame':r['frame'],'hypothesis':r['hypothesis'],'physical':r['physical'],'both_periodic_residual_pass':all(a['periodic_mean']<=.5 for a in arcs),'arcs':arcs})
+(p/'periodic-refit.json').write_text(json.dumps(rows,indent=2)+'\n')
+print('both periodic residual pass',sum(r['both_periodic_residual_pass'] for r in rows),'/',len(rows));print('median max residual',statistics.median(max(a['periodic_mean'] for a in r['arcs']) for r in rows));print('failed',[(r['frame'],r['physical'],[a['periodic_mean'] for a in r['arcs']]) for r in rows if not r['both_periodic_residual_pass']]);print('noisy parity diff median',statistics.median(max(r['arcs'],key=lambda a:a['raw_mean'])['parity_offset_difference'] for r in rows))

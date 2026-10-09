@@ -1,0 +1,11 @@
+{
+  "git_head": "81cef2b4d0c3c29ef9d5d9cc550dc148b87232b0",
+  "sha256": {
+    "src/tushenghao/docs/evidence/final-fixes/fix2-sweep/flicker_sequence.json": "e9acb22ddc70ea5deb9d7cd8bcc19910cb1189452d9c6bdc80c09726cc8e9684",
+    "data/raw/marker_video.avi": "aa1219a7a7b702ea1265be8752853a267c982a651afa0f7846f516f9517c9ac7",
+    "docs/evidence/112-forensics/run/frames.jsonl": "b9851ab421a241770e542182a92651285082ab649e71191d02831f6a593053ee",
+    "src/tushenghao/config/detector_verification.yaml": "e594f62aba15c4b59da2462cd8308fe739f2440e8d0b6c014a2c935af3e7b143",
+    "src/tushenghao/config/detector.yaml": "d0804307d6a036a18b16db149c4eb4c533e03e7209122ca81fce08b73cc4bfc2",
+    "src/tushenghao/config/detector_debug.yaml": "ea57f1cdf15e3bc26439fb1239f721b1011d94a56e28eea6aa9316d9267008ba"
+  }
+}

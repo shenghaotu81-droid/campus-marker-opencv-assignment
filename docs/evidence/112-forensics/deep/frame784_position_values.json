@@ -1,0 +1,45 @@
+{
+  "frame": 784,
+  "edges": [
+    [
+      [
+        312.484375,
+        319.84375
+      ],
+      [
+        344.3125,
+        320.5
+      ]
+    ],
+    [
+      [
+        344.3125,
+        320.5
+      ],
+      [
+        343.65625,
+        353.96875
+      ]
+    ]
+  ],
+  "corner": [
+    352.5653669310873,
+    322
+  ],
+  "threshold": 9.0,
+  "arcs": [
+    {
+      "raw_max_position": 4.921651780652508,
+      "fitted_projected_max_position_independent_double_tls": 4.921651780652508,
+      "mean_residual_prototype": 0,
+      "support_points": 30
+    },
+    {
+      "raw_max_position": 9.009297687061148,
+      "fitted_projected_max_position_independent_double_tls": 8.069556001367324,
+      "mean_residual_prototype": 0.4525645039733591,
+      "support_points": 37
+    }
+  ],
+  "note": "位置复算使用独立双精度TLS；原型实际拟合仍使用原cv::fitLine，二者不混称精确同一浮点结果。"
+}

@@ -1,0 +1,5 @@
+分支：debug/112-forensics
+生产/已跟踪文件 diff：空
+本轮新增仅 docs/evidence/112-forensics/；初始未跟踪提示文件保留。
+?? docs/evidence/
+?? src/tushenghao/docs/ref/codex-112-forensics-prompt.md

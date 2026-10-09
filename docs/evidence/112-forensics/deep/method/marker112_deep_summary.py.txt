@@ -1,0 +1,52 @@
+# 中文用途：对账全部独立试验，并将支持弧、单门控与整链原型分开记录，避免夸大恢复率。
+import json,shlex,csv,collections,statistics,math,pathlib
+p=pathlib.Path('docs/evidence/112-forensics/deep');sample=json.loads((p/'sample_definition.json').read_text());failed=set(sample['failed_ids']);controls=set(sample['adjacent_detected_ids']);orig={int(r['frame_id']):r for r in map(json.loads,open('docs/evidence/112-forensics/run/frames.jsonl'))}
+def read(name):return [json.loads(l) for l in (p/name).open() if l.endswith('\n')]
+base=read('probe-base.jsonl');raw={}
+for line in (p/'corner_inputs.txt').read_text().splitlines():
+ t=shlex.split(line);n=int(t[4]);i=13+2*n;ok=int(t[i]);corner=list(map(float,t[i+1:i+3])) if ok else None;reason=t[i+3] if ok else t[i+1];raw[tuple(map(int,t[:3]))]={'ok':ok,'corner':corner,'reason':reason}
+assert len(base)==len(raw)==1176
+mismatch=[]
+for r in base:
+ x=raw[r['frame'],r['hypothesis'],r['physical']]
+ if r['success']!=x['ok'] or (x['ok'] and r['corner']!=x['corner']) or r['reason']!=x['reason']:mismatch.append([r['frame'],r['hypothesis'],r['physical']])
+assert not mismatch
+modes={}
+for mode in ['residual','position','direction','connection','extension','tls','unique','endpoints']:
+ rows=read('probe-'+mode+'.jsonl');assert len(rows)==116
+ good=[r for r in rows if r['success']];modes[mode]={'tested_failed_calls':len(rows),'recovered_calls':len(good),'frames_with_any_recovered_corner':len({r['frame'] for r in good}),'recovered_keys':[[r['frame'],r['hypothesis'],r['physical']] for r in good]}
+res=read('probe-residual-evidence.jsonl');v=sorted(max(r['support_mean']) for r in res if r['success'])
+def distribution(v):
+ v=sorted(v);return {'n':len(v),'min':v[0] if v else None,'p50':statistics.median(v) if v else None,'p95':v[min(len(v)-1,int(len(v)*.95))] if v else None,'max':v[-1] if v else None}
+metrics={}
+# 原日志首次失败与全角影子执行分别汇总，原生产拒绝分布保持独立。
+first_keys=set()
+for fid in failed:
+ for msg in orig[fid]['result']['diagnostics']:
+  if msg.startswith('corner/'):
+   import re
+   h=int(msg.split('/')[1]);phy=int(re.search(r': P(\d)',msg).group(1));first_keys.add((fid,h,phy))
+for group,keys in [('production_first_failure',first_keys),('all_shadow_failed_calls',{(r['frame'],r['hypothesis'],r['physical']) for r in base if not r['success']})]:
+ hist=collections.defaultdict(collections.Counter);steps={};counts=collections.Counter();extremes={}
+ for r in base:
+  if (r['frame'],r['hypothesis'],r['physical']) not in keys:continue
+  for k,m in r['metrics'].items():
+   counts[k]+=m['n'];steps[k]=m['hist_step'];hist[k].update({int(a):b for a,b in m['hist'].items()});extremes.setdefault(k,[m['min'],m['max']]);extremes[k]=[min(extremes[k][0],m['min']),max(extremes[k][1],m['max'])]
+ metrics[group]={k:{'n':counts[k],'min':extremes[k][0],'max':extremes[k][1],'hist_step':steps[k],'histogram':dict(sorted(hist[k].items()))} for k in counts}
+photo=read('photometric-refit.jsonl');period=json.loads((p/'periodic-refit.json').read_text());envelope=json.loads((p/'envelope-refit.json').read_text());median=json.loads((p/'scanline-median-refit.json').read_text())
+summary={'sample':{'failed_frames':len(failed),'adjacent_successful_frames':len(controls),'shadow_corner_calls':len(base),'shadow_failed_corner_calls':sum(not r['success'] for r in base),'first_failure_calls':len(first_keys)},'baseline_replay_mismatches':mismatch,'single_gate_and_structural_trials':modes,'residual_ablation_chosen_support_max_distribution':distribution(v),'noisy_support_orientation':dict(collections.Counter('vertical' if max(y for x,y in r['support_arcs'][max(range(2),key=lambda k:r['support_mean'][k])])-min(y for x,y in r['support_arcs'][max(range(2),key=lambda k:r['support_mean'][k])])>max(x for x,y in r['support_arcs'][max(range(2),key=lambda k:r['support_mean'][k])])-min(x for x,y in r['support_arcs'][max(range(2),key=lambda k:r['support_mean'][k])]) else 'horizontal' for r in res if r['success'])),'photometric_refit':{'tested':len(photo),'local_quality_pass':sum(r['local_quality_pass'] for r in photo),'unique_crossing_for_all_points':sum(r['unresolved_crossings']==0 for r in photo),'corner_change':distribution([r['corner_delta'] for r in photo]),'refined_max_residual':distribution([max(r['refined_mean']) for r in photo])},'periodic_model':{'tested':len(period),'both_residual_pass':sum(r['both_periodic_residual_pass'] for r in period),'row_offset_difference':distribution([max(r['arcs'],key=lambda a:a['raw_mean'])['parity_offset_difference'] for r in period]),'note':'非生产误差模型的支持弧层级验证；不是检出数，不证明视频是隔行扫描。'},'envelope':{'both_residual_pass':sum(r['both_envelope_residual_pass'] for r in envelope),'tested':len(envelope)},'scanline_median':{'both_residual_pass':sum(r['both_envelope_residual_pass'] for r in median),'tested':len(median)},'numeric_gate_distributions':metrics}
+for name in ['positionfit','cascade','cascade-full']:
+ rows=read('pipeline-'+name+'.jsonl')
+ summary['pipeline_'+name]={'completed_frames':len(rows),'expected_frames':1676 if name.endswith('full') else 293}
+ if len(rows)!=summary['pipeline_'+name]['expected_frames']:continue
+ assert len({r['frame'] for r in rows})==len(rows) and all(r['status'] in [2,3] for r in rows)
+ recovered=[r['frame'] for r in rows if r['frame'] in failed and r['status']==3];lost=[r['frame'] for r in rows if orig[r['frame']]['result_status']==3 and r['status']!=3];changed=[];new_other=[]
+ for r in rows:
+  fid=r['frame'];old=orig[fid]['details']['decode']['detections']
+  if orig[fid]['result_status']==3 and r['status']==3:
+   if r['detections']!=[x['corners'] for x in old]:changed.append(fid)
+  if fid not in failed and orig[fid]['result_status']!=3 and r['status']==3:new_other.append(fid)
+ summary['pipeline_'+name].update({'recovered_target_ids':recovered,'recovered_target_count':len(recovered),'old_detected_frames_lost':lost,'old_raw_detection_corners_changed':changed,'new_other_ids':new_other,'statuses':dict(collections.Counter(r['status'] for r in rows))})
+(p/'deep_summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n');print(json.dumps({k:v for k,v in summary.items() if k not in ['numeric_gate_distributions','single_gate_and_structural_trials']},ensure_ascii=False,indent=2))
+# 382来源身份同一性对账。
+r=orig[382];hyps=r['details']['completed']['hypotheses'];first=[dict((a['model_part_id'],a['component_id']) for a in h['assignments']) for h in hyps];comparison={'same_assignments':first[0]==first[1],'hypotheses':hyps,'successful_first_parent_measurements':r['details']['decode']['measurements'],'original_diagnostics':r['result']['diagnostics']};(p/'frame382_competition.json').write_text(json.dumps(comparison,ensure_ascii=False,indent=2)+'\n')

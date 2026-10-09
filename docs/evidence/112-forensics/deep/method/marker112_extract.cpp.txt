@@ -1,0 +1,51 @@
+// 中文用途：只读调用原生产几何流程，导出选帧全部物理角输入；不改变生产源码与阈值。
+#include "config/config.hpp"
+#include "preprocess/preprocess.hpp"
+#include "geometry/geometry_observation.hpp"
+#include "geometry/geometry_matcher.hpp"
+#include "geometry/geometry_validation.hpp"
+#include "geometry/geometry_assignment_completion.hpp"
+#include "corners/corner_observation.hpp"
+#include "corners/corner_edge_fit.hpp"
+#include "core/observed_geometry_utils.hpp"
+#include <opencv2/videoio.hpp>
+#include <fstream>
+#include <iomanip>
+#include <set>
+#include <iostream>
+int main(int argc,char**argv){
+ auto app=mark::loadConfig(argv[1]);auto c=app.detector_config;
+ auto model=mark::loadMarkerGeometry("src/tushenghao/config/marker_geometry.yaml");
+ std::ifstream ids(argv[3]);std::set<int> selected;int id;while(ids>>id)selected.insert(id);
+ std::ofstream out(argv[4]);out<<std::setprecision(17);
+ cv::VideoCapture cap(argv[2]);cv::Mat img;int fid=0;
+ while(cap.read(img)){
+ if(selected.count(fid)){
+  mark::FrameInput in;in.image=img;in.frame_id=fid;in.timestamp_us=0;
+  auto f=mark::preprocess(in,c.preprocess);f.components_=mark::extractWhiteComponents(f,c.geometry_);
+  auto obs=mark::observeShapes(f.components_,c.geometry_);auto b=mark::generateGeometryHypotheses(obs,model,c.geometry_);
+  b=mark::validateGeometryBatch(b,model,f.components_,c.geometry_);
+  b=mark::completeSegmentedAssignments(b,f.components_,model,*c.assignment_completion_);
+  const char* names[]={"L0","M1","L2","L3"};int ea[]={5,0,5,5},eb[]={0,1,0,0};
+  for(size_t h=0;h<b.hypotheses_.size();++h)for(int p=0;p<4;++p){
+   auto &hyp=b.hypotheses_[h];size_t cid=SIZE_MAX;
+   for(auto &a:hyp.assignments_)if(a.model_part_id_==names[p])cid=a.component_id_;
+   const mark::WhiteComponent*comp=nullptr;for(auto &x:f.components_)if(x.component_id_==cid)comp=&x;
+   const mark::GeometryPolygon*poly=nullptr;for(auto &x:model.polygons)if(x.id==names[p])poly=&x;
+   if(!comp||!poly)continue;
+   auto ring=mark::observeOriginalContour(f,*comp,*c.corner_.observation_budget_);
+   if(!ring.reason.empty()){std::cerr<<fid<<" "<<h<<" "<<p<<" "<<ring.reason<<"\n";continue;}
+   std::array<std::array<cv::Point2d,2>,2> edges;int es[]={ea[p],eb[p]};
+   for(int e=0;e<2;++e)for(int k=0;k<2;++k)edges[e][k]=f.workToOriginal(mark::observed::project(hyp.affine_transform_,poly->vertices[(es[e]+k)%poly->vertices.size()]));
+   auto fit=mark::fitObservedEdgePair(ring.contour,edges,c.corner_);
+   out<<fid<<' '<<h<<' '<<p<<' '<<cid<<' '<<ring.contour.size();
+   for(auto &e:edges)for(auto q:e)out<<' '<<q.x<<' '<<q.y;
+   for(auto q:ring.contour)out<<' '<<q.x<<' '<<q.y;
+   out<<' '<<bool(fit.evidence);if(fit.evidence)out<<' '<<fit.evidence->intersection_.x<<' '<<fit.evidence->intersection_.y;
+   out<<' '<<std::quoted(fit.reason)<<'\n';
+  }
+ }
+ ++fid;
+ }
+ std::cerr<<"read_frames="<<fid<<" selected="<<selected.size()<<"\n";
+}

@@ -1,0 +1,426 @@
+--- a/src/tushenghao/lib/corners/corner_edge_fit.cpp
++++ b/src/tushenghao/lib/corners/corner_edge_fit.cpp
+@@ -10,15 +10,18 @@
+ #include <map>
+ #include <sstream>
+ #include <cstdlib>
++#include <memory>
++#include <unordered_map>
+ 
+ namespace mark
+ {
+     namespace
+     {
++        struct SupportSet{bool ready=false;std::set<std::pair<double,double>> pixels;};
+         struct Arc
+         {
+             size_t begin, end;
+-            size_t source_front=0,source_back=0;
++            size_t source_front=0,source_back=0,fit_identity=0;
+             unsigned position_mask=3;
+             std::vector<cv::Point2d> points;
+             cv::Vec4d line;
+@@ -27,19 +30,19 @@
+             int model_kind=0,model_axis=1;
+             double min_x=INFINITY,max_x=-INFINITY,min_y=INFINITY,max_y=-INFINITY;
+             unsigned edge_mask = 0;
+-            std::set<std::pair<double, double>> support;
++            std::shared_ptr<SupportSet> support;
+         };
+ 
+         // 普通L2拟合；支持点来自连续弧，至少三个去重点且具有预算要求的实际跨度。
+         bool fitArc(Arc &arc, const CornerConfig &config, int model_kind)
+         {
+             sandbox::Scope profile(sandbox::ArcFit);
+-            for (auto p : arc.points)
+-                arc.support.emplace(p.x, p.y);
+-            if (arc.support.size() < static_cast<size_t>(config.min_line_points_))
+-                return false;
++            // 唯一点数只需证明达到既有下限；不为随后失败的弧构建整条树集合。
++            std::vector<std::pair<double,double>> unique;unique.reserve(config.min_line_points_);
++            for(auto p:arc.points){auto key=std::make_pair(p.x,p.y);if(std::find(unique.begin(),unique.end(),key)==unique.end())unique.push_back(key);if(unique.size()>=static_cast<size_t>(config.min_line_points_))break;}
++            if(unique.size()<static_cast<size_t>(config.min_line_points_))return false;
+             arc.model_kind=model_kind;
+-            if(model_kind==1||model_kind==3||model_kind==4){auto f=model_kind==4?sandbox::fitPeriodicLAD(arc.points):model_kind==3?sandbox::fitPeriodicMedian(arc.points):sandbox::fitPeriodic(arc.points);if(!f.valid)return false;arc.line=f.line;arc.model_axis=f.axis;arc.model_coefficient=f.coefficient;}
++            if(model_kind==1||model_kind==3||model_kind==4||model_kind==5){auto f=model_kind==5?sandbox::fitPeriodicZero(arc.points):model_kind==4?sandbox::fitPeriodicLAD(arc.points):model_kind==3?sandbox::fitPeriodicMedian(arc.points):sandbox::fitPeriodic(arc.points);if(!f.valid)return false;arc.line=f.line;arc.model_axis=f.axis;arc.model_coefficient=f.coefficient;}
+             else if(model_kind==2){std::vector<cv::Point2d>corrected;corrected.reserve(arc.points.size());arc.model_coefficient=sandbox::frame_shift;for(auto p:arc.points)corrected.emplace_back(p.x-arc.model_coefficient*sandbox::phase(p,1),p.y);cv::fitLine(corrected,arc.line,cv::DIST_L2,0,.01,.01);}
+             else cv::fitLine(arc.points, arc.line, cv::DIST_L2, 0, 0.01, 0.01);
+             double line_norm = std::hypot(arc.line[0], arc.line[1]);
+@@ -63,8 +66,24 @@
+                 arc.maximum = std::max(arc.maximum, d);
+             }
+             arc.mean = sum / arc.points.size();arc.model_mean=model_sum/arc.points.size();
+-            return hi - lo >= config.observation_budget_->min_support_span_px &&
+-                   arc.model_mean <= config.max_line_fit_error_;
++            bool valid=hi - lo >= config.observation_budget_->min_support_span_px && arc.model_mean <= config.max_line_fit_error_;
++            if(valid)arc.support=std::make_shared<SupportSet>();return valid;
++        }
++
++        // 最慢帧实验：同一条原始连续支持的拟合与位置模式无关；调用内缓存并共享不可变支持集合。
++        struct FitRecord{size_t identity=0;bool valid=false;cv::Vec4d line{};std::array<double,9> values{};int kind=0,axis=1;std::shared_ptr<SupportSet> support;std::vector<cv::Point2d> points;};
++        using FitCache=std::map<std::tuple<int,size_t,size_t>,FitRecord>;
++        struct Range{size_t first=0,last=0,count=0;unsigned mask=3;bool continuous=true;};
++        struct FitContext{std::array<std::vector<Range>,2> ranges;FitCache fits;std::vector<std::vector<size_t>> excluded;std::vector<bool> ready;explicit FitContext(size_t n):excluded(n),ready(n,false){}};
++        bool cachedFit(Arc&arc,const CornerConfig&config,int kind,size_t first,size_t last,FitCache&cache,const std::vector<cv::Point>&contour){
++            auto key=std::make_tuple(kind,first,last);auto it=cache.find(key);
++            if(it==cache.end()){
++                if(arc.points.empty())for(size_t k=first;;k=(k+1)%contour.size()){arc.points.emplace_back(contour[k]);if(k==last)break;}
++                bool valid=fitArc(arc,config,kind);FitRecord record;record.valid=valid;record.identity=cache.size();arc.fit_identity=record.identity;
++                if(valid){record.line=arc.line;record.values={arc.mean,arc.maximum,arc.model_mean,arc.model_max,arc.model_coefficient,arc.min_x,arc.max_x,arc.min_y,arc.max_y};record.kind=arc.model_kind;record.axis=arc.model_axis;record.support=arc.support;record.points=arc.points;}
++                cache.emplace(key,std::move(record));return valid;
++            }
++            const auto&r=it->second;if(!r.valid)return false;arc.fit_identity=r.identity;arc.line=r.line;arc.mean=r.values[0];arc.maximum=r.values[1];arc.model_mean=r.values[2];arc.model_max=r.values[3];arc.model_coefficient=r.values[4];arc.min_x=r.values[5];arc.max_x=r.values[6];arc.min_y=r.values[7];arc.max_y=r.values[8];arc.model_kind=r.kind;arc.model_axis=r.axis;arc.support=r.support;arc.points=r.points;return true;
+         }
+ 
+         // 指定有限模型边的方向与位置共同限制候选；内侧平行边不能仅凭方向获选。
+@@ -74,6 +93,8 @@
+             if (observed::angleDeg({arc.line[0], arc.line[1]}, edge[1] - edge[0]) >
+                 budget.max_edge_direction_diff_deg)
+                 return false;
++            // 前缀位置mask已经以完全相同的原像素有限段谓词检查过整条支持。
++            if(!fitted_position)return true;
+             for (auto p : arc.points)
+                 if (observed::segmentDistance(fitted_position ? cv::Point2d(arc.line[2],arc.line[3])+cv::Point2d(arc.line[0],arc.line[1])*((p-cv::Point2d(arc.line[2],arc.line[3])).dot(cv::Point2d(arc.line[0],arc.line[1]))) : p, edge[0], edge[1]) >
+                     budget.max_edge_position_distance_px)
+@@ -86,6 +107,9 @@
+         {
+             cv::Point2d v{arc.line[0], arc.line[1]};
+             double lo = INFINITY, hi = -INFINITY;
++            // 轴向单位线的投影极值就是像素包围盒极值，计算与逐点相同，不引入容差。
++            if(v.x==0&&std::abs(v.y)==1){double a=(arc.min_y-p.y)*v.y,b=(arc.max_y-p.y)*v.y;lo=std::min(a,b);hi=std::max(a,b);return lo>0?lo:hi<0?-hi:0;}
++            if(v.y==0&&std::abs(v.x)==1){double a=(arc.min_x-p.x)*v.x,b=(arc.max_x-p.x)*v.x;lo=std::min(a,b);hi=std::max(a,b);return lo>0?lo:hi<0?-hi:0;}
+             for (auto q : arc.points)
+             {
+                 double t = (q - p).dot(v);
+@@ -98,7 +122,7 @@
+ 
+     static EdgePairFitResult fitObservedEdgePairImpl(const std::vector<cv::Point> &contour,
+                                           const std::array<std::array<cv::Point2d, 2>, 2> &edges,
+-                                          const CornerConfig &config, bool all_endpoints, bool fitted_position, int model_kind=0)
++                                          const CornerConfig &config, bool all_endpoints, bool fitted_position, int model_kind, FitContext&context)
+     {
+         sandbox::Scope profile(sandbox::Fit);
+         EdgePairFitResult result;
+@@ -109,9 +133,12 @@
+         std::map<std::pair<int,int>,size_t> first_pixel;
+         for(size_t k=0;k<contour.size();++k){first_pixel.emplace(std::make_pair(contour[k].x,contour[k].y),k);walk_prefix[k+1]=walk_prefix[k]+cv::norm(contour[(k+1)%contour.size()]-contour[k]);}
+         std::vector<unsigned> pixel_mask(contour.size(),3);
+-        if(!fitted_position)for(size_t k=0;k<contour.size();++k)for(unsigned e=0;e<2;++e)
++        for(size_t k=0;k<contour.size();++k)for(unsigned e=0;e<2;++e)
+           if(observed::segmentDistance(contour[k],edges[e][0],edges[e][1])>budget.max_edge_position_distance_px)pixel_mask[k]&=~(1u<<e);
+         const double prefix_roundoff=64*std::numeric_limits<double>::epsilon()*contour.size()*std::max(1.,walk_prefix.back());
++        // 连续支持位置mask用前缀计数求交；端点邻域由同一cv::norm谓词惰性缓存，完全保留修剪语义。
++        std::array<std::vector<size_t>,2> bad_prefix;for(unsigned e=0;e<2;++e){bad_prefix[e].resize(contour.size()+1);for(size_t k=0;k<contour.size();++k)bad_prefix[e][k+1]=bad_prefix[e][k]+(!(pixel_mask[k]&(1u<<e)));}
++        auto excluded_at=[&](size_t endpoint)->const std::vector<size_t>&{if(!context.ready[endpoint]){auto&v=context.excluded[endpoint];for(size_t k=0;k<contour.size();++k)if(cv::norm(cv::Point2d(contour[k])-cv::Point2d(contour[endpoint]))<budget.turn_trim_distance_px)v.push_back(k);context.ready[endpoint]=true;}return context.excluded[endpoint];};
+         std::vector<cv::Point> polygon;
+         cv::approxPolyDP(contour, polygon, config.approximation_epsilon_, true);
+         if (polygon.size() < 3)
+@@ -156,7 +183,12 @@
+         indices.erase(std::unique(indices.begin(), indices.end()), indices.end());
+         std::vector<Arc> arcs;
+         std::set<std::vector<std::pair<double,double>>> distinct_support;
+-        std::map<std::string, size_t> rejected;
++        std::set<std::pair<size_t,size_t>> distinct_ranges;std::vector<size_t> excluded_offsets;
++        // 同一调用的各拟合模型重复使用同一端点/支持描述表，枚举顺序仍为原顺序。
++        auto&family=context.ranges[all_endpoints?1:0];bool reuse_ranges=!family.empty();size_t range_cursor=0;
++        /* 计数语义和输出顺序不变，热点循环用固定数组，避免每次构造字符串和查红黑树。 */
++        std::array<size_t,8> rejected{};
++        const char*rejection_names[]={"angle","connection","corner_or_extension","direction_or_position_arc","discontinuous_arc","nonconvex","reused_support","short_or_residual_arc"};
+         // 简化只用于标记真实轮廓上的转折，支持点仍来自CHAIN_APPROX_NONE连续弧。
+         // 栅格圆角会在一条直边末端插入额外简化顶点，原单段实现误当缺边。
+         // 实拍栅格边界可能将一条外边拆成多个简化段，不能把相邻段数固定为两段。
+@@ -169,42 +201,41 @@
+                 Arc arc{};
+                 arc.begin = indices[i];
+                 arc.end = indices[(i + segments) % indices.size()];
+-                bool started = false, ended = false, continuous = true;
+-                for (size_t k = arc.begin;; k = (k + 1) % contour.size())
+-                {
+-                    cv::Point2d p = contour[k];
+-                    if (cv::norm(p - cv::Point2d(contour[arc.begin])) >=
+-                            budget.turn_trim_distance_px &&
+-                        cv::norm(p - cv::Point2d(contour[arc.end])) >= budget.turn_trim_distance_px)
+-                    {
+-                        if (ended)
+-                            continuous = false;
+-                        started = true;
+-                        arc.points.push_back(p);
+-                        if(!fitted_position){arc.position_mask&=pixel_mask[k];if(!arc.position_mask)break;}
+-                    }
+-                    else if (started)
+-                        ended = true;
+-                    if (k == arc.end)
+-                        break;
+-                }
+-                if(!arc.position_mask){++rejected["direction_or_position_arc"];continue;}
++                Range range;
++                if(reuse_ranges)range=family[range_cursor++];else{
++                    const size_t extent=(arc.end+contour.size()-arc.begin)%contour.size();excluded_offsets.clear();
++                    for(size_t endpoint:{arc.begin,arc.end})for(size_t k:excluded_at(endpoint)){size_t offset=(k+contour.size()-arc.begin)%contour.size();if(offset<=extent)excluded_offsets.push_back(offset);}
++                    std::sort(excluded_offsets.begin(),excluded_offsets.end());excluded_offsets.erase(std::unique(excluded_offsets.begin(),excluded_offsets.end()),excluded_offsets.end());
++                    size_t first_offset=0,last_offset=extent;for(size_t k:excluded_offsets){if(k==first_offset)++first_offset;else if(k>first_offset)break;}
++                    if(first_offset<=extent){
++                        for(auto it=excluded_offsets.rbegin();it!=excluded_offsets.rend();++it){if(*it==last_offset){if(!last_offset)break;--last_offset;}else if(*it<last_offset)break;}
++                        for(size_t k:excluded_offsets)if(k>=first_offset&&k<=last_offset){range.continuous=false;break;}
++                        range.first=(arc.begin+first_offset)%contour.size();range.last=(arc.begin+last_offset)%contour.size();range.count=last_offset-first_offset+1;
++                        for(unsigned e=0;e<2;++e){const auto&pref=bad_prefix[e];size_t bad=range.last>=range.first?pref[range.last+1]-pref[range.first]:pref.back()-pref[range.first]+pref[range.last+1];if(bad)range.mask&=~(1u<<e);}
++                    }
++                    family.push_back(range);
++                }
++                if(!range.count){++rejected[7];continue;}
++                bool continuous=range.continuous;size_t fit_first=range.first,fit_last=range.last;arc.position_mask=fitted_position?3:range.mask;
++                if(!arc.position_mask){++rejected[3];continue;}
+                 if (!continuous)
+-                    ++rejected["discontinuous_arc"];
++                    ++rejected[4];
+                 else
+                 {
+                     // 沙盒A：只有完整有序支持序列相同才去重，避免回走路径误合并。
++                    if(range.count<static_cast<size_t>(config.min_line_points_)){++rejected[7];continue;}
++                    if(all_endpoints){if(!distinct_ranges.emplace(fit_first,fit_last).second)continue;for(size_t k=fit_first;;k=(k+1)%contour.size()){arc.points.emplace_back(contour[k]);if(k==fit_last)break;}}
+                     if(all_endpoints&&!arc.points.empty()){std::vector<std::pair<double,double>> key;for(auto q:arc.points)key.emplace_back(q.x,q.y);if(!distinct_support.insert(key).second)continue;}
+                     // 有限模型边的位置检查无需拟合，先排除跨过其他外边的长区间。
+                     unsigned position_mask = arc.position_mask;
+                     if (!position_mask)
+                     {
+-                        ++rejected["direction_or_position_arc"];
++                        ++rejected[3];
+                         continue;
+                     }
+-                    if (!fitArc(arc, config, model_kind))
++                    if (!cachedFit(arc, config, model_kind,fit_first,fit_last,context.fits,contour))
+                     {
+-                        ++rejected["short_or_residual_arc"];
++                        ++rejected[7];
+                         continue;
+                     }
+                     // 两条指定有限边已在配对前可知；先剔除不属于任一指定边的连续弧，
+@@ -218,14 +249,26 @@
+                         arcs.push_back(std::move(arc));
+                     }
+                     else
+-                        ++rejected["direction_or_position_arc"];
+-                }
+-            }
+-        }
++                        ++rejected[3];
++                }
++            }
++        }
++        // 相同支持的几何配对仅验算一次；每个端点别名仍独立执行歧义/评分/来源tie-break。
++        struct PairMemo{bool valid=false;int reason=-1;cv::Point2d intersection;double corner_error=0,ea=0,eb=0;std::vector<cv::Point2d> connector;};
++        struct PairHash{size_t operator()(const std::pair<size_t,size_t>&p)const{return p.first^(p.second+size_t(0x9e3779b9)+(p.first<<6)+(p.first>>2));}};
++        std::unordered_map<std::pair<size_t,size_t>,PairMemo,PairHash> pair_cache;
+         const double winding = cv::contourArea(contour, true);
+         { sandbox::Scope profile(sandbox::Pairs);
+-        for (size_t i = 0; i < arcs.size(); ++i)
+-            for (size_t j = 0; j < arcs.size(); ++j)
++        std::vector<std::vector<size_t>> by_front(contour.size());
++        for(size_t j=0;j<arcs.size();++j)by_front[arcs[j].source_front].push_back(j);
++        for (size_t i = 0; i < arcs.size(); ++i){
++            std::vector<size_t> near;
++            size_t start=arcs[i].source_back;
++            for(size_t step=0;step<contour.size();++step){size_t k=(start+step)%contour.size();double length=k>=start?walk_prefix[k]-walk_prefix[start]:walk_prefix.back()-walk_prefix[start]+walk_prefix[k];
++                if(length-prefix_roundoff>budget.max_turn_connection_length_px)break;
++                near.insert(near.end(),by_front[k].begin(),by_front[k].end());}
++            std::sort(near.begin(),near.end());
++            for (size_t j : near)
+             {
+                 if (i == j)
+                     continue;
+@@ -236,21 +279,24 @@
+                 bool reverse = (a.edge_mask & 2) && (b.edge_mask & 1);
+                 if (!direct && !reverse)
+                     continue;
++                auto key=std::make_pair(a.fit_identity,b.fit_identity);auto it=pair_cache.find(key);
++                if(it==pair_cache.end()){
++                    PairMemo memo;auto compute=[&]()->bool{
+                 // 先按有序轮廓真实弧长做保守排除，避免对数百万不邻接弧对做set交集。
+                 const size_t start_index=a.source_back,stop_index=b.source_front;
+                 const double connection_estimate=stop_index>=start_index?walk_prefix[stop_index]-walk_prefix[start_index]:walk_prefix.back()-walk_prefix[start_index]+walk_prefix[stop_index];
+-                if(connection_estimate-prefix_roundoff>budget.max_turn_connection_length_px){++rejected["connection"];continue;}
++                if(connection_estimate-prefix_roundoff>budget.max_turn_connection_length_px){memo.reason=1;return false;}
+                 bool shared = false;
+                 if(!(a.max_x<b.min_x||b.max_x<a.min_x||a.max_y<b.min_y||b.max_y<a.min_y))for (auto p : b.points)
+-                    if (a.support.count({p.x, p.y}))
++                    if ((a.support->ready||( [&]{for(auto q:a.points)a.support->pixels.emplace(q.x,q.y);a.support->ready=true;return true;}())) && a.support->pixels.count({p.x,p.y}))
+                     {
+                         shared = true;
+                         break;
+                     }
+                 if (shared)
+                 {
+-                    ++rejected["reused_support"];
+-                    continue;
++                    memo.reason=6;
++                    return false;
+                 }
+                 // 相邻支持弧之间允许圆角连接，连接长度受独立预算约束。
+                 std::vector<cv::Point2d> connector;
+@@ -268,15 +314,15 @@
+                 }
+                 if (k != stop || length > budget.max_turn_connection_length_px)
+                 {
+-                    ++rejected["connection"];
+-                    continue;
++                    memo.reason=1;
++                    return false;
+                 }
+                 cv::Point2d da = a.points.back() - a.points.front(),
+                             db = b.points.back() - b.points.front();
+                 if ((da.x * db.y - da.y * db.x) * winding <= 0)
+                 {
+-                    ++rejected["nonconvex"];
+-                    continue;
++                    memo.reason=5;
++                    return false;
+                 }
+                 const Arc &first = direct ? a : b;
+                 const Arc &second = direct ? b : a;
+@@ -284,23 +330,29 @@
+                 double theta = observed::angleDeg(v, w);
+                 if (!std::isfinite(theta) || theta < config.min_intersection_angle_deg_)
+                 {
+-                    ++rejected["angle"];
+-                    continue;
++                    memo.reason=0;
++                    return false;
+                 }
+                 double cross = v.x * w.y - v.y * w.x;
+                 cv::Point2d p{first.line[2], first.line[3]}, q{second.line[2], second.line[3]},
+                     d = q - p;
+                 cv::Point2d intersection = p + v * ((d.x * w.y - d.y * w.x) / cross);
+                 if (!observed::finite(intersection))
+-                    continue;
++                    return false;
+                 double corner_error = observed::boundaryDistance(intersection, connector, false);
+                 double ea = extension(intersection, first), eb = extension(intersection, second);
+                 if (corner_error > config.max_corner_error_ ||
+                     ea > budget.max_support_extension_px || eb > budget.max_support_extension_px)
+                 {
+-                    ++rejected["corner_or_extension"];
+-                    continue;
+-                }
++                    memo.reason=2;
++                    return false;
++                }
++                memo.intersection=intersection;memo.corner_error=corner_error;memo.ea=ea;memo.eb=eb;memo.connector=std::move(connector);return true;
++                    };memo.valid=compute();it=pair_cache.emplace(key,std::move(memo)).first;
++                }
++                const auto&memo=it->second;if(!memo.valid){if(memo.reason>=0)++rejected[memo.reason];continue;}
++                const Arc&first=direct?a:b;const Arc&second=direct?b:a;
++                const auto&connector=memo.connector;auto intersection=memo.intersection;double corner_error=memo.corner_error,ea=memo.ea,eb=memo.eb;
+                 // 所有门控均执行后，歧义检查仍无条件覆盖低分候选；只延迟深拷贝。
+                 const double candidate_error=first.mean+second.mean;
+                 if(result.evidence){
+@@ -339,14 +391,13 @@
+                 evidence.error_ = first.mean + second.mean;
+                 result.evidence = std::move(evidence);
+             }
+-        }
++        }}
+         if (!result.evidence)
+         {
+             std::ostringstream reason;
+             reason << "NO_VALID_ADJACENT_EDGES: polygon=" << polygon.size()
+                    << ",eligible_arcs=" << arcs.size();
+-            for (const auto &count : rejected)
+-                reason << ',' << count.first << '=' << count.second;
++            for(size_t k=0;k<rejected.size();++k)if(rejected[k])reason<<','<<rejection_names[k]<<'='<<rejected[k];
+             result.reason = reason.str();
+         }
+         return result;
+@@ -354,18 +405,29 @@
+     // 沙盒路由由环境变量选择，仅供比较；正式实施应使用实例内策略而非全局开关。
+     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point>&contour,
+       const std::array<std::array<cv::Point2d,2>,2>&edges,const CornerConfig&config){
+-        auto r=fitObservedEdgePairImpl(contour,edges,config,false,false);
++        FitContext context(contour.size());auto run=[&](bool all,bool position,int kind=0){return fitObservedEdgePairImpl(contour,edges,config,all,position,kind,context);};
++        auto r=run(false,false);
+         const char*route=std::getenv("MARK_SANDBOX_ROUTE");
+         if(!route||std::string(route)=="baseline"||r.evidence)return r;
+-        r=fitObservedEdgePairImpl(contour,edges,config,false,true);
+-        if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,true,false);
++        // 探索观测模型优先：简化端点上的合法周期候选先于昂贵全端点补查；原成功路径仍最先返回。
++        const char*priority=std::getenv("MARK_WORST_ROUTE");
++        if(priority&&std::string(priority)=="phase_first"&&sandbox::modelMode()==3){
++            for(auto spec:std::array<std::pair<int,bool>,4>{{{3,false},{5,false},{3,true},{5,true}}}){auto fast=run(false,spec.second,spec.first);if(fast.evidence)return fast;}
++        }
++        r=run(false,true);
++        if(!r.evidence)r=run(true,false);
+         int model=sandbox::modelMode();
+-        if(!r.evidence&&model){r=fitObservedEdgePairImpl(contour,edges,config,false,false,model);
+-          if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,false,true,model);
+-          if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,true,false,model);
+-          if(!r.evidence&&model==3){r=fitObservedEdgePairImpl(contour,edges,config,false,false,4);
+-            if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,false,true,4);
+-            if(!r.evidence)r=fitObservedEdgePairImpl(contour,edges,config,true,false,4);}
++        if(!r.evidence&&model){r=run(false,false,model);
++          if(!r.evidence)r=run(false,true,model);
++          if(!r.evidence)r=run(true,false,model);
++          if(!r.evidence&&model==3){
++            // 通用零斜率先给出可独立验算的候选；成功仍须全部原门控，不以超时丢弃病态输入。
++            r=run(false,false,5);
++            if(!r.evidence)r=run(false,true,5);
++            if(!r.evidence)r=run(true,false,5);
++            if(!r.evidence)r=run(false,false,4);
++            if(!r.evidence)r=run(false,true,4);
++            if(!r.evidence)r=run(true,false,4);}
+         }
+         return r;
+     }
+--- a/src/tushenghao/lib/corners/corner_evidence_validation.cpp
++++ b/src/tushenghao/lib/corners/corner_evidence_validation.cpp
+@@ -47,7 +47,7 @@
+         for (int edge = 0; edge < 2; ++edge)
+         {
+             const auto &line = lines[edge];
+-            if(e.sandbox_model_kind_[edge]<0||e.sandbox_model_kind_[edge]>4||e.sandbox_model_axis_[edge]<0||e.sandbox_model_axis_[edge]>1||!std::isfinite(e.sandbox_model_coefficient_[edge]))return fail("SANDBOX_MODEL_INVALID");
++            if(e.sandbox_model_kind_[edge]<0||e.sandbox_model_kind_[edge]>5||e.sandbox_model_axis_[edge]<0||e.sandbox_model_axis_[edge]>1||!std::isfinite(e.sandbox_model_coefficient_[edge]))return fail("SANDBOX_MODEL_INVALID");
+             if(e.sandbox_model_kind_[edge]==2&&!same(e.sandbox_model_coefficient_[edge],sandbox::frame_shift))return fail("SANDBOX_FRAME_MODEL_MISMATCH");
+             const auto &support = e.original_support_arcs_[edge];
+             for (double value : line.val)
+@@ -95,7 +95,7 @@
+             // 沙盒C：复算模型参数和校正残差，不允许把任意小残差写进内部证据。
+             if(e.sandbox_model_kind_[edge]){
+                 if(!same(model_sum/support.size(),e.sandbox_model_mean_[edge])||!same(model_max,e.sandbox_model_max_[edge]))return fail("SANDBOX_MODEL_RESIDUAL_MISMATCH");
+-                if(e.sandbox_model_kind_[edge]==1||e.sandbox_model_kind_[edge]==3||e.sandbox_model_kind_[edge]==4){auto fitted=e.sandbox_model_kind_[edge]==4?sandbox::fitPeriodicLAD(support):e.sandbox_model_kind_[edge]==3?sandbox::fitPeriodicMedian(support):sandbox::fitPeriodic(support);if(!fitted.valid||fitted.axis!=e.sandbox_model_axis_[edge]||!same(fitted.coefficient,e.sandbox_model_coefficient_[edge]))return fail("SANDBOX_MODEL_PARAMETER_MISMATCH");double norm=std::hypot(fitted.line[0],fitted.line[1]);fitted.line[0]/=norm;fitted.line[1]/=norm;for(int k=0;k<4;++k)if(!same(fitted.line[k],line[k]))return fail("SANDBOX_MODEL_LINE_MISMATCH");}
++                if(e.sandbox_model_kind_[edge]==1||e.sandbox_model_kind_[edge]==3||e.sandbox_model_kind_[edge]==4||e.sandbox_model_kind_[edge]==5){auto fitted=e.sandbox_model_kind_[edge]==5?sandbox::fitPeriodicZero(support):e.sandbox_model_kind_[edge]==4?sandbox::fitPeriodicLAD(support):e.sandbox_model_kind_[edge]==3?sandbox::fitPeriodicMedian(support):sandbox::fitPeriodic(support);if(!fitted.valid||fitted.axis!=e.sandbox_model_axis_[edge]||!same(fitted.coefficient,e.sandbox_model_coefficient_[edge]))return fail("SANDBOX_MODEL_PARAMETER_MISMATCH");double norm=std::hypot(fitted.line[0],fitted.line[1]);fitted.line[0]/=norm;fitted.line[1]/=norm;for(int k=0;k<4;++k)if(!same(fitted.line[k],line[k]))return fail("SANDBOX_MODEL_LINE_MISMATCH");}
+             }
+             // 无限线交点必须确实在两条拟合线上，不能只写一个任意凸四点。
+             double line_distance =
+--- a/src/tushenghao/lib/corners/sandbox_periodic.hpp
++++ b/src/tushenghao/lib/corners/sandbox_periodic.hpp
+@@ -12,7 +12,8 @@
+ inline int modelMode(){const char*v=std::getenv("MARK_SANDBOX_MODEL");return v&&std::string(v)=="c1"?1:v&&std::string(v)=="c1median"?3:v&&std::string(v)=="c2"?2:0;}
+ inline thread_local double frame_shift=0;
+ struct PeriodicFit{cv::Vec4d line{};int axis=1;double coefficient=0;bool valid=false;};
+-inline double phase(cv::Point2d p,int axis){return (static_cast<long long>(std::llround(axis?p.y:p.x))&1)?1.:-1.;}
++inline double phase(cv::Point2d p,int axis){// 原始整数像素走无libm调用的精确路径；非整数/越界输入仍沿用原llround语义。
++ double coordinate=axis?p.y:p.x;if(coordinate>=std::numeric_limits<int>::min()&&coordinate<=std::numeric_limits<int>::max()){int integer=static_cast<int>(coordinate);if(coordinate==integer)return (integer&1)?1.:-1.;}return (static_cast<long long>(std::llround(coordinate))&1)?1.:-1.;}
+ // 中心化闭式OLS，不为每个弧构造矩阵/调用通用求解器。
+ inline PeriodicFit fitPeriodic(const std::vector<cv::Point2d>&points){
+  PeriodicFit result;if(points.size()<3)return result;double minx=INFINITY,maxx=-INFINITY,miny=INFINITY,maxy=-INFINITY;
+@@ -32,6 +33,13 @@
+  double medians[2];for(int k=0;k<2;++k){auto&v=groups[k];if(v.empty()){result.valid=false;return result;}auto mid=v.begin()+v.size()/2;std::nth_element(v.begin(),mid,v.end());medians[k]=*mid;if(v.size()%2==0)medians[k]=.5*(medians[k]+*std::max_element(v.begin(),mid));}
+  double b=.5*(medians[0]+medians[1]);result.coefficient=.5*(medians[1]-medians[0]);double norm=std::hypot(slope,1.);
+  result.line=result.axis?cv::Vec4d(slope/norm,1/norm,b,origin):cv::Vec4d(1/norm,slope/norm,origin,b);return result;
++}
++// 最慢帧实验：零斜率是同一周期模型的通用候选，不绑定帧号；保留全部像素和原质量门限。
++inline PeriodicFit fitPeriodicZero(const std::vector<cv::Point2d>&points){
++ auto result=fitPeriodic(points);if(!result.valid)return result;std::vector<double>groups[2];
++ for(auto p:points)groups[phase(p,result.axis)>0?1:0].push_back(result.axis?p.x:p.y);
++ double m[2];for(int k=0;k<2;++k){auto&v=groups[k];auto mid=v.begin()+v.size()/2;std::nth_element(v.begin(),mid,v.end());m[k]=*mid;if(v.size()%2==0)m[k]=.5*(m[k]+*std::max_element(v.begin(),mid));}
++ double b=.5*(m[0]+m[1]);result.coefficient=.5*(m[1]-m[0]);result.line=result.axis?cv::Vec4d(0,1,b,result.line[3]):cv::Vec4d(1,0,result.line[2],b);return result;
+ }
+ // 对同一a/b/c模型精化斜率：消去两相位中位截距后，坐标绝对残差是凸函数。
+ inline PeriodicFit fitPeriodicLAD(const std::vector<cv::Point2d>&points){
+@@ -67,7 +75,7 @@
+ }
+ inline double correctedDistance(cv::Point2d p,const cv::Vec4d&line,int kind,int axis,double coefficient){
+  double signed_distance=line[0]*(p.y-line[3])-line[1]*(p.x-line[2]);
+- if(kind==1||kind==3||kind==4){double scale=axis?-line[1]:line[0];signed_distance-=scale*coefficient*phase(p,axis);}
++ if(kind==1||kind==3||kind==4||kind==5){double scale=axis?-line[1]:line[0];signed_distance-=scale*coefficient*phase(p,axis);}
+  else if(kind==2)signed_distance+=line[1]*coefficient*phase(p,1);
+  return std::abs(signed_distance);
+ }

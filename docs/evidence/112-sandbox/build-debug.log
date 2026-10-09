@@ -1,0 +1,141 @@
+[  0%] Building CXX object CMakeFiles/mark_detector.dir/lib/core/timing.cpp.o
+[  1%] Building CXX object CMakeFiles/marker_display_probe.dir/app/display_probe.cpp.o
+[  2%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/diagnostics_recorder.cpp.o
+[  3%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/diagnostics_context.cpp.o
+[  3%] Linking CXX executable marker_display_probe
+[  4%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/run_report.cpp.o
+[  4%] Built target marker_display_probe
+[  5%] Building CXX object CMakeFiles/mark_detector.dir/lib/core/marker_geometry.cpp.o
+[  6%] Building CXX object CMakeFiles/mark_detector.dir/lib/core/geometry_utils.cpp.o
+[  7%] Building CXX object CMakeFiles/mark_detector.dir/lib/config/config.cpp.o
+[  8%] Building CXX object CMakeFiles/mark_detector.dir/lib/preprocess/preprocess.cpp.o
+[  9%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_matcher.cpp.o
+[ 10%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_observation.cpp.o
+[ 11%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_l_topology.cpp.o
+[ 12%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_anchor_evidence.cpp.o
+[ 13%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_validation.cpp.o
+[ 14%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_assignment_completion.cpp.o
+[ 15%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/corner_resolver.cpp.o
+[ 16%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/corner_observation.cpp.o
+[ 17%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/corner_edge_fit.cpp.o
+[ 18%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/corner_evidence_validation.cpp.o
+[ 19%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/screen_order.cpp.o
+[ 20%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/semantic_resolver.cpp.o
+[ 21%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/detection_validator.cpp.o
+[ 21%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/detection_publication.cpp.o
+[ 22%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/decode_stage.cpp.o
+[ 23%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/frame_sequence.cpp.o
+[ 24%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/temporal_geometry.cpp.o
+[ 25%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/temporal_stabilizer.cpp.o
+[ 26%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/display_history.cpp.o
+[ 27%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/stabilize_stage.cpp.o
+[ 28%] Building CXX object CMakeFiles/mark_detector.dir/lib/pipeline/detector.cpp.o
+[ 29%] Linking CXX static library libmark_detector.a
+[ 29%] Built target mark_detector
+[ 31%] Building CXX object CMakeFiles/mark_offline.dir/app/offline_runner.cpp.o
+[ 31%] Building CXX object CMakeFiles/mark_frame_record_reader.dir/tools/common/frame_record_reader.cpp.o
+[ 32%] Building CXX object CMakeFiles/timing_test.dir/tests/timing_test.cpp.o
+[ 33%] Building CXX object CMakeFiles/temporal_stabilizer_test.dir/tests/temporal_stabilizer_test.cpp.o
+[ 34%] Linking CXX executable temporal_stabilizer_test
+[ 35%] Linking CXX static library libmark_frame_record_reader.a
+[ 35%] Built target mark_frame_record_reader
+[ 36%] Building CXX object CMakeFiles/display_history_test.dir/tests/display_history_test.cpp.o
+[ 37%] Linking CXX executable timing_test
+[ 37%] Built target temporal_stabilizer_test
+[ 38%] Building CXX object CMakeFiles/temporal_integration_test.dir/tests/temporal_integration_test.cpp.o
+[ 38%] Built target timing_test
+[ 39%] Building CXX object CMakeFiles/block3_contract_regression_test.dir/tests/block3_contract_regression_test.cpp.o
+[ 40%] Building CXX object CMakeFiles/mark_offline.dir/app/debug_renderer.cpp.o
+[ 41%] Linking CXX executable display_history_test
+[ 41%] Built target display_history_test
+[ 41%] Building CXX object CMakeFiles/assignment_completion_test.dir/tests/assignment_completion_test.cpp.o
+[ 42%] Building CXX object CMakeFiles/mark_offline.dir/app/input_completion.cpp.o
+[ 43%] Linking CXX executable temporal_integration_test
+[ 44%] Building CXX object CMakeFiles/mark_offline.dir/app/display_session.cpp.o
+[ 45%] Linking CXX executable block3_contract_regression_test
+[ 45%] Built target temporal_integration_test
+[ 46%] Building CXX object CMakeFiles/corner_edge_fit_test.dir/tests/corner_edge_fit_test.cpp.o
+[ 46%] Built target block3_contract_regression_test
+[ 47%] Building CXX object CMakeFiles/config_contract_test.dir/tests/config_contract_test.cpp.o
+[ 48%] Linking CXX executable config_contract_test
+[ 49%] Linking CXX executable assignment_completion_test
+[ 49%] Built target config_contract_test
+[ 50%] Building CXX object CMakeFiles/config_error_test.dir/tests/config_error_test.cpp.o
+[ 51%] Building CXX object CMakeFiles/mark_offline.dir/app/video_exporter.cpp.o
+[ 51%] Built target assignment_completion_test
+[ 52%] Building CXX object CMakeFiles/config_roundtrip_test.dir/tests/config_roundtrip_test.cpp.o
+[ 53%] Linking CXX executable config_error_test
+[ 54%] Linking CXX executable config_roundtrip_test
+[ 55%] Linking CXX executable corner_edge_fit_test
+[ 55%] Built target config_error_test
+[ 56%] Building CXX object CMakeFiles/detector_contract_test.dir/tests/detector_contract_test.cpp.o
+[ 57%] Building CXX object CMakeFiles/mark_offline.dir/app/run_console.cpp.o
+[ 57%] Built target corner_edge_fit_test
+[ 57%] Built target config_roundtrip_test
+[ 58%] Building CXX object CMakeFiles/geometry_model_test.dir/tests/geometry_model_test.cpp.o
+[ 59%] Building CXX object CMakeFiles/geometry_utils_test.dir/tests/geometry_utils_test.cpp.o
+[ 60%] Linking CXX executable geometry_utils_test
+[ 61%] Linking CXX executable geometry_model_test
+[ 62%] Linking CXX static library libmark_offline.a
+[ 62%] Built target mark_offline
+[ 63%] Building CXX object CMakeFiles/geometry_matcher_test.dir/tests/geometry_matcher_test.cpp.o
+[ 63%] Built target geometry_utils_test
+[ 64%] Building CXX object CMakeFiles/manual_validation_check.dir/tests/manual_validation_check.cpp.o
+[ 64%] Built target geometry_model_test
+[ 65%] Building CXX object CMakeFiles/corner_resolver_test.dir/tests/corner_resolver_test.cpp.o
+[ 65%] Linking CXX executable detector_contract_test
+[ 65%] Built target detector_contract_test
+[ 66%] Building CXX object CMakeFiles/screen_order_test.dir/tests/screen_order_test.cpp.o
+[ 67%] Linking CXX executable manual_validation_check
+[ 68%] Linking CXX executable corner_resolver_test
+[ 68%] Built target manual_validation_check
+[ 69%] Building CXX object CMakeFiles/semantic_resolver_test.dir/tests/semantic_resolver_test.cpp.o
+[ 70%] Linking CXX executable screen_order_test
+[ 70%] Built target corner_resolver_test
+[ 71%] Building CXX object CMakeFiles/detection_validator_test.dir/tests/detection_validator_test.cpp.o
+[ 72%] Linking CXX executable geometry_matcher_test
+[ 72%] Built target screen_order_test
+[ 73%] Building CXX object CMakeFiles/geometry_l_topology_test.dir/tests/geometry_l_topology_test.cpp.o
+[ 73%] Built target geometry_matcher_test
+[ 74%] Building CXX object CMakeFiles/geometry_anchor_evidence_test.dir/tests/geometry_anchor_evidence_test.cpp.o
+[ 75%] Linking CXX executable semantic_resolver_test
+[ 75%] Built target semantic_resolver_test
+[ 76%] Building CXX object CMakeFiles/path_a_competition_test.dir/tests/path_a_competition_test.cpp.o
+[ 77%] Linking CXX executable detection_validator_test
+[ 77%] Built target detection_validator_test
+[ 78%] Building CXX object CMakeFiles/decode_audit.dir/tools/audit/decode_audit.cpp.o
+[ 79%] Linking CXX executable geometry_l_topology_test
+[ 79%] Built target geometry_l_topology_test
+[ 80%] Building CXX object CMakeFiles/temporal_audit.dir/tools/audit/temporal_audit.cpp.o
+[ 81%] Linking CXX executable geometry_anchor_evidence_test
+[ 81%] Built target geometry_anchor_evidence_test
+[ 82%] Building CXX object CMakeFiles/geometry_audit.dir/tools/audit/geometry_audit.cpp.o
+[ 83%] Linking CXX executable path_a_competition_test
+[ 84%] Linking CXX executable decode_audit
+[ 84%] Built target path_a_competition_test
+[ 85%] Building CXX object CMakeFiles/observability_verify.dir/tools/validation/observability_verify.cpp.o
+[ 85%] Built target decode_audit
+[ 86%] Building CXX object CMakeFiles/final_fixes_verify.dir/tools/validation/final_fixes_verify.cpp.o
+[ 87%] Linking CXX executable geometry_audit
+[ 88%] Linking CXX executable temporal_audit
+[ 88%] Built target geometry_audit
+[ 89%] Building CXX object CMakeFiles/path_a_verify.dir/tools/validation/path_a_verify.cpp.o
+[ 89%] Built target temporal_audit
+[ 90%] Building CXX object CMakeFiles/marker_app.dir/app/main.cpp.o
+[ 91%] Linking CXX executable observability_verify
+[ 91%] Built target observability_verify
+[ 92%] Building CXX object CMakeFiles/diagnostics_record_test.dir/tests/diagnostics_record_test.cpp.o
+[ 93%] Linking CXX executable marker_app
+[ 94%] Linking CXX executable final_fixes_verify
+[ 94%] Built target marker_app
+[ 95%] Building CXX object CMakeFiles/debug_renderer_test.dir/tests/debug_renderer_test.cpp.o
+[ 95%] Built target final_fixes_verify
+[ 96%] Building CXX object CMakeFiles/observability_integration_test.dir/tests/observability_integration_test.cpp.o
+[ 97%] Linking CXX executable diagnostics_record_test
+[ 97%] Built target diagnostics_record_test
+[ 98%] Linking CXX executable debug_renderer_test
+[ 98%] Built target debug_renderer_test
+[ 99%] Linking CXX executable path_a_verify
+[100%] Linking CXX executable observability_integration_test
+[100%] Built target path_a_verify
+[100%] Built target observability_integration_test

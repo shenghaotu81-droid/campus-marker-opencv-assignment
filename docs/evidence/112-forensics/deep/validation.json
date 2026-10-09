@@ -1,0 +1,20 @@
+{
+  "all_final_pipeline_records_have_visual_status": true,
+  "subset_matches_full_exactly": true,
+  "baseline_corner_replay_mismatches": 0,
+  "full_frames": 1676,
+  "target_new_detections": 20,
+  "previous_detection_frames_lost": 0,
+  "previous_raw_detection_corner_changes": 0,
+  "new_detections_outside_target_set": 0,
+  "branch": "debug/112-forensics",
+  "tracked_worktree_and_index_diff_empty": true,
+  "existing_untracked_prompt_preserved": true,
+  "not_verified": [
+    "独立真值定位误差",
+    "周期模型完整检测链",
+    "temporal smoothing输出",
+    "生产性能",
+    "全部Detection字段逐字段比较"
+  ]
+}
