@@ -65,10 +65,13 @@ ffplay new-runs/quickstart-verification-01/overlay.mp4
 
 配置模型路径相对 YAML 所在目录解析；命令中的视频和输出路径按当前工作目录解析。库使用者包含 `<mark/detector.hpp>`，内部模块见 `lib/`。
 
-当前框来自当前帧测量，失检时不绘历史框；证据不足、结构截断或无法消除的几何竞争会拒绝，方向不唯一可保持 unknown。一般透视、任意尺度/成像条件和真实角点精度仍有适用范围限制；本轮小修没有解决闪烁或重定预算，详见[fix2-sweep 原理调查](docs/fix2_sweep_report.md)与[后续小修验收](docs/fix2_followup_acceptance.md)。
+当前框来自当前帧测量，失检时不绘历史框；证据不足、结构截断或无法消除的几何竞争会拒绝，方向不唯一可保持 unknown。112恢复已落地：固定1676帧视频达到1088检测、112/112恢复，原976帧raw四角逐值不变，集合外新增0；单线程Release两次实测均值7.67/7.48ms、最大27.80/26.06ms，均0帧超33ms。历史沙盒参考为均值7.5ms、最大29.5ms、0超33ms，详见[112恢复验收](docs/fix112_recovery_acceptance.md)。
+
+结论限于固定1676帧基准，不保证任意输入/硬件的33ms最坏耗时；固定2px奇偶位移压力样本仍严格拒绝，保留这一盲区。一般透视、任意尺度/成像条件和实拍亚像素角点精度仍有适用范围限制；实拍视频没有独立真值标注，独立合成定位结果不能外推为实拍正确率。
 
 ## 文档导航
 
 - [完整文档索引](docs/INDEX.md)
+- [112恢复施工记录](docs/fix112_recovery_log.md)与[验收结果](docs/fix112_recovery_acceptance.md)
 - [后续小修施工记录](docs/fix2_followup_log.md)与[验收结果](docs/fix2_followup_acceptance.md)
 - [修改前 README 历史全文](docs/history/README_before_fix2_followup.md)：保留 Block3/4/5、Final-fixes、Path A 的全部历史说明和命令。

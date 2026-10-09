@@ -1,0 +1,89 @@
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/tushenghao/projects/campus-marker-opencv-assignment/build/112-recovery/release
+[  2%] Built target marker_display_probe
+[  4%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/corner_resolver.cpp.o
+[  4%] Building CXX object CMakeFiles/mark_detector.dir/lib/corners/corner_edge_fit.cpp.o
+[  5%] Linking CXX static library libmark_detector.a
+[ 30%] Built target mark_detector
+[ 33%] Built target mark_frame_record_reader
+[ 32%] Linking CXX executable timing_test
+[ 34%] Linking CXX executable temporal_stabilizer_test
+[ 35%] Building CXX object CMakeFiles/mark_offline.dir/app/offline_runner.cpp.o
+[ 36%] Linking CXX executable display_history_test
+[ 37%] Built target timing_test
+[ 38%] Linking CXX executable temporal_integration_test
+[ 39%] Built target temporal_stabilizer_test
+[ 40%] Linking CXX executable block3_contract_regression_test
+[ 41%] Built target display_history_test
+[ 42%] Linking CXX executable assignment_completion_test
+[ 43%] Built target temporal_integration_test
+[ 43%] Building CXX object CMakeFiles/corner_edge_fit_test.dir/tests/corner_edge_fit_test.cpp.o
+[ 44%] Built target block3_contract_regression_test
+[ 44%] Built target assignment_completion_test
+[ 45%] Linking CXX executable config_contract_test
+[ 46%] Linking CXX executable config_error_test
+[ 47%] Built target config_error_test
+[ 48%] Building CXX object CMakeFiles/corner_edge_fit_test.dir/tests/support/recovery112_reference.cpp.o
+[ 49%] Built target config_contract_test
+[ 50%] Linking CXX executable config_roundtrip_test
+[ 51%] Built target config_roundtrip_test
+[ 52%] Linking CXX executable detector_contract_test
+[ 53%] Built target detector_contract_test
+[ 54%] Linking CXX executable geometry_model_test
+[ 55%] Built target geometry_model_test
+[ 55%] Linking CXX executable geometry_utils_test
+[ 56%] Built target geometry_utils_test
+[ 57%] Linking CXX executable geometry_matcher_test
+[ 58%] Built target geometry_matcher_test
+[ 59%] Linking CXX executable manual_validation_check
+[ 60%] Built target manual_validation_check
+[ 61%] Linking CXX executable corner_resolver_test
+[ 62%] Built target corner_resolver_test
+[ 62%] Linking CXX executable screen_order_test
+[ 63%] Built target screen_order_test
+[ 64%] Building CXX object CMakeFiles/mark_offline.dir/app/debug_renderer.cpp.o
+[ 65%] Building CXX object CMakeFiles/mark_offline.dir/app/input_completion.cpp.o
+[ 66%] Building CXX object CMakeFiles/mark_offline.dir/app/display_session.cpp.o
+[ 67%] Linking CXX executable corner_edge_fit_test
+[ 67%] Building CXX object CMakeFiles/mark_offline.dir/app/video_exporter.cpp.o
+[ 67%] Built target corner_edge_fit_test
+[ 68%] Linking CXX executable semantic_resolver_test
+[ 69%] Built target semantic_resolver_test
+[ 69%] Linking CXX executable detection_validator_test
+[ 70%] Built target detection_validator_test
+[ 71%] Linking CXX executable geometry_l_topology_test
+[ 72%] Building CXX object CMakeFiles/mark_offline.dir/app/run_console.cpp.o
+[ 73%] Built target geometry_l_topology_test
+[ 73%] Linking CXX executable geometry_anchor_evidence_test
+[ 74%] Linking CXX executable path_a_competition_test
+[ 74%] Linking CXX executable observability_verify
+[ 75%] Built target geometry_anchor_evidence_test
+[ 76%] Linking CXX executable final_fixes_verify
+[ 77%] Built target path_a_competition_test
+[ 78%] Linking CXX executable path_a_verify
+[ 79%] Built target observability_verify
+[ 80%] Linking CXX executable recovery112_benchmark
+[ 81%] Built target final_fixes_verify
+[ 82%] Built target path_a_verify
+[ 83%] Linking CXX executable recovery112_synthetic
+[ 84%] Linking CXX executable diagnostics_record_test
+[ 85%] Built target recovery112_synthetic
+[ 86%] Built target recovery112_benchmark
+[ 87%] Built target diagnostics_record_test
+[ 88%] Linking CXX static library libmark_offline.a
+[ 88%] Built target mark_offline
+[ 91%] Linking CXX executable marker_app
+[ 91%] Linking CXX executable observability_integration_test
+[ 92%] Linking CXX executable debug_renderer_test
+[ 92%] Building CXX object CMakeFiles/decode_audit.dir/tools/audit/decode_audit.cpp.o
+[ 93%] Built target debug_renderer_test
+[ 94%] Building CXX object CMakeFiles/temporal_audit.dir/tools/audit/temporal_audit.cpp.o
+[ 95%] Built target marker_app
+[ 96%] Built target observability_integration_test
+[ 97%] Linking CXX executable geometry_audit
+[ 98%] Linking CXX executable decode_audit
+[ 99%] Built target geometry_audit
+[ 99%] Built target decode_audit
+[100%] Linking CXX executable temporal_audit
+[100%] Built target temporal_audit

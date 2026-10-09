@@ -1,0 +1,23 @@
+{
+  "src/tushenghao/README.md": "99e09a8b3b3c13b6fe6e6baed20e9368d576f671eecc06a262ccdaa892ae9825",
+  "src/tushenghao/config/detector.yaml": "d0804307d6a036a18b16db149c4eb4c533e03e7209122ca81fce08b73cc4bfc2",
+  "src/tushenghao/config/detector_debug.yaml": "ea57f1cdf15e3bc26439fb1239f721b1011d94a56e28eea6aa9316d9267008ba",
+  "src/tushenghao/config/detector_verification.yaml": "e594f62aba15c4b59da2462cd8308fe739f2440e8d0b6c014a2c935af3e7b143",
+  "src/tushenghao/config/marker_geometry.yaml": "844853098082c0eae1972f744e084ca8b928233bf62b6c3933c6af4ada374109",
+  "src/tushenghao/docs/ref/1.md": "f283fbec41c28e09d1fa94b5b7decc0eea5fc78241c36d516b08a652e24624cc",
+  "src/tushenghao/docs/ref/2.md": "dddc29831b73505bdfbc89402b7b8f51842fcf16e79f61981a0a43d2af229b60",
+  "src/tushenghao/docs/ref/3-2.md": "f8d59d02300430117bab5fb41ab6020c54e723c21512f9712419974206ea6f67",
+  "src/tushenghao/docs/ref/4.md": "b3445cd26384a1fde61aaa7d4a98c80dc1ffca887becf2b1a723b930f1334559",
+  "src/tushenghao/docs/ref/5.md": "ef7e14c32c60200b9f3e49096cf4d43b945a4a6fe0bd65421bff75f123300310",
+  "src/tushenghao/docs/ref/Block3_\u504f\u79bb\u5ba1\u8ba1\u4e0eCodex\u4fee\u590d\u65b9\u6848_\u7ec8\u7a3f.md": "58707c549e63f64addeec43e0c94abda755711911c992a133374af84ace3a011",
+  "src/tushenghao/docs/ref/Block4_\u8f93\u51fa\u7a33\u5b9a\u5c42_Codex\u5b8c\u6574\u5b9e\u73b0\u65b9\u6848_\u7ec8\u7a3f.md": "0eeb006ee566f3ba4197a6710fc134a689a019a817560139e3e920332fe74206",
+  "src/tushenghao/docs/ref/Block5_\u53ef\u89c2\u6d4b\u6027_Codex\u5b8c\u6574\u5b9e\u73b0\u65b9\u6848_\u7ec8\u7a3f.md": "baeda02287bc128b78de431536fc00e033ba40a8790f9cfac9d5440ac5361994",
+  "src/tushenghao/docs/ref/Final-fixes_PathA_\u951a\u70b9\u7ade\u4e89_Codex\u6267\u884c\u65b9\u6848_\u7ec8\u7a3f.md": "818cc1ffbf4367d416e9d2fce3f9c3d8ad3fa54cee648f889f7374b7897bc814",
+  "src/tushenghao/docs/ref/FinalFixes_Codex\u6267\u884c\u65b9\u6848_\u7ec8\u7a3f.md": "60f97da8a2f829b366f5181f162f591d3c3c3616daee6999d05119f3d49ab7a7",
+  "src/tushenghao/docs/ref/Fix2-sweep_\u540e\u7eed\u5c0f\u4fee_Codex\u6267\u884c\u65b9\u6848.md": "1dfbd56d7889536bb69fcbe7134bd477456e31bf9f0b9dd0bf54a6c5642c6fc7",
+  "src/tushenghao/docs/ref/codex-112-implementation-prompt.md": "2301c4725968eaaecfb82edfd836243578e839e9c80ade90ede51ddc506a4af5",
+  "src/tushenghao/docs/ref/v0.8.1_Detector.md": "02b798f0c3863cd94b1cd15f13e2cd9ca3194becd921d084b74fd24a77736d41",
+  "src/tushenghao/include/mark/detector.hpp": "904617fc8e13bb168b161430b6fce82b99f0d3dfa6d55df9386b0d3efcd36d97",
+  "src/tushenghao/include/mark/detector_config.hpp": "6157f2a9895b06a812ac4f39c5866f96af4cc7e07262ab0e416b8bf32653481a",
+  "src/tushenghao/include/mark/detector_types.hpp": "d954500665cdb4cfb284103e15910f10eca1ce5643963b71a46a88d4b7d2d73f"
+}
