@@ -1,0 +1,70 @@
+Internal ctest changing into directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build/112-recovery/release
+Test project /home/tushenghao/projects/campus-marker-opencv-assignment/build/112-recovery/release
+      Start  1: diagnostics_record_test
+ 1/25 Test  #1: diagnostics_record_test ...........   Passed    0.05 sec
+      Start  2: debug_renderer_test
+ 2/25 Test  #2: debug_renderer_test ...............   Passed    0.03 sec
+      Start  3: timing_test
+ 3/25 Test  #3: timing_test .......................   Passed    0.00 sec
+      Start  4: observability_integration_test
+ 4/25 Test  #4: observability_integration_test ....   Passed    0.41 sec
+      Start  5: temporal_stabilizer_test
+ 5/25 Test  #5: temporal_stabilizer_test ..........   Passed    0.00 sec
+      Start  6: display_history_test
+ 6/25 Test  #6: display_history_test ..............   Passed    0.00 sec
+      Start  7: temporal_integration_test
+ 7/25 Test  #7: temporal_integration_test .........   Passed    0.20 sec
+      Start  8: block3_contract_regression_test
+ 8/25 Test  #8: block3_contract_regression_test ...   Passed    0.07 sec
+      Start  9: assignment_completion_test
+ 9/25 Test  #9: assignment_completion_test ........   Passed    0.08 sec
+      Start 10: corner_edge_fit_test
+10/25 Test #10: corner_edge_fit_test ..............***Failed    6.53 sec
+PASS UniqueSupportPixelCount
+PASS RoundedCornerDoesNotCrash
+PASS ParallelEdgesFail
+PASS RemoteIntersectionFails
+PASS SplitRoundedBoundary
+PASS FragmentedVideoBoundary
+PASS ManySimplifiedSegments
+PASS PeriodicParameters
+FAIL PeriodicEvidenceContract: raw residual was replaced by corrected error
+
+      Start 11: config_contract_test
+11/25 Test #11: config_contract_test ..............   Passed    0.00 sec
+      Start 12: config_error_test
+12/25 Test #12: config_error_test .................   Passed    0.01 sec
+      Start 13: config_roundtrip_test
+13/25 Test #13: config_roundtrip_test .............   Passed    0.00 sec
+      Start 14: detector_contract_test
+14/25 Test #14: detector_contract_test ............   Passed    0.00 sec
+      Start 15: geometry_model_test
+15/25 Test #15: geometry_model_test ...............   Passed    0.00 sec
+      Start 16: geometry_utils_test
+16/25 Test #16: geometry_utils_test ...............   Passed    0.00 sec
+      Start 17: geometry_matcher_test
+17/25 Test #17: geometry_matcher_test .............   Passed    0.02 sec
+      Start 18: manual_validation_check
+18/25 Test #18: manual_validation_check ...........   Passed    0.00 sec
+      Start 19: corner_resolver_test
+19/25 Test #19: corner_resolver_test ..............   Passed    0.20 sec
+      Start 20: screen_order_test
+20/25 Test #20: screen_order_test .................   Passed    0.00 sec
+      Start 21: semantic_resolver_test
+21/25 Test #21: semantic_resolver_test ............   Passed    0.00 sec
+      Start 22: detection_validator_test
+22/25 Test #22: detection_validator_test ..........   Passed    0.16 sec
+      Start 23: geometry_l_topology_test
+23/25 Test #23: geometry_l_topology_test ..........   Passed    0.02 sec
+      Start 24: geometry_anchor_evidence_test
+24/25 Test #24: geometry_anchor_evidence_test .....   Passed    0.00 sec
+      Start 25: path_a_competition_test
+25/25 Test #25: path_a_competition_test ...........   Passed    0.13 sec
+
+96% tests passed, 1 tests failed out of 25
+
+Total Test time (real) =   7.93 sec
+
+The following tests FAILED:
+	 10 - corner_edge_fit_test (Failed)
+Errors while running CTest

@@ -11,6 +11,9 @@
 - [Block4已批准归档](block4/)：原始审批与逐帧结果，只读。
 - [Block5可观测性](block5/INDEX.md)：新run与Route B基线，历史日志不重写。
 
+| 批次 | 当前阅读入口 |
+|---|---|
 | [112帧取证](112-forensics/ANALYSIS_REPORT.md) | 漏检根因、deep/深入取证报告 |
 | [112帧沙盒方案](112-sandbox/EXECUTION_PLAN.md) | 实施总纲、6步验收标准 |
 | [112最慢帧优化](112-worstframe/REPORT.md) | 性能最终数据、两条路线对比 |
+| [112-recovery干净实现验收](112-recovery/INDEX.md) | 逐步全视频对账、双配置回归、独立真值/负样本、manifest |

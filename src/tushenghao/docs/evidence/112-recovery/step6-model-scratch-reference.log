@@ -1,0 +1,11 @@
+PASS UniqueSupportPixelCount
+PASS RoundedCornerDoesNotCrash
+PASS ParallelEdgesFail
+PASS RemoteIntersectionFails
+PASS SplitRoundedBoundary
+PASS FragmentedVideoBoundary
+PASS ManySimplifiedSegments
+PASS PeriodicParameters
+PASS PeriodicEvidenceContract
+reference comparisons=39 (all arcs/pairs/evidence exact)
+PASS IndexedSearchReference

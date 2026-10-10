@@ -1,0 +1,62 @@
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/tushenghao/projects/campus-marker-opencv-assignment/build/112-recovery/release
+[  2%] Built target marker_display_probe
+[ 30%] Built target mark_detector
+[ 34%] Built target temporal_stabilizer_test
+[ 34%] Built target mark_frame_record_reader
+[ 37%] Building CXX object CMakeFiles/mark_offline.dir/app/offline_runner.cpp.o
+[ 37%] Built target timing_test
+[ 39%] Built target temporal_integration_test
+[ 41%] Built target display_history_test
+[ 43%] Built target block3_contract_regression_test
+[ 44%] Building CXX object CMakeFiles/mark_offline.dir/app/debug_renderer.cpp.o
+[ 45%] Building CXX object CMakeFiles/corner_edge_fit_test.dir/tests/corner_edge_fit_test.cpp.o
+[ 46%] Built target assignment_completion_test
+[ 48%] Built target config_contract_test
+[ 50%] Built target config_error_test
+[ 52%] Built target config_roundtrip_test
+[ 54%] Built target detector_contract_test
+[ 56%] Built target geometry_model_test
+[ 58%] Built target geometry_utils_test
+[ 60%] Built target geometry_matcher_test
+[ 62%] Built target manual_validation_check
+[ 64%] Built target corner_resolver_test
+[ 65%] Built target screen_order_test
+[ 67%] Built target semantic_resolver_test
+[ 69%] Built target detection_validator_test
+[ 70%] Built target geometry_l_topology_test
+[ 72%] Built target geometry_anchor_evidence_test
+[ 74%] Built target path_a_competition_test
+[ 75%] Built target observability_verify
+[ 77%] Built target final_fixes_verify
+[ 79%] Built target path_a_verify
+[ 80%] Building CXX object CMakeFiles/recovery112_benchmark.dir/tools/validation/recovery112_benchmark.cpp.o
+[ 80%] Building CXX object CMakeFiles/mark_offline.dir/app/input_completion.cpp.o
+[ 81%] Linking CXX executable recovery112_benchmark
+[ 82%] Building CXX object CMakeFiles/mark_offline.dir/app/display_session.cpp.o
+[ 82%] Built target recovery112_benchmark
+[ 83%] Building CXX object CMakeFiles/recovery112_synthetic.dir/tools/validation/recovery112_synthetic.cpp.o
+[ 83%] Linking CXX executable corner_edge_fit_test
+[ 83%] Built target corner_edge_fit_test
+[ 84%] Building CXX object CMakeFiles/mark_offline.dir/app/video_exporter.cpp.o
+[ 85%] Building CXX object CMakeFiles/mark_offline.dir/app/run_console.cpp.o
+[ 86%] Built target diagnostics_record_test
+[ 87%] Linking CXX static library libmark_offline.a
+[ 87%] Built target mark_offline
+[ 90%] Linking CXX executable marker_app
+[ 90%] Linking CXX executable debug_renderer_test
+[ 90%] Linking CXX executable observability_integration_test
+[ 91%] Linking CXX executable recovery112_synthetic
+[ 92%] Built target debug_renderer_test
+[ 93%] Building CXX object CMakeFiles/decode_audit.dir/tools/audit/decode_audit.cpp.o
+[ 93%] Built target recovery112_synthetic
+[ 94%] Building CXX object CMakeFiles/temporal_audit.dir/tools/audit/temporal_audit.cpp.o
+[ 95%] Built target observability_integration_test
+[ 96%] Built target marker_app
+[ 97%] Linking CXX executable geometry_audit
+[ 98%] Built target geometry_audit
+[ 99%] Linking CXX executable decode_audit
+[ 99%] Built target decode_audit
+[100%] Linking CXX executable temporal_audit
+[100%] Built target temporal_audit

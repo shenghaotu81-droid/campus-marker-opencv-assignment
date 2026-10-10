@@ -25,6 +25,8 @@
 
 - [Final-fixes 验收](final-fixes_acceptance.md)：13 项实施、两种构建、完整回归、显示与视频自动验证及人工关卡。
 - [Final-fixes 证据](evidence/final-fixes/INDEX.md)：批次日志、全帧 JSONL、完整 MP4、命令及 SHA256。
+- [112恢复施工记录](fix112_recovery_log.md)：干净重写、六步独立验收、中文代码阅读路线。
+- [112恢复验收](fix112_recovery_acceptance.md)：1088/1676、112/112、单线程完整性能与独立测试边界。
 
 当前 Final-fixes 自动验证已完成；有屏显示和人工播放器待确认，干净 Linux 按用户决定记未验证。
 历史 Block5 失败 fixture 与未实现视频导出不代表当前状态；原记录保持。
