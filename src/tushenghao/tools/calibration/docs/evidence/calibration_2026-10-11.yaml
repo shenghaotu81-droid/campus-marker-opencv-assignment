@@ -1,0 +1,20 @@
+# 输出的 calibration.yaml 复制一份
+%YAML:1.0
+---
+schema_version: 1
+camera_matrix: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 2.3943661291886838e+03, 0., 7.0500308444768814e+02, 0.,
+       2.3948121535232967e+03, 5.6541391190450588e+02, 0., 0., 1. ]
+distortion_coefficients: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ -6.4232559043765958e-02, 2.2389068439225621e-01,
+       -4.1206250758182568e-04, -9.5439325610655588e-04,
+       6.8195350877044358e-01 ]
+image_width: 1440
+image_height: 1080
+reprojection_error: 1.3052994586492386e-02
