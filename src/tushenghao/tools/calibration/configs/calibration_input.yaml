@@ -1,0 +1,17 @@
+%YAML:1.0
+
+schema_version: 1
+
+video_path: "data/raw/calibration_video.avi"
+
+board_rows: 7
+board_cols: 7
+
+point_spacing: 0.03
+
+start_frame: 0
+end_frame: -1
+
+frame_list: []
+
+output_path: "src/tushenghao/config/calibration.yaml"

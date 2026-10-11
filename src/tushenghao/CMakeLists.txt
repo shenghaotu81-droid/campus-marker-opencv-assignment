@@ -178,5 +178,12 @@ add_executable(recovery112_synthetic tools/validation/recovery112_synthetic.cpp)
 target_link_libraries(recovery112_synthetic PRIVATE mark_detector_internal_headers mark_test_support)
 
 # 离线相机标定工具：7x7 圆点阵（0.03m 间距），求内参 K 和畸变 dist。
-add_executable(calibration_tool tools/calibration/calibration_main.cpp)
+add_executable(
+    calibration_tool
+    tools/calibration/calibration_main.cpp
+    tools/calibration/calibration_config.cpp
+    tools/calibration/calibration_video.cpp
+    tools/calibration/calibration_detection.cpp
+    tools/calibration/calibration_result.cpp
+)
 target_link_libraries(calibration_tool PRIVATE ${OpenCV_LIBS})
