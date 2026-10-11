@@ -27,6 +27,7 @@ cmake --build build/block3-fixture -j 4
 | 独立结果核查 | [reporting/report_verification.py](block3_fixture/reporting/report_verification.py) | python3 脚本 | 工具侧真值、屏幕顺序、bbox/证据与H门槛核查 |
 | C统计报表 | [reporting/summarize.py](block3_fixture/reporting/summarize.py)、[关联报表](block3_fixture/reporting/summarize_association.py) | python3 脚本 | 分层分布与预算测量报表 |
 | 角统计报表 | [reporting/summarize_video_corners.py](block3_fixture/reporting/summarize_video_corners.py) | python3 脚本 | 实拍逐角分布及不可测统计 |
+| 相机标定 | [calibration/calibration_main.cpp](calibration/calibration_main.cpp) | build/release/calibration_tool | 离线相机标定：7x7 圆点阵求内参 K 和畸变系数，输出 config/calibration.yaml 给 solvePnP 用 |
 
 四个Python脚本共置reporting/，保留对summarize模块的直接导入。旧[synth_ref](synth_ref/README.md)完整保留；其build*/、runs/和__pycache__是参考包历史/生成物，不是现行工具入口，本轮不清理或迁移。历史诊断.cpp留在[证据批次](../docs/evidence/block3/04-four-track-v3-v4/INDEX.md)，不进入新CMake目标。
 
