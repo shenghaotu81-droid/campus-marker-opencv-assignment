@@ -12,7 +12,7 @@
 2. calculate_reprojection_error（static 辅助函数）:
 对每张标定图：用刚算出的 K/dist + 外参，把 3D 点重新投影回 2D（cv::projectPoints）
 比较"投影回去的 2D 点" vs "实际检测到的 2D 点"，算偏差
-所有点取平均，就是重投影误差——越小说明标定越准
+平方平均后开根号（不是所有点取平均），就是重投影误差——越小说明标定越准
 static 表示只在这个文件里用
 3. save_calibration_result:
 用 cv::FileStorage 写 yaml
@@ -22,6 +22,7 @@ static 表示只在这个文件里用
 #include "calibration_result.hpp"
 
 #include <iostream>
+#include <cmath>
 
 // 计算平均重投影误差
 static double
@@ -42,7 +43,8 @@ calculate_reprojection_error(const std::vector<std::vector<cv::Point3f>> &object
 
         double error = cv::norm(image_points[i], projected_points, cv::NORM_L2);
 
-        total_error += error;
+        // total_error += error;
+        total_error += error * error;  // 先累加平方，最后统一开根号
         total_points += static_cast<int>(object_points[i].size());
     }
 
@@ -51,7 +53,8 @@ calculate_reprojection_error(const std::vector<std::vector<cv::Point3f>> &object
         return -1.0;
     }
 
-    return total_error / total_points;
+    // return total_error / total_points;
+    return std::sqrt(total_error / total_points);
 }
 
 // 执行相机标定
@@ -73,11 +76,17 @@ bool run_camera_calibration(const CalibrationConfig &config,
     std::vector<cv::Mat> tvecs;
 
     // 非线性优化求解
-    cv::calibrateCamera(object_points, image_points, image_size, result.camera_matrix,
-                        result.dist_coeffs, rvecs, tvecs);
+    // cv::calibrateCamera(object_points, image_points, image_size, result.camera_matrix,
+    //                     result.dist_coeffs, rvecs, tvecs);
+    double cv_rms = cv::calibrateCamera(object_points, image_points, image_size,
+                                        result.camera_matrix, result.dist_coeffs, rvecs, tvecs);
 
     result.reprojection_error = calculate_reprojection_error(
         object_points, image_points, rvecs, tvecs, result.camera_matrix, result.dist_coeffs);
+
+    // 检验修复成果
+    std::cout << "手算 RMSE: " << result.reprojection_error << ", OpenCV RMS: " << cv_rms
+              << std::endl;
 
     return true;
 }

@@ -70,7 +70,7 @@ camera_matrix: !!opencv-matrix      # 3x3 内参
 distortion_coefficients: !!opencv-matrix  # 1x5 畸变
 image_width: 1440
 image_height: 1080
-reprojection_error: 0.013          # 重投影误差（像素）
+reprojection_error: 0.095         # 重投影误差（像素）
 ```
 
 ## 验收标准

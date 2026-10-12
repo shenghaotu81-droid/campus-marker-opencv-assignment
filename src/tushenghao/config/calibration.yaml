@@ -16,4 +16,4 @@ distortion_coefficients: !!opencv-matrix
        6.8195350877044358e-01 ]
 image_width: 1440
 image_height: 1080
-reprojection_error: 1.3052994586492386e-02
+reprojection_error: 9.5094037701559969e-02
