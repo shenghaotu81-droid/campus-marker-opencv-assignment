@@ -187,3 +187,6 @@ add_executable(
     tools/calibration/calibration_result.cpp
 )
 target_link_libraries(calibration_tool PRIVATE ${OpenCV_LIBS})
+
+# G2 独立感知层，默认关闭；不改变原检测器目标。
+include(cmake/g2.cmake)
