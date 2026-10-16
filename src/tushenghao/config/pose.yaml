@@ -14,11 +14,11 @@ geometry:
   hardware_verified: 0
 budgets:
   # 空字符串表示尚未标定；不继承二维角点拟合预算，不填经验值。(后定阈值)
-  # 合成数据 3456 组 μ+3σ
+  # 合成数据 3456 组 μ+3σ;注意：min_quad_area_px2暂时不填0.0以通过测试要求
   max_rmse_px: "31.2166"
   max_corner_error_px: "33.4116"
   # 暂不过滤：合成数据距离跨度大，μ-3σ 为负已截零；等实车数据再标定
-  min_quad_area_px2: "0.00"
+  min_quad_area_px2: ""
   # 等硬件实测
   max_time_uncertainty_s: ""
   hardware_verified: 0

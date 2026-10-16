@@ -36,3 +36,9 @@ Path A 推荐顺序：[专项验收](path_a_acceptance.md) → [施工日志](pa
 - [Fix2-sweep 后续小修施工记录](fix2_followup_log.md)：计数、几何残差、README 迁移和独立排版。
 - [Fix2-sweep 后续小修验收](fix2_followup_acceptance.md)：A01–A10 实测、双配置测试和同视频回归。
 - [README 历史全文](history/README_before_fix2_followup.md)：原入口完整保留，当前操作见项目 README。
+
+## G2 扩展感知
+
+- [G2 位姿与退出感知：构建、运行、参数与限制](g2.md)
+- [G2 实施验收与待验证事项](g2_acceptance.md)
+- G2 证据归档：`evidence/g2/`（测试日志、配置、敏感性与录像结果；不放编译产物）

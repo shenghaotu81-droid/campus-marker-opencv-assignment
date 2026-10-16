@@ -69,9 +69,16 @@ ffplay new-runs/quickstart-verification-01/overlay.mp4
 
 结论限于固定1676帧基准，不保证任意输入/硬件的33ms最坏耗时；固定2px奇偶位移压力样本仍严格拒绝，保留这一盲区。一般透视、任意尺度/成像条件和实拍亚像素角点精度仍有适用范围限制；实拍视频没有独立真值标注，独立合成定位结果不能外推为实拍正确率。
 
+## G2 位姿与退出感知
+
+G2 是独立构建选项，原 MARK 检测器接口保持不变。安装/构建/运行/参数与限制见 [G2 使用说明](docs/g2.md)，验收状态见 [G2 验收记录](docs/g2_acceptance.md)。
+
+默认位姿预算和退出 Tag 信息尚未实测，候选解可用于离线验证；未经过实车确认。
+
 ## 文档导航
 
 - [完整文档索引](docs/INDEX.md)
 - [112恢复施工记录](docs/fix112_recovery_log.md)与[验收结果](docs/fix112_recovery_acceptance.md)
 - [后续小修施工记录](docs/fix2_followup_log.md)与[验收结果](docs/fix2_followup_acceptance.md)
 - [修改前 README 历史全文](docs/history/README_before_fix2_followup.md)：保留 Block3/4/5、Final-fixes、Path A 的全部历史说明和命令。
+- [G2 位姿与退出感知](docs/g2.md)：通用 PnP 求解器 + MARK/AprilTag 双 wrapper，含阈值标定与验收。

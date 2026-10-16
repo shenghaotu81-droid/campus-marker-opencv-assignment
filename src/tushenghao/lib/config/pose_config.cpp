@@ -29,7 +29,7 @@ std::string text(const cv::FileNode &node, const char *key)
 double number(const cv::FileNode &value)
 {
     if (!value.isInt() && !value.isReal())
-        throw std::runtime_error("G2 应为有限数值");
+        throw std::runtime_error("G2 应为有限数值");   // "31.2166" 是 String，直接炸
     const double result = static_cast<double>(value);
     if (!std::isfinite(result))
         throw std::runtime_error("G2 数值非有限");
@@ -52,12 +52,30 @@ bool boolean(const cv::FileNode &node, const char *key)
     return value == 1;
 }
 
-// 空字符串→nullopt，就是"未标定"
+// 空字符串→nullopt，就是"未标定"(debug:G2 设计说 budgets 用字符串（空串=未标定），但代码没写字符串转数字的逻辑)
+/* 需要加字符串解析：
 std::optional<double> optional_number(const cv::FileNode &node, const char *key)
 {
     auto value = required(node, key);
     if (value.isString() && static_cast<std::string>(value).empty())
-        return std::nullopt;
+        return std::nullopt; // 空字符串→未标定，OK
+    return number(value);  // 非空字符串→调 number()
+}
+*/
+std::optional<double> optional_number(const cv::FileNode &node, const char *key)
+{
+    auto value = required(node, key);
+    if (value.isString())
+    {
+        std::string s = static_cast<std::string>(value);
+        if (s.empty())
+            return std::nullopt;
+        size_t pos = 0;
+        double d = std::stod(s, &pos);
+        if (pos != s.size() || !std::isfinite(d))
+            throw std::runtime_error("G2 数值非有限");
+        return d;
+    }
     return number(value);
 }
 
