@@ -1,0 +1,47 @@
+%YAML:1.0
+---
+schema_version: 1
+camera:
+  calibration: "calibration.yaml"
+  # 这是参考数据身份，不是硬件序列号；领取相机后重新标定并核对身份。
+  camera_id: "reference-maxicam-calibration"
+  hardware_verified: 0
+geometry:
+  model: "marker_geometry.yaml"
+  source_unit: "mm"
+  target_id: "mark-white-structure-v1"
+  # 图纸 P0=L0.v0/P1=M1.v1/P2=L2.v0/P3=L3.v0，不是外板 115x120。
+  hardware_verified: 0
+budgets:
+  # 空字符串表示尚未标定；不继承二维角点拟合预算，不填经验值。(后定阈值)
+  max_rmse_px: ""
+  max_corner_error_px: ""
+  min_quad_area_px2: ""
+  max_time_uncertainty_s: ""
+  hardware_verified: 0
+  evidence: "unmeasured"
+selection:
+  min_z_m: ""
+  max_z_m: ""
+  min_normal_z: ""
+  max_normal_z: ""
+  constraints_verified: 0
+  refine_lm: 0
+  prior_enabled: 0
+  prior_max_age_s: ""
+  prior_max_translation_m: ""
+  prior_max_rotation_rad: ""
+tag:
+  family: "tag36h11"
+  # 以下是可复现的算法起点，不是比赛质量阈值；默认原分辨率、单线程、无纠错。
+  nthreads: 1
+  quad_decimate: 1.0
+  quad_sigma: 0.0
+  refine_edges: 1
+  decode_sharpening: 0.25
+  max_hamming: 0
+  min_decision_margin: ""
+  allowed_ids: []
+  # 硬件确认后填写 id 与 side_m；边长量取黑白检测边界，这里不猜 ID/尺寸。
+  sizes: []
+  hardware_verified: 0

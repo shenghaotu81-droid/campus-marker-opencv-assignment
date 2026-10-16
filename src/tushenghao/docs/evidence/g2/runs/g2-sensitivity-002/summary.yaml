@@ -1,0 +1,8 @@
+%YAML:1.0
+---
+samples: "3456"
+unique: "0"
+invalid: "0"
+seed: 20261015
+hardware_confirmed: 0
+note: "未经过实车确认；truth_nearest 是离线评分，不是生产选择"

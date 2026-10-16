@@ -3,6 +3,8 @@
 // 批量生成合成数据（3 距离×3 倾角×12 旋转×4 噪声×8 重复=3456 组），跑位姿估计，把误差写进 sensitivity.csv 和 candidate_errors.csv
 // 它只产数据，阈值后面用 Python 算 3σ 再手填进 pose.yaml
 #include "mark/pose_estimator.hpp"
+#include "mark/pose_estimator.hpp"
+#include "../../lib/pose/pose_geometry.hpp"  // 加这一行，为了 detail::quad_area
 
 #include <algorithm>
 #include <cmath>
@@ -36,7 +38,7 @@ int main(int argc, char **argv)
         std::ofstream candidates(out / "candidate_errors.csv");
         if (!candidates)
             throw std::runtime_error("候选误差 CSV 打不开");
-        candidates << "sample_id,candidate_index,rmse_px,min_depth_m,translation_error_m,rotation_error_rad\n";
+        candidates << "sample_id,candidate_index,rmse_px,min_depth_m,translation_error_m,rotation_error_rad,max_error_px,quad_area_px2\n";
         candidates << std::setprecision(17);
         std::mt19937 rng(20261015);
         std::normal_distribution<double> normal(0, 1);
@@ -99,10 +101,12 @@ int main(int argc, char **argv)
                                 cv::Matx33d measured_rotation;
                                 cv::Rodrigues(candidate.pose_.rvec_, measured_rotation);
                                 const double cosine = (cv::trace(rotation.t() * measured_rotation) - 1) / 2;
-                                candidates << (sequence - 1) << ',' << k << ',' << candidate.rmse_px_
-                                    << ',' << candidate.min_depth_m_ << ','
-                                    << cv::norm(candidate.pose_.t_m_ - translation) << ','
-                                    << std::acos(std::clamp(cosine, -1.0, 1.0)) << '\n';
+                                candidates << (sequence - 1) << ',' << k << ','
+                                           << candidate.rmse_px_ << ',' << candidate.min_depth_m_
+                                           << ',' << cv::norm(candidate.pose_.t_m_ - translation)
+                                           << ',' << std::acos(std::clamp(cosine, -1.0, 1.0)) << ','
+                                           << candidate.max_error_px_ << ','
+                                           << mark::pose::detail::quad_area(observed) << '\n';
                             }
                         }
         if (!csv.good() || !candidates.good())

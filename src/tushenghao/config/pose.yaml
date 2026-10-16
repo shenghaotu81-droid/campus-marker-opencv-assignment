@@ -14,19 +14,28 @@ geometry:
   hardware_verified: 0
 budgets:
   # 空字符串表示尚未标定；不继承二维角点拟合预算，不填经验值。(后定阈值)
-  max_rmse_px: ""
-  max_corner_error_px: ""
-  min_quad_area_px2: ""
+  # 合成数据 3456 组 μ+3σ
+  max_rmse_px: "31.2166"
+  max_corner_error_px: "33.4116"
+  # 暂不过滤：合成数据距离跨度大，μ-3σ 为负已截零；等实车数据再标定
+  min_quad_area_px2: "0.00"
+  # 等硬件实测
   max_time_uncertainty_s: ""
   hardware_verified: 0
   evidence: "unmeasured"
+# 可选的精细过滤器(空字符串 = "不启用这个过滤")
 selection:
+  # 只接受距离在 X~Y 米之间的位姿
   min_z_m: ""
   max_z_m: ""
+  # 只接受视角不太偏的（法向量 Z 分量范围）
   min_normal_z: ""
   max_normal_z: ""
+  # 安全开关
   constraints_verified: 0
+  # 是否用 LM 非线性优化打磨位姿
   refine_lm: 0
+  # 用上一帧先验做时间一致性检查（G4 跟踪才用）
   prior_enabled: 0
   prior_max_age_s: ""
   prior_max_translation_m: ""
