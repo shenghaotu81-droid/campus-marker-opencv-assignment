@@ -1,8 +1,14 @@
 #pragma once
 #include "mark/detector_types.hpp"
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
+
+namespace mark
+{
+    struct CornerMeasurement;
+}
 
 namespace mark::validation
 {
@@ -38,4 +44,7 @@ namespace mark::validation
 
     JsonValue readJson(const std::string &);
     FrameResult readResult(const JsonValue &, uint64_t, int64_t);
+    // V03：完整协议→角测量；只核身份/字段，几何与线模型仍由独立 validator 重算。
+    CornerMeasurement readCornerMeasurement(const JsonValue &, uint64_t,
+                                          const std::set<size_t> &);
 }

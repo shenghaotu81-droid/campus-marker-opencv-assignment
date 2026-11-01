@@ -14,6 +14,9 @@
 namespace mark
 {
 
+    // D14→A07/V03：角证据单独版本化；外层 FrameRecord schema 与公开 Detection 不变。
+    inline constexpr int corner_evidence_schema_version = 2;
+
     // 单线遗漏扫描行奇偶结构；内部模型类型明确区分估计目标，不改公开 Detection。
     enum class LineFitModel
     {

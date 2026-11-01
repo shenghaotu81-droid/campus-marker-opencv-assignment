@@ -49,6 +49,10 @@ python3 src/tushenghao/tools/calibration/scripts/frame_picker.py data/raw/calibr
 
 CLI 可覆盖：`--video`、`--output`、`--rows`、`--cols`、`--spacing`、`--start-frame`、`--end-frame`。
 
+配置步骤先检查完整 CLI，再按默认值 → YAML → CLI 覆盖。未知选项、重复选项和缺值均报错；数值必须完整解析，禁止 `7junk`、NaN/Inf。YAML 只接受已列出的配置字段及 `schema_version`，拒绝未知/重复键和错误类型；整数原始 token 必须落在 C++ `int` 可表示范围内，避免 OpenCV 先窄化再误接受。`frame_list` 必须是非负整数序列，圆心间距必须是有限正数。配置失败返回非零，不打开视频、不写标定结果。
+
+选帧器到末帧显示 `END_OF_INPUT`，仍可回看；按 `q` 以 `USER_FINISH` 正常结束。定位或解码失败返回非零并显示 `READ_ERROR`，保留失败前已选列表，但不把它描述为正常完成的选帧结果。
+
 ## 模块结构
 
 ```

@@ -2,6 +2,11 @@
 #include "pipeline/diagnostics_recorder.hpp"
 #include "pipeline/stabilize_stage.hpp"
 #include "common/frame_record_reader.hpp"
+#include "corners/corner_evidence_validation.hpp"
+#include "corners/corner_resolver.hpp"
+#include "corners/detection_validator.hpp"
+#include "corners/periodic_line_fit.hpp"
+#include "corners/screen_order.hpp"
 #include <fstream>
 using namespace mark;
 using namespace observability_fixture;
@@ -336,6 +341,164 @@ namespace
               "R08 original evidence lost");
     }
 
+    // A07→V03→D16：真实证据经 JSON 往返后仍独立复算，协议不能靠默认值补齐。
+    void evidence_protocol()
+    {
+        auto config = fixture::cornerConfig();
+        Detector detector(app().detector_config);
+        DetectorDiagnosticsAccess::prepare(detector, request());
+        detector.process(frame(0, 0, true));
+        auto current = DetectorDiagnosticsAccess::take(detector);
+
+        const auto verify = [](FrameRecord record, const CornerConfig &config)
+        {
+            const auto source = readJson(serializeFrameRecord(record));
+            const auto &raw = source.at("details").at("decode").at("measurements").array.at(0);
+            std::set<size_t> ids;
+            for (const auto &e : record.details->decoded.measurements.at(0).evidence_)
+                ids.insert(e.component_id_);
+            auto decoded = readCornerMeasurement(raw, record.frame_id, ids);
+            const auto order = orderScreenCorners(decoded.physical_corners_, config);
+            check(bool(order.screen_order_), "F21 decoded corner ordering failed");
+            const auto result = validateDetectionGeometry(decoded, *order.screen_order_,
+                                                         {1440, 1080}, config);
+            check(result.valid_, result.rejection_reason_);
+            auto details = std::make_shared<StageDetails>(*record.details);
+            details->decoded.measurements[0] = decoded;
+            record.details = details;
+            check(readJson(serializeFrameRecord(record)).at("details").at("decode")
+                      .at("measurements").array[0] == raw,
+                  "F21 evidence fields changed during roundtrip");
+
+            // 五组新增字段、版本、形状及本帧身份分别篡改；不能只查 encoder 的键存在。
+            for (const auto &field : {"line_model_kinds", "periodic_axes", "periodic_coefficients",
+                                      "model_mean_residual_px", "model_max_residual_px",
+                                      "line_mean_residual_px", "line_max_residual_px"})
+            {
+                auto changed = raw;
+                auto &number = changed.array[0].object.at(field).array[0];
+                number.text = field == std::string("line_model_kinds") ? "99" :
+                              field == std::string("periodic_axes") ? "2" : "999";
+                bool rejected = false;
+                try
+                {
+                    const auto invalid = readCornerMeasurement(changed, record.frame_id, ids);
+                    std::string reason;
+                    rejected = !validateCornerEvidence(invalid.evidence_[0],
+                                                       invalid.physical_corners_[0], 0,
+                                                       config, reason);
+                }
+                catch (const std::exception &)
+                {
+                    rejected = true;
+                }
+                check(rejected, "F21 changed line metadata accepted");
+            }
+            for (const auto &field : {"evidence_schema_version", "line_model_kinds",
+                                      "periodic_axes", "periodic_coefficients",
+                                      "model_mean_residual_px", "model_max_residual_px"})
+            {
+                auto missing = raw;
+                missing.array[0].object.erase(field);
+                rejects([&] { readCornerMeasurement(missing, record.frame_id, ids); });
+            }
+            auto malformed = raw;
+            malformed.array[0].object.at("periodic_axes").array.pop_back();
+            rejects([&] { readCornerMeasurement(malformed, record.frame_id, ids); });
+            rejects([&] { readCornerMeasurement(raw, record.frame_id + 1, ids); });
+            rejects([&] { readCornerMeasurement(raw, record.frame_id, {}); });
+            malformed = raw;
+            malformed.array[0].object.at("evidence_schema_version").text = "99";
+            rejects([&] { readCornerMeasurement(malformed, record.frame_id, ids); });
+        };
+        verify(current, app().detector_config.corner_);
+
+        // 复用已有周期证据契约的非零奇偶位移场景，防止 codec 偷把系数或模型残差写成零。
+        auto scene = fixture::scene(1440, 1080, 2.0);
+        const auto image = scene.frame.original_image_.clone();
+        scene.frame.original_image_.setTo(cv::Scalar(0, 0, 0));
+        for (int y = 0; y < image.rows; ++y)
+            for (int x = 0; x < image.cols; ++x)
+            {
+                const int target = x + (y % 2 ? 1 : -1);
+                if (target >= 0 && target < image.cols)
+                    scene.frame.original_image_.at<cv::Vec3b>(y, target) = image.at<cv::Vec3b>(y, x);
+            }
+        auto periodic_config = fixture::cornerConfig();
+        periodic_config.min_line_points_ = 10;
+        periodic_config.max_line_fit_error_ = 0.5;
+        periodic_config.observation_budget_ = CornerObservationBudget{3, 9, 4.5, 2, 13.5, 9.5, 14};
+        const auto observed = resolveObservedCorners(scene.frame, scene.hypothesis, scene.geometry,
+                                                     periodic_config);
+        check(bool(observed.measurement_), observed.rejection_reason_);
+        bool nonzero = false;
+        for (const auto &e : observed.measurement_->evidence_)
+            for (double coefficient : e.periodic_coefficients_)
+                nonzero |= coefficient != 0;
+        check(nonzero, "F21 periodic fixture has no nonzero coefficient");
+        auto periodic_record = record(scene.frame.frame_id_);
+        // 手工注入已取到的测量时同步标明执行过的阶段，缺测详情按原协议仍是 null。
+        periodic_record.counts.generated = 0;
+        periodic_record.counts.measurements = 1;
+        auto periodic_details = std::make_shared<StageDetails>();
+        periodic_details->decoded.measurements.push_back(*observed.measurement_);
+        periodic_record.details = periodic_details;
+        verify(periodic_record, periodic_config);
+
+        // 手工直角/连续整数支持弧：四个周期估计器都应还原同一组可复算实测线。
+        for (auto model : {LineFitModel::PeriodicLeastSquares, LineFitModel::PeriodicPhaseMedian,
+                           LineFitModel::PeriodicL1, LineFitModel::PeriodicZeroSlope})
+        {
+            auto details = std::make_shared<StageDetails>();
+            CornerMeasurement measurement;
+            const std::array<cv::Point2d, 4> corners{{{100, 100}, {200, 100},
+                                                      {200, 200}, {100, 200}}};
+            for (size_t i = 0; i < corners.size(); ++i)
+            {
+                auto &e = measurement.evidence_[i];
+                const auto p = corners[i];
+                measurement.physical_corners_[i] = e.intersection_ = p;
+                e.physical_corner_ = static_cast<PhysicalCorner>(i);
+                e.frame_id_ = current.frame_id;
+                e.component_id_ = i;
+                e.stable_id_ = "F21-" + std::to_string(i);
+                e.model_vertex_id_ = i == 1 ? 1 : 0;
+                e.model_edge_ids_ = i == 1 ? std::array<int, 2>{0, 1} :
+                                           std::array<int, 2>{5, 0};
+                e.observed_segment_ids_ = {0, 1};
+                e.observed_segment_end_ids_ = {2, 3};
+                e.original_observation_ = true;
+                e.truncated_ = false;
+                for (int offset = 10; offset >= 3; --offset)
+                    e.original_support_arcs_[0].push_back(p + cv::Point2d(0, offset));
+                for (int offset = 3; offset <= 10; ++offset)
+                    e.original_support_arcs_[1].push_back(p + cv::Point2d(offset, 0));
+                e.original_turn_arc_ = {p + cv::Point2d(0, 3), p + cv::Point2d(0, 2),
+                                        p + cv::Point2d(0, 1), p, p + cv::Point2d(1, 0),
+                                        p + cv::Point2d(2, 0), p + cv::Point2d(3, 0)};
+                for (size_t edge = 0; edge < 2; ++edge)
+                {
+                    const auto fit = fitPeriodicLine(e.original_support_arcs_[edge], model);
+                    check(bool(fit), "F21 periodic fixture did not fit");
+                    (edge ? e.line_b_ : e.line_a_) = fit->line;
+                    e.line_model_kinds_[edge] = model;
+                    e.periodic_axes_[edge] = fit->axis;
+                    e.periodic_coefficients_[edge] = fit->coefficient;
+                    const auto &support = e.original_support_arcs_[edge];
+                    (edge ? e.edge_segment_b_ : e.edge_segment_a_) =
+                        std::array<cv::Point2d, 2>{support.front(), support.back()};
+                }
+                e.line_mean_residual_px_ = e.line_max_residual_px_ = {0, 0};
+                e.model_mean_residual_px_ = e.model_max_residual_px_ = {0, 0};
+                e.support_extension_px_ = {3, 3};
+                e.corner_error_px_ = e.error_ = 0;
+            }
+            details->decoded.measurements.push_back(measurement);
+            current.details = details;
+            verify(current, config);
+        }
+    }
+
     void config()
     {
         auto a = app();
@@ -375,5 +538,6 @@ int main()
                                   {"R06", exports},
                                   {"R07", resets},
                                   {"R08", evidence},
+                                  {"F21_evidence_protocol", evidence_protocol},
                                   {"R09", config}});
 }

@@ -348,67 +348,6 @@ namespace
     }
 
     // 缺任何 CornerEvidence 字段都拒绝，不能用默认0替失踪残差或物理标签。
-    mark::CornerMeasurement measurement(const J &v, uint64_t frame,
-                                        const std::set<size_t> &components)
-    {
-        auto &es = array(v);
-        require(es.size() == 4, "measurement must contain four evidence entries");
-        mark::CornerMeasurement m;
-        std::set<int> physical;
-        for (auto &data : es)
-        {
-            int id = integer(data.at("physical"));
-            require(id >= 0 && id < 4 && physical.insert(id).second, "invalid physical identity");
-            auto &e = m.evidence_[id];
-            e.physical_corner_ = static_cast<mark::PhysicalCorner>(id);
-            e.frame_id_ = data.at("frame_id").u64();
-            e.component_id_ = data.at("component_id").u64();
-            require(e.frame_id_ == frame && components.count(e.component_id_),
-                    "noncurrent evidence reference");
-            e.stable_id_ = str(data.at("evidence_id"));
-            require(!e.stable_id_.empty(), "empty evidence ID");
-            e.model_vertex_id_ = integer(data.at("model_vertex_id"));
-            auto &model = array(data.at("model_edge_ids"));
-            auto &starts = array(data.at("observed_segment_ids"));
-            auto &ends = array(data.at("observed_segment_end_ids"));
-            auto &lines = array(data.at("fitted_lines"));
-            auto &segments = array(data.at("finite_segments"));
-            auto &arcs = array(data.at("support_arcs"));
-            auto &mean = array(data.at("line_mean_residual_px"));
-            auto &max = array(data.at("line_max_residual_px"));
-            auto &extension = array(data.at("support_extension_px"));
-            for (auto *pair :
-                 {&model, &starts, &ends, &lines, &segments, &arcs, &mean, &max, &extension})
-                require(pair->size() == 2, "two-edge field arity");
-            for (size_t i = 0; i < 2; ++i)
-            {
-                e.model_edge_ids_[i] = integer(model[i]);
-                e.observed_segment_ids_.push_back(integer(starts[i]));
-                e.observed_segment_end_ids_[i] = integer(ends[i]);
-                auto &l = array(lines[i]);
-                require(l.size() == 4, "line arity");
-                for (size_t k = 0; k < 4; ++k)
-                    (i ? e.line_b_ : e.line_a_)[k] = l[k].number();
-                auto seg = points(segments[i]);
-                require(seg.size() == 2, "segment arity");
-                for (size_t k = 0; k < 2; ++k)
-                    (i ? e.edge_segment_b_ : e.edge_segment_a_)[k] = seg[k];
-                e.original_support_arcs_[i] = points(arcs[i]);
-                e.line_mean_residual_px_[i] = mean[i].number();
-                e.line_max_residual_px_[i] = max[i].number();
-                e.support_extension_px_[i] = extension[i].number();
-            }
-            e.original_turn_arc_ = points(data.at("turn_arc"));
-            e.original_observation_ = boolean(data.at("original_observation"));
-            e.truncated_ = boolean(data.at("truncated"));
-            e.corner_error_px_ = data.at("corner_error_px").number();
-            e.error_ = data.at("measurement_error_px").number();
-            e.intersection_ = point(data.at("intersection"));
-            m.physical_corners_[id] = e.intersection_;
-        }
-        return m;
-    }
-
     std::set<size_t> components(const J &r)
     {
         std::set<size_t> out;
@@ -595,7 +534,7 @@ namespace
         std::vector<mark::CornerMeasurement> ms;
         for (auto &raw : array(decoded.at("measurements")))
         {
-            auto m = measurement(raw, frame, ids);
+            auto m = mark::validation::readCornerMeasurement(raw, frame, ids);
             auto order = mark::orderScreenCorners(m.physical_corners_, config);
             require(bool(order.screen_order_), "reconstructed screen order failed");
             auto valid = mark::validateDetectionGeometry(m, *order.screen_order_, original, config);
@@ -977,7 +916,8 @@ namespace
                         title += "; NO MEASUREMENT / NO POINTS";
                     if (!layers.empty())
                     {
-                        auto m = measurement(layers[layer], frameId, currentComponents);
+                        auto m = mark::validation::readCornerMeasurement(layers[layer], frameId,
+                                                                       currentComponents);
                         auto ordered = mark::orderScreenCorners(m.physical_corners_,
                                                                 cfg.detector_config.corner_);
                         require(bool(ordered.screen_order_), "render invalid screen order");

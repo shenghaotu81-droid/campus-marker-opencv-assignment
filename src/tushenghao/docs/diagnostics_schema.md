@@ -50,6 +50,20 @@ offline实时字段全部null，realtime.applicability=not_applicable；不制�
 
 原角点详情的`physical`来自CornerEvidence自身枚举，`measurement_error_px`直接保存原error_（两线平均残差之和），不从稳定点计算。旧金样未包含error_，verify对共同证据字段exact比较，另核新增error_与原两线均值之和相等。直接Temporal的非法update也保留其详情，不以是否执行geometry决定丢弃已取得的诊断。
 
+## 角证据完整复算协议
+
+外层 `record_schema_version=1` 保持不变；每个角证据单独带 `evidence_schema_version=2`。
+除了原有来源、连续支持弧、拟合线、交点与原始残差，还必须完整保存两条线各自的
+`line_model_kinds`、`periodic_axes`、`periodic_coefficients`、
+`model_mean_residual_px`、`model_max_residual_px`，每组长度固定为二。
+原始点到物理线的残差与声明模型的残差分别记录，不用校正残差覆盖原字段。
+
+工具共用 `readCornerMeasurement` 恢复字段与本帧身份，随后仍由现行 validator
+从原始弧独立重拟合并核对周期参数、两类残差及几何；解码成功不等于复算通过。
+无版本旧记录不能确定当时采用的线模型，明确报
+`UNREPLAYABLE_CORNER_EVIDENCE`，不默认 Legacy 或用无穷/零补造遗漏字段；
+历史记录保持原文，不回写。未知版本、缺失字段、非法类型/长度或非本帧来源均明确失败。
+
 ## Final-fixes 增补契约
 
 记录 schema 仍为 1，manifest.environment 的 `final_fixes_contract="1"` 表示本轮覆盖契约。

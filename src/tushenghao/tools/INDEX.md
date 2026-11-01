@@ -21,12 +21,12 @@ cmake --build build/block3-fixture -j 4
 | C校准 | [calibration/measure.cpp](block3_fixture/calibration/measure.cpp) | block3_measure | C固定条件隔离/关联测量，不表示正式H |
 | 阶段验证 | [validation/verify.cpp](block3_fixture/validation/verify.cpp) | block3_verify | 默认正式C/H链路；另有明确诊断参数 |
 | 资源验证 | [validation/resources.cpp](block3_fixture/validation/resources.cpp) | block3_resources | 固定候选/扩展/截断压力场景 |
-| 父诊断 | [diagnostics/parent_diagnose.cpp](block3_fixture/diagnostics/parent_diagnose.cpp) | block3_parent_diagnose | 逐父、类别/锚点及isolated epsilon诊断 |
+| 父诊断 | [diagnostics/parent_diagnose.cpp](block3_fixture/diagnostics/parent_diagnose.cpp) | block3_parent_diagnose | 按组件/观察来源ID关联的逐父、类别/锚点及isolated epsilon诊断，ID不要求连续或与容器同序 |
 | 视频阻断诊断 | [diagnostics/video_diagnose.cpp](block3_fixture/diagnostics/video_diagnose.cpp) | block3_video_diagnose | 选帧逐门限诊断，不作为正式验收输出 |
 | 实拍角统计 | [diagnostics/video_corner_measure.cpp](block3_fixture/diagnostics/video_corner_measure.cpp) | block3_video_corner_measure | 固定713组逐角原始统计，null不丢分母 |
 | 独立结果核查 | [reporting/report_verification.py](block3_fixture/reporting/report_verification.py) | python3 脚本 | 工具侧真值、屏幕顺序、bbox/证据与H门槛核查 |
-| C统计报表 | [reporting/summarize.py](block3_fixture/reporting/summarize.py)、[关联报表](block3_fixture/reporting/summarize_association.py) | python3 脚本 | 分层分布与预算测量报表 |
-| 角统计报表 | [reporting/summarize_video_corners.py](block3_fixture/reporting/summarize_video_corners.py) | python3 脚本 | 实拍逐角分布及不可测统计 |
+| C统计报表 | [reporting/summarize.py](block3_fixture/reporting/summarize.py)、[关联报表](block3_fixture/reporting/summarize_association.py) | python3 脚本 | 分层分布与预算测量报表；关联报表缺分布时保留失败明细与固定CSV列，未知统计量留空 |
+| 角统计报表 | [reporting/summarize_video_corners.py](block3_fixture/reporting/summarize_video_corners.py) | python3 脚本 | 实拍逐角分布及不可测统计；缺测/未定义样本标准差为null或N/A，四物理角分布不足时不导出候选预算 |
 | 相机标定 | [calibration/calibration_main.cpp](calibration/calibration_main.cpp) | build/release/calibration_tool | 离线相机标定：7x7 圆点阵求内参 K 和畸变系数，输出 config/calibration.yaml 给 solvePnP 用 |
 
 四个Python脚本共置reporting/，保留对summarize模块的直接导入。旧[synth_ref](synth_ref/README.md)完整保留；其build*/、runs/和__pycache__是参考包历史/生成物，不是现行工具入口，本轮不清理或迁移。历史诊断.cpp留在[证据批次](../docs/evidence/block3/04-four-track-v3-v4/INDEX.md)，不进入新CMake目标。

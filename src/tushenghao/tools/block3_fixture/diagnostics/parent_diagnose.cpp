@@ -16,14 +16,43 @@
 #include <set>
 using Json = nlohmann::json;
 
+namespace
+{
+    // V02：把组件身份接到观测/假设；ID 允许非连续，重复来源不能静默覆盖。
+    std::map<size_t, const mark::WhiteComponent *>
+    componentsById(const std::vector<mark::WhiteComponent> &components)
+    {
+        std::map<size_t, const mark::WhiteComponent *> result;
+        for (const auto &component : components)
+            if (!result.emplace(component.component_id_, &component).second)
+                throw std::runtime_error("duplicate component identity in parent probe");
+        return result;
+    }
+
+    // V02：修改诊断副本的锚点前按来源找位置，不要求观察序列与组件序列同序。
+    std::map<size_t, size_t>
+    observationPositions(const std::vector<mark::ShapeObservation> &observations)
+    {
+        std::map<size_t, size_t> result;
+        for (size_t i = 0; i < observations.size(); ++i)
+            if (!result.emplace(observations[i].source_component_id_, i).second)
+                throw std::runtime_error("duplicate observation identity in parent probe");
+        return result;
+    }
+}
+
 // 归档真实工作图多拓扑、原凹点与全部去重锚点；first_anchor仅作旧行为对照。
 Json observationsJson(const std::vector<mark::WhiteComponent> &cs,
                       const std::vector<mark::ShapeObservation> &os)
 {
     Json rows = Json::array();
-    for (size_t i = 0; i < os.size(); ++i)
+    const auto components = componentsById(cs);
+    std::set<size_t> sources;
+    for (const auto &o : os)
     {
-        auto &o = os[i];
+        if (!sources.insert(o.source_component_id_).second)
+            throw std::runtime_error("duplicate observation identity in parent probe");
+        const auto &component = *components.at(o.source_component_id_);
         Json concave = Json::array(), points = Json::array();
         for (auto t : o.turns_)
             if (t.type_ == mark::TurnType::CONCAVE)
@@ -58,10 +87,10 @@ Json observationsJson(const std::vector<mark::WhiteComponent> &cs,
                 }
         for (auto p : unique)
             anchors.push_back({p.first, p.second});
-        rows.push_back({{"component", cs[i].component_id_},
+        rows.push_back({{"component", component.component_id_},
                         {"source_component_id", o.source_component_id_},
-                        {"area", cs[i].area_},
-                        {"border", cs[i].touches_border_},
+                        {"area", component.area_},
+                        {"border", component.touches_border_},
                         {"vertices", o.turns_.size()},
                         {"concave_indices", concave},
                         {"first_anchor",
@@ -80,6 +109,7 @@ Json hypothesisMetrics(const mark::GeometryHypothesis &h, const mark::MarkerGeom
 {
     Json a = Json::array();
     double worst = 0;
+    const auto components = componentsById(cs);
     for (auto assign : h.assignments_)
     {
         auto it = std::find_if(m.polygons.begin(), m.polygons.end(),
@@ -87,7 +117,7 @@ Json hypothesisMetrics(const mark::GeometryHypothesis &h, const mark::MarkerGeom
                                {
                                    return p.id == assign.model_part_id_;
                                });
-        auto &c = cs.at(assign.component_id_);
+        const auto &c = *components.at(assign.component_id_);
         std::vector<cv::Point2f> projected, contour;
         cv::transform(it->vertices, projected, h.affine_transform_);
         for (auto p : c.contour_)
@@ -122,6 +152,7 @@ Json alternativeAnchors(const std::vector<mark::ShapeObservation> &os,
                         const mark::GeometryConfig &cfg)
 {
     bool truncated = false;
+    const auto positions = observationPositions(os);
     auto combos = mark::generateSixComponentCombinations(os, m, cfg, truncated);
     size_t tried = 0, passed = 0, proper = 0;
     double best = INFINITY;
@@ -132,7 +163,7 @@ Json alternativeAnchors(const std::vector<mark::ShapeObservation> &os,
         for (auto a : as)
         {
             std::vector<size_t> ids;
-            for (auto t : os[a.component_id_].turns_)
+            for (auto t : os.at(positions.at(a.component_id_)).turns_)
                 if (t.type_ == mark::TurnType::CONCAVE)
                     ids.push_back(t.vertex_index_);
             candidates.push_back(ids);
@@ -142,9 +173,9 @@ Json alternativeAnchors(const std::vector<mark::ShapeObservation> &os,
                 for (auto z : candidates[2])
                 {
                     auto copy = os;
-                    copy[as[0].component_id_].anchor_vertex_index_ = x;
-                    copy[as[1].component_id_].anchor_vertex_index_ = y;
-                    copy[as[2].component_id_].anchor_vertex_index_ = z;
+                    copy.at(positions.at(as[0].component_id_)).anchor_vertex_index_ = x;
+                    copy.at(positions.at(as[1].component_id_)).anchor_vertex_index_ = y;
+                    copy.at(positions.at(as[2].component_id_)).anchor_vertex_index_ = z;
                     auto transform = mark::fitModelToImageAffine(as, copy, m);
                     if (transform.empty())
                         continue;

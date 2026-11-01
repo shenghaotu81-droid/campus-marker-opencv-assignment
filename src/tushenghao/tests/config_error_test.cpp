@@ -10,6 +10,7 @@
 */
 #include "config/config.hpp"
 #include "core/config_error.hpp"
+#include "../tools/calibration/calibration_config.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -462,10 +463,108 @@ debug:
 // 运行所有测试（主函数）
 // ctest --test-dir build/tushenghao --output-on-failure    :  --output-on-failure：测试挂了才显示它的输出。
 // 平时 ctest 只告诉你 Passed/Failed，不给细节。现在测的是错误情况——万一挂了，必须看到底哪个 case 挂的、打印了啥，不然没法修。所以加上。
+namespace
+{
+    // C01 负例：在打开视频前核验字段类型/完整 CLI 和 NaN，合法 YAML→CLI 覆盖不变。
+    bool calibrationConfigErrors()
+    {
+        const auto path = std::filesystem::temp_directory_path() / "lean-calibration-errors.yaml";
+        const std::string valid =
+            "schema_version: 1\nvideo_path: fixture.avi\noutput_path: result.yaml\n"
+            "board_rows: 7\nboard_cols: 7\npoint_spacing: 0.03\nframe_list: [0, 2, 4]\n";
+        writeTestConfig(path, valid);
+        CalibrationConfig config;
+        initialize_default_config(config);
+        if (!load_config_yaml(path.string(), config) || !validate_config(config) ||
+            config.frame_list != std::vector<int>{0, 2, 4})
+            return false;
+
+        for (const std::string bad : {
+                 "video_path: fixture.avi\n", "schema_version: \"1\"\n",
+                 "schema_version: 1\nunknown_field: 1\n",
+                 "schema_version: 1\nboard_rows: 7\nboard_rows: 8\n",
+                 "schema_version: 1\nboard_rows: 7.5\n",
+                 "schema_version: 4294967297\n",
+                 "schema_version: 1\nboard_rows: 4294967297\n",
+                 "schema_version: 1\nboard_cols: 0x100000001\n",
+                 "schema_version: 1\nstart_frame: 4294967296\n",
+                 "schema_version: 1\nend_frame: 4294967295\n",
+                 "schema_version: 1\nboard_cols: \"7\"\n",
+                 "schema_version: 1\nvideo_path: 7\n",
+                 "schema_version: 1\noutput_path: []\n",
+                 "schema_version: 1\npoint_spacing: .Nan\n",
+                 "schema_version: 1\npoint_spacing: .Inf\n",
+                 "schema_version: 1\npoint_spacing: \"0.03\"\n",
+                 "schema_version: 1\nframe_list: 7\n",
+                 "schema_version: 1\nframe_list: {}\n",
+                 "schema_version: 1\nframe_list: [0, 1.5]\n",
+                 "schema_version: 1\nframe_list: [\"1\"]\n",
+                 "schema_version: 1\nframe_list: [-1]\n",
+                 "schema_version: 1\nframe_list: [0, 4294967297]\n",
+                 "schema_version: 1\nframe_list:\n  - 0\n  - 4294967297\n"})
+        {
+            writeTestConfig(path, bad);
+            CalibrationConfig rejected;
+            initialize_default_config(rejected);
+            if (load_config_yaml(path.string(), rejected))
+            {
+                std::cerr << "calibration YAML accepted: " << bad;
+                std::filesystem::remove(path);
+                return false;
+            }
+        }
+        std::filesystem::remove(path);
+
+        auto parse = [](std::vector<std::string> arguments, CalibrationConfig &result)
+        {
+            std::vector<char *> argv;
+            for (auto &argument : arguments) argv.push_back(argument.data());
+            std::string config_path;
+            if (!extract_config_path(static_cast<int>(argv.size()), argv.data(), config_path))
+                return false;
+            apply_cli_overrides(static_cast<int>(argv.size()), argv.data(), result);
+            return validate_config(result);
+        };
+        if (!parse({"calibration_tool", "--config", "fixture.yaml", "--rows", "8",
+                    "--cols", "9", "--spacing", "0.04", "--video", "override.avi"}, config) ||
+            config.board_rows != 8 || config.board_cols != 9 ||
+            config.point_spacing != 0.04 || config.video_path != "override.avi")
+            return false;
+
+        for (const auto &suffix : std::vector<std::vector<std::string>>{
+                 {"--config", "again.yaml"}, {"--unknown", "1"}, {"--rows"},
+                 {"--spacing", "--cols", "7"}, {"--rows", "7", "--rows", "8"},
+                 {"--rows", "7junk"}, {"--rows", "4294967296"},
+                 {"--spacing", "nan"}, {"--spacing", "inf"}, {"--spacing", "0.04junk"},
+                 {"--spacing", "0"}, {"--spacing", "-1"}})
+        {
+            auto arguments = std::vector<std::string>{"calibration_tool", "--config", "fixture.yaml"};
+            arguments.insert(arguments.end(), suffix.begin(), suffix.end());
+            auto rejected = config;
+            try
+            {
+                if (!parse(arguments, rejected)) continue;
+            }
+            catch (const std::exception &) { continue; }
+            std::cerr << "calibration CLI accepted invalid case\n";
+            return false;
+        }
+        for (double value : {std::numeric_limits<double>::quiet_NaN(),
+                             std::numeric_limits<double>::infinity(), -1., 0.})
+        {
+            config.point_spacing = value;
+            if (validate_config(config)) return false;
+        }
+        std::cout << "PASS calibration strict YAML/CLI/spacing\n";
+        return true;
+    }
+}
+
 int main()
 {
     try
     {
+        if (!calibrationConfigErrors()) return 1;
         if (!temporalErrors())
         {
             std::cerr << "temporal errors failed\n";

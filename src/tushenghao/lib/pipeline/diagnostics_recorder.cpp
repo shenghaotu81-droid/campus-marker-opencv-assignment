@@ -215,10 +215,11 @@ namespace mark
             out << '}';
         }
 
-        // 原角证据深嵌测量循环；独立输出真实证据，保持字段次序和同一次取证来源。
+        // D14→A07：完整编码本次角证据；V03 依版本读取后独立复算，不能默认成 Legacy。
         void serialize_corner_evidence(JsonStream &out, const CornerEvidence &e)
         {
-            out << "{\"physical\":" << int(e.physical_corner_) << ",\"frame_id\":" << e.frame_id_
+            out << "{\"evidence_schema_version\":" << corner_evidence_schema_version
+                << ",\"physical\":" << int(e.physical_corner_) << ",\"frame_id\":" << e.frame_id_
                 << ",\"component_id\":" << e.component_id_
                 << ",\"model_vertex_id\":" << e.model_vertex_id_ << ",\"model_edge_ids\":["
                 << e.model_edge_ids_[0] << ',' << e.model_edge_ids_[1]
@@ -265,6 +266,13 @@ namespace mark
             out << ",\"line_mean_residual_px\":[" << e.line_mean_residual_px_[0] << ','
                 << e.line_mean_residual_px_[1] << "],\"line_max_residual_px\":["
                 << e.line_max_residual_px_[0] << ',' << e.line_max_residual_px_[1]
+                << "],\"line_model_kinds\":[" << int(e.line_model_kinds_[0]) << ','
+                << int(e.line_model_kinds_[1]) << "],\"periodic_axes\":[" << e.periodic_axes_[0]
+                << ',' << e.periodic_axes_[1] << "],\"periodic_coefficients\":["
+                << e.periodic_coefficients_[0] << ',' << e.periodic_coefficients_[1]
+                << "],\"model_mean_residual_px\":[" << e.model_mean_residual_px_[0] << ','
+                << e.model_mean_residual_px_[1] << "],\"model_max_residual_px\":["
+                << e.model_max_residual_px_[0] << ',' << e.model_max_residual_px_[1]
                 << "],\"support_extension_px\":[" << e.support_extension_px_[0] << ','
                 << e.support_extension_px_[1] << "],\"corner_error_px\":" << e.corner_error_px_
                 << ",\"measurement_error_px\":" << e.error_ << ",\"support_arcs\":[";

@@ -1,229 +1,247 @@
 #include "calibration_config.hpp"
 
-#include <opencv2/opencv.hpp>
-
+#include <opencv2/core.hpp>
+#include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
-#include <vector>
+#include <limits>
+#include <map>
+#include <regex>
+#include <set>
+#include <stdexcept>
 
-// 当前支持的配置文件版本
-constexpr int kSupportedSchemaVersion = 1;
+namespace
+{
+    constexpr int kSupportedSchemaVersion = 1;
 
-// 初始化默认配置
+    // C01：FileStorage 4.x 会先把越界整数窄化（如 4294967297→1），节点检查已太晚。
+    // 只复核整数配置/帧列表的原始 token；类型与 YAML 语法仍由 FileStorage 验证。
+    void validate_original_integers(const std::string &source)
+    {
+        auto text = source;
+        const std::regex literals(R"lit("(?:\\.|[^"\\])*"|'(?:''|[^'])*'|#[^\n]*)lit");
+        for (std::sregex_iterator it(source.begin(), source.end(), literals), end; it != end; ++it)
+        {
+            size_t after = size_t(it->position() + it->length());
+            while (after < source.size() && (source[after] == ' ' || source[after] == '\t')) ++after;
+            if ((*it).str()[0] != '#' && after < source.size() && source[after] == ':') continue;
+            for (size_t i = size_t(it->position()); i < size_t(it->position() + it->length()); ++i)
+                if (text[i] != '\n' && text[i] != '\r') text[i] = ' ';
+        }
+        const std::regex token(R"((^|[\s,\[])([+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+))(?=[\s,\]]|$))");
+        auto require_range = [&](const std::string &values)
+        {
+            for (std::sregex_iterator it(values.begin(), values.end(), token), end; it != end; ++it)
+            {
+                const auto value = (*it)[2].str();
+                size_t used = 0;
+                const auto number = std::stoll(value, &used, 0);
+                if (used != value.size() || number < std::numeric_limits<int>::min() ||
+                    number > std::numeric_limits<int>::max())
+                    throw std::invalid_argument("标定整数超出可表示范围: " + value);
+            }
+        };
+        const std::regex fields(R"((?:^|[\n{,])[ \t]*['"]?(?:schema_version|board_rows|board_cols|start_frame|end_frame|frame_list)['"]?[ \t]*:[ \t]*(\[[^\]]*\]|[^\n,}]*))");
+        for (std::sregex_iterator it(text.begin(), text.end(), fields), end; it != end; ++it)
+            require_range((*it)[1].str());
+        const std::regex block_frames(R"((?:^|\n)[ \t]*['"]?frame_list['"]?[ \t]*:[ \t]*\r?\n((?:[ \t]+-[^\n]*(?:\n|$))+))");
+        for (std::sregex_iterator it(text.begin(), text.end(), block_frames), end; it != end; ++it)
+            require_range((*it)[1].str());
+    }
+
+    // C01：两个既有入口共用 CLI 协议；先检查完整命令，再读取 YAML 或覆盖配置。
+    std::map<std::string, std::string> parse_cli(int argc, char **argv)
+    {
+        const std::set<std::string> allowed{"--config", "--video", "--output", "--rows",
+                                            "--cols", "--spacing", "--start-frame", "--end-frame"};
+        std::map<std::string, std::string> values;
+        for (int i = 1; i < argc; ++i)
+        {
+            const std::string key = argv[i];
+            if (!allowed.count(key))
+                throw std::invalid_argument("未知标定参数: " + key);
+            if (i + 1 == argc || std::string(argv[i + 1]).rfind("--", 0) == 0)
+                throw std::invalid_argument("标定参数缺值: " + key);
+            if (!values.emplace(key, argv[++i]).second)
+                throw std::invalid_argument("重复标定参数: " + key);
+        }
+        return values;
+    }
+
+    int cli_integer(const std::string &value)
+    {
+        size_t used = 0;
+        const int result = std::stoi(value, &used);
+        if (used != value.size())
+            throw std::invalid_argument("整数含多余字符: " + value);
+        return result;
+    }
+
+    int yaml_integer(const cv::FileNode &node)
+    {
+        if (!node.isInt())
+            throw std::invalid_argument("标定字段须为整数: " + node.name());
+        return static_cast<int>(node);
+    }
+
+    std::string yaml_text(const cv::FileNode &node)
+    {
+        if (!node.isString())
+            throw std::invalid_argument("标定字段须为字符串: " + node.name());
+        return static_cast<std::string>(node);
+    }
+}
+
+// C01 默认值步骤：输入空配置，填入既有板参数和默认输出路径，供 YAML/CLI 覆盖。
 void initialize_default_config(CalibrationConfig &config)
 {
     config.board_rows = 7;
     config.board_cols = 7;
-
     config.point_spacing = 0.03;
-
     config.start_frame = 0;
     config.end_frame = -1;
-
-    // 根据当前源文件位置推导默认输出路径
-    std::filesystem::path source_path(__FILE__);
-
-    std::filesystem::path output_path =
-        source_path.parent_path().parent_path().parent_path() / "config" / "calibration.yaml";
-
-    config.output_path = output_path.string();
+    const std::filesystem::path source_path(__FILE__);
+    config.output_path =
+        (source_path.parent_path().parent_path().parent_path() / "config" / "calibration.yaml").string();
 }
 
-// 从 OpenCV YAML 文件读取配置
+// C01 YAML 步骤：严格读取字段；未知/重复键、错误类型或非有限值返回失败。
 bool load_config_yaml(const std::string &config_path, CalibrationConfig &config)
 {
-    cv::FileStorage fs(config_path, cv::FileStorage::READ);
-
-    if (!fs.isOpened())
+    try
     {
-        std::cerr << "无法打开配置文件: " << config_path << std::endl;
-
-        return false;
-    }
-
-    // 检查配置文件版本
-    cv::FileNode schema_node = fs["schema_version"];
-
-    if (schema_node.empty())
-    {
-        std::cerr << "配置文件缺少 schema_version" << std::endl;
-
-        return false;
-    }
-
-    int schema_version = 0;
-
-    schema_node >> schema_version;
-
-    if (schema_version != kSupportedSchemaVersion)
-    {
-        std::cerr << "不支持的配置文件版本: " << schema_version << std::endl;
-
-        return false;
-    }
-
-    // YAML 存在字段时覆盖默认值
-    // 读取视频和输出路径
-    if (!fs["video_path"].empty())
-    {
-        fs["video_path"] >> config.video_path;
-    }
-
-    if (!fs["output_path"].empty())
-    {
-        fs["output_path"] >> config.output_path;
-    }
-
-    // 读取标定板参数
-    if (!fs["board_rows"].empty())
-    {
-        fs["board_rows"] >> config.board_rows;
-    }
-
-    if (!fs["board_cols"].empty())
-    {
-        fs["board_cols"] >> config.board_cols;
-    }
-
-    if (!fs["point_spacing"].empty())
-    {
-        fs["point_spacing"] >> config.point_spacing;
-    }
-
-    // 读取帧范围
-    if (!fs["start_frame"].empty())
-    {
-        fs["start_frame"] >> config.start_frame;
-    }
-
-    if (!fs["end_frame"].empty())
-    {
-        fs["end_frame"] >> config.end_frame;
-    }
-
-    // 读取指定抽帧列表
-    cv::FileNode frame_node = fs["frame_list"];
-
-    if (!frame_node.empty())
-    {
-        for (auto iterator = frame_node.begin(); iterator != frame_node.end(); ++iterator)
+        std::ifstream input(config_path);
+        if (!input) throw std::invalid_argument("无法打开标定配置: " + config_path);
+        const std::string source((std::istreambuf_iterator<char>(input)), {});
+        if (input.bad()) throw std::invalid_argument("无法读取标定配置: " + config_path);
+        validate_original_integers(source);
+        cv::FileStorage fs(source, cv::FileStorage::READ | cv::FileStorage::MEMORY);
+        if (!fs.isOpened())
+            throw std::invalid_argument("无法打开标定配置: " + config_path);
+        const std::set<std::string> allowed{"schema_version", "video_path", "output_path",
+                                            "board_rows", "board_cols", "point_spacing",
+                                            "start_frame", "end_frame", "frame_list"};
+        std::set<std::string> seen;
+        for (const auto &node : fs.root())
         {
-            int frame_index = 0;
-
-            *iterator >> frame_index;
-
-            config.frame_list.push_back(frame_index);
+            const auto key = node.name();
+            if (!allowed.count(key) || !seen.insert(key).second)
+                throw std::invalid_argument("未知或重复标定字段: " + key);
         }
+        if (yaml_integer(fs["schema_version"]) != kSupportedSchemaVersion)
+            throw std::invalid_argument("缺少或不支持的 schema_version");
+        if (seen.count("video_path")) config.video_path = yaml_text(fs["video_path"]);
+        if (seen.count("output_path")) config.output_path = yaml_text(fs["output_path"]);
+        if (seen.count("board_rows")) config.board_rows = yaml_integer(fs["board_rows"]);
+        if (seen.count("board_cols")) config.board_cols = yaml_integer(fs["board_cols"]);
+        if (seen.count("start_frame")) config.start_frame = yaml_integer(fs["start_frame"]);
+        if (seen.count("end_frame")) config.end_frame = yaml_integer(fs["end_frame"]);
+        if (seen.count("point_spacing"))
+        {
+            const auto node = fs["point_spacing"];
+            if (!node.isInt() && !node.isReal())
+                throw std::invalid_argument("point_spacing 须为有限数");
+            config.point_spacing = node.real();
+            if (!std::isfinite(config.point_spacing))
+                throw std::invalid_argument("point_spacing 须为有限数");
+        }
+        const auto frames = fs["frame_list"];
+        if (seen.count("frame_list"))
+        {
+            if (!frames.isSeq())
+                throw std::invalid_argument("frame_list 须为整数序列");
+            for (const auto &node : frames)
+            {
+                const int index = yaml_integer(node);
+                if (index < 0)
+                    throw std::invalid_argument("frame_list 帧号不能为负");
+                config.frame_list.push_back(index);
+            }
+        }
+        return true;
     }
+    catch (const std::exception &error)
+    {
+        std::cerr << "标定 YAML 错误: " << error.what() << '\n';
+        return false;
+    }
+}
 
+// C01：提取配置路径前验证所有参数，首个 --config 不得掩盖其后的非法参数。
+bool extract_config_path(int argc, char **argv, std::string &config_path)
+{
+    const auto values = parse_cli(argc, argv);
+    const auto found = values.find("--config");
+    if (found == values.end())
+        return false;
+    config_path = found->second;
     return true;
 }
 
-// 从命令行提取 --config
-bool extract_config_path(int argc, char **argv, std::string &config_path)
-{
-    for (int i = 1; i < argc; ++i)
-    {
-        std::string argument = argv[i];
-
-        if (argument == "--config" && i + 1 < argc)
-        {
-            config_path = argv[++i];
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// 使用命令行覆盖配置
+// C01 CLI 步骤：只覆盖显式字段；整数/实数须消费完整 token，错误由入口终止。
 void apply_cli_overrides(int argc, char **argv, CalibrationConfig &config)
 {
-    for (int i = 1; i < argc; ++i)
+    for (const auto &item : parse_cli(argc, argv))
     {
-        std::string argument = argv[i];
-
-        if (argument == "--video" && i + 1 < argc)
+        const auto &key = item.first;
+        const auto &value = item.second;
+        try
         {
-            config.video_path = argv[++i];
+            if (key == "--video") config.video_path = value;
+            else if (key == "--output") config.output_path = value;
+            else if (key == "--rows") config.board_rows = cli_integer(value);
+            else if (key == "--cols") config.board_cols = cli_integer(value);
+            else if (key == "--start-frame") config.start_frame = cli_integer(value);
+            else if (key == "--end-frame") config.end_frame = cli_integer(value);
+            else if (key == "--spacing")
+            {
+                size_t used = 0;
+                config.point_spacing = std::stod(value, &used);
+                if (used != value.size() || !std::isfinite(config.point_spacing))
+                    throw std::invalid_argument("间距须为完整的有限数");
+            }
         }
-        else if (argument == "--output" && i + 1 < argc)
+        catch (const std::exception &error)
         {
-            config.output_path = argv[++i];
-        }
-        else if (argument == "--rows" && i + 1 < argc)
-        {
-            config.board_rows = std::stoi(argv[++i]);
-        }
-        else if (argument == "--cols" && i + 1 < argc)
-        {
-            config.board_cols = std::stoi(argv[++i]);
-        }
-        else if (argument == "--spacing" && i + 1 < argc)
-        {
-            config.point_spacing = std::stod(argv[++i]);
-        }
-        else if (argument == "--start-frame" && i + 1 < argc)
-        {
-            config.start_frame = std::stoi(argv[++i]);
-        }
-        else if (argument == "--end-frame" && i + 1 < argc)
-        {
-            config.end_frame = std::stoi(argv[++i]);
+            throw std::invalid_argument(key + ": " + error.what());
         }
     }
 }
 
-// 检查标定配置是否合法
+// C01→C04：最终配置只拒绝非法输入，不依据标定质量筛选帧或推定硬件资格。
 bool validate_config(const CalibrationConfig &config)
 {
-    // 检查输入视频路径
     if (config.video_path.empty())
     {
-        std::cerr << "缺少输入视频路径" << std::endl;
-
+        std::cerr << "缺少输入视频路径\n";
         return false;
     }
-
-    // 检查输出路径
     if (config.output_path.empty())
     {
-        std::cerr << "缺少输出文件路径" << std::endl;
-
+        std::cerr << "缺少输出文件路径\n";
         return false;
     }
-
-    // 检查标定板参数
     if (config.board_rows <= 0 || config.board_cols <= 0)
     {
-        std::cerr << "标定板尺寸非法" << std::endl;
-
+        std::cerr << "标定板尺寸非法\n";
         return false;
     }
-
-    // 检查圆点间距
-    if (config.point_spacing <= 0)
+    // NaN 不会命中 <=0，须在创建物点前明确排除，否则会污染后续 OpenCV 求解。
+    if (!std::isfinite(config.point_spacing) || config.point_spacing <= 0)
     {
-        std::cerr << "标定点间距非法" << std::endl;
-
+        std::cerr << "标定点间距非法\n";
         return false;
     }
-
-    // 检查帧范围
     if (config.start_frame < 0)
     {
-        std::cerr << "起始帧不能小于 0" << std::endl;
-
+        std::cerr << "起始帧不能小于 0\n";
         return false;
     }
-
     if (config.end_frame != -1 && config.end_frame < config.start_frame)
     {
-        std::cerr << "结束帧不能小于起始帧" << std::endl;
-
+        std::cerr << "结束帧不能小于起始帧\n";
         return false;
     }
-
     return true;
 }

@@ -43,19 +43,16 @@ struct CalibrationConfig
     std::vector<int> frame_list;
 };
 
-// 从 OpenCV YAML 配置文件读取参数
-// YAML 中存在字段时覆盖默认值
+// C01：严格读取 YAML 覆盖默认值；未知/重复键、错误类型或非有限间距返回 false。
 bool load_config_yaml(const std::string &config_path, CalibrationConfig &config);
 
 // 初始化标定工具默认配置
 void initialize_default_config(CalibrationConfig &config);
 
-// 从命令行中提取配置文件路径
-// 在 YAML 加载之前调用
+// C01：检查完整 CLI 后提取 --config；未知/重复/缺值参数抛异常，未给配置则返回 false。
 bool extract_config_path(int argc, char **argv, std::string &config_path);
 
-// 使用命令行参数覆盖配置
-// 在 YAML 加载之后调用
+// C01：按 CLI 覆盖 YAML；数值须完整解析，错误由入口报告后终止。
 void apply_cli_overrides(int argc, char **argv, CalibrationConfig &config);
 
 // 检查标定配置是否合法

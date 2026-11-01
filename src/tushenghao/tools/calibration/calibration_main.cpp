@@ -29,31 +29,39 @@ int main(int argc, char **argv)
 {
     CalibrationConfig config;
 
-    // 初始化默认配置
-    initialize_default_config(config);
-
-    std::string config_path;
-
-    // 获取 YAML 配置文件路径
-    if (!extract_config_path(argc, argv, config_path))
+    // C01：默认值→严格 YAML→合法 CLI 覆盖；失败不打开视频、不写标定结果。
+    try
     {
-        std::cerr << "缺少 --config 参数" << std::endl;
+        initialize_default_config(config);
 
-        return -1;
+        std::string config_path;
+
+        // 获取 YAML 配置文件路径
+        if (!extract_config_path(argc, argv, config_path))
+        {
+            std::cerr << "缺少 --config 参数" << std::endl;
+
+            return -1;
+        }
+
+        // 加载 YAML 配置
+        if (!load_config_yaml(config_path, config))
+        {
+            return -1;
+        }
+
+        // 使用命令行参数CLI覆盖 YAML 配置
+        apply_cli_overrides(argc, argv, config);
+
+        // 检查最终配置是否合法
+        if (!validate_config(config))
+        {
+            return -1;
+        }
     }
-
-    // 加载 YAML 配置
-    if (!load_config_yaml(config_path, config))
+    catch (const std::exception &error)
     {
-        return -1;
-    }
-
-    // 使用命令行参数CLI覆盖 YAML 配置
-    apply_cli_overrides(argc, argv, config);
-
-    // 检查最终配置是否合法
-    if (!validate_config(config))
-    {
+        std::cerr << "标定配置错误: " << error.what() << '\n';
         return -1;
     }
 

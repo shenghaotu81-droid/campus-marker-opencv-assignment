@@ -6,6 +6,11 @@ import sys
 from pathlib import Path
 from summarize import distribution
 
+# V05：列由测量协议决定；没有可用分布时也输出同一表头，不从首行数据猜列。
+STAT_FIELDS = ('n', 'mean', 'sample_std', 'percentile', 'maximum', 'minimum', 'raw', 'rounded', 'step')
+CSV_FIELDS = ('work_width', 'radius', 'noisy', 'metric', 'total', 'failures',
+              *STAT_FIELDS, 'worst_case')
+
 
 def main():
     source, report = map(Path, sys.argv[1:])
@@ -47,11 +52,19 @@ def main():
             })
         for metric, value in values.items():
             group['metrics'].setdefault(metric, []).append((r['measurement_case_id'], value))
+    # 先保全结构失败；后续统计失败也不会把已有拒绝明细一起丢掉。
+    report.write_text('\n'.join(['# C-v2 关联与assignment原始预算测量（待审）', '',
+        '分布统计尚未完成；以下为已读取的结构失败。', '', '结构失败：'] +
+        ([f'- {case}: {reason}' for case, reason in failed] or ['- 无'])) + '\n')
     rows, candidates = [], {}
     for key, group in sorted(strata.items()):
         for metric, samples in group['metrics'].items():
             if len(samples) < 2:
                 failed.append((str(key), 'INSUFFICIENT_DISTRIBUTION:' + metric))
+                rows.append(dict(work_width=key[0], radius=key[1], noisy=int(key[2]), metric=metric,
+                    total=group['total'], failures=group['total']-len(samples),
+                    **{field: len(samples) if field == 'n' else None for field in STAT_FIELDS},
+                    worst_case=None))
                 continue
             lower = metric.startswith('min_')
             # 相对面积无量纲，报告明确采用0.005网格，不冒称终稿指定了这一网格。
@@ -63,7 +76,9 @@ def main():
             value = stats['rounded']
             candidates[metric] = (min if lower else max)(candidates.get(metric, value), value)
     with report.with_suffix('.csv').open('w') as out:
-        writer = csv.DictWriter(out, fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
+        writer = csv.DictWriter(out, fieldnames=CSV_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
     text = ['# C-v2 关联与assignment原始预算测量（待审）', '',
             f'样例720；定位及assignment结构失败记录{len(failed)}，所有失败保留。', '',
             '规则：原图epsilon1/trim2，assignment epsilon上限3工作px，固定五比例1/3..1；采样步长1工作px。',
@@ -72,6 +87,8 @@ def main():
             '采样边界距连续上界可再加step/2；该裕量不隐藏在统计均值中。', '',
             '| 字段 | 统计候选（待审） |', '|---|---:|']
     text += [f'| {name} | {value:g} |' for name, value in candidates.items()]
+    if not candidates:
+        text += ['| 无有效分布 | N/A |', '', '有效样本不足；统计量留空，不生成候选预算。']
     text += ['', '结构失败：'] + ([f'- {case}: {reason}' for case, reason in failed] or ['- 无'])
     text += ['', f'原始记录 `{source}`；逐层统计 `{report.with_suffix(".csv").name}`。',
              '候选不能因成功率自动获批；H/视频不得反向参与定值。']

@@ -1,4 +1,5 @@
 #include "common/frame_record_reader.hpp"
+#include "corners/corner_types.hpp"
 #include <charconv>
 #include <cmath>
 #include <limits>
@@ -377,4 +378,136 @@ namespace mark::validation
             r.diagnostics.push_back(d.text);
         return r;
     }
+
+    namespace
+    {
+        void requireCorner(bool ok, const char *message)
+        {
+            if (!ok)
+                throw std::runtime_error(message);
+        }
+
+        const std::vector<JsonValue> &cornerArray(const JsonValue &value)
+        {
+            requireCorner(value.kind == JsonValue::Kind::Array, "expected corner evidence array");
+            return value.array;
+        }
+
+        int cornerInteger(const JsonValue &value)
+        {
+            const auto number = value.i64();
+            requireCorner(number >= std::numeric_limits<int>::min() &&
+                              number <= std::numeric_limits<int>::max(), "corner integer overflow");
+            return int(number);
+        }
+
+        cv::Point2d cornerPoint(const JsonValue &value)
+        {
+            const auto &coordinates = cornerArray(value);
+            requireCorner(coordinates.size() == 2, "corner point arity");
+            return {coordinates[0].number(), coordinates[1].number()};
+        }
+
+        std::vector<cv::Point2d> cornerPoints(const JsonValue &value)
+        {
+            std::vector<cv::Point2d> points;
+            for (const auto &point : cornerArray(value))
+                points.push_back(cornerPoint(point));
+            return points;
+        }
+    }
+
+    // V03：协议只恢复完整数值和本帧身份；拟合、残差、连续弧仍交独立 validator 重算。
+    CornerMeasurement readCornerMeasurement(const JsonValue &v, uint64_t frame,
+                                        const std::set<size_t> &components)
+    {
+        auto &es = cornerArray(v);
+        requireCorner(es.size() == 4, "measurement must contain four evidence entries");
+        mark::CornerMeasurement m;
+        std::set<int> physical;
+        for (auto &data : es)
+        {
+            // 无版本的旧记录未保存线模型，不能从原始弧猜测当时采用的估计器。
+            const auto version = data.object.find("evidence_schema_version");
+            requireCorner(version != data.object.end(),
+                          "UNREPLAYABLE_CORNER_EVIDENCE: missing line-model schema");
+            requireCorner(cornerInteger(version->second) == corner_evidence_schema_version,
+                          "unsupported corner evidence schema");
+            int id = cornerInteger(data.at("physical"));
+            requireCorner(id >= 0 && id < 4 && physical.insert(id).second, "invalid physical identity");
+            auto &e = m.evidence_[id];
+            e.physical_corner_ = static_cast<mark::PhysicalCorner>(id);
+            e.frame_id_ = data.at("frame_id").u64();
+            e.component_id_ = data.at("component_id").u64();
+            requireCorner(e.frame_id_ == frame && components.count(e.component_id_),
+                    "noncurrent evidence reference");
+            requireCorner(data.at("evidence_id").kind == JsonValue::Kind::String,
+                          "expected evidence ID string");
+            e.stable_id_ = data.at("evidence_id").text;
+            requireCorner(!e.stable_id_.empty(), "empty evidence ID");
+            e.model_vertex_id_ = cornerInteger(data.at("model_vertex_id"));
+            auto &model = cornerArray(data.at("model_edge_ids"));
+            auto &starts = cornerArray(data.at("observed_segment_ids"));
+            auto &ends = cornerArray(data.at("observed_segment_end_ids"));
+            auto &lines = cornerArray(data.at("fitted_lines"));
+            auto &segments = cornerArray(data.at("finite_segments"));
+            auto &arcs = cornerArray(data.at("support_arcs"));
+            auto &mean = cornerArray(data.at("line_mean_residual_px"));
+            auto &max = cornerArray(data.at("line_max_residual_px"));
+            auto &extension = cornerArray(data.at("support_extension_px"));
+            auto &kinds = cornerArray(data.at("line_model_kinds"));
+            auto &axes = cornerArray(data.at("periodic_axes"));
+            auto &coefficients = cornerArray(data.at("periodic_coefficients"));
+            auto &model_mean = cornerArray(data.at("model_mean_residual_px"));
+            auto &model_max = cornerArray(data.at("model_max_residual_px"));
+            for (auto *pair :
+                 {&model, &starts, &ends, &lines, &segments, &arcs, &mean, &max, &extension,
+                  &kinds, &axes, &coefficients, &model_mean, &model_max})
+                requireCorner(pair->size() == 2, "two-edge field arity");
+            for (size_t i = 0; i < 2; ++i)
+            {
+                e.model_edge_ids_[i] = cornerInteger(model[i]);
+                e.observed_segment_ids_.push_back(cornerInteger(starts[i]));
+                e.observed_segment_end_ids_[i] = cornerInteger(ends[i]);
+                auto &l = cornerArray(lines[i]);
+                requireCorner(l.size() == 4, "line arity");
+                for (size_t k = 0; k < 4; ++k)
+                    (i ? e.line_b_ : e.line_a_)[k] = l[k].number();
+                auto seg = cornerPoints(segments[i]);
+                requireCorner(seg.size() == 2, "segment arity");
+                for (size_t k = 0; k < 2; ++k)
+                    (i ? e.edge_segment_b_ : e.edge_segment_a_)[k] = seg[k];
+                e.original_support_arcs_[i] = cornerPoints(arcs[i]);
+                e.line_mean_residual_px_[i] = mean[i].number();
+                e.line_max_residual_px_[i] = max[i].number();
+                e.support_extension_px_[i] = extension[i].number();
+                const int kind = cornerInteger(kinds[i]);
+                requireCorner(kind == int(LineFitModel::Legacy) ||
+                                  kind == int(LineFitModel::PeriodicLeastSquares) ||
+                                  kind == int(LineFitModel::PeriodicPhaseMedian) ||
+                                  kind == int(LineFitModel::PeriodicL1) ||
+                                  kind == int(LineFitModel::PeriodicZeroSlope),
+                              "unknown corner line model");
+                e.line_model_kinds_[i] = static_cast<LineFitModel>(kind);
+                e.periodic_axes_[i] = cornerInteger(axes[i]);
+                requireCorner(e.periodic_axes_[i] == 0 || e.periodic_axes_[i] == 1,
+                              "invalid periodic axis");
+                e.periodic_coefficients_[i] = coefficients[i].number();
+                e.model_mean_residual_px_[i] = model_mean[i].number();
+                e.model_max_residual_px_[i] = model_max[i].number();
+            }
+            e.original_turn_arc_ = cornerPoints(data.at("turn_arc"));
+            requireCorner(data.at("original_observation").kind == JsonValue::Kind::Bool &&
+                              data.at("truncated").kind == JsonValue::Kind::Bool,
+                          "expected corner observation flags");
+            e.original_observation_ = data.at("original_observation").boolean;
+            e.truncated_ = data.at("truncated").boolean;
+            e.corner_error_px_ = data.at("corner_error_px").number();
+            e.error_ = data.at("measurement_error_px").number();
+            e.intersection_ = cornerPoint(data.at("intersection"));
+            m.physical_corners_[id] = e.intersection_;
+        }
+        return m;
+    }
+
 }

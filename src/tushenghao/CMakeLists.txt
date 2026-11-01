@@ -92,6 +92,9 @@ foreach(MARK_TEST_NAME IN LISTS MARK_TEST_NAMES)
     add_test(NAME ${MARK_TEST_NAME} COMMAND ${MARK_TEST_NAME})
 endforeach()
 
+# F61：配置负例直接调用标定解析器；只为已有测试追加实现，不新增目标。
+target_sources(config_error_test PRIVATE tools/calibration/calibration_config.cpp)
+
 # 计数 helper 仅给此工具口径测试使用，不向 Detector 或公共使用者传播。
 target_include_directories(corner_edge_fit_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/block3_fixture/common")
@@ -146,7 +149,7 @@ target_link_libraries(geometry_audit PRIVATE mark_offline)
 target_compile_definitions(mark_offline PRIVATE MARK_COMMIT="${MARK_COMMIT}" MARK_CODE_HASH="${MARK_CODE_HASH}" MARK_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 add_library(mark_frame_record_reader tools/common/frame_record_reader.cpp)
 target_include_directories(mark_frame_record_reader PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
-target_link_libraries(mark_frame_record_reader PRIVATE mark_detector)
+target_link_libraries(mark_frame_record_reader PRIVATE mark_detector_internal_headers)
 add_executable(observability_verify tools/validation/observability_verify.cpp)
 target_include_directories(observability_verify PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 target_link_libraries(observability_verify PRIVATE mark_frame_record_reader mark_detector_internal_headers OpenSSL::Crypto)
