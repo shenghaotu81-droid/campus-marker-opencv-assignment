@@ -52,6 +52,7 @@ void CvFilter::initialize(const cv::Vec3d &p, const cv::Matx33d &r, double vv)
 {
     if (!finite_vector(p) || !positive_definite(cv::Mat(r)) || !std::isfinite(vv) || vv <= 0)
         throw std::runtime_error("TRACK_BAD_INITIAL_STATE");
+    ++revision_;
     x_ = Vec6::all(0);
     P_ = Mat6::zeros();
     for (int i = 0; i < 3; ++i)
@@ -72,6 +73,7 @@ void CvFilter::bootstrap(const cv::Vec3d &p0, const cv::Matx33d &r0,
         !std::isfinite(q) || q < 0 || !std::isfinite(bound) || bound < 0 || bound >= dt ||
         !std::isfinite(position_bound) || position_bound < 0)
         throw std::runtime_error("TRACK_BAD_BOOTSTRAP");
+    ++revision_;
     const auto v = (p1 - p0) / dt;
     if (!finite_vector(v))
         throw std::runtime_error("TRACK_BOOTSTRAP_VELOCITY_OVERFLOW");
@@ -141,6 +143,7 @@ void CvFilter::predict(double dt, double q, double bound)
         propagated = (1 + ratio) * (f * P_ * f.t()) + noise +
             (1 + 1 / ratio) * bound * bound * (a * second_moment_bound * a.t());
     }
+    ++revision_;
     x_ = f * x_;
     for (double value : x_.val)
         if (!std::isfinite(value)) throw std::runtime_error("TRACK_PREDICTION_STATE_OVERFLOW");
@@ -148,7 +151,7 @@ void CvFilter::predict(double dt, double q, double bound)
 }
 
 // 用Cholesky解线性方程，不显式求逆；创新门槛由未截断的正例分布标定。
-double CvFilter::nis(const cv::Vec3d &z, const cv::Matx33d &r) const
+InnovationResult CvFilter::innovation(const cv::Vec3d &z, const cv::Matx33d &r) const
 {
     if (!finite_vector(z) || !positive_definite(cv::Mat(r)))
         throw std::runtime_error("TRACK_BAD_MEASUREMENT_NOISE");
@@ -160,24 +163,37 @@ double CvFilter::nis(const cv::Vec3d &z, const cv::Matx33d &r) const
     const double score = cv::Mat(innovation).dot(solved);
     if (!std::isfinite(score) || score < 0)
         throw std::runtime_error("TRACK_INVALID_NIS");
-    return score;
+    return {innovation, s, r, score, this, revision_};
+}
+
+double CvFilter::nis(const cv::Vec3d &z,const cv::Matx33d &r) const
+{
+    return innovation(z,r).score;
 }
 
 // Joseph更新比(I-KH)P更能保持数值对称/正定；它仍依赖声明的线性噪声模型。
 void CvFilter::correct(const cv::Vec3d &z, const cv::Matx33d &r)
 {
-    (void)nis(z, r);
+    correct(innovation(z,r));
+}
+
+void CvFilter::correct(const InnovationResult &innovation)
+{
+    if (innovation.owner != this || innovation.revision != revision_)
+        throw std::runtime_error("TRACK_STALE_INNOVATION");
+    const auto &r = innovation.R;
     cv::Mat h = cv::Mat::zeros(3, 6, CV_64F);
     for (int i = 0; i < 3; ++i)
         h.at<double>(i, i) = 1;
     cv::Mat p(P_), solved;
-    const cv::Mat s = h * p * h.t() + cv::Mat(r);
+    const cv::Mat s(innovation.S);
     const cv::Mat pht = p * h.t();
     if (!cv::solve(s, pht.t(), solved, cv::DECOMP_CHOLESKY))
         throw std::runtime_error("TRACK_GAIN_SOLVE_FAILED");
     const cv::Mat gain = solved.t();
-    const cv::Mat state = cv::Mat(x_) + gain * cv::Mat(z - position());
+    const cv::Mat state = cv::Mat(x_) + gain * cv::Mat(innovation.residual);
     if (!cv::checkRange(state)) throw std::runtime_error("TRACK_CORRECTION_STATE_OVERFLOW");
+    ++revision_;
     state.copyTo(cv::Mat(x_, false));
     const cv::Mat a = cv::Mat::eye(6, 6, CV_64F) - gain * h;
     P_ = checked_covariance(a * p * a.t() + gain * cv::Mat(r) * gain.t());

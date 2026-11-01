@@ -137,7 +137,20 @@ void test_filter_math()
     const cv::Mat k = p * h.t() * s.inv();
     const cv::Mat a = cv::Mat::eye(6, 6, CV_64F) - k * h;
     const cv::Mat expected = a * p * a.t() + k * r * k.t();
-    filter.correct({1.1, 2.2, 2.9}, noise);
+    const cv::Vec3d residual = cv::Vec3d(1.1,2.2,2.9)-filter.position();
+    const cv::Mat independent_score = cv::Mat(residual).t()*s.inv()*cv::Mat(residual);
+    const auto innovation = filter.innovation({1.1,2.2,2.9},noise);
+    near(innovation.score,independent_score.at<double>(0),1e-12,"innovation score differs from independent solve");
+    auto other = filter;
+    bool wrong_owner=false;
+    try { other.correct(innovation); }
+    catch(const std::runtime_error &error) { wrong_owner=std::string(error.what())=="TRACK_STALE_INNOVATION"; }
+    require(wrong_owner,"innovation reused across filter instances");
+    filter.correct(innovation);
+    bool stale=false;
+    try { filter.correct(innovation); }
+    catch(const std::runtime_error &error) { stale=std::string(error.what())=="TRACK_STALE_INNOVATION"; }
+    require(stale,"innovation reused after state update");
     require(cv::norm(cv::Mat(filter.covariance()), expected, cv::NORM_INF) < 1e-12,
             "M04 Joseph 更新必须符合完整公式");
     for (int i = 0; i < 80; ++i)
