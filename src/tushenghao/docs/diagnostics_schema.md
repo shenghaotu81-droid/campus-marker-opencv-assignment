@@ -34,7 +34,7 @@ offline实时字段全部null，realtime.applicability=not_applicable；不制�
 
 ## 配置与指纹
 
-旧debug.timing_enabled/draw_candidates和output.show_window/show_held_state是唯一生效旧开关；新App配置存level、范围、图层、模式、输出目录、导出和回放速率。boolean只接受0/1；范围配置采用非负32位整数并在原始token上检查溢出（记录frame_id仍支持uint64）。baseline拒详细/GUI/等待/证据冲突，关闭timing也拒绝。CLI覆盖路径、模式、报告用途及 Final-fixes 新开关/期待帧数，effective_config导出最终值。当前 export_video=1 在 debug 模式逐帧导出 MJPG/MP4；Block5 旧证据中的 NOT_IMPLEMENTED 只表示当时实现。
+`debug.timing_enabled` 控制默认计时；`display.show_window/show_held_state/draw_candidates` 分别写入 AppConfig.show_window 与 RenderConfig，显示值只有一份。旧 output 下的两个显示键及 debug.draw_candidates 明确拒绝。App 配置另存 level、范围、图层、模式、输出目录、导出和回放速率。boolean只接受0/1；范围配置采用非负32位整数并在原始token上检查溢出（记录frame_id仍支持uint64）。baseline拒详细/GUI/等待/证据冲突，关闭timing也拒绝。CLI覆盖路径、模式、报告用途及 Final-fixes 新开关/期待帧数，effective_config导出最终值。当前 export_video=1 在 debug 模式逐帧导出 MJPG/MP4；Block5 旧证据中的 NOT_IMPLEMENTED 只表示当时实现。
 
 结果指纹FNV1a64版本1：初值14695981039346656037、乘1099511628211、uint64溢出。id(uint64)、timestamp(int64位模式)、status(uint32)，raw vector长度(uint64)及每项category/quality(uint32)、corners/bbox(IEEE float32)、orientation/marker_code/confidence，track vector长度/索引(uint64)/同Detection，display可选。optional先0/1；string长度uint64后UTF8；orientation四int32；marker_code为scheme/value(int32)；display为source/age(uint64)、held(1byte)、value(string)。所有整数little-endian。排除diagnostics/timing/runmeta。App文件指纹为FNV1a64+size，明确非密码学摘要，归档工具补SHA256。结果指纹仅连接summary基线，不能代替逐帧比较。
 

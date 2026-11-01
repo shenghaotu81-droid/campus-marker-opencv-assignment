@@ -140,9 +140,9 @@ namespace mark
                     throw std::runtime_error("run directory required");
                 if (baseline_ &&
                     (!timing_ || app_.diagnostics.level != "summary" ||
-                     app_.detector_config.output.show_window ||
-                     app_.detector_config.output.show_held_state ||
-                     app_.detector_config.debug.draw_candidates ||
+                     app_.show_window ||
+                     app_.render.show_held_state ||
+                     app_.render.draw_candidates ||
                      app_.render.draw_corner_evidence || app_.offline.export_evidence ||
                      app_.offline.export_video || app_.offline.playback_fps != 0))
                     throw std::runtime_error("baseline configuration conflict");
@@ -241,7 +241,7 @@ namespace mark
                 writeRunManifest(meta_, (recorder_.directory() / "manifest.yaml").string());
                 meta_.environment["video_export_requested"] =
                     app_.offline.export_video ? "true" : "false";
-                const bool requested = app_.detector_config.output.show_window;
+                const bool requested = app_.show_window;
                 display_session_.start(
                     requested, display_probe_path(),
                     std::chrono::milliseconds(app_.offline.display_probe_timeout_ms));
@@ -382,8 +382,6 @@ namespace mark
                     return overlay;
                 auto start = Clock::now();
                 auto render = app_.render;
-                render.draw_candidates = app_.detector_config.debug.draw_candidates;
-                render.show_held_state = app_.detector_config.output.show_held_state;
                 auto events = validateRenderEvidence(record);
                 record.events.insert(record.events.end(), events.begin(), events.end());
                 overlay = renderDebugFrame(image_, result, record, render);

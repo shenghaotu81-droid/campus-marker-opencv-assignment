@@ -39,7 +39,7 @@ namespace
         detector.preprocess.work_height = 720;
         detector.preprocess.threshold = 200;
 
-        detector.mode = mark::DetectorMode::Skeleton;
+        detector.mode = mark::DetectorMode::SegmentedMark;
 
         detector.temporal.stabilization_enabled = false;
         detector.temporal.display_hold_enabled = false;
@@ -51,20 +51,17 @@ namespace
         detector.temporal.min_area_ratio=.6;detector.temporal.max_area_ratio=1.8;
         detector.temporal.correspondence_uncertainty_px=2;detector.temporal.max_smoothing_deviation_px=3;
 
-        detector.output.show_window = false;
-        detector.output.show_held_state = false;
+        config.show_window = true;
+        config.render.show_held_state = true;
 
         detector.debug.timing_enabled = false;
-        detector.debug.draw_candidates = false;
+        config.render.draw_candidates = true;
 
-        detector.corner_.local_search_margin_ratio_ = 0.2;
         detector.corner_.min_line_points_ = 5;
         detector.corner_.max_line_fit_error_ = 2.0;
         detector.corner_.min_intersection_angle_deg_ = 10.0;
         detector.corner_.max_corner_error_ = 5.0;
-        detector.corner_.reject_truncated_corner_ = true;
         detector.corner_.approximation_epsilon_ = 2.0;
-        detector.corner_.edge_point_distance_threshold_ = 3.0;
         detector.corner_.semantic_geometry_threshold_ = 64.0; // Step 5 假设间几何一致性阈值 单位：pixel²
 
         return config;
@@ -105,24 +102,21 @@ namespace
                a.temporal.correspondence_uncertainty_px == b.temporal.correspondence_uncertainty_px &&
                a.temporal.max_smoothing_deviation_px == b.temporal.max_smoothing_deviation_px &&
 
-               a.output.show_window ==
-                   b.output.show_window &&
-               a.output.show_held_state ==
-                   b.output.show_held_state &&
+               lhs.show_window ==
+                   rhs.show_window &&
+               lhs.render.show_held_state ==
+                   rhs.render.show_held_state &&
 
                a.debug.timing_enabled ==
                    b.debug.timing_enabled &&
-               a.debug.draw_candidates ==
-                   b.debug.draw_candidates &&
+               lhs.render.draw_candidates ==
+                   rhs.render.draw_candidates &&
 
-               a.corner_.local_search_margin_ratio_ == b.corner_.local_search_margin_ratio_ &&
                a.corner_.min_line_points_ == b.corner_.min_line_points_ &&
                a.corner_.max_line_fit_error_ == b.corner_.max_line_fit_error_ &&
                a.corner_.min_intersection_angle_deg_ == b.corner_.min_intersection_angle_deg_ &&
                a.corner_.max_corner_error_ == b.corner_.max_corner_error_ &&
-               a.corner_.reject_truncated_corner_ == b.corner_.reject_truncated_corner_ &&
                a.corner_.approximation_epsilon_ == b.corner_.approximation_epsilon_ &&
-               a.corner_.edge_point_distance_threshold_ == b.corner_.edge_point_distance_threshold_&&
                a.corner_.semantic_geometry_threshold_ == b.corner_.semantic_geometry_threshold_;
     }
 

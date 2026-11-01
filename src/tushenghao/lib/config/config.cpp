@@ -1,43 +1,4 @@
-// 黑盒！！！
-// 读->验->写（三个函数）(读取 + 检查 + 转换) 具体实现暂时黑盒（时间不足以完全学会，以后遇到要改动再展开第二层（requireNode、readBool/readInt、lambda、错误设计）实现细节）
-// 工程定位：负责把外部 YAML 配置文件，转换成程序内部可靠的 C++ 配置对象，并保证进入 Detector 前配置合法。
-/* 报错表格配置板块契约（看懂就能理解报错输出、能验收、能调试）：
-1.loadConfig 抛错（读的时候）：
-->文件不存在/打不开
-->必填字段缺失
-->类型错误（开关不是 0/1 整数、mode 不是字符串）
-->mode 不是 "skeleton"
-
-2.validateConfig 抛错（验的时候）：
-->schema_version ≠ 1、pixel_format ≠ BGR8、timestamp_unit ≠ "us"
-->work_width/height ≤ 0、threshold 超出 0~255、max_hold_frames < 0
-->Block5绘制/计时开关被打开
-
-3.writeEffectiveConfig 抛错：
-->文件写不开
-
-错误信息格式统一：file=哪个文件, field=哪个字段, reason=为啥错。
-*/
-/* 加字段后续可能增量：
-1. struct 加成员；
-2. loadConfig 加一段"读"；
-3. validateConfig 加一条"验"；
-4. writeEffectiveConfig 加一段"写"；
-5. detector.yaml 加一行；
-6. schema_version 升版（冻结要求"新增参数须版本化"）扩展点明确，不用碰老代码。
-*/
-/*  大体思路：
-1. loadConfig(path)——读
-打开 YAML 文件 → 逐个读 14 个字段。每个字段三步：看在不在（缺了抛错）、看类型对不对（开关必须是整数 0/1）、转成 C++ 类型（0/1→bool，"skeleton"→枚举）。读完再调 validateConfig 验一遍，返回填好的配置。
-2. validateConfig(config)——验
-不碰文件，只检查内存里的 struct。一条条过：版本号是不是 1、宽高是不是正数、阈值在不在 0~255、那几个"本板块不可启用"的开关有没有被打开（开了就报错"未实现"）。一条不过就抛 ConfigError。
-3. writeEffectiveConfig(config, path)——写
-把配置写回 YAML 文件。用途是导出"实际生效的配置"留档。要求：写出去再读回来，值必须一样（往返一致）。
-
-两个小帮手：
-throwConfigError：统一抛错，错误信息里带"哪个文件、哪个字段、为啥错"
-readBool：读 0/1 开关，顺手校验只能是 0 或 1
-*/
+// Q01→Q03→Q06：严格读取、分模块校验、导出生效配置；预算值仅来自输入。
 #include "config/config.hpp"
 #include "core/corner_budget.hpp"
 #include <set>
@@ -51,29 +12,12 @@ readBool：读 0/1 开关，顺手校验只能是 0 或 1
 
 #include <filesystem>
 
-// #include<iostream>  // debug临时加的
 
 namespace mark
 {
 
     namespace
     { // 配置错误：文件=<path>，字段=<field>，原因=<reason>
-
-        // 错误信息中英文对照：
-        //   missing required field  → 缺少必填字段
-        //   expected integer        → 应为整数
-        //   expected integer 0/1    → 应为整数 0 或 1
-        //   expected string         → 应为字符串
-        //   unsupported mode        → 不支持的模式（只认 skeleton）
-        //   unsupported version     → 不支持的版本（只认 1）
-        //   unsupported format      → 不支持的格式（只认 BGR8）
-        //   unsupported unit        → 不支持的单位（只认 us）
-        //   must be positive        → 必须为正数（>0）
-        //   must be non-negative    → 必须为非负数（≥0）
-        //   range 0-255             → 超出范围 0~255
-        //   cannot open file        → 无法打开文件
-        //   cannot write file       → 无法写入文件
-        //   not implemented         → 该功能在本板块未实现
 
         // 统一生成配置错误，保证错误信息包含文件路径和字段路径。
         [[noreturn]] void throwConfigError(const std::filesystem::path &file,
@@ -185,7 +129,7 @@ namespace mark
         // 在转换强类型之前逐层检查结构，保留OpenCV FileStorage单一加载路径。
         checkFields(fs.root(), path, "root",
                     {"schema_version", "input", "preprocess", "marker_geometry_path", "detector",
-                     "geometry", "temporal", "output", "debug"});
+                     "geometry", "temporal", "output", "debug", "display"});
         checkFields(fs["input"], path, "input", {"pixel_format", "timestamp_unit"});
         checkFields(fs["preprocess"], path, "preprocess",
                     {"work_width", "work_height", "threshold"});
@@ -194,9 +138,9 @@ namespace mark
                      "max_validation_residual", "min_area_ratio", "max_area_ratio"});
         checkFields(fs["detector"], path, "detector", {"mode", "corner", "assignment_completion"});
         checkFields(fs["detector"]["corner"], path, "detector.corner",
-                    {"local_search_margin_ratio", "min_line_points", "max_line_fit_error",
-                     "min_intersection_angle_deg", "max_corner_error", "reject_truncated_corner",
-                     "approximation_epsilon", "edge_point_distance_threshold",
+                    {"min_line_points", "max_line_fit_error",
+                     "min_intersection_angle_deg", "max_corner_error",
+                     "approximation_epsilon",
                      "semantic_geometry_threshold", "observation"});
         checkFields(fs["temporal"], path, "temporal",
                     {"stabilization_enabled", "display_hold_enabled", "max_hold_frames",
@@ -204,15 +148,18 @@ namespace mark
                      "max_center_distance_diagonal_ratio", "min_area_ratio", "max_area_ratio",
                      "correspondence_uncertainty_px", "max_smoothing_deviation_px"});
         checkFields(fs["output"], path, "output",
-                    {"show_window", "show_held_state", "run_mode", "run_directory",
+                    {"run_mode", "run_directory",
                      "export_evidence", "export_video", "playback_fps", "expected_frame_count",
                      "video_fourcc", "video_filename", "display_probe_timeout_ms"});
         checkFields(fs["debug"], path, "debug",
-                    {"timing_enabled", "draw_candidates", "level", "detail_first", "detail_last",
+                    {"timing_enabled", "level", "detail_first", "detail_last",
                      "detail_interval", "draw_raw", "draw_stable", "draw_corner_evidence",
                      "draw_timing"});
 
-        // YAML 字段属于 DetectorConfig，因此统一从这里访问，避免应用层和检测器配置混淆。
+        checkFields(fs["display"], path, "display",
+                    {"show_window", "show_held_state", "draw_candidates"});
+
+        // Q02：算法字段写入检测配置，显示与运行字段写入应用配置。
         DetectorConfig &detector = config.detector_config;
 
         auto requireNode = [&](const std::string &field) -> cv::FileNode
@@ -290,8 +237,6 @@ namespace mark
         // Block 3 角点恢复参数。
         cv::FileNode corner_node = detector_node["corner"];
 
-        detector.corner_.local_search_margin_ratio_ = readDouble(
-            corner_node["local_search_margin_ratio"], path, "corner.local_search_margin_ratio");
 
         detector.corner_.min_line_points_ =
             readInt(corner_node["min_line_points"], path, "corner.min_line_points");
@@ -305,15 +250,10 @@ namespace mark
         detector.corner_.max_corner_error_ =
             readDouble(corner_node["max_corner_error"], path, "corner.max_corner_error");
 
-        detector.corner_.reject_truncated_corner_ = readBool(
-            corner_node["reject_truncated_corner"], path, "corner.reject_truncated_corner");
 
         detector.corner_.approximation_epsilon_ =
             readDouble(corner_node["approximation_epsilon"], path, "corner.approximation_epsilon");
 
-        detector.corner_.edge_point_distance_threshold_ =
-            readDouble(corner_node["edge_point_distance_threshold"], path,
-                       "corner.edge_point_distance_threshold");
 
         detector.corner_.semantic_geometry_threshold_ = readDouble(
             corner_node["semantic_geometry_threshold"], path, "corner.semantic_geometry_threshold");
@@ -390,33 +330,9 @@ namespace mark
         std::string mode;
         mode_node >> mode;
 
-        /* debug 工程经验：OpenCV cv::FileStorage 的 YAML 注释兼容性与标准 YAML 不完全一致，配置文件中避免使用行尾 # comment，否则可能被读取为字符串内容。
-        这三行是"用数字代替眼睛"：
-
-        1. mode.size() —— 字符串长度。"Skeleton" 该是 8，读出来 59，直接暴露多了东西
-
-        2. for 循环打印每个字符的 ASCII 码 —— 比如 S=83、k=107、空格=32。肉眼看不见的字符（空格、换行、中文），在数字面前全现形
-
-        3. mode=[...] —— 前后加方括号，原样打印。一眼看出开头结尾有没有偷藏空格
-
-        4. 原理："看着对但跑不对"时，别用眼睛猜，用数字说话。 size=59 就是铁证——字符串里混进了注释。
-        // debug 临时加的
-        std::cout << "mode size = " << mode.size() << std::endl;
-
-        std::cout << "mode chars:";
-        for (unsigned char c : mode)
+        if (mode == "SegmentedMark")
         {
-            std::cout << " [" << static_cast<int>(c) << "]";
-        }
-        std::cout << std::endl;
-
-        std::cout << "mode=[" << mode << "]" << std::endl;
-        // debug end
-        */
-
-        if (mode == "Skeleton")
-        {
-            detector.mode = DetectorMode::Skeleton;
+            detector.mode = DetectorMode::SegmentedMark;
         }
         else
         {
@@ -486,18 +402,19 @@ namespace mark
 
         cv::FileNode output = requireNode("output");
 
-        detector.output.show_window = readBool(output["show_window"], path, "output.show_window");
-
-        detector.output.show_held_state =
-            readBool(output["show_held_state"], path, "output.show_held_state");
+        // Q02：显示字段只写入应用配置，旧 output/debug 下的显示键由 checkFields 拒绝。
+        const auto display = requireNode("display");
+        config.show_window = readBool(display["show_window"], path, "display.show_window");
+        config.render.show_held_state = readBool(display["show_held_state"], path,
+                                                 "display.show_held_state");
+        config.render.draw_candidates = readBool(display["draw_candidates"], path,
+                                                 "display.draw_candidates");
 
         cv::FileNode debug = requireNode("debug");
 
         detector.debug.timing_enabled =
             readBool(debug["timing_enabled"], path, "debug.timing_enabled");
 
-        detector.debug.draw_candidates =
-            readBool(debug["draw_candidates"], path, "debug.draw_candidates");
 
         // 旧配置没有观测字段时采用冻结默认；存在字段仍走严格基础类型检查，不改变算法预算。
         auto optionalString = [&](const cv::FileNode &node, const char *key, std::string &value,
@@ -718,12 +635,6 @@ namespace mark
         // Block 3 corner 参数校验
         const auto &corner = detector.corner_;
 
-        if (!std::isfinite(corner.local_search_margin_ratio_) ||
-            corner.local_search_margin_ratio_ <= 0.0)
-        {
-            throw ConfigError(
-                "Config error: field=corner.local_search_margin_ratio, reason=must be positive");
-        }
 
         if (corner.min_line_points_ < 3)
         {
@@ -762,12 +673,6 @@ namespace mark
                 "Config error: field=corner.approximation_epsilon, reason=must be positive");
         }
 
-        if (!std::isfinite(corner.edge_point_distance_threshold_) ||
-            corner.edge_point_distance_threshold_ <= 0.0)
-        {
-            throw ConfigError(
-                "Config error: field=corner.edge_point_distance_threshold, reason=must be positive");
-        }
 
         if (corner.observation_budget_)
             validateCornerObservationBudget(corner);
@@ -797,7 +702,7 @@ namespace mark
         }
 
         validateTemporalConfig(detector.temporal);
-        if (detector.mode != DetectorMode::Skeleton)
+        if (detector.mode != DetectorMode::SegmentedMark)
         {
             throw ConfigError("Config error: field=detector.mode, reason=unsupported mode");
         }
@@ -923,13 +828,12 @@ namespace mark
            << "{";
 
         fs << "mode"
-           << "Skeleton";
+           << "SegmentedMark";
 
         // 结构对齐（写和读的位置要一致）
         fs << "corner"
            << "{";
 
-        fs << "local_search_margin_ratio" << detector.corner_.local_search_margin_ratio_;
 
         fs << "min_line_points" << detector.corner_.min_line_points_;
 
@@ -939,12 +843,9 @@ namespace mark
 
         fs << "max_corner_error" << detector.corner_.max_corner_error_;
 
-        fs << "reject_truncated_corner"
-           << static_cast<int>(detector.corner_.reject_truncated_corner_);
 
         fs << "approximation_epsilon" << detector.corner_.approximation_epsilon_;
 
-        fs << "edge_point_distance_threshold" << detector.corner_.edge_point_distance_threshold_;
 
         fs << "semantic_geometry_threshold" << detector.corner_.semantic_geometry_threshold_;
 
@@ -1013,11 +914,14 @@ namespace mark
            << "video_fourcc" << config.offline.video_fourcc << "video_filename"
            << config.offline.video_filename << "display_probe_timeout_ms"
            << config.offline.display_probe_timeout_ms;
-        fs << "show_window" << static_cast<int>(detector.output.show_window);
 
-        fs << "show_held_state" << static_cast<int>(detector.output.show_held_state);
 
         fs << "}";
+
+        // Q06：应用显示协议独立导出，数值与原开关保持一致。
+        fs << "display" << "{" << "show_window" << int(config.show_window)
+           << "show_held_state" << int(config.render.show_held_state)
+           << "draw_candidates" << int(config.render.draw_candidates) << "}";
 
         fs << "debug"
            << "{";
@@ -1033,7 +937,6 @@ namespace mark
            << int(config.render.draw_timing);
         fs << "timing_enabled" << static_cast<int>(detector.debug.timing_enabled);
 
-        fs << "draw_candidates" << static_cast<int>(detector.debug.draw_candidates);
 
         fs << "}";
 

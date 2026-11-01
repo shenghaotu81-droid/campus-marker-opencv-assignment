@@ -3,7 +3,7 @@
 #include <optional>
 #include <string>
 namespace mark {
-// 应用观测值与算法配置分开；旧timing/candidate/window成员作为唯一生效开关，不另设冲突默认。
+// Q02→A03/A08：应用观测、渲染和导出各持有自己的参数，不回填检测器配置。
 struct DiagnosticsConfig {
     std::string level{"summary"};
     uint64_t detail_first{0};

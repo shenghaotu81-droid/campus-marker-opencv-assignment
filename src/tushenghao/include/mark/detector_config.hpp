@@ -1,5 +1,4 @@
-// Detector 自己需要的配置结构（只包含检测算法配置）14 个 YAML 字段（冻结文档，配置文件语言） → C++ 成员（映射，程序语言）
-// Detector 模块的配置结构体定义（定义 外部怎么配置 Detector）（配置怎么传递）（公共接口层组分）
+// D01 配置契约：仅保留检测/时序参数；显示由 AppConfig/RenderConfig 持有。
 #pragma once
 
 #include <string>
@@ -23,12 +22,12 @@ namespace mark
     // 把 YAML 里的配置，映射成 C++ 结构，让 Detector 使用
 
     // 检测器
-    // YAML detector.mode uses "skeleton"; enum limits valid states.
-    // YAML detector.mode 使用字符串 "skeleton"，enum 用于限制合法状态空间。
+    // YAML detector.mode uses "SegmentedMark"; enum limits valid states.
+    // YAML detector.mode 使用字符串 "SegmentedMark"，enum 用于限制合法状态空间。
     enum class DetectorMode
     {
-        Skeleton
-    };          // 现在是骨架模式（啥也不干，返回 NOT_READY）
+        SegmentedMark
+    };          // 唯一检测模式，编排当前帧完整检测流程
 
     // 输入相关配置
     // Keep C++ structure aligned with YAML hierarchy for field-path validation.
@@ -112,15 +111,6 @@ namespace mark
 
     struct CornerConfig
     {
-        /**
-         * @brief 局部搜索区域扩大比例
-         *
-         * 根据模型对应区域扩大搜索范围。
-         *
-         * 只用于寻找真实观测边，
-         * 不生成预测点。
-         */
-        double local_search_margin_ratio_{0.2};
 
         /**
          * @brief 拟合直线所需最少点数
@@ -151,14 +141,6 @@ namespace mark
          */
         double max_corner_error_{5.0};
 
-        /**
-         * @brief 是否拒绝截断角
-         *
-         * true：
-         * 图像边界切断结构时，
-         * 不输出有效角。
-         */
-        bool reject_truncated_corner_{true};
 
         /**
          * @brief Block 3 轮廓近似参数
@@ -174,15 +156,6 @@ namespace mark
          */
         double approximation_epsilon_{2.0};
 
-        /**
-         * @brief 点到候选边的距离阈值
-         *
-         * 用于 find_matching_edge 收集 contour 点。
-         * 跟 approximation_epsilon_ 分开：
-         * epsilon 控制轮廓简化强度，
-         * 这个控制点归属判定。
-         */
-        double edge_point_distance_threshold_{3.0};
 
         /**
          * @brief 假设间几何一致性阈值
@@ -227,20 +200,11 @@ namespace mark
         int max_hold_frames = 5;                     // 最多保持5帧
     };
 
-    // 输出/显示相关
-    struct OutputConfig
-    {
-        bool show_window = false;            //控制cv::imshow()是否打开
-
-        bool show_held_state = false;        //历史保持状态是否显示                          // 都是 0（不弹窗）
-    };         // 它属于 App 行为。但这里先放在 DetectorConfig 里，是冻结结构决定的。
-
     // 调试开关
     struct DebugConfig
     {
         bool timing_enabled = false;         // 打开处理耗时统计
 
-        bool draw_candidates = false;        // 显示亮斑候选，轮廓，角点方便调试           // 都是 0（关，板块5才开）
     };
 
     // DetectorConfig 总结构
@@ -266,11 +230,10 @@ namespace mark
         // 用于 Block 2 geometry matcher 加载模型几何描述。
         std::string marker_geometry_path_ = "config/marker_geometry.yaml";
 
-        DetectorMode mode = DetectorMode::Skeleton;
+        DetectorMode mode = DetectorMode::SegmentedMark;
 
         TemporalConfig temporal;
 
-        OutputConfig output;
 
         DebugConfig debug;
     };              // 和 YAML 配置层级一致！参数  给定默认值再覆盖（如果 YAML 没写，使用默认值）

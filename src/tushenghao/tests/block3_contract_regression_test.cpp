@@ -187,7 +187,6 @@ namespace
             if (variant == 2)
             {
                 m.evidence_[0].truncated_ = true;
-                c.reject_truncated_corner_ = false;
             }
             if (variant == 3)
                 m.evidence_[0].intersection_.x += 1;
@@ -246,12 +245,11 @@ namespace
     // 所有corner浮点字段逐个检查NaN/Inf，新增显式预算导出往返不得丢字段。
     void budgetConfig()
     {
-        double mark::CornerConfig::*fields[] = {&mark::CornerConfig::local_search_margin_ratio_,
+        double mark::CornerConfig::*fields[] = {
                                                 &mark::CornerConfig::max_line_fit_error_,
                                                 &mark::CornerConfig::max_corner_error_,
                                                 &mark::CornerConfig::min_intersection_angle_deg_,
                                                 &mark::CornerConfig::approximation_epsilon_,
-                                                &mark::CornerConfig::edge_point_distance_threshold_,
                                                 &mark::CornerConfig::semantic_geometry_threshold_};
         for (auto field : fields)
             for (double value : {std::numeric_limits<double>::quiet_NaN(),

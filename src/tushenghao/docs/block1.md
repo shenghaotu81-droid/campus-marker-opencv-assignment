@@ -1,5 +1,7 @@
 # 板块1 验收记录
 
+> 历史状态：下文保留板块 1 当时的命名、配置与验收结论。现行模式为 `SegmentedMark`，显示键归属 `display`；当前接口见 [数据流与接口](dataflow-interfaces.md)。
+
 ## 1. 完成内容
 
 本板块完成 Detector 配置骨架与基础工程链路：

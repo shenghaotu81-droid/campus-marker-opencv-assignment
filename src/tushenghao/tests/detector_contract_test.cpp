@@ -42,17 +42,14 @@ namespace
         config.preprocess.work_height = 720;
         config.preprocess.threshold = 200;
 
-        config.mode = mark::DetectorMode::Skeleton;
+        config.mode = mark::DetectorMode::SegmentedMark;
 
         config.temporal.stabilization_enabled = false;
         config.temporal.display_hold_enabled = false;
         config.temporal.max_hold_frames = 5;
 
-        config.output.show_window = false;
-        config.output.show_held_state = false;
 
         config.debug.timing_enabled = false;
-        config.debug.draw_candidates = false;
 
         return config;
     }

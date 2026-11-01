@@ -14,6 +14,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <string>
 #include <limits>
@@ -107,12 +108,14 @@ temporal:
   stabilization_enabled: 0
   display_hold_enabled: 0
   max_hold_frames: 5
-output:
+display:
   show_window: 0
   show_held_state: 0
+  draw_candidates: 0
+output:
+  run_mode: baseline
 debug:
   timing_enabled: 0
-  draw_candidates: 0
 )");
 
         try
@@ -164,12 +167,14 @@ temporal:
   stabilization_enabled: 0
   display_hold_enabled: 0
   max_hold_frames: 5
-output:
+display:
   show_window: 0
   show_held_state: 0
+  draw_candidates: 0
+output:
+  run_mode: baseline
 debug:
   timing_enabled: 0
-  draw_candidates: 0
 )");
 
         try
@@ -205,17 +210,19 @@ preprocess:
   work_height: 480
   threshold: 300
 detector:
-  mode: skeleton
+  mode: SegmentedMark
 temporal:
   stabilization_enabled: 0
   display_hold_enabled: 0
   max_hold_frames: 5
-output:
+display:
   show_window: 0
   show_held_state: 0
+  draw_candidates: 0
+output:
+  run_mode: baseline
 debug:
   timing_enabled: 0
-  draw_candidates: 0
 )");
 
         try
@@ -251,18 +258,20 @@ preprocess:
   work_height: 480
   threshold: 128
 detector:
-  mode: skeleton
+  mode: SegmentedMark
 temporal:
   stabilization_enabled: 0
   display_hold_enabled: 0
   max_hold_frames: 5
-output:
+display:
   show_window: 0
   show_held_state: 0
+  draw_candidates: 0
+output:
+  run_mode: baseline
   export_video: 1
 debug:
   timing_enabled: 1
-  draw_candidates: 0
 )");
 
         try
@@ -465,6 +474,49 @@ debug:
 // 平时 ctest 只告诉你 Passed/Failed，不给细节。现在测的是错误情况——万一挂了，必须看到底哪个 case 挂的、打印了啥，不然没法修。所以加上。
 namespace
 {
+    // Q02：先确认完整新协议可读，再逐项注入旧键，避免缺字段负例掩盖兼容残留。
+    bool rejectedOldProtocol()
+    {
+        const auto path = std::filesystem::temp_directory_path() / "lean-old-protocol.yaml";
+        auto config = mark::loadConfig(std::filesystem::path(__FILE__).parent_path().parent_path() /
+                                       "config/detector.yaml");
+        mark::writeEffectiveConfig(config, path);
+        std::ifstream input(path);
+        std::ostringstream buffer;
+        buffer << input.rdbuf();
+        const auto valid = buffer.str();
+        mark::loadConfig(path);
+        const std::pair<std::string, std::string> cases[] = {
+            {"   corner:", "      local_search_margin_ratio: 0.2"},
+            {"   corner:", "      reject_truncated_corner: 0"},
+            {"   corner:", "      edge_point_distance_threshold: 3."},
+            {"output:", "   show_window: 0"},
+            {"output:", "   show_held_state: 0"},
+            {"debug:", "   draw_candidates: 0"},
+            {"SegmentedMark", "Skeleton"},
+            {"SegmentedMark", "skeleton"}};
+        for (const auto &[anchor, old] : cases)
+        {
+            auto bad = valid;
+            const auto at = bad.find(anchor);
+            if (at == std::string::npos) throw std::runtime_error("fixture anchor absent: " + anchor);
+            if (anchor == "SegmentedMark") bad.replace(at, anchor.size(), old);
+            else bad.insert(at + anchor.size(), "\n" + old);
+            { std::ofstream output(path); output << bad; }
+            bool rejected = false;
+            try { mark::loadConfig(path); }
+            catch (const mark::ConfigError &error)
+            {
+                const std::string message = error.what();
+                rejected = anchor == "SegmentedMark" ? message.find("mode") != std::string::npos
+                                                      : message.find(old.substr(0, old.find(':')).substr(old.find_first_not_of(' '))) != std::string::npos;
+            }
+            if (!rejected) { std::cerr << "old protocol accepted/wrong error: " << old << '\n'; return false; }
+        }
+        std::filesystem::remove(path);
+        return true;
+    }
+
     // C01 负例：在打开视频前核验字段类型/完整 CLI 和 NaN，合法 YAML→CLI 覆盖不变。
     bool calibrationConfigErrors()
     {
@@ -564,6 +616,7 @@ int main()
 {
     try
     {
+        if (!rejectedOldProtocol()) return 1;
         if (!calibrationConfigErrors()) return 1;
         if (!temporalErrors())
         {

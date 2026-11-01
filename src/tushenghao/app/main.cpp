@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         if ((display || export_video) && app.offline.mode != "debug")
             throw std::runtime_error("display/export-video requires debug mode");
         if (display)
-            app.detector_config.output.show_window = true;
+            app.show_window = true;
         if (export_video)
             app.offline.export_video = true;
         // 旧 CLI 没有独立期待帧数；严格十进制正整数只覆盖本次 App 完整性核验。

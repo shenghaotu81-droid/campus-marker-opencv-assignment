@@ -85,7 +85,7 @@ flowchart TD
 | `input.pixel_format` | `BGR8` | 公共输入格式约束 |
 | `input.timestamp_unit` | `us` | 时间戳单位约束 |
 | `marker_geometry_path` | `"marker_geometry.yaml"` | 解析为 `config/marker_geometry.yaml` 并加载 |
-| `detector.mode` | `Skeleton` | 当前唯一合法枚举值；当前 process 实际执行完整流水线 |
+| `detector.mode` | `SegmentedMark` | 当前唯一合法枚举值（旧值明确拒绝）；当前 process 实际执行完整流水线 |
 
 ### 3.2 读取、包装当前帧并准备诊断请求
 
@@ -198,7 +198,7 @@ flowchart TD
 | `detector.corner.observation.max_support_extension_px` | `9.5` | 交点相对每条有限支持的延伸上限 |
 | `detector.corner.observation.min_support_span_px` | `14.0` | 支持点沿拟合线的跨度下限 |
 
-`detector.corner.local_search_margin_ratio=0.2`、`edge_point_distance_threshold=3.0`、`reject_truncated_corner=1`（D）仍被加载和配置校验，但当前 resolver/边对搜索没有读取它们。原图来源关联使用上表预算；截断拒绝是实际路径的强制检查，不能把该旧开关解读成可接受截断角。
+历史的 `detector.corner.local_search_margin_ratio`、`edge_point_distance_threshold`、`reject_truncated_corner` 已删除；读取旧键会明确报错。原图来源关联使用上表预算；截断拒绝是实际路径的强制检查，不能把该旧开关解读成可接受截断角。
 
 ### 3.11 四角屏幕排序
 
@@ -291,13 +291,13 @@ flowchart TD
 | YAML 参数 | D | DD | DV |
 | --- | --- | --- | --- |
 | `output.run_mode` | 未写，默认 `baseline` | `debug` | `debug` |
-| `output.show_window` | `0` | `0` | `0` |
-| `output.show_held_state` | `0` | `0` | `0` |
+| `display.show_window` | `0` | `0` | `0` |
+| `display.show_held_state` | `0` | `0` | `0` |
 | `output.display_probe_timeout_ms` | `3000` | `3000` | `3000` |
 | `output.playback_fps` | 未写，默认 `0` | `0.0` | `0.0` |
 | `debug.draw_raw` | 未写，默认 `1` | `1` | `1` |
 | `debug.draw_stable` | 未写，默认 `1` | `1` | `1` |
-| `debug.draw_candidates` | `0` | `0` | `1` |
+| `display.draw_candidates` | `0` | `0` | `1` |
 | `debug.draw_corner_evidence` | 未写，默认 `0` | `0` | `1` |
 | `debug.draw_timing` | 未写，默认 `0` | `0` | `1` |
 
@@ -411,7 +411,7 @@ Detector 保存上一合法 stamp 和尺寸，不保存输入像素作预测。
 | --- | --- | --- | --- |
 | `AppConfig.detector_config` | 算法/公共输入配置总包 | loadConfig | Detector 构造与各算法阶段 |
 | `AppConfig.diagnostics` | `level/detail_first/detail_last/detail_interval`，详情级别及采样范围/步长 | loadConfig 或 C++ 默认 | runner 构造 DiagnosticsRequest，recorder 控制记录 |
-| `AppConfig.render` | `draw_raw/draw_stable/draw_candidates/draw_corner_evidence/draw_timing/show_held_state`，绘制开关 | loadConfig；runner 用冻结开关覆盖 candidates/held | debug_renderer |
+| `AppConfig.render` | `draw_raw/draw_stable/draw_candidates/draw_corner_evidence/draw_timing/show_held_state`，绘制开关 | loadConfig；runner 直接使用这份值 | debug_renderer |
 | `AppConfig.offline` | 模式、目录、导出、播放速度和输入完整性/编码参数 | loadConfig、CLI、默认 | OfflineRunSession、recorder、显示和视频导出 |
 | `DetectorConfig.schema_version` | 检测配置版本 1 | loadConfig | validateConfig/有效配置记录 |
 | `DetectorConfig.input` | `pixel_format/timestamp_unit`，BGR8/us 输入约束 | loadConfig | 配置校验；公共输入检查执行固定约束 |
@@ -420,10 +420,10 @@ Detector 保存上一合法 stamp 和尺寸，不保存输入像素作预测。
 | `DetectorConfig.corner_` | 角点参数及可选 `observation_budget_` | loadConfig 读取 `detector.corner` | resolver、拟合、证据/几何校验、归并 |
 | `DetectorConfig.assignment_completion_` | 可选 M/S 补全预算 | loadConfig 读取 `detector.assignment_completion` | 入口就绪门控、completeSegmentedAssignments |
 | `DetectorConfig.marker_geometry_path_` | 几何模型文件路径 | loadConfig 按配置目录解析，runner 规范路径 | Detector/审计加载 MarkerGeometry |
-| `DetectorConfig.mode` | 当前合法值为 Skeleton | loadConfig | 配置校验；不是 process 是否执行的开关 |
+| `DetectorConfig.mode` | 当前合法值为 SegmentedMark | loadConfig | 配置校验；不是 process 是否执行的开关 |
 | `DetectorConfig.temporal` | 选择/平滑/文字历史参数 | loadConfig | TemporalStabilizer、DisplayHistory |
-| `DetectorConfig.output` | `show_window/show_held_state`，冻结在公共配置内的显示项 | loadConfig；CLI 可覆盖窗口开关 | App 显示/渲染 |
-| `DetectorConfig.debug` | `timing_enabled/draw_candidates`，冻结的计时/候选开关 | loadConfig | App 请求计时/绘候选，baseline 冲突检查 |
+| `AppConfig.show_window` | `display.show_window`，窗口开关 | loadConfig；CLI 可覆盖 | App 显示 |
+| `DetectorConfig.debug` | `timing_enabled`，计时开关 | loadConfig | App 请求计时，baseline 冲突检查 |
 
 各子配置字段的含义和值对应 §3 参数表：`GeometryConfig` 和 `CornerConfig` 的普通算法字段在 C++ 名尾有 `_`；`CornerObservationBudget` 七字段和 `AssignmentCompletionConfig` 八字段不带尾部下划线。`TemporalConfig` 字段与 YAML 同名，其中两个 px 预算为 optional；缺失不会自动得到生产预算。
 
@@ -876,10 +876,10 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | 事项 | 当前代码事实与影响 |
 | --- | --- |
 | 严格方向输出 | 方向不唯一/搜索截断仍可能发布几何，orientation 留空；尚未完全执行“四角可信+方向可信+几何合理才输出”的严格规则，见 2.3。 |
-| Skeleton 名称 | 枚举/YAML 名称仍为 Skeleton，旧头注释称“啥也不干”，当前 process 实际编排完整检测和稳定阶段；真正 NOT_READY 原因是预算未齐等就绪检查。 |
+| 检测模式名称 | 枚举/YAML 名称为 SegmentedMark；历史名称 Skeleton 明确拒绝。process 编排完整检测和稳定阶段；NOT_READY 原因是预算未齐等就绪检查。 |
 | preprocess 二值图注释 | 当前 PreparedFrame.image_ 是 BGR8 resize 图；工作图二值化在 geometry_observation，原图二值化在 OriginalContourIndex。 |
-| temporal 旧 YAML 注释 | 仍有“还没实现，先关着”文字；实际 stabilization_enabled=1，TemporalStabilizer 和 DisplayHistory 已实现。生产文字源缺失另行说明。 |
-| 旧角点参数 | local_search_margin_ratio、edge_point_distance_threshold、reject_truncated_corner 被读取，但当前原图定位路径不以它们决定搜索/截断；有效门控见 3.10。 |
+| temporal | stabilization_enabled=1，TemporalStabilizer 和 DisplayHistory 已实现。生产文字源缺失另行说明。 |
+| 旧角点参数 | 历史三个无消费者旋钮已删除且旧键拒绝；当前原图定位路径保持既有搜索/截断检查；有效门控见 3.10。 |
 | 旧首凹点 helper | 生产三 L 生成使用明确 L 拓扑支持的全部合法锚点元组；不能按仍保留的 fitModelToImageAffine/anchor_vertex_index 字段推断只取首凹点。 |
 | 112 顺序 | 生产 FastRecovery 有四项周期快速前置及重复的完整路由组合，真实顺序以 §5 展开的 run 代码为准。 |
 
