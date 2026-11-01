@@ -1,16 +1,32 @@
 // 三历史各自所有，不给Detection增加时序身份或伪置信度。
 #pragma once
 #include "core/frame_stamp.hpp"
+#include "core/diagnostics_types.hpp"
 namespace mark {
+enum class TemporalCause { Other, InputChanged, HistoryExpired, AssociationFailed, AssociationAmbiguous,
+                           CorrespondenceAmbiguous, ZeroDt, SmoothingDeviation };
+inline ReasonCode temporalRecordCode(TemporalCause cause) {
+    switch(cause) {
+    case TemporalCause::HistoryExpired:return ReasonCode::HistoryExpired;
+    case TemporalCause::AssociationFailed:return ReasonCode::AssociationFailed;
+    case TemporalCause::AssociationAmbiguous:return ReasonCode::AssociationAmbiguous;
+    case TemporalCause::CorrespondenceAmbiguous:return ReasonCode::CorrespondenceAmbiguous;
+    case TemporalCause::ZeroDt:return ReasonCode::ZeroDt;
+    case TemporalCause::SmoothingDeviation:return ReasonCode::SmoothingRejected;
+    default:return ReasonCode::OtherRecordedReason;
+    }
+}
 struct AssociationResult {
     std::optional<size_t> current_index;
     bool matched_history{false}, ambiguous{false};
-    std::string reason;
+    std::string reason; // 旧协议文本/未知错误 detail，不参与机器分类。
+    TemporalCause cause{TemporalCause::Other};
 };
 struct CornerCorrespondence {
     std::array<size_t,4> current_to_previous{};
     bool valid{false};
-    std::string reason;
+    std::string reason; // 旧协议文本/未知错误 detail，不参与机器分类。
+    TemporalCause cause{TemporalCause::Other};
     // 四个循环的保守误差区间；物理对应不需要这些数值。
     std::optional<std::array<double,4>> energy, lower, upper;
 };
@@ -26,6 +42,7 @@ struct TemporalDiagnostics {
     bool used_smoothing{false}, fell_back{false};
     std::string reset_or_fallback_reason;
     std::optional<std::array<int,4>> output_slot_mapping;
+    TemporalCause reset_or_fallback_cause{TemporalCause::Other};
 };
 struct TemporalResult {
     Status status{Status::NOT_READY};

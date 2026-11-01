@@ -108,7 +108,7 @@ flowchart TD
 - **实现文件**：[lib/preprocess/preprocess.hpp](../lib/preprocess/preprocess.hpp)/[preprocess.cpp](../lib/preprocess/preprocess.cpp)；[lib/core/prepared_frame.hpp](../lib/core/prepared_frame.hpp)。
 - **调用位置**：`detector.cpp:141 → decode_stage.cpp:224` 的 `preprocess(input, config.preprocess)`。
 - **输入**：`FrameInput.image/frame_id/timestamp_us`、`PreprocessConfig`。
-- **输出**：`PreparedFrame.image_` 为缩放后的 BGR8；`original_image_` 为只读原图浅引用；`scale_x_/scale_y_` 保存映射；`original_white_threshold_` 保存原图取证阈值；`components_` 此时尚未填充。
+- **输出**：`PreparedFrame.image_` 为缩放后的 BGR8；`original_image_` 为只读原图浅引用；`scale_x_/scale_y_` 保存映射；`original_white_threshold_` 保存原图取证阈值；主链组件另作步骤输出，兼容字段 `components_` 不回填。
 - **关键参数（D）**：
 
 | YAML 参数 | 当前值 | 用途 |
@@ -122,7 +122,7 @@ flowchart TD
 ### 3.5 工作图白片提取
 
 - **实现文件**：[lib/geometry/geometry_observation.hpp](../lib/geometry/geometry_observation.hpp)/[geometry_observation.cpp](../lib/geometry/geometry_observation.cpp)；[lib/core/geometry_types.hpp](../lib/core/geometry_types.hpp)。
-- **调用位置**：`decode_stage.cpp:235` 的 `extractWhiteComponents`；:236 写入 `prepared.components_`。
+- **调用位置**：`runGeometrySteps` 的 `extractWhiteComponents`，产物为独立 `components`；旧探针包装可显式填兼容字段。
 - **输入**：`PreparedFrame.image_`（工作图）和 `GeometryConfig`。
 - **输出**：`vector<WhiteComponent>`，每片保存帧内 ID、工作图轮廓、面积、外接框和碰边标志。灰度阈值分割使用 `RETR_EXTERNAL/CHAIN_APPROX_SIMPLE`；这里尚未赋予模型片身份。
 - **关键参数（D）**：`geometry.white_threshold=200`；`geometry.min_area=0.0`（工作图像素面积下限）。本阶段没有使用 `preprocess.threshold`。
@@ -176,7 +176,7 @@ flowchart TD
 
 - **实现文件**：[lib/pipeline/decode_stage.hpp](../lib/pipeline/decode_stage.hpp)/[decode_stage.cpp](../lib/pipeline/decode_stage.cpp)；[lib/corners/corner_resolver.hpp](../lib/corners/corner_resolver.hpp)/`corner_resolver.cpp`；[corner_observation.hpp](../lib/corners/corner_observation.hpp)/[corner_observation.cpp](../lib/corners/corner_observation.cpp)；[corner_edge_fit.hpp](../lib/corners/corner_edge_fit.hpp)/[corner_edge_fit.cpp](../lib/corners/corner_edge_fit.cpp)；[periodic_line_fit.hpp](../lib/corners/periodic_line_fit.hpp)/[periodic_line_fit.cpp](../lib/corners/periodic_line_fit.cpp)；[lib/core/corner_budget.hpp](../lib/core/corner_budget.hpp)。
 - **调用位置**：`decode_stage.cpp:49` 建立本次 decode 的 `OriginalContourIndex`；:53 遍历假设，:85 调用 `resolveObservedCorners`。resolver 对 P0～P3 依次执行 `index.observe → 模型边投影到原图 → fitObservedEdgePair`，不是先量完所有轮廓再统一拟合。
-- **输入**：`PreparedFrame.original_image_/original_white_threshold_/components_/scale_*`；`GeometryHypothesis.assignments_/affine_transform_`；物理角绑定和 `CornerConfig`。
+- **输入**：原图/阈值/像素中心映射、显式组件列表与 OriginalContourSource；`GeometryHypothesis.assignments_/affine_transform_`；物理角绑定和 `CornerConfig`。
 - **输出**：成功为 `CornerResolution.measurement_`，内含原图 `P0～P3` 四点和四份 `CornerEvidence`；任一角失败，整个 measurement 为空并附原因。
 - **关键函数与数据关系**：`OriginalContourIndex::prepare` 惰性做一次当前原图灰度、阈值、`RETR_EXTERNAL/CHAIN_APPROX_NONE` 完整轮廓；`observe` 按已确定的工作图组件做双向边界关联，恰好一个来源才接受，碰原图边界直接拒绝。索引只活过本次 decode，不跨帧。模型投影仅指定两条待寻找的有限边；真实连续支持弧通过 `fitFor/matches/pairGeometry/select` 得到交点，恢复顺序见 §5。
 - **关键参数（D，原图像素，角度项为度）**：
@@ -278,7 +278,7 @@ flowchart TD
 
 详情采样条件为范围内且 `(frame_id-detail_first)%detail_interval==0`，summary 级不采样详情。当前 context 对 frame/evidence 的选中帧都建立 `StageDetails`；不能仅凭级别名称认定 frame 级一定没有完整角证据。
 
-调用顺序必须是同一 Detector 的 `prepare → process → take`；prepare 请求或需读取的完成记录不能被下一调用覆盖，重复/重入会抛逻辑错误。普通直接调用 `process` 无需 prepare，采用默认 summary 请求且不启用计时。公共调用不含 Capture、GUI、等待、编码和 JSON 写盘；在 Full App 中 ProcessTotal 的边界标为 `public_call`。
+应用通过 `execute_and_record` 单次取得结果与记录，桥内调用顺序是同一 Detector 的 `prepare → process → take`；prepare 请求或需读取的完成记录不能被下一调用覆盖，重复/重入会抛逻辑错误。普通直接调用 `process` 无需 prepare，采用默认 summary 请求且不启用计时。公共调用不含 Capture、GUI、等待、编码和 JSON 写盘；在 Full App 中 ProcessTotal 的边界标为 `public_call`。
 
 ### 3.17 渲染与等待
 
@@ -465,7 +465,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | `original_white_threshold_: int` | 当前原图二值化阈值，未设置默认为 -1 | preprocess 写 threshold=200 | OriginalContourIndex::prepare |
 | `scale_x_: double` | 工作宽/原图宽 | preprocess | workToOriginal/originalToWork，resolver 验映射 |
 | `scale_y_: double` | 工作高/原图高 | preprocess | 同上 |
-| `components_: vector<WhiteComponent>` | 本帧工作图白片的唯一观测集合 | runDecodePipeline 写提取结果 | resolver 按 ID 回查；详情渲染 |
+| `components_: vector<WhiteComponent>` | 旧独立探针入口的兼容载体；主链不用 | 旧探针显式适配 | 独立 resolver/decode 包装入口 |
 | `frame_id_: uint64_t` | 本帧来源身份 | preprocess 从输入复制 | 索引绑定、四角证据、渲染/诊断 |
 | `timestamp_us_: int64_t` | 本帧输入时间戳 | preprocess 从输入复制 | 详情/审计上下文；不用于预测角点 |
 
@@ -672,7 +672,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | `run_id: string` | 运行身份 | OfflineRunSession::process_frame | FrameRecord/recorder 身份检查 |
 | `timing_enabled: bool` | 本次算法阶段是否读取/记录时钟 | runner 从 debug.timing_enabled 填 | FrameTiming、context 和 Detector Completion |
 | `selected: bool` | 本次是否位于详情采样范围 | runner 按帧号/采样配置填 | context 决定是否复制载荷 |
-| `scope: ExecutionScope` | Full/Geometry/Decode/Temporal 实际执行范围 | runner/main/审计入口 | 阶段编排、计时适用性、记录 |
+| `scope: ExecutionScope` | 请求记录中的范围标签 | runner/main/审计入口 | 计时适用性、记录；算法范围由独立显式参数传入 |
 | `level: DiagnosticsLevel` | Summary/Frame/Evidence | runner 从 debug.level 转换 | context；Summary 不产生选中详情 |
 | `timestamp_recipe: string` | 数值时间戳取得方式；视频输入为 video_fps，默认 input | runner/默认请求 | FrameRecord 来源说明 |
 
@@ -771,10 +771,10 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | `config_path` | 实际配置路径 | 同上 | manifest |
 | `model_path` | 实际几何模型路径 | 同上 | 模型加载/指纹、manifest |
 | `commit_label` | 编译时 MARK_COMMIT 标签 | 同上 | manifest；不是运行时查询的提交状态 |
-| `code_fingerprint` | 编译时 MARK_CODE_HASH | 同上 | manifest 实现身份 |
+| `code_fingerprint` | 本次可执行目标的源码／头／链接闭包与构建输入身份 | CLI 显式交给 runOffline；旧入口使用离线库身份 | manifest；构建目录另存每目标 sources.manifest |
 | `input_fingerprint` | 输入文件 FNV1a64 和大小 | runner.fingerprint_file | manifest；不是 SHA256 |
 | `run_purpose` | production/verification 运行目的 | CLI/runner | manifest、控制台 |
-| `environment` | CPU/编译器/OpenCV、执行范围、输入数量、FPS、显示/导出状态等实际说明 | runner 启动和收尾逐步填 | manifest/控制台/审计 |
+| `environment` | CPU/编译器/OpenCV、执行范围、输入数量、FPS、显示/导出状态等实际说明 | runner 启动和收尾编码 | manifest/审计；终端直接接 RunOutcome |
 
 | RunSummary 字段 | 含义 | 谁填充 | 下游谁用 |
 | --- | --- | --- | --- |
@@ -892,3 +892,5 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 `MarkCategory` 当前只有 Unknown，后续类别全集、marker_code 编码方案和 confidence 的评分定义**未确认**；严格方向输出差异的后续修复方案同样**未确认**。本次只生成说明文档，没有运行检测、构建、回归或重新验证历史“112 恢复”的性能/检出率结论。
 
 主链角点步骤同时交付同一 double 四角的 ScreenOrder，几何验证和语义归并显式复用；独立 resolver/semantic 入口仍自行核验，float 发布仍另作排序。成功／失败工厂统一状态、optional 与拒绝原因。绑定验证每次只投影一次，面积检查消费同一投影计量；M/S 廉价面积筛查把已算面积交给完整计量，独立计量入口保留坏输入检查。身份查找统一由 geometry_types.hpp 的只读函数按 ID 处理，重复所查 ID 的原拒绝与旧 fixture 未填来源的入口解释保持。
+
+运行结论以 RunOutcome/RunOverhead 显式交给 finishRun，summary() 只读。时序生产步骤同时给出 TemporalCause 与保留的旧协议 detail，记录器按枚举编码机器原因，终端保留未知原因 fallback，不反向解析提示文本。FNV 字节身份统一由 core/file_fingerprint.hpp 实现，SHA256 与独立数值 reference 保持各自计算。配置读取原语显式区分 Detector 严格数值、G2 普通字段严格／optional 数字串、G4 完整数值字符串及空串未知；整数 token／节点复核与 uint64 占位替换属于独立 codec。

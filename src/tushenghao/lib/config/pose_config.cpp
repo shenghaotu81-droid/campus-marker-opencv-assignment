@@ -1,5 +1,6 @@
 // 配置解析/标定加载/模型转换
 #include "mark/pose_config.hpp"
+#include "config/value_reader.hpp"
 #include "pose/pose_geometry.hpp"
 #include "core/marker_geometry.hpp"
 
@@ -12,73 +13,36 @@ namespace mark::pose
 namespace
 {
 // 过去缺字段易被 OpenCV 转成 0；新配置逐项检查类型，空字符串只用于明确未知值。
-cv::FileNode required(const cv::FileNode &node, const char *key)
+cv::FileNode required(const cv::FileNode &node,const char *key)
 {
-    auto value = node[key];
-    if (value.empty())
-        throw std::runtime_error(std::string("G2 配置缺字段: ") + key);
-    return value;
+    return config_value::required(node,key,[&](auto){throw std::runtime_error(std::string("G2 配置缺字段: ")+key);});
 }
-
-std::string text(const cv::FileNode &node, const char *key)
+std::string text(const cv::FileNode &node,const char *key)
 {
-    auto value = required(node, key);
-    if (!value.isString())
-        throw std::runtime_error(std::string("G2 应为字符串: ") + key);
-    return static_cast<std::string>(value);
+    return config_value::text(required(node,key),[&](auto){throw std::runtime_error(std::string("G2 应为字符串: ")+key);});
 }
-
-double number(const cv::FileNode &value)
+void number_error(config_value::Error error)
 {
-    if (!value.isInt() && !value.isReal())
-        throw std::runtime_error("G2 应为有限数值");   // "31.2166" 是 String，直接炸
-    const double result = static_cast<double>(value);
-    if (!std::isfinite(result))
-        throw std::runtime_error("G2 数值非有限");
-    return result;
+    throw std::runtime_error(error==config_value::Error::Number?"G2 应为有限数值":"G2 数值非有限");
 }
-
-int integer(const cv::FileNode &node, const char *key)
+double number(const cv::FileNode &node)
 {
-    auto value = required(node, key);
-    if (!value.isInt())
-        throw std::runtime_error(std::string("G2 应为整数: ") + key);
-    return static_cast<int>(value);
+    return config_value::number(node,config_value::NumericPolicy::NodeNumber,number_error);
 }
-
-bool boolean(const cv::FileNode &node, const char *key)
+int integer(const cv::FileNode &node,const char *key)
 {
-    int value = integer(node, key);
-    if (value != 0 && value != 1)
-        throw std::runtime_error(std::string("G2 开关必须是 0/1: ") + key);
-    return value == 1;
+    return config_value::integer(required(node,key),[&](auto){throw std::runtime_error(std::string("G2 应为整数: ")+key);});
 }
-
-// 空字符串→nullopt，就是"未标定"(debug:G2 设计说 budgets 用字符串（空串=未标定），但代码没写字符串转数字的逻辑)
-/* 需要加字符串解析：
-std::optional<double> optional_number(const cv::FileNode &node, const char *key)
+bool boolean(const cv::FileNode &node,const char *key)
 {
-    auto value = required(node, key);
-    if (value.isString() && static_cast<std::string>(value).empty())
-        return std::nullopt; // 空字符串→未标定，OK
-    return number(value);  // 非空字符串→调 number()
+    return config_value::boolean(required(node,key),[&](auto error){
+        throw std::runtime_error(std::string(error==config_value::Error::Integer?"G2 应为整数: ":"G2 开关必须是 0/1: ")+key);
+    });
 }
-*/
-std::optional<double> optional_number(const cv::FileNode &node, const char *key)
+std::optional<double> optional_number(const cv::FileNode &node,const char *key)
 {
-    auto value = required(node, key);
-    if (value.isString())
-    {
-        std::string s = static_cast<std::string>(value);
-        if (s.empty())
-            return std::nullopt;
-        size_t pos = 0;
-        double d = std::stod(s, &pos);
-        if (pos != s.size() || !std::isfinite(d))
-            throw std::runtime_error("G2 数值非有限");
-        return d;
-    }
-    return number(value);
+    return config_value::optional_number(required(node,key),config_value::NumericPolicy::CompleteNumericString,
+        config_value::OptionalPolicy::EmptyStringIsUnknown,number_error);
 }
 
 // 原模型单位未记录；只能显式声明 mm 或 m，不能按目标大小猜单位。

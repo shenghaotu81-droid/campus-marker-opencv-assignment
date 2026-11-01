@@ -1,3 +1,4 @@
+#include "core/file_fingerprint.hpp"
 // 只读核验新schema和历史temporal金样；不回写、不补造旧耗时，不参与检测准入。
 #include "common/file_digest.hpp"
 #include "common/frame_record_reader.hpp"
@@ -77,28 +78,7 @@ namespace
     // 核对真实文件，不凭manifest自述接受输入/model指纹；同时补SHA256关联到非密码学FNV。
     std::string fingerprint_file(const fs::path &path)
     {
-        std::ifstream in(path, std::ios::binary);
-        if (!in)
-            throw std::runtime_error("fingerprint input missing");
-        uint64_t hash = 14695981039346656037ull, size = 0;
-        char bytes[65536];
-        while (in)
-        {
-            in.read(bytes, sizeof bytes);
-            auto n = in.gcount();
-            size += uint64_t(n);
-            for (std::streamsize i = 0; i < n; ++i)
-            {
-                hash ^= static_cast<unsigned char>(bytes[i]);
-                hash *= 1099511628211ull;
-            }
-        }
-        if (!in.eof())
-            throw std::runtime_error("fingerprint IO failure");
-        std::ostringstream out;
-        out << "FNV1a64:" << std::hex << std::setw(16) << std::setfill('0') << hash
-            << ":size=" << std::dec << size;
-        return out.str();
+        return mark::file_fingerprint(path,"fingerprint input missing","fingerprint IO failure");
     }
 
     JsonValue canonical(JsonValue v)

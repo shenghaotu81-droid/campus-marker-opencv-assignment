@@ -1,3 +1,4 @@
+#include "core/cli_options.hpp"
 #include "mark/target_tracker.hpp"
 #include "tracking/tracking_io.hpp"
 #include <filesystem>
@@ -13,19 +14,13 @@ namespace
 // 严格CLI避免拼错参数后静默使用默认；配置未测仍可检查，但不假称有速度。
 std::map<std::string, std::string> parse_cli(int argc, char **argv)
 {
-    std::map<std::string, std::string> options;
     const std::set<std::string> valued{"--config", "--profile", "--input", "--out"};
-    for (int i = 1; i < argc; ++i)
-    {
-        const std::string key = argv[i];
-        if (key == "--check-config")
+    auto options=mark::parse_options(argc,argv,valued,{"--check-config"},true,
+        [](mark::OptionError error,const std::string &key)
         {
-            if (!options.emplace(key, "1").second) throw std::runtime_error("重复check-config");
-        }
-        else if (!valued.count(key) || i + 1 == argc ||
-            std::string(argv[i + 1]).rfind("--", 0) == 0 || !options.emplace(key, argv[++i]).second)
-            throw std::runtime_error("未知/重复/缺值参数:" + key);
-    }
+            if(error==mark::OptionError::DuplicateFlag)throw std::runtime_error("重复check-config");
+            throw std::runtime_error("未知/重复/缺值参数:"+key);
+        });
     if (options.count("--check-config"))
     {
         if (options.count("--input") || options.count("--out"))

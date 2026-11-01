@@ -1,3 +1,4 @@
+#include "core/cli_options.hpp"
 // 新阶段工具复用完整几何编排和统一记录；有假设不等于DETECTED，不添加准入判据。
 #include "offline_runner.hpp"
 #include <iostream>
@@ -7,15 +8,11 @@ int main(int argc, char **argv)
 {
     try
     {
-        std::map<std::string, std::string> args;
-        for (int i = 1; i < argc; ++i)
-        {
-            std::string key = argv[i];
-            if (key != "--video" && key != "--config" && key != "--run-dir")
-                throw std::runtime_error("unknown option");
-            if (i + 1 == argc || !args.emplace(key, argv[++i]).second)
-                throw std::runtime_error("missing/duplicate option");
-        }
+        auto args=mark::parse_options(argc,argv,{"--video","--config","--run-dir"},{},false,
+            [](mark::OptionError error,const std::string &)
+            {
+                throw std::runtime_error(error==mark::OptionError::Unknown?"unknown option":"missing/duplicate option");
+            });
         for (auto key : {"--video", "--config", "--run-dir"})
             if (!args.count(key))
                 throw std::runtime_error("required option missing");
@@ -25,7 +22,7 @@ int main(int argc, char **argv)
         if (app.diagnostics.level == "summary")
             app.diagnostics.level = "frame";
         return mark::runOffline(app, args["--video"], args["--config"],
-                                mark::ExecutionScope::Geometry);
+                                mark::ExecutionScope::Geometry, {}, "production", MARK_CODE_HASH);
     }
     catch (const std::exception &e)
     {

@@ -1,3 +1,5 @@
+#include "core/cli_options.hpp"
+#include "core/file_fingerprint.hpp"
 // Path A 专项只读验收：比较全部公共字段、回溯锚点资格、精确复算原拟合。
 // 不参与生产准入，不替用户批准真值/方向；损坏/缺失证据一律非零退出。
 #include "common/frame_record_reader.hpp"
@@ -297,24 +299,7 @@ namespace
 
     std::string fingerprint(const fs::path &p)
     {
-        std::ifstream f(p, std::ios::binary);
-        require(bool(f), "cannot fingerprint " + p.string());
-        uint64_t hash = 14695981039346656037ull, count = 0;
-        char buf[65536];
-        while (f.read(buf, sizeof buf) || f.gcount())
-        {
-            for (std::streamsize i = 0; i < f.gcount(); ++i)
-            {
-                hash ^= static_cast<unsigned char>(buf[i]);
-                hash *= 1099511628211ull;
-            }
-            count += f.gcount();
-        }
-        require(f.eof(), "fingerprint read failed");
-        std::ostringstream s;
-        s << "FNV1a64:" << std::hex << std::setfill('0') << std::setw(16) << hash
-          << ":size=" << std::dec << count;
-        return s.str();
+        return mark::file_fingerprint(p,"cannot fingerprint " + p.string(),"fingerprint read failed");
     }
 
     void configs(const fs::path &old, const fs::path &now, const fs::path &supplied)
@@ -594,15 +579,11 @@ namespace
                                            "--output-dir"}
                    : std::set<std::string>{"--baseline-run", "--candidate-run", "--config",
                                            "--expected-frames", "--report-dir"};
-        std::map<std::string, std::string> out;
-        for (int i = render ? 2 : 1; i < argc; ++i)
-        {
-            std::string key = argv[i];
-            require(allowed.count(key) && i + 1 < argc &&
-                        std::string(argv[i + 1]).rfind("--", 0) != 0,
-                    "unknown/missing option " + key);
-            require(out.emplace(key, argv[++i]).second, "duplicate option " + key);
-        }
+        auto out=mark::parse_options(argc,argv,allowed,{},true,
+            [](mark::OptionError error,const std::string &key)
+            {
+                require(false,(error==mark::OptionError::Duplicate?"duplicate option ":"unknown/missing option ")+key);
+            },render?2:1);
         require(out.size() == allowed.size(), "all options are required");
         return out;
     }

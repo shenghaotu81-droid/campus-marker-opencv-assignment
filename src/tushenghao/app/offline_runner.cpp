@@ -1,3 +1,4 @@
+#include "core/file_fingerprint.hpp"
 #include "offline_runner.hpp"
 #include "debug_renderer.hpp"
 #include "display_session.hpp"
@@ -26,29 +27,8 @@ namespace mark
         // App只使用标准库文件FNV指纹并明确算法名/大小；归档工具另补SHA256，不能冒称密码学摘要。
         std::string fingerprint_file(const std::filesystem::path &path)
         {
-            std::ifstream in(path, std::ios::binary);
-            if (!in)
-                throw std::runtime_error("cannot fingerprint input: " + path.string());
-            uint64_t hash = 14695981039346656037ull, size = 0;
-            char buffer[65536];
-            while (in)
-            {
-                in.read(buffer, sizeof buffer);
-                auto n = in.gcount();
-                size += uint64_t(n);
-                for (std::streamsize i = 0; i < n; ++i)
-                {
-                    hash ^= static_cast<unsigned char>(buffer[i]);
-                    hash *= 1099511628211ull;
-                }
-            }
-            if (!in.eof())
-                throw std::runtime_error("fingerprint read failed");
-            std::ostringstream out;
-            out << "FNV1a64:" << std::hex << std::setw(16) << std::setfill('0') << hash
-                << ":size=" << std::dec << size;
-            return out.str();
-        }
+        return mark::file_fingerprint(path,"cannot fingerprint input: " + path.string(),"fingerprint read failed");
+    }
 
         // 读取实际CPU名称；环境不可读取时明确UNKNOWN，不能推测硬件。
         std::string cpu()
@@ -80,10 +60,10 @@ namespace mark
         {
           public:
             OfflineRunSession(AppConfig app, std::string video, std::string config_path,
-                              ExecutionScope scope, std::set<uint64_t> subset, std::string purpose)
+                              ExecutionScope scope, std::set<uint64_t> subset, std::string purpose, std::string identity)
                 : app_(std::move(app)), video_(std::move(video)),
                   config_path_(std::move(config_path)), scope_(scope), subset_(std::move(subset)),
-                  purpose_(std::move(purpose)), recorder_(app_.diagnostics), pending_(subset_),
+                  purpose_(std::move(purpose)), identity_(std::move(identity)), recorder_(app_.diagnostics), pending_(subset_),
                   baseline_(app_.offline.mode == "baseline"),
                   timing_(app_.detector_config.debug.timing_enabled)
             {
@@ -105,7 +85,7 @@ namespace mark
             std::string video_, config_path_;
             ExecutionScope scope_;
             std::set<uint64_t> subset_;
-            std::string purpose_;
+            std::string purpose_, identity_;
             RunMetadata meta_;
             DiagnosticsRecorder recorder_;
             cv::VideoCapture capture_;
@@ -167,7 +147,7 @@ namespace mark
                         .lexically_normal()
                         .string();
                 meta_.commit_label = MARK_COMMIT;
-                meta_.code_fingerprint = MARK_CODE_HASH;
+                meta_.code_fingerprint = identity_;
                 meta_.input_fingerprint = fingerprint_file(meta_.source_path);
                 meta_.environment = {
                     {"CPU", cpu()},
@@ -507,6 +487,12 @@ namespace mark
                    ExecutionScope scope, const std::set<uint64_t> &subset,
                    const std::string &purpose)
     {
-        return OfflineRunSession(std::move(app), video, config_path, scope, subset, purpose).run();
+        return OfflineRunSession(std::move(app), video, config_path, scope, subset, purpose, MARK_CODE_HASH).run();
+    }
+    int runOffline(AppConfig app,const std::string &video,const std::string &config_path,
+                   ExecutionScope scope,const std::set<uint64_t> &subset,const std::string &purpose,
+                   const std::string &identity)
+    {
+        return OfflineRunSession(std::move(app),video,config_path,scope,subset,purpose,identity).run();
     }
 } // namespace mark

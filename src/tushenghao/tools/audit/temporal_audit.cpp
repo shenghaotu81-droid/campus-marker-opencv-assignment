@@ -1,3 +1,4 @@
+#include "core/cli_options.hpp"
 // 原video与480x32实验网格保留，统一FrameRecord/recorder；阶段装配不假称公共process。
 #include "offline_runner.hpp"
 #include "pipeline/stabilize_stage.hpp"
@@ -201,24 +202,13 @@ int main(int argc, char **argv)
 {
     try
     {
-        std::map<std::string, std::string> args;
-        bool grid = false;
-        for (int i = 1; i < argc; ++i)
-        {
-            std::string key = argv[i];
-            if (key == "--experiment-grid")
+        auto args=mark::parse_options(argc,argv,{"--video","--config","--output","--noise-csv","--run-dir"},
+            {"--experiment-grid"},false,[](mark::OptionError error,const std::string &)
             {
-                if (grid)
-                    throw std::runtime_error("duplicate experiment mode");
-                grid = true;
-                continue;
-            }
-            if (key != "--video" && key != "--config" && key != "--output" &&
-                key != "--noise-csv" && key != "--run-dir")
-                throw std::runtime_error("unknown option");
-            if (i + 1 == argc || !args.emplace(key, argv[++i]).second)
-                throw std::runtime_error("missing/duplicate option");
-        }
+                if(error==mark::OptionError::DuplicateFlag)throw std::runtime_error("duplicate experiment mode");
+                throw std::runtime_error(error==mark::OptionError::Unknown?"unknown option":"missing/duplicate option");
+            });
+        const bool grid=args.erase("--experiment-grid")!=0;
         if (!args.count("--config") || (!args.count("--run-dir") && !args.count("--output")))
             throw std::runtime_error("--config and --run-dir required");
         if (grid ? (!args.count("--noise-csv") || args.count("--video"))
@@ -235,7 +225,7 @@ int main(int argc, char **argv)
             app.diagnostics.level = "frame";
         int result = grid ? experiment(app, args["--config"], args["--noise-csv"])
                           : mark::runOffline(app, args["--video"], args["--config"],
-                                             mark::ExecutionScope::Temporal);
+                                             mark::ExecutionScope::Temporal, {}, "production", MARK_CODE_HASH);
         if (args.count("--output"))
         {
             std::ofstream note(args["--output"]);

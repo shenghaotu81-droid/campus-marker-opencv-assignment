@@ -63,25 +63,10 @@ namespace mark
             if (context->details)
                 context->details->temporal = stable.diagnostics;
             context->record.counts.tracks = stable.tracks.size();
-            for (const auto &reason : {stable.diagnostics.association.reason,
-                                       stable.diagnostics.reset_or_fallback_reason})
-                if (!reason.empty())
-                {
-                    ReasonCode code = ReasonCode::OtherRecordedReason;
-                    if (reason == "HISTORY_EXPIRED")
-                        code = ReasonCode::HistoryExpired;
-                    else if (reason == "ASSOCIATION_FAILED")
-                        code = ReasonCode::AssociationFailed;
-                    else if (reason == "ASSOCIATION_AMBIGUOUS")
-                        code = ReasonCode::AssociationAmbiguous;
-                    else if (reason == "CORRESPONDENCE_AMBIGUOUS")
-                        code = ReasonCode::CorrespondenceAmbiguous;
-                    else if (reason == "ZERO_DT")
-                        code = ReasonCode::ZeroDt;
-                    else if (reason == "SMOOTHING_DEVIATION")
-                        code = ReasonCode::SmoothingRejected;
-                    context->event(Stage::Stabilize, code, reason);
-                }
+            for (const auto &entry : {
+                std::pair{stable.diagnostics.association.cause,&stable.diagnostics.association.reason},
+                std::pair{stable.diagnostics.reset_or_fallback_cause,&stable.diagnostics.reset_or_fallback_reason}})
+                if(!entry.second->empty()) context->event(Stage::Stabilize,temporalRecordCode(entry.first),*entry.second);
             auto resets = temporal.takeResetSnapshot();
             if (context->request.scope == ExecutionScope::Temporal)
                 context->resets(resets, stamp.frame_id);
@@ -98,7 +83,7 @@ namespace mark
                 temporal.takeResetSnapshot();
             return result;
         }
-        if (stable.diagnostics.reset_or_fallback_reason == "INPUT_CHANGED")
+        if (stable.diagnostics.reset_or_fallback_cause == TemporalCause::InputChanged)
             display.reset(ResetReason::InputChanged);
         result.detections = decoded.detections;
         result.tracks = std::move(stable.tracks);

@@ -1,5 +1,7 @@
 # 架构与整理记录
 
+下表保留原迁移／整理记录；现行流程边界见 [流程导读](../flow-guide.md)，瘦身裁决与未做项见 [修改报告](../lean-changes.md)。本次没有移动文件或拆分模块 CMake。
+
 | 记录 | 用途 |
 |---|---|
 | [include依赖分析](include-dependency-analysis.md) | 源码迁移前的审批快照，含93文件/227边 |

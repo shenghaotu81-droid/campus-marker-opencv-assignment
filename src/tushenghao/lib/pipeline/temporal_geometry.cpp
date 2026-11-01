@@ -83,6 +83,7 @@ namespace mark
         if (unique != 1)
         {
             r.reason = "CORRESPONDENCE_AMBIGUOUS";
+            r.cause = TemporalCause::CorrespondenceAmbiguous;
             return r;
         }
         for (size_t i = 0; i < 4; ++i)
@@ -94,8 +95,9 @@ namespace mark
 
     // 正凸环同时排除自交与重复；画内边界严格，不裁点或放宽运动预算。
     bool validateStableCorners(const std::array<cv::Point2d, 4> &z, const Detection &current,
-                               cv::Size size, double max_deviation, std::string &reason)
+                               cv::Size size, double max_deviation, std::string &reason, TemporalCause *cause)
     {
+        if(cause) *cause=TemporalCause::Other;
         if (size.width <= 0 || size.height <= 0 || !std::isfinite(max_deviation) ||
             max_deviation < 0)
         {
@@ -117,6 +119,7 @@ namespace mark
             if (cv::norm(z[i] - cv::Point2d(current.corners[i])) > max_deviation)
             {
                 reason = "SMOOTHING_DEVIATION";
+            if(cause) *cause=TemporalCause::SmoothingDeviation;
                 return false;
             }
         }

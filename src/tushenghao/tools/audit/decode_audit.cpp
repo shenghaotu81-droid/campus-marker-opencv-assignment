@@ -47,7 +47,7 @@ int main(int argc, char **argv)
         app.offline.mode = "debug";
         if (app.diagnostics.level == "summary")
             app.diagnostics.level = "frame";
-        return mark::runOffline(app, positional[0], config, mark::ExecutionScope::Decode, subset);
+        return mark::runOffline(app, positional[0], config, mark::ExecutionScope::Decode, subset, "production", MARK_CODE_HASH);
     }
     catch (const std::exception &e)
     {

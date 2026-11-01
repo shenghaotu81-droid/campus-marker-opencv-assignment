@@ -95,7 +95,7 @@ namespace
         t.update({square()}, stamp(0, 0), {1440, 1080});
         auto r = t.update({square(1)}, stamp(1, 0), {1440, 1080});
         check(same(tracked(r), square(1)) && !r.diagnostics.alpha &&
-                  r.diagnostics.reset_or_fallback_reason == "ZERO_DT",
+                  r.diagnostics.reset_or_fallback_reason == "ZERO_DT" && r.diagnostics.reset_or_fallback_cause == TemporalCause::ZeroDt,
               "zero dt froze history");
         near(tracked(t.update({square(2)}, stamp(2, 14000), {1440, 1080})).corners[0].x, 101.7);
     }
@@ -183,7 +183,7 @@ namespace
         t.update({a}, stamp(0, 0), {1440, 1080});
         auto r = t.update({b}, stamp(1, 14000), {1440, 1080});
         check(same(tracked(r), b) &&
-                  r.diagnostics.reset_or_fallback_reason == "CORRESPONDENCE_AMBIGUOUS" &&
+                  r.diagnostics.reset_or_fallback_reason == "CORRESPONDENCE_AMBIGUOUS" && r.diagnostics.reset_or_fallback_cause == TemporalCause::CorrespondenceAmbiguous &&
                   !r.diagnostics.alpha,
               "ambiguous points filtered");
         auto next = square(0, 46, false);
@@ -213,7 +213,7 @@ namespace
         check(r.tracks[0].detection_index == 1 && r.diagnostics.association.matched_history,
               "unique match not selected");
         r = t.update({square(2), square(3)}, stamp(2, 28000), {1440, 1080});
-        check(r.diagnostics.association.ambiguous && same(tracked(r), square(2)),
+        check(r.diagnostics.association.ambiguous && r.diagnostics.association.cause == TemporalCause::AssociationAmbiguous && same(tracked(r), square(2)),
               "two matches guessed nearest");
         r = t.update({square(400), big}, stamp(3, 42000), {1440, 1080});
         check(!r.diagnostics.association.matched_history && r.tracks[0].detection_index == 1,
@@ -280,7 +280,7 @@ namespace
         t.update({q}, stamp(0, 0), {1440, 1080});
         auto r = t.update({square(10)}, stamp(1, 14000), {1440, 1080});
         check(same(tracked(r), square(10)) &&
-                  r.diagnostics.reset_or_fallback_reason == "SMOOTHING_DEVIATION",
+                  r.diagnostics.reset_or_fallback_reason == "SMOOTHING_DEVIATION" && r.diagnostics.reset_or_fallback_cause == TemporalCause::SmoothingDeviation,
               "deviation clipped or accepted");
         near(tracked(t.update({square(11)}, stamp(2, 28000), {1440, 1080})).corners[0].x, 110.7);
         // 防御所有当前候选：错起点、方向重复、bbox错误、集合中一个坏项均INVALID_INPUT。

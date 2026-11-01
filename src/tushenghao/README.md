@@ -2,6 +2,8 @@
 
 本目录实现基于白色几何结构的 MARK 检测、当前帧角点取证、时序稳定及离线诊断。以下操作适用于 Ubuntu/Linux，均从**仓库根目录**执行；输入视频由你提供。
 
+代码按步骤阅读见 [流程导读](docs/flow-guide.md)，本次瘦身范围、裁决和验证见 [修改报告](docs/lean-changes.md)。现行模式名为 `SegmentedMark`，显示开关归 `display`；旧键会明确报错。历史验收结论保留各自原适用范围。
+
 ## 第一步：安装依赖并构建
 
 需要 C++17、CMake ≥3.16、OpenCV 和 OpenSSL。每条命令均为单行：
@@ -11,7 +13,7 @@ sudo apt-get update && sudo apt-get install --no-install-recommends build-essent
 cmake -S src/tushenghao -B build/release -DCMAKE_BUILD_TYPE=Release && cmake --build build/release -j4
 ```
 
-独立标定工具额外需要 `nlohmann-json3-dev`，见[工具索引](tools/INDEX.md)；普通 App 无须构建这些工具。`clang-format` 仅用于开发排版，不是运行依赖。
+几何夹具／测量工具额外需要 `nlohmann-json3-dev`，见[工具索引](tools/INDEX.md)；普通 App 无须构建这些工具。`clang-format` 仅用于开发排版，不是运行依赖。
 
 ## 第二步：检查配置并选择一种运行方式
 

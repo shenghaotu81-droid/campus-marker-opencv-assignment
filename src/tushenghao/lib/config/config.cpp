@@ -1,5 +1,6 @@
 // Q01→Q03→Q06：严格读取、分模块校验、导出生效配置；预算值仅来自输入。
 #include "config/config.hpp"
+#include "config/value_reader.hpp"
 #include "core/corner_budget.hpp"
 #include <set>
 #include <fstream>
@@ -27,72 +28,88 @@ namespace mark
                               ", reason=" + message);
         }
 
-        // 读取 YAML 中的开关字段，并转换成 C++ bool。
-        bool readBool(const cv::FileNode &node, const std::filesystem::path &file,
-                      const std::string &field)
+        // Q02：Detector 只接收真实数值节点，字符串和 bool 的原严格契约不放松。
+        bool readBool(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+        {
+            return config_value::boolean(node,[&](auto){throwConfigError(file,field,"expected integer 0/1");});
+        }
+        int readInt(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+        {
+            return config_value::integer(node,[&](auto){throwConfigError(file,field,"expected integer");});
+        }
+        std::string readString(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+        {
+            return config_value::text(node,[&](auto){throwConfigError(file,field,"expected string");});
+        }
+        double readDouble(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+        {
+            return config_value::number(node,config_value::NumericPolicy::NodeNumber,[&](auto error){
+                throwConfigError(file,field,error==config_value::Error::NonFinite?"expected finite number":"expected number");
+            });
+        }
+
+        // Q02：FileStorage 整数已窄化，原 token 范围与节点基础类型必须同时核对。
+        void validate_exact_integer_tokens(const std::string &source,const std::regex &token,
+                                            const std::filesystem::path &path,const std::string &field)
+        {
+            for(std::sregex_iterator it(source.begin(),source.end(),token),end;it!=end;++it)
+                try
+                {
+                    const auto value=std::stoll((*it)[2].str());
+                    if(value<0 || value>std::numeric_limits<int>::max())
+                        throwConfigError(path,field,"integer overflow or negative");
+                }
+                catch(const std::out_of_range &)
+                {
+                    throwConfigError(path,field,"integer overflow");
+                }
+        }
+
+        uint64_t read_exact_integer(const cv::FileNode &node,const std::string &raw_text,
+                                    const std::filesystem::path &path)
         {
             if (!node.isInt())
+                throwConfigError(path, "output.expected_frame_count",
+                                 "expected nonnegative integer");
+            // FileStorage 的 int 只有 32 位；原始十进制 token 保留 uint64 完整范围并严格拒绝溢出。
+            const std::regex token(
+                R"((^|[\n{,])[ \t]*(?:"expected_frame_count"|expected_frame_count)[ \t]*:[ \t]*([^ \t\r\n,}#]+))");
+            std::smatch match;
+            if (!std::regex_search(raw_text, match, token))
+                throwConfigError(path, "output.expected_frame_count", "missing integer token");
+            const auto value = match[2].str();
+            if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
+                throwConfigError(path, "output.expected_frame_count",
+                                 "expected nonnegative integer");
+            try
             {
-                throwConfigError(file, field, "expected integer 0/1");
+                return std::stoull(value);
             }
-
-            int value = 0;
-            node >> value;
-
-            if (value != 0 && value != 1)
+            catch (const std::exception &)
             {
-                throwConfigError(file, field, "expected integer 0/1");
+                throwConfigError(path, "output.expected_frame_count", "uint64 overflow");
             }
-
-            return value == 1;
         }
 
-        // 读取整数字段并检查基础类型。
-        int readInt(const cv::FileNode &node, const std::filesystem::path &file,
-                    const std::string &field)
+        // Q06：FileStorage 没有 uint64 重载；仅替换本次生成的唯一占位并核验写失败。
+        void write_exact_integer(const std::filesystem::path &path,uint64_t value)
         {
-            if (!node.isInt())
-            {
-                throwConfigError(file, field, "expected integer");
-            }
-
-            int value = 0;
-            node >> value;
-
-            return value;
-        }
-
-        // 读取字符串字段并检查基础类型。
-        std::string readString(const cv::FileNode &node, const std::filesystem::path &file,
-                               const std::string &field)
-        {
-            if (!node.isString())
-            {
-                throwConfigError(file, field, "expected string");
-            }
-
-            std::string value;
-            node >> value;
-
-            return value;
-        }
-
-        // 读取浮点字段，并检查 YAML 基础类型。(避免 OpenCV YAML 类型坑)
-        double readDouble(const cv::FileNode &node, const std::filesystem::path &file,
-                          const std::string &field)
-        {
-            if (!node.isReal() && !node.isInt())
-            {
-                throwConfigError(file, field, "expected number");
-            }
-
-            double value = 0.0;
-
-            node >> value;
-            // NaN/Inf 在范围比较中可能全部为假，不能被当作合法预算。
-            if (!std::isfinite(value))
-                throwConfigError(file, field, "expected finite number");
-            return value;
+        // FileStorage 无 uint64 写入重载；只替换本次生成的唯一占位字段为精确整数，避免截断或浮点舍入。
+        std::ifstream input(path);
+        std::string text((std::istreambuf_iterator<char>(input)), {});
+        input.close();
+        const std::regex placeholder(
+            R"count((expected_frame_count:[ \t]*)"?__FINAL_FIXES_EXPECTED_COUNT__"?)count");
+        std::smatch match;
+        if (!std::regex_search(text, match, placeholder))
+            throwConfigError(path, "output.expected_frame_count", "effective placeholder missing");
+        text.replace(size_t(match.position()), size_t(match.length()),
+                     match[1].str() + std::to_string(value));
+        std::ofstream out(path);
+        out << text;
+        out.flush();
+        if (!out)
+            throwConfigError(path, "output.expected_frame_count", "effective config write failed");
         }
 
         // 冻结配置拒绝未知/重复键；否则拼错预算会静默回落到旧占位参数。
@@ -384,21 +401,7 @@ namespace mark
         std::string raw_text((std::istreambuf_iterator<char>(raw_file)), {});
         const std::regex hold_token(
             R"((^|[\n{,])[ \t]*(?:"max_hold_frames"|max_hold_frames)[ \t]*:[ \t]*([+-]?[0-9]+))");
-        for (std::sregex_iterator it(raw_text.begin(), raw_text.end(), hold_token), end; it != end;
-             ++it)
-        {
-            try
-            {
-                long long value = std::stoll((*it)[2].str());
-                if (value < 0 || value > std::numeric_limits<int>::max())
-                    throwConfigError(path, "temporal.max_hold_frames",
-                                     "integer overflow or negative");
-            }
-            catch (const std::out_of_range &)
-            {
-                throwConfigError(path, "temporal.max_hold_frames", "integer overflow");
-            }
-        }
+        validate_exact_integer_tokens(raw_text, hold_token, path, "temporal.max_hold_frames");
 
         cv::FileNode output = requireNode("output");
 
@@ -437,19 +440,7 @@ namespace mark
             // FileStorage会先截断32位整数，先核原始十进制token，避免巨大帧号被默默改为0。
             const std::regex token(std::string("(^|[\\n{,])[ \\t]*(?:\"") + key + "\"|" + key +
                                    ")[ \\t]*:[ \\t]*([+-]?[0-9]+)");
-            for (std::sregex_iterator it(raw_text.begin(), raw_text.end(), token), end; it != end;
-                 ++it)
-                try
-                {
-                    auto v = std::stoll((*it)[2].str());
-                    if (v < 0 || v > std::numeric_limits<int>::max())
-                        throwConfigError(path, std::string("debug.") + key,
-                                         "integer overflow or negative");
-                }
-                catch (const std::out_of_range &)
-                {
-                    throwConfigError(path, std::string("debug.") + key, "integer overflow");
-                }
+            validate_exact_integer_tokens(raw_text, token, path, std::string("debug.") + key);
             const auto value = readDouble(debug[key], path, std::string("debug.") + key);
             if (!debug[key].isInt() || value < 0 || value > std::numeric_limits<int>::max())
                 throwConfigError(path, std::string("debug.") + key,
@@ -472,27 +463,7 @@ namespace mark
         // 容器截断也可能正常 EOF；App 期待帧数单独加载，不进入 Detector 判据。
         if (!output["expected_frame_count"].empty())
         {
-            if (!output["expected_frame_count"].isInt())
-                throwConfigError(path, "output.expected_frame_count",
-                                 "expected nonnegative integer");
-            // FileStorage 的 int 只有 32 位；原始十进制 token 保留 uint64 完整范围并严格拒绝溢出。
-            const std::regex token(
-                R"((^|[\n{,])[ \t]*(?:"expected_frame_count"|expected_frame_count)[ \t]*:[ \t]*([^ \t\r\n,}#]+))");
-            std::smatch match;
-            if (!std::regex_search(raw_text, match, token))
-                throwConfigError(path, "output.expected_frame_count", "missing integer token");
-            const auto value = match[2].str();
-            if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
-                throwConfigError(path, "output.expected_frame_count",
-                                 "expected nonnegative integer");
-            try
-            {
-                config.offline.expected_frame_count = std::stoull(value);
-            }
-            catch (const std::exception &)
-            {
-                throwConfigError(path, "output.expected_frame_count", "uint64 overflow");
-            }
+            config.offline.expected_frame_count = read_exact_integer(output["expected_frame_count"], raw_text, path);
         }
         if (!output["playback_fps"].empty())
             config.offline.playback_fps =
@@ -941,22 +912,7 @@ namespace mark
         fs << "}";
 
         fs.release();
-        // FileStorage 无 uint64 写入重载；只替换本次生成的唯一占位字段为精确整数，避免截断或浮点舍入。
-        std::ifstream input(path);
-        std::string text((std::istreambuf_iterator<char>(input)), {});
-        input.close();
-        const std::regex placeholder(
-            R"count((expected_frame_count:[ \t]*)"?__FINAL_FIXES_EXPECTED_COUNT__"?)count");
-        std::smatch match;
-        if (!std::regex_search(text, match, placeholder))
-            throwConfigError(path, "output.expected_frame_count", "effective placeholder missing");
-        text.replace(size_t(match.position()), size_t(match.length()),
-                     match[1].str() + std::to_string(config.offline.expected_frame_count));
-        std::ofstream out(path);
-        out << text;
-        out.flush();
-        if (!out)
-            throwConfigError(path, "output.expected_frame_count", "effective config write failed");
+        write_exact_integer(path, config.offline.expected_frame_count);
     }
 
 } // namespace mark

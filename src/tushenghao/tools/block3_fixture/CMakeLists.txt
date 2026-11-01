@@ -21,35 +21,11 @@ add_executable(block3_measure calibration/measure.cpp)
 target_link_libraries(block3_measure PRIVATE mark_detector_internal_headers synthetic_gen_core)
 target_compile_definitions(block3_measure PRIVATE DETECTOR_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/../../config/detector.yaml")
 
-file(GLOB_RECURSE MEASURE_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../app/*.cpp"
-)
-file(GLOB_RECURSE MEASURE_TOOL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-list(APPEND MEASURE_SOURCES ${MEASURE_TOOL_SOURCES}
-    "${CMAKE_CURRENT_SOURCE_DIR}/common/support_pixel_count.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/common/file_digest.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test_support/block3_fixture.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../CMakeLists.txt"
-    "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
-)
-list(SORT MEASURE_SOURCES)
-set(MEASURE_DIGEST "")
-foreach(MEASURE_FILE IN LISTS MEASURE_SOURCES)
-    file(SHA256 "${MEASURE_FILE}" MEASURE_FILE_HASH)
-    string(APPEND MEASURE_DIGEST "${MEASURE_FILE_HASH}")
-endforeach()
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${MEASURE_SOURCES})
-string(SHA256 MEASURE_CODE_HASH "${MEASURE_DIGEST}")
-target_compile_definitions(block3_measure PRIVATE MEASURE_CODE_HASH="${MEASURE_CODE_HASH}")
-
 add_executable(block3_resources validation/resources.cpp)
 target_link_libraries(block3_resources PRIVATE mark_detector_internal_headers mark_test_support)
 add_executable(block3_verify validation/verify.cpp)
 target_link_libraries(block3_verify PRIVATE mark_detector_internal_headers synthetic_gen_core)
-target_compile_definitions(block3_verify PRIVATE MEASURE_CODE_HASH="${MEASURE_CODE_HASH}" DETECTOR_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/../../config/detector.yaml")
+target_compile_definitions(block3_verify PRIVATE DETECTOR_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/../../config/detector.yaml")
 
 # 实拍拒绝原因只读诊断；仍复用Detector，不改变生产预算或读取真值。
 find_package(nlohmann_json REQUIRED)
@@ -61,3 +37,13 @@ target_link_libraries(block3_video_corner_measure PRIVATE mark_detector_internal
 add_executable(block3_parent_diagnose diagnostics/parent_diagnose.cpp)
 target_include_directories(block3_parent_diagnose PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..")
 target_link_libraries(block3_parent_diagnose PRIVATE mark_detector_internal_headers nlohmann_json::nlohmann_json OpenSSL::Crypto)
+
+# B05：按每个工具的实际源码/链接闭包计算，生成与测量不共享全目录摘要。
+foreach(target block3_fixture block3_measure block3_resources block3_verify block3_video_diagnose
+               block3_video_corner_measure block3_parent_diagnose)
+    mark_target_provenance(${target} "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+    get_target_property(hash ${target} MARK_SOURCE_HASH)
+    if(target STREQUAL "block3_measure" OR target STREQUAL "block3_verify")
+        target_compile_definitions(${target} PRIVATE MEASURE_CODE_HASH="${hash}")
+    endif()
+endforeach()

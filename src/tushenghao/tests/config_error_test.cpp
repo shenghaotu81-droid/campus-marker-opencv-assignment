@@ -1,13 +1,4 @@
-//配置模块的（测 config.cpp） 坏配置能被拒（5 种错误都抛 ConfigError）
-// 配置错误测试：验证"坏配置"能被正确拒绝：5 种错误情况都抛 ConfigError
-//测试部分依然黑盒（等需要改测试时再展开）
-/*三步看懂：
-1.先看 main()：5 个 if，每个调一个 test 函数，全过才 return 0，挂一个就 return 1
-2.再看任意一个 test 函数（5 个长得一样）：造一个"坏"的 YAML → 调 loadConfig → 期望抛 ConfigError → 打印错误 → 删临时文件
-3.看中文注释：每个函数头一句话告诉你"这个 case 测什么坏情况"
-
-5 个函数是同一模板，只是"坏"的地方不同（mode 类型 / mode 值 / threshold / 开关 / 文件缺失）。看懂一个，其他四个扫一眼就行。
-*/
+// Q02/C01：配置与标定坏输入主动检查；本次临时输入由显式 test_root 隔离。
 #include "config/config.hpp"
 #include "core/config_error.hpp"
 #include "../tools/calibration/calibration_config.hpp"
@@ -20,6 +11,7 @@
 #include <string>
 #include <limits>
 #include <cmath>
+#include <chrono>
 
 namespace
 {
@@ -33,49 +25,17 @@ namespace
             throw std::runtime_error("cannot create test config file");
         }
 
-        file << "%YAML:1.0\n"; // OpenCV FileStorage 需要这个头 定位问题修改1 YAML 头问题修好
-        /*工程实践问题记录：定位问题修改1
-1. 现象
-ctest 显示 50%，第一个 case 有 [expected] 输出，第二个 case 静默失败——连错误都没打印。
+        file << "%YAML:1.0\n"; // OpenCV FileStorage 要求版本头。
 
-2. 定位"哪挂了"
-在 main() 每个 if 前加打印 run testXXX。输出停在 run testModeTypeError——第二个 case 挂的。
-
-3. 定位"怎么挂的"
-第二个 case 的 catch (const mark::ConfigError&) 没触发。三种可能：
-
-抛了别的异常，被 main 的 catch (...) 吃掉 → 无声 return 1
-根本没抛异常，测试返回 false → 无声 return 1
-崩溃——但 ctest 会报，不像
-
-把 catch 临时放宽成 catch (const std::exception& e) 并打印，一测便知是哪种。
-note:    catch (const mark::ConfigError& e)  // 只抓我们自己的
-         catch (const std::exception& e)     // 抓所有标准异常，谁抛的都能看见
-         catch (...)                         // 抓一切，但连错误信息都看不到
-
-
-4. 真相
-打印出 Input file is invalid in function 'open'——OpenCV 的 FileStorage 在打开文件时就抛了自己的异常，压根没进到我们的 ConfigError 逻辑。
-
-5. 根因
-OpenCV 的 FileStorage 不是通用 YAML 解析器，它要求文件以 %YAML:1.0 开头。测试手写的 YAML 没这个头，OpenCV 拒读。
-
-6. 为啥这样改
-
-改 writeTestConfig 自动加头：一处改，4 个 case 全受益
-不动 config.cpp：生产代码没问题，是测试工具造的文件不合格
-把诊断用的 std::exception 改回去：最终要验证的就是 ConfigError，诊断工具用完就拆
-
-记住这个套路：定位"哪" → 定位"怎么" → 定位"为啥"，每次只改一处，看数据不猜。*/
         file << content;
     }
 
     // 测试配置文件不存在时是否抛出 ConfigError。
-    bool testMissingFile()
+    bool testMissingFile(const std::filesystem::path &test_root)
     {
         try
         {
-            mark::loadConfig("not_exist_config.yaml");
+            mark::loadConfig(test_root / "not_exist_config.yaml");
         }
         catch (const mark::ConfigError &e)
         {
@@ -89,9 +49,9 @@ OpenCV 的 FileStorage 不是通用 YAML 解析器，它要求文件以 %YAML:1.
     }
 
     // 测试 detector.mode 类型错误时是否抛出 ConfigError。
-    bool testModeTypeError()
+    bool testModeTypeError(const std::filesystem::path &test_root)
     {
-        const auto path = std::filesystem::temp_directory_path() / "mode_type_error.yaml";
+        const auto path = test_root / "mode_type_error.yaml";
 
         writeTestConfig(path,
                         R"(
@@ -133,24 +93,14 @@ debug:
             return true;
         }
 
-        /*
-        catch (const std::exception &e)
-        {
-          std::cout << "[caught std::exception] " << e.what() << std::endl;
-
-          std::filesystem::remove(path);
-          return true;
-        }          // 定位问题修改1
-        */
-
         std::filesystem::remove(path);
         return false;
     }
 
     // 测试 detector.mode 非法值时是否抛出 ConfigError。
-    bool testModeValueError()
+    bool testModeValueError(const std::filesystem::path &test_root)
     {
-        const auto path = std::filesystem::temp_directory_path() / "mode_value_error.yaml";
+        const auto path = test_root / "mode_value_error.yaml";
 
         writeTestConfig(path,
                         R"(
@@ -196,9 +146,9 @@ debug:
     }
 
     // 测试 preprocess.threshold 超出范围时是否抛出 ConfigError。
-    bool testThresholdRangeError()
+    bool testThresholdRangeError(const std::filesystem::path &test_root)
     {
-        const auto path = std::filesystem::temp_directory_path() / "threshold_error.yaml";
+        const auto path = test_root / "threshold_error.yaml";
 
         writeTestConfig(path,
                         R"(
@@ -244,9 +194,9 @@ debug:
     }
 
     // 计时已经实现，旧负例改测仍未实现的视频导出，不删除未实现功能拒绝覆盖。
-    bool testUnsupportedFeatureError()
+    bool testUnsupportedFeatureError(const std::filesystem::path &test_root)
     {
-        const auto path = std::filesystem::temp_directory_path() / "unsupported_feature.yaml";
+        const auto path = test_root / "unsupported_feature.yaml";
 
         writeTestConfig(path,
                         R"(
@@ -293,7 +243,7 @@ debug:
     }
 
     // 新增时序字段同时测试直接配置与YAML类型/缺失/重复/溢出，防止Release空绿。
-    bool temporalErrors()
+    bool temporalErrors(const std::filesystem::path &test_root)
     {
         auto base = mark::loadConfig(std::filesystem::path(VISION_SOURCE_ROOT) /
                                      "config/detector.yaml");
@@ -363,7 +313,7 @@ debug:
                 return false;
             }
         }
-        auto path = std::filesystem::temp_directory_path() / "block4-temporal-errors.yaml";
+        auto path = test_root / "block4-temporal-errors.yaml";
         mark::writeEffectiveConfig(base, path);
         std::ifstream input(path);
         std::string text((std::istreambuf_iterator<char>(input)), {});
@@ -470,13 +420,10 @@ debug:
 
 } // namespace
 
-// 运行所有测试（主函数）
-// ctest --test-dir build/tushenghao --output-on-failure    :  --output-on-failure：测试挂了才显示它的输出。
-// 平时 ctest 只告诉你 Passed/Failed，不给细节。现在测的是错误情况——万一挂了，必须看到底哪个 case 挂的、打印了啥，不然没法修。所以加上。
 namespace
 {
     // C04/C05：成功/失败交错时保留源身份；不同尺寸由视频信息显式交给求解与写出。
-    bool calibrationFlow()
+    bool calibrationFlow(const std::filesystem::path &test_root)
     {
         CalibrationConfig config; initialize_default_config(config);
         cv::Mat board(480, 640, CV_8UC3, cv::Scalar(255,255,255));
@@ -504,7 +451,7 @@ namespace
             if (!run_camera_calibration(video,samples,result) || result.image_size!=size ||
                 result.source_path!="fixture" || result.frame_ids!=std::vector<int>({10,13,16,19,22,25}) ||
                 !std::isfinite(result.reprojection_error) || result.reprojection_error>1e-3) return false;
-            config.output_path=(std::filesystem::temp_directory_path()/"lean-calibration-roundtrip.yaml").string();
+            config.output_path=(test_root/"lean-calibration-roundtrip.yaml").string();
             if (!save_calibration_result(config,result)) return false;
             cv::FileStorage stored(config.output_path,cv::FileStorage::READ);
             if (int(stored["image_width"])!=size.width || int(stored["image_height"])!=size.height) return false;
@@ -514,9 +461,9 @@ namespace
     }
 
     // Q02：先确认完整新协议可读，再逐项注入旧键，避免缺字段负例掩盖兼容残留。
-    bool rejectedOldProtocol()
+    bool rejectedOldProtocol(const std::filesystem::path &test_root)
     {
-        const auto path = std::filesystem::temp_directory_path() / "lean-old-protocol.yaml";
+        const auto path = test_root / "lean-old-protocol.yaml";
         auto config = mark::loadConfig(std::filesystem::path(VISION_SOURCE_ROOT) /
                                        "config/detector.yaml");
         mark::writeEffectiveConfig(config, path);
@@ -557,9 +504,9 @@ namespace
     }
 
     // C01 负例：在打开视频前核验字段类型/完整 CLI 和 NaN，合法 YAML→CLI 覆盖不变。
-    bool calibrationConfigErrors()
+    bool calibrationConfigErrors(const std::filesystem::path &test_root)
     {
-        const auto path = std::filesystem::temp_directory_path() / "lean-calibration-errors.yaml";
+        const auto path = test_root / "lean-calibration-errors.yaml";
         const std::string valid =
             "schema_version: 1\nvideo_path: fixture.avi\noutput_path: result.yaml\n"
             "board_rows: 7\nboard_cols: 7\npoint_spacing: 0.03\nframe_list: [0, 2, 4]\n";
@@ -658,37 +605,54 @@ int main()
 {
     try
     {
-        if (!calibrationFlow()) return 1;
-        if (!rejectedOldProtocol()) return 1;
-        if (!calibrationConfigErrors()) return 1;
-        if (!temporalErrors())
+        // V06/F71：跨构建可并行运行；目录创建成功才取得所有权，异常也清理本次文件。
+        struct RunDirectory
+        {
+            std::filesystem::path root;
+            ~RunDirectory() { std::error_code ignored; std::filesystem::remove_all(root,ignored); }
+        };
+        const auto base=std::filesystem::temp_directory_path() /
+            ("lean-config-test-"+std::to_string(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+        std::filesystem::path root;
+        for(uint64_t attempt=0;;++attempt)
+        {
+            auto candidate=std::filesystem::path(base.string()+"-"+std::to_string(attempt));
+            std::error_code error;
+            if(std::filesystem::create_directory(candidate,error)) { root=std::move(candidate); break; }
+            if(error)throw std::runtime_error("cannot create test directory: "+error.message());
+        }
+        const RunDirectory run{root};
+        if (!calibrationFlow(run.root)) return 1;
+        if (!rejectedOldProtocol(run.root)) return 1;
+        if (!calibrationConfigErrors(run.root)) return 1;
+        if (!temporalErrors(run.root))
         {
             std::cerr << "temporal errors failed\n";
             return 1;
         }
         std::cout << "run testMissingFile"
-                  << std::endl; // 排查哪个 case 失败(工程经验) 定位问题修改1
-        if (!testMissingFile())
+                  << std::endl;
+        if (!testMissingFile(run.root))
         {
             return 1;
         }
         std::cout << "run testModeTypeError" << std::endl;
-        if (!testModeTypeError())
+        if (!testModeTypeError(run.root))
         {
             return 1;
         }
         std::cout << "run testModeValueError" << std::endl;
-        if (!testModeValueError())
+        if (!testModeValueError(run.root))
         {
             return 1;
         }
         std::cout << "run testThresholdRangeError" << std::endl;
-        if (!testThresholdRangeError())
+        if (!testThresholdRangeError(run.root))
         {
             return 1;
         }
         std::cout << "run testUnsupportedFeatureError" << std::endl;
-        if (!testUnsupportedFeatureError())
+        if (!testUnsupportedFeatureError(run.root))
         {
             return 1;
         }
@@ -700,26 +664,3 @@ int main()
 
     return 0;
 }
-
-/*  第一次原版：文件缺失（配置错误）
-// 配置错误测试(验证 loadConfig() 遇到错误配置时，会不会正确抛出 ConfigError)
-#include "config.hpp"
-#include "config_error.hpp"
-
-using namespace mark;
-
-int main()
-{
-    try      // C++ 异常处理机制（try 包住“可能出错的代码”，如果里面发生异常，就跳到对应的 catch 处理）
-    {
-        loadConfig("invalid_config.yaml");
-    }
-    catch (const ConfigError &)    // 我只关心它发生了，不需要读取错误信息（预期结果）只判断类型
-    {
-        return 0;
-    }
-
-    // 如果没有抛出 ConfigError，说明测试失败
-    return 1;
-}
-*/

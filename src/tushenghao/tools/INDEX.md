@@ -77,3 +77,5 @@ build/block4/temporal_audit --experiment-grid --noise-csv build/block4-evidence/
 `validation/recovery112_check.py` 现行入口必须显式提供 `--source-root`、`--input-manifest`、`--output-root`、`--build-logs`，再选 `run LABEL BINARY EXPECTED` 或 `summarize`。输入 manifest 包含 input_root、video、config、failed_ids_file、expected_frames、expected_runs、expected_test_targets、historical_fast、historical_synthetic、protected_before、readme_current、readme_original、legacy_source_prefix；路径应明确指向保留的冻结输入/原文，legacy_source_prefix 仅适配旧 manifest 的来源键。缺输入会失败，输出目录不能指向历史 evidence 原件。CTest 按目标名称集合及全过摘要检查，允许新增测试；全部 Python 证据条件在普通与 `-O` 模式均执行。
 
 历史静态 recipe 导出 `--candidate-config` 和 temporal_audit 的无效 `--overwrite` 已删除，现行入口明确拒绝；已有目录仍禁止覆盖，measure 与独立验证入口保留。
+
+现行 CLI 的允许参数／flag 由入口声明，共用 core/cli_options.hpp 的普通解析函数；是否允许选项形状的值、错误文本及运行互斥规则仍由各入口提供。合成环境 code_hash 描述 synthetic_gen_core 的实际输入；CLI／测试另有各自构建 manifest。

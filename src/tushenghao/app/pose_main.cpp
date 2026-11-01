@@ -1,3 +1,4 @@
+#include "core/cli_options.hpp"
 // 单独pose_app; 不改旧main
 #include "mark/detector.hpp"
 #include "mark/tag_detector.hpp"
@@ -14,28 +15,17 @@
 
 namespace
 {
-// argc 是参数个数，argv 是参数数组（parse_cli 就是扫这个数组进map，把 --key value 配成对按key取用）
-// 参数解析的具体实现：定允许的参数名（--video、--out 等 7 个）、把 argv 扫进 map、校验（未知参数、重复、缺值都抛错）（main 开头调用）
-// 独立 G2 运行器只编排已有 Detector 与新感知层，不修改原 marker_app 模式。
+// A01：声明 G2 允许项，运行参数互斥规则仍由入口负责。
 std::map<std::string, std::string> parse_cli(int argc, char **argv)
 {
     const std::set<std::string> allowed{"--config", "--detector-config", "--video", "--out",
                                          "--camera-id", "--session-id", "--expected-frames"};
-    std::map<std::string, std::string> result;
-    for (int i = 1; i < argc; ++i)
-    {
-        const std::string key = argv[i];
-        if (key == "--check-config")
+    auto result=mark::parse_options(argc,argv,allowed,{"--check-config"},true,
+        [](mark::OptionError error,const std::string &key)
         {
-            if (!result.emplace(key, "1").second)
-                throw std::runtime_error("重复 --check-config");
-            continue;
-        }
-        if (!allowed.count(key) || i + 1 >= argc ||
-            std::string(argv[i + 1]).rfind("--", 0) == 0 ||
-            !result.emplace(key, argv[++i]).second)
-            throw std::runtime_error("未知参数、重复参数或缺值: " + key);
-    }
+            if(error==mark::OptionError::DuplicateFlag)throw std::runtime_error("重复 --check-config");
+            throw std::runtime_error("未知参数、重复参数或缺值: "+key);
+        });
     if (result.count("--check-config"))
     {
         for (const auto &[key, value] : result)
@@ -133,9 +123,10 @@ int main(int argc, char **argv)
         if (args.count("--expected-frames"))
         {
             const auto &token = args.at("--expected-frames");
-            if (token.empty() || token.find_first_not_of("0123456789") != std::string::npos)
+            const auto value=mark::decimal_uint64(token);
+            if (!value)
                 throw std::runtime_error("expected-frames 必须为正整数");
-            expected = std::stoull(token);
+            expected = *value;
             if (*expected == 0)
                 throw std::runtime_error("expected-frames 不能为零");
         }

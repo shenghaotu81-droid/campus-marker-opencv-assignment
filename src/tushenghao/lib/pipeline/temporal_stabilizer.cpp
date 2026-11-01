@@ -128,6 +128,7 @@ namespace mark
         {
             reset(ResetReason::InputChanged);
             result.diagnostics.reset_or_fallback_reason = "INPUT_CHANGED";
+            result.diagnostics.reset_or_fallback_cause=TemporalCause::InputChanged;
         }
         size_ = size;
         last_input_ = stamp;
@@ -137,6 +138,7 @@ namespace mark
             reference_.reset();
             smoothing_.reset();
             result.diagnostics.reset_or_fallback_reason = "HISTORY_EXPIRED";
+            result.diagnostics.reset_or_fallback_cause=TemporalCause::HistoryExpired;
         }
         if (detections.empty())
         {
@@ -178,6 +180,7 @@ namespace mark
             {
                 diag.association.ambiguous = matches > 1;
                 diag.association.reason = matches ? "ASSOCIATION_AMBIGUOUS" : "ASSOCIATION_FAILED";
+                diag.association.cause = matches ? TemporalCause::AssociationAmbiguous : TemporalCause::AssociationFailed;
                 smoothing_.reset();
             }
         }
@@ -191,14 +194,19 @@ namespace mark
         {
             const double dt = double(stamp.timestamp_us - smoothing_->stamp.timestamp_us) / 1e6;
             diag.dt_seconds = dt;
+            TemporalCause fallback_cause=TemporalCause::Other;
             if (dt == 0)
-                reason = "ZERO_DT";
+            {
+                reason = "ZERO_DT"; fallback_cause=TemporalCause::ZeroDt;
+            }
             else
             {
                 diag.correspondence =
                     resolveCornerCorrespondence(current, smoothing_->raw, config_);
                 if (!diag.correspondence.valid)
-                    reason = diag.correspondence.reason;
+                {
+                    reason = diag.correspondence.reason; fallback_cause=diag.correspondence.cause;
+                }
                 else
                 {
                     double alpha = computeCurrentWeight(dt, tau_);
@@ -208,14 +216,14 @@ namespace mark
                             (1 - alpha) *
                                 smoothing_->stable[diag.correspondence.current_to_previous[i]];
                     if (validateStableCorners(stable, current, size,
-                                              *config_.max_smoothing_deviation_px, reason))
+                                              *config_.max_smoothing_deviation_px, reason, &fallback_cause))
                     {
                         // 转float后再验证当前slot，随后屏幕排序仅影响对外输出，不改变内部slot。
                         auto published = stable;
                         for (auto &p : published)
                             p = cv::Point2f(p);
                         if (validateStableCorners(published, current, size,
-                                                  *config_.max_smoothing_deviation_px, reason))
+                                                  *config_.max_smoothing_deviation_px, reason, &fallback_cause))
                         {
                             auto order = orderScreenCycle(published, CornerConfig{}, reason);
                             if (order)
@@ -241,6 +249,7 @@ namespace mark
             {
                 diag.fell_back = true;
                 diag.reset_or_fallback_reason = reason;
+                diag.reset_or_fallback_cause = fallback_cause;
                 for (size_t i = 0; i < 4; ++i)
                     stable[i] = current.corners[i];
                 output = current;
@@ -253,6 +262,8 @@ namespace mark
                     ? "SMOOTHING_DISABLED"
                     : (!diag.association.matched_history ? diag.association.reason
                                                          : "SMOOTHING_HISTORY_EMPTY");
+            diag.reset_or_fallback_cause = !config_.stabilization_enabled ? TemporalCause::Other
+                : (!diag.association.matched_history ? diag.association.cause : TemporalCause::Other);
             diag.fell_back = config_.stabilization_enabled;
         }
         reference_ = Reference{current, stamp};

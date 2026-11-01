@@ -1,5 +1,7 @@
 # 文档索引
 
+现行代码首先读 [流程导读](flow-guide.md) 与 [瘦身修改报告](lean-changes.md)，再查 [数据流与接口](dataflow-interfaces.md)。以下各阶段验收数字与旧目录描述保留原时点含义；本轮没有关闭 G-01/G-02/G-03，也没有升级硬件资格。
+
 当前实现先读[README](../README.md)与[Block3当前状态](block3.md)，再查[预算及审批](block3_budget.md)、[适用边界](evidence/block3/05-L-observation-v5-v7/适用边界与已知局限.md)。Block3/4/5 已合入；算法基准为冻结v7，H已PASS，人工 V/Q 等验收仍待完成；Block4代码及G-B已批准落地，批准范围内Block4验收已完成，公共流程按预算就绪，未标注视频不报正确率。
 
 | 入口 | 内容 |

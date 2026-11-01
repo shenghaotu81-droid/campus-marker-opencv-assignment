@@ -102,3 +102,5 @@ video_filename 固定 overlay.mp4，display_probe_timeout_ms 为正整数。
 测试资源由目标的 `VISION_SOURCE_ROOT` 显式定位，不再按测试源文件的父目录层数猜配置根。夹具 CMake 优先链接父工程已有目标；独立构建仍由旧根装配，完整模块开关与递归导入消除留待布局搬迁。
 
 形状观察的兼容字段 `simplification_error` 为 `null`（unknown），内部不再保存恒零伪测量。记录枚举／重置计数编码归 diagnostics_types.hpp，计时器实现仅负责时间槽；编码字符串与饱和行为保持。
+
+B05 构建身份按目标实际源码、工程内 include、链接依赖及 CMake／生成模板输入登记，构建目录保存 `<target>-sources.manifest`。未链接的 G2/G4 或合成测试改动不会污染 detector／生成库身份；改变实际依赖会传播。现有根 CMake 仍作为实际构建输入整体登记，模块级拆分留待搬家。CLI 显式把自身身份交给离线会话；旧 runOffline 签名保持并使用离线库自身身份。

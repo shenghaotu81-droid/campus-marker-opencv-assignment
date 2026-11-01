@@ -1,4 +1,5 @@
 #include "mark/tracking_config.hpp"
+#include "config/value_reader.hpp"
 #include "core/observed_geometry_utils.hpp"
 #include <cmath>
 #include <stdexcept>
@@ -7,57 +8,31 @@ namespace mark::tracking
 {
 namespace
 {
-cv::FileNode require(const cv::FileNode &node, const char *key)
+cv::FileNode require(const cv::FileNode &node,const char *key)
 {
-    auto value = node[key];
-    if (value.empty())
-        throw std::runtime_error(std::string("G4_CONFIG_MISSING:") + key);
-    return value;
+    return config_value::required(node,key,[&](auto){throw std::runtime_error(std::string("G4_CONFIG_MISSING:")+key);});
 }
-
-std::string text(const cv::FileNode &node, const char *key)
+std::string text(const cv::FileNode &node,const char *key)
 {
-    const auto value = require(node, key);
-    if (!value.isString())
-        throw std::runtime_error(std::string("G4_CONFIG_EXPECT_STRING:") + key);
-    return static_cast<std::string>(value);
+    return config_value::text(require(node,key),[&](auto){throw std::runtime_error(std::string("G4_CONFIG_EXPECT_STRING:")+key);});
 }
-
-// 同时接受YAML数值和完整的数值字符串；拒绝31px/NaN等静默截断。
+void number_error(config_value::Error error)
+{
+    throw std::runtime_error(error==config_value::Error::PartialNumber?"G4_CONFIG_PARTIAL_NUMBER":
+        error==config_value::Error::NonFinite?"G4_CONFIG_NONFINITE":"G4_CONFIG_EXPECT_NUMBER");
+}
 double number(const cv::FileNode &node)
 {
-    double result = 0;
-    if (node.isInt() || node.isReal())
-        result = static_cast<double>(node);
-    else if (node.isString())
-    {
-        const auto token = static_cast<std::string>(node);
-        std::size_t used = 0;
-        result = std::stod(token, &used);
-        if (used != token.size())
-            throw std::runtime_error("G4_CONFIG_PARTIAL_NUMBER");
-    }
-    else
-        throw std::runtime_error("G4_CONFIG_EXPECT_NUMBER");
-    if (!std::isfinite(result))
-        throw std::runtime_error("G4_CONFIG_NONFINITE");
-    return result;
+    return config_value::number(node,config_value::NumericPolicy::CompleteNumericString,number_error);
 }
-
-bool flag(const cv::FileNode &node, const char *key)
+bool flag(const cv::FileNode &node,const char *key)
 {
-    auto value = require(node, key);
-    if (!value.isInt() || (static_cast<int>(value) != 0 && static_cast<int>(value) != 1))
-        throw std::runtime_error(std::string("G4_CONFIG_EXPECT_BOOL01:") + key);
-    return static_cast<int>(value) == 1;
+    return config_value::boolean(require(node,key),[&](auto){throw std::runtime_error(std::string("G4_CONFIG_EXPECT_BOOL01:")+key);});
 }
-
-std::optional<double> optional_number(const cv::FileNode &node, const char *key)
+std::optional<double> optional_number(const cv::FileNode &node,const char *key)
 {
-    const auto value = require(node, key);
-    if (value.isString() && static_cast<std::string>(value).empty())
-        return std::nullopt;
-    return number(value);
+    return config_value::optional_number(require(node,key),config_value::NumericPolicy::CompleteNumericString,
+        config_value::OptionalPolicy::EmptyStringIsUnknown,number_error);
 }
 
 void version(const cv::FileStorage &fs)

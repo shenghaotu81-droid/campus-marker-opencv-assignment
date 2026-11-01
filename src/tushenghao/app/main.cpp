@@ -1,3 +1,4 @@
+#include "core/cli_options.hpp"
 // 原App无参静默退出0且只支持check-config；严格解析离线两模式，实际算法由公共process完成。
 #include "mark/detector.hpp"
 #include "offline_runner.hpp"
@@ -97,9 +98,10 @@ int main(int argc, char **argv)
         if (args.count("--expected-frames"))
         {
             const auto &token = args.at("--expected-frames");
-            if (token.empty() || token.find_first_not_of("0123456789") != std::string::npos)
+            const auto value=mark::decimal_uint64(token);
+            if (!value)
                 throw std::runtime_error("expected-frames requires positive integer");
-            auto count = std::stoull(token);
+            auto count = *value;
             if (!count)
                 throw std::runtime_error("expected-frames out of range");
             app.offline.expected_frame_count = count;
@@ -110,7 +112,7 @@ int main(int argc, char **argv)
         if (purpose == "verification" && app.offline.mode != "debug")
             throw std::runtime_error("verification requires debug mode");
         return mark::runOffline(app, args["--video"], config, mark::ExecutionScope::Full, {},
-                                purpose);
+                                purpose, MARK_CODE_HASH);
     }
     catch (const std::exception &e)
     {

@@ -5,6 +5,6 @@
 namespace mark {
 CornerCorrespondence resolveCornerCorrespondence(const Detection&, const Detection& previous_raw, const TemporalConfig&);
 bool validateStableCorners(const std::array<cv::Point2d,4>&, const Detection& current,
-                           cv::Size original_size, double max_deviation_px, std::string& reason);
+                           cv::Size original_size, double max_deviation_px, std::string& reason, TemporalCause *cause = nullptr);
 cv::Rect2f boundingBoxFromCorners(const std::array<cv::Point2f,4>&);
 }
