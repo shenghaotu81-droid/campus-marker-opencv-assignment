@@ -1,3 +1,5 @@
+#include "assertions.hpp"
+#include "case_runner.hpp"
 /**
  * @file screen_order_test.cpp
  * @brief Step 4 orderScreenCorners() 单元测试。
@@ -23,11 +25,7 @@
 // 普通C++检查在Release仍有效；每用例失败由main独立记录，不引入测试框架。
 namespace
 {
-    void check(bool ok, const char *message)
-    {
-        if (!ok)
-            throw std::runtime_error(message);
-    }
+    using test_support::check;
 }
 
 #include <array>
@@ -325,8 +323,7 @@ namespace mark
 // 每个历史用例仍独立执行，失败不会跳过其它用例。
 int main()
 {
-    int failures = 0;
-    const std::pair<const char *, void (*)()> cases[] = {
+    const std::vector<std::pair<std::string, void (*)()>> cases = {
         {"StandardRectangle", mark::StandardRectangle},
         {"TiltedQuadrilateral", mark::TiltedQuadrilateral},
         {"DiamondNearTie", mark::DiamondNearTie},
@@ -335,18 +332,5 @@ int main()
         {"CollinearFails", mark::CollinearFails},
         {"DuplicatePointFails", mark::DuplicatePointFails},
     };
-    for (auto item : cases)
-    {
-        try
-        {
-            item.second();
-            std::cout << "PASS " << item.first << "\n";
-        }
-        catch (const std::exception &e)
-        {
-            ++failures;
-            std::cerr << "FAIL " << item.first << ": " << e.what() << "\n";
-        }
-    }
-    return failures ? 1 : 0;
+    return test_support::run(cases);
 }

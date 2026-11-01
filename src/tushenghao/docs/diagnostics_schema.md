@@ -100,3 +100,5 @@ video_filename 固定 overlay.mp4，display_probe_timeout_ms 为正整数。
 运行完成判断以 `RunOutcome` 交给记录器与终端，外部耗时及结果指纹以 `RunOverhead` 交给 `finishRun`；`summary()` 只读。manifest 边界仍编码原 coverage/completion_reason 键。执行范围是算法入口的显式参数，观察请求仅保存记录属性。主链 `runGeometrySteps` 依次输出预处理、组件、形状观察、生成/验证/补全批次；旧独立探针仍可用 PreparedFrame.components_ 适配，主链不回填该兼容字段。渲染适配器将阶段快照转换为原图点线 `RenderInput`，证据检查只做一次；实验网格 JSON 由 temporal_audit 编码，检测与渲染不消费实验结构。
 
 测试资源由目标的 `VISION_SOURCE_ROOT` 显式定位，不再按测试源文件的父目录层数猜配置根。夹具 CMake 优先链接父工程已有目标；独立构建仍由旧根装配，完整模块开关与递归导入消除留待布局搬迁。
+
+形状观察的兼容字段 `simplification_error` 为 `null`（unknown），内部不再保存恒零伪测量。记录枚举／重置计数编码归 diagnostics_types.hpp，计时器实现仅负责时间槽；编码字符串与饱和行为保持。

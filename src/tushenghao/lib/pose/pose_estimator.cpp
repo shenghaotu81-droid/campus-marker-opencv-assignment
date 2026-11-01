@@ -15,7 +15,7 @@ namespace
 bool passes_constraints(const RigidPose &p, const SelectionConfig &s)
 {
     cv::Matx33d r;
-    cv::Rodrigues(p.rvec_, r);  // rvec ↔ 旋转矩阵互转，passes_constraints 里用它取 R(2,2) 做法向量检查
+    if (s.min_normal_z_) cv::Rodrigues(p.rvec_, r);
     return (!s.min_z_m_ || (p.t_m_[2] >= *s.min_z_m_ && p.t_m_[2] <= *s.max_z_m_)) &&
            (!s.min_normal_z_ || (r(2, 2) >= *s.min_normal_z_ && r(2, 2) <= *s.max_normal_z_));
 }
@@ -255,17 +255,17 @@ PoseObservation PoseEstimator::estimate_planar(
             return out;
         }
         // eligible_ 计数，0 个 → NoSolution，1 个 → Unique，2+ → Ambiguous
-        std::vector<std::size_t> eligible_;
+        std::size_t eligible_count=0, sole_index=0;
         for (std::size_t i = 0; i < out.candidates_.size(); ++i)
             if (out.candidates_[i].eligible_)
-                eligible_.push_back(i);
-        if (eligible_.size() != 1)
+                { ++eligible_count; sole_index=i; }
+        if (eligible_count != 1)
         {
-            out.status_ = eligible_.empty() ? PoseStatus::NoSolution : PoseStatus::Ambiguous;
-            out.reasons_.push_back(eligible_.empty() ? "ALL_CANDIDATES_REJECTED" : "PLANAR_AMBIGUITY");
+            out.status_ = eligible_count == 0 ? PoseStatus::NoSolution : PoseStatus::Ambiguous;
+            out.reasons_.push_back(eligible_count == 0 ? "ALL_CANDIDATES_REJECTED" : "PLANAR_AMBIGUITY");
             return out;
         }
-        const auto index = eligible_.front();
+        const auto index = sole_index;
         const auto &selected = out.candidates_[index];
         out.selected_index_ = index;
         out.T_camera_target_ = selected.pose_;

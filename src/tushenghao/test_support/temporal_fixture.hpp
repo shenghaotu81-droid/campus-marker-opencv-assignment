@@ -1,5 +1,7 @@
 // r=2、偏离=20只是主动断言fixture，不能写生产YAML或视作预算审批。
 #pragma once
+#include "assertions.hpp"
+#include "case_runner.hpp"
 #include "pipeline/temporal_stabilizer.hpp"
 #include "corners/screen_order.hpp"
 #include <cmath>
@@ -8,11 +10,8 @@
 
 namespace temporal_fixture
 {
-    inline void check(bool ok, const std::string &message)
-    {
-        if (!ok)
-            throw std::runtime_error(message);
-    }
+    using test_support::check;
+    using test_support::run;
 
     inline void near(double a, double b, double eps = 1e-5)
     {
@@ -85,20 +84,4 @@ namespace temporal_fixture
                a.quality_flags == b.quality_flags;
     }
 
-    inline int run(const std::vector<std::pair<std::string, void (*)()>> &cases)
-    {
-        int failures = 0;
-        for (const auto &c : cases)
-            try
-            {
-                c.second();
-                std::cout << "PASS " << c.first << '\n';
-            }
-            catch (const std::exception &e)
-            {
-                ++failures;
-                std::cerr << "FAIL " << c.first << ": " << e.what() << '\n';
-            }
-        return failures ? 1 : 0;
-    }
 }

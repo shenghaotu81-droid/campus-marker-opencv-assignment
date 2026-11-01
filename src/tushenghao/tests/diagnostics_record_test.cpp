@@ -1,4 +1,6 @@
+#include "case_runner.hpp"
 #include "observability_fixture.hpp"
+#include "temporal_fixture.hpp"
 #include "pipeline/diagnostics_recorder.hpp"
 #include "pipeline/stabilize_stage.hpp"
 #include "common/frame_record_reader.hpp"
@@ -331,6 +333,8 @@ namespace
         d.process(frame(0, 0, true));
         auto r = DetectorDiagnosticsAccess::take(d);
         auto j = readJson(serializeFrameRecord(r));
+        for (const auto &observation : j.at("details").at("observations").array)
+            check(observation.at("simplification_error").null(), "unmeasured simplification error is not null");
         const auto &evidence = j.at("details").at("decode").at("measurements").array[0].array[0];
         const auto &old = r.details->decoded.measurements[0].evidence_[0];
         check(evidence.at("evidence_id").text == old.stable_id_ &&
@@ -529,7 +533,7 @@ namespace
 
 int main()
 {
-    return temporal_fixture::run({{"F05_export_contract", export_contract},
+    return test_support::run({{"F05_export_contract", export_contract},
                                   {"R01", escapes},
                                   {"R02", finite},
                                   {"R03", lifecycle},

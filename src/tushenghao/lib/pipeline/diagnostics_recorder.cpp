@@ -353,7 +353,7 @@ namespace mark
                 }
                 out << "],\"supported_classes\":";
                 strings(out, o.supported_classes_);
-                out << ",\"simplification_error\":" << o.simplification_error_
+                out << ",\"simplification_error\":null"
                     << ",\"anchor_vertex_index\":";
                 optional_number(out, o.anchor_vertex_index_);
                 out << ",\"turns\":[";

@@ -133,14 +133,14 @@ flowchart TD
 - **调用位置**：`decode_stage.cpp:237` 的 `observeShapes`，其中调用 `observeLTopologies`。
 - **输入**：`WhiteComponent.contour_/component_id_`。
 - **输出**：`vector<ShapeObservation>`：来源 ID、简化多边形、凸凹转折、候选类别和多个 `LTopologyCandidate`。合法 L 候选保存真实六边轮廓和唯一凹点；不能仅凭顶点数把短 M 当 L。`supported_classes_` 是搜索候选类别，不是公开 `Detection.category`。
-- **关键参数（D）**：`geometry.approximation_epsilon=2.0` 工作图像素。L 观察固定尝试其 `1、0.5、0.75、1.25、1.5、2` 倍，比例是源码规则，没有另设 YAML 开关。`simplification_error_` 当前写为 `0.0` 占位。
+- **关键参数（D）**：`geometry.approximation_epsilon=2.0` 工作图像素。L 观察固定尝试其 `1、0.5、0.75、1.25、1.5、2` 倍，比例是源码规则，没有另设 YAML 开关。内部不再保存未测量的简化误差；记录兼容字段 `simplification_error` 固定为 `null`，表示 unknown。
 
 ### 3.7 生成三 L 父假设
 
 - **实现文件**：[lib/geometry/geometry_matcher.hpp](../lib/geometry/geometry_matcher.hpp)/[geometry_matcher.cpp](../lib/geometry/geometry_matcher.cpp)；[geometry_anchor_evidence.hpp](../lib/geometry/geometry_anchor_evidence.hpp)/[geometry_anchor_evidence.cpp](../lib/geometry/geometry_anchor_evidence.cpp)。
 - **调用位置**：`decode_stage.cpp:238` 的 `generateGeometryHypotheses`。
 - **输入**：`ShapeObservation.source_component_id_/supported_classes_/l_topology_candidates_`；`MarkerGeometry.polygons` 的三 L 锚点。
-- **输出**：`GeometryBatch.hypotheses_`。每个假设包含三个 `ComponentAssignment`、模型到工作图的仿射矩阵、未计算残差 `-1`、待验证完整性和来源证据。组合枚举三观测 L 对三模型 L 的六种排列，再通过 `collect_observed_l_anchors/fitAnchorTuple` 枚举合法实际凹点元组。生产入口不直接采用旧 `fitModelToImageAffine` 的首凹点捷径。
+- **输出**：`GeometryBatch.hypotheses_`。每个假设包含三个 `ComponentAssignment`、模型到工作图的仿射矩阵、未计算残差 `-1`、待验证完整性和来源证据。组合枚举三观测 L 对三模型 L 的六种排列，再通过 `collect_observed_l_anchors/fitAnchorTuple` 枚举合法实际凹点元组。生产入口不直接采用探针局部 `fitFirstConcaveAnchorAffine` 的首凹点对照路径。
 - **关键参数（D）**：`geometry.max_hypothesis_count=1000`，约束对应组合及实际锚点元组搜索；无效仿射尝试也计入元组预算。仍有未检查候选时触顶，设置 `resource_truncated_=true`。
 
 ### 3.8 验证父几何假设
@@ -484,10 +484,10 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | `WhiteComponent.touches_border_: bool` | 工作图轮廓是否触边 | extractWhiteComponents | 父完整性、补全候选拒绝 |
 | `ShapeObservation.source_component_id_: size_t` | 来源白片 ID；默认最大 size_t 只用于兼容未显式填 ID 的旧 fixture | observeShapes 复制白片 ID | matcher 回查真实来源、锚点证据 |
 | `ShapeObservation.l_topology_candidates_: vector<LTopologyCandidate>` | 同一白片的合法 L 多拓扑候选 | observeLTopologies 经 observeShapes 存入 | collect_observed_l_anchors，生产三 L 拟合 |
-| `ShapeObservation.simplified_polygon_: vector<Point2f>` | 基础简化后的工作图多边形 | observeShapes | 基础转折、诊断；旧 fitModelToImageAffine 可读 |
+| `ShapeObservation.simplified_polygon_: vector<Point2f>` | 基础简化后的工作图多边形 | observeShapes | 基础转折、诊断；诊断的 fitFirstConcaveAnchorAffine 可读 |
 | `ShapeObservation.turns_: vector<TurnFeature>` | 基础多边形各顶点凸/凹属性 | observeShapes | 基础 M/S 候选类别、诊断；不直接授权生产 L 拟合锚点 |
 | `ShapeObservation.anchor_vertex_index_: optional<size_t>` | 基础多边形的首凹点下标，无凹点为空 | observeShapes | 旧仿射 helper、诊断；生产元组搜索用明确 L 拓扑 |
-| `ShapeObservation.simplification_error_: double` | 观察误差预留；当前固定 0.0 | observeShapes 占位赋值 | 诊断，不作有效精度证据 |
+| 记录中的 `simplification_error: null` | 未测量，无内部伪数值成员 | serializer 兼容编码 | 下游应视作 unknown |
 | `ShapeObservation.supported_classes_: vector<string>` | L/M/S 候选类别；有明确 L 候选则 L，否则按基础转折数给 M/S | observeShapes | matcher 搜索剪枝、诊断，不填公开 category |
 | `TurnFeature.vertex_index_: size_t` | 基础简化多边形顶点下标 | observeShapes | 转折锚点索引和诊断 |
 | `TurnFeature.type_: TurnType` | CONVEX/CONCAVE | observeShapes 的 classifyTurn | 候选类别、首凹点、诊断 |
@@ -867,7 +867,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 - **Detection 的 category 当前为 Unknown，confidence 为空，marker_code 为空——下游不得当作有效证据使用。** 有效的 L/M/S 候选类别或六片模型 ID 都不等于公开类别/编码。
 - **FrameResult 的时间源当前为 Unknown——时间戳字段已预留但未填充真实值。** 就当前代码而言，FrameResult 只有 timestamp_us，没有时间源字段；来源由 FrameInput/FrameStamp 和 FrameRecord 表达。App 已按帧号/FPS 写入推算数值，公共结果原样携带，缺少的是真实捕获时钟时间及其来源，不能把“未填真实值”理解为每帧数值恒为 0。时序模块目前使用这些输入数值算 dt；steady_clock 的处理耗时属于另一种计时。
 - `Detection.quality_flags` 当前为 0，未建立有效质量位定义；其位语义未确认。
-- `ShapeObservation.simplification_error_` 当前固定 0.0，仍是占位，不证明零简化误差。
+- `simplification_error` 保留为记录兼容字段，值为 `null`，不表示零简化误差。
 - 生产 `SemanticDisplaySample` 输入恒为空，故 `FrameResult.display_state` 当前为空；DisplayHistory 类已实现不代表生产有文字识别来源。
 - FrameRecord 的实时覆盖计数、入队时间、端到端延迟及时钟域未填，适用性为 `not_applicable`；不得用作实时性能证据。
 
@@ -880,7 +880,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | preprocess 二值图注释 | 当前 PreparedFrame.image_ 是 BGR8 resize 图；工作图二值化在 geometry_observation，原图二值化在 OriginalContourIndex。 |
 | temporal | stabilization_enabled=1，TemporalStabilizer 和 DisplayHistory 已实现。生产文字源缺失另行说明。 |
 | 旧角点参数 | 历史三个无消费者旋钮已删除且旧键拒绝；当前原图定位路径保持既有搜索/截断检查；有效门控见 3.10。 |
-| 旧首凹点 helper | 生产三 L 生成使用明确 L 拓扑支持的全部合法锚点元组；不能按仍保留的 fitModelToImageAffine/anchor_vertex_index 字段推断只取首凹点。 |
+| 旧首凹点 helper | 生产三 L 生成使用明确 L 拓扑支持的全部合法锚点元组；首凹点 helper 只属于 parent_diagnose 的 fitFirstConcaveAnchorAffine 对照探针；生产按 generateThreeLAssignments 枚举，不按 anchor_vertex_index 推断只取首凹点。 |
 | 112 顺序 | 生产 FastRecovery 有四项周期快速前置及重复的完整路由组合，真实顺序以 §5 展开的 run 代码为准。 |
 
 ### 6.3 参考缺失及未确认范围

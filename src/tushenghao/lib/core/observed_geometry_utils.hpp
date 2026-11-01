@@ -8,6 +8,16 @@
 
 namespace mark::observed
 {
+    inline cv::Rect2f four_corner_bounds(const std::array<cv::Point2f,4> &points)
+    {
+        float xmin=points[0].x,xmax=xmin,ymin=points[0].y,ymax=ymin;
+        for(const auto &point:points) {
+            xmin=std::min(xmin,point.x);xmax=std::max(xmax,point.x);
+            ymin=std::min(ymin,point.y);ymax=std::max(ymax,point.y);
+        }
+        return {xmin,ymin,xmax-xmin,ymax-ymin};
+    }
+
     // 判断像素/变换有限，避免NaN越过后续比较。
     inline bool finite(cv::Point2d p)
     {

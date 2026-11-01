@@ -80,6 +80,33 @@ Json arcMetrics(const std::vector<cv::Point> &contour, const mark::CornerConfig 
     return rows;
 }
 
+enum class GateProbe { Frozen, Residual, Span, Points, Direction, Position, Corner, Extension, Connection, AllNumeric };
+// V02：仅诊断副本关闭指定门限，数值、顺序和标签保持既有实验定义。
+static mark::CornerConfig makeProbeConfig(const mark::CornerConfig &base, GateProbe probe)
+{
+    const int g = static_cast<int>(probe);
+    auto c = base;
+    auto &b = *c.observation_budget_;
+    double high = std::numeric_limits<double>::max();
+    if (g == 1 || g == 9)
+        c.max_line_fit_error_ = high;
+    if (g == 2 || g == 9)
+        b.min_support_span_px = .001;
+    if (g == 3 || g == 9)
+        c.min_line_points_ = 3;
+    if (g == 4 || g == 9)
+        b.max_edge_direction_diff_deg = 90;
+    if (g == 5 || g == 9)
+        b.max_edge_position_distance_px = high;
+    if (g == 6 || g == 9)
+        c.max_corner_error_ = high;
+    if (g == 7 || g == 9)
+        b.max_support_extension_px = high;
+    if (g == 8 || g == 9)
+        b.max_turn_connection_length_px = high;
+    return c;
+}
+
 int main(int argc, char **argv)
 {
     try
@@ -134,25 +161,7 @@ int main(int argc, char **argv)
                                            "all_numeric_off"};
                     for (int g = 0; g < 10; ++g)
                     {
-                        auto c = cfg.corner_;
-                        auto &b = *c.observation_budget_;
-                        double high = std::numeric_limits<double>::max();
-                        if (g == 1 || g == 9)
-                            c.max_line_fit_error_ = high;
-                        if (g == 2 || g == 9)
-                            b.min_support_span_px = .001;
-                        if (g == 3 || g == 9)
-                            c.min_line_points_ = 3;
-                        if (g == 4 || g == 9)
-                            b.max_edge_direction_diff_deg = 90;
-                        if (g == 5 || g == 9)
-                            b.max_edge_position_distance_px = high;
-                        if (g == 6 || g == 9)
-                            c.max_corner_error_ = high;
-                        if (g == 7 || g == 9)
-                            b.max_support_extension_px = high;
-                        if (g == 8 || g == 9)
-                            b.max_turn_connection_length_px = high;
+                        auto c = makeProbeConfig(cfg.corner_, static_cast<GateProbe>(g));
                         auto found = mark::resolveObservedCorners(frame, parent, model, c);
                         auto stage = mark::decodeStage(frame, batch, model, c);
                         Json gate = {{"branch", h},
@@ -224,25 +233,7 @@ int main(int argc, char **argv)
                             // 直接记录单角每门限隔离，避免resolver首失败掩盖后续物理角。
                             for (int g = 0; g < 10; ++g)
                             {
-                                auto c = cfg.corner_;
-                                auto &b = *c.observation_budget_;
-                                double high = std::numeric_limits<double>::max();
-                                if (g == 1 || g == 9)
-                                    c.max_line_fit_error_ = high;
-                                if (g == 2 || g == 9)
-                                    b.min_support_span_px = .001;
-                                if (g == 3 || g == 9)
-                                    c.min_line_points_ = 3;
-                                if (g == 4 || g == 9)
-                                    b.max_edge_direction_diff_deg = 90;
-                                if (g == 5 || g == 9)
-                                    b.max_edge_position_distance_px = high;
-                                if (g == 6 || g == 9)
-                                    c.max_corner_error_ = high;
-                                if (g == 7 || g == 9)
-                                    b.max_support_extension_px = high;
-                                if (g == 8 || g == 9)
-                                    b.max_turn_connection_length_px = high;
+                        auto c = makeProbeConfig(cfg.corner_, static_cast<GateProbe>(g));
                                 auto x = mark::fitObservedEdgePair(observed.contour, edges, c);
                                 Json gate = {{"gate", gates[g]},
                                              {"success", bool(x.evidence)},

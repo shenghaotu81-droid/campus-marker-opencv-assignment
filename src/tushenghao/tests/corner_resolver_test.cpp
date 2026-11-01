@@ -1,3 +1,5 @@
+#include "assertions.hpp"
+#include "case_runner.hpp"
 // 输入真实BGR fixture，隔离assignment后调用冻结签名；输出断言通过/失败。
 // 原“全黑图+手填轮廓”的成功用例改为反证，新增真正画面正例，保留旧负例目的。
 #include "block3_fixture.hpp"
@@ -9,11 +11,7 @@
 
 namespace
 {
-    void check(bool ok, const char *message)
-    {
-        if (!ok)
-            throw std::runtime_error(message);
-    }
+    using test_support::check;
 
     mark::CornerResolution resolve(const fixture::Scene &s,
                                    mark::CornerConfig c = fixture::cornerConfig())
@@ -226,7 +224,7 @@ namespace
 
 int main()
 {
-    const std::pair<const char *, void (*)()> cases[] = {
+    const std::vector<std::pair<std::string, void (*)()>> cases = {
         {"DirectCornerReturnsSuccess", direct},
         {"OriginalScaleAndReadOnly", scale},
         {"BlackOriginalRejectsFakeContour", blackImage},
@@ -243,19 +241,5 @@ int main()
         {"TruncatedCornerFails", truncated},
         {"InvalidAffineFails", invalidAffine},
         {"MissingBudgetIsConfigError", missingBudget}};
-    int failures = 0;
-    for (auto item : cases)
-    {
-        try
-        {
-            item.second();
-            std::cout << "PASS " << item.first << '\n';
-        }
-        catch (const std::exception &e)
-        {
-            ++failures;
-            std::cerr << "FAIL " << item.first << ": " << e.what() << '\n';
-        }
-    }
-    return failures ? 1 : 0;
+    return test_support::run(cases);
 }

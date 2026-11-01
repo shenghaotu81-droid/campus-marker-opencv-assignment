@@ -8,6 +8,7 @@
 #include "common/file_digest.hpp"
 #include <nlohmann/json.hpp>
 #include <opencv2/videoio.hpp>
+#include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <filesystem>
@@ -41,6 +42,71 @@ namespace
         return result;
     }
 }
+
+// V02：只为首凹点对照拟合仿射，正式生成器仍枚举全部合法锚点。
+    static cv::Mat fitFirstConcaveAnchorAffine(const std::vector<mark::ComponentAssignment> &assignment,
+                                  const std::vector<mark::ShapeObservation> &observations,
+                                  const mark::MarkerGeometry &model_geometry)
+    {
+        std::vector<cv::Point2f> model_points;
+
+        std::vector<cv::Point2f> image_points;
+
+        for (const auto &item : assignment)
+        {
+
+            auto model_it =
+                std::find_if(model_geometry.polygons.begin(), model_geometry.polygons.end(),
+                             [&](const mark::GeometryPolygon &polygon)
+                             {
+                                 return polygon.id == item.model_part_id_;
+                             });
+
+            if (model_it == model_geometry.polygons.end())
+            {
+                continue;
+            }
+
+            const mark::ShapeObservation *source = nullptr;
+            for (size_t i = 0; i < observations.size(); ++i)
+            {
+                const auto id = observations[i].source_component_id_ == std::numeric_limits<size_t>::max()
+                                  ? i : observations[i].source_component_id_;
+                if (id != item.component_id_) continue;
+                if (source) throw std::invalid_argument("DUPLICATE_OBSERVATION_SOURCE_ID");
+                source = &observations[i];
+            }
+            if (!source)
+                continue;
+            const auto &observation = *source;
+
+            if (!observation.anchor_vertex_index_.has_value())
+            {
+                continue;
+            }
+
+            const std::size_t vertex_index = observation.anchor_vertex_index_.value();
+
+            if (vertex_index >= observation.simplified_polygon_.size())
+            {
+                continue;
+            }
+
+            model_points.push_back(model_it->anchor);
+
+            image_points.push_back(observation.simplified_polygon_[vertex_index]);
+        }
+
+
+        if (model_points.size() < 3)
+        {
+            return cv::Mat();
+        }
+
+
+        return cv::estimateAffine2D(model_points, image_points);
+    }
+
 
 // 归档真实工作图多拓扑、原凹点与全部去重锚点；first_anchor仅作旧行为对照。
 Json observationsJson(const std::vector<mark::WhiteComponent> &cs,
@@ -154,7 +220,7 @@ Json alternativeAnchors(const std::vector<mark::ShapeObservation> &os,
 {
     bool truncated = false;
     const auto positions = observationPositions(os);
-    auto combos = mark::generateSixComponentCombinations(os, m, cfg, truncated);
+    auto combos = mark::generateThreeLAssignments(os, m, cfg, truncated);
     size_t tried = 0, passed = 0, proper = 0;
     double best = INFINITY;
     Json witness = nullptr, properWitness = nullptr;
@@ -177,11 +243,11 @@ Json alternativeAnchors(const std::vector<mark::ShapeObservation> &os,
                     copy.at(positions.at(as[0].component_id_)).anchor_vertex_index_ = x;
                     copy.at(positions.at(as[1].component_id_)).anchor_vertex_index_ = y;
                     copy.at(positions.at(as[2].component_id_)).anchor_vertex_index_ = z;
-                    auto transform = mark::fitModelToImageAffine(as, copy, m);
+                    auto transform = fitFirstConcaveAnchorAffine(as, copy, m);
                     if (transform.empty())
                         continue;
                     ++tried;
-                    auto h = mark::buildGeometryHypothesis(as, transform, copy, m);
+                    auto h = mark::buildGeometryHypothesis(as, transform);
                     auto metrics = hypothesisMetrics(h, m, cs);
                     double residual = metrics["worst_residual"];
                     if (residual < best)

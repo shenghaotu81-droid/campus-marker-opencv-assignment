@@ -1,3 +1,4 @@
+#include "core/observed_geometry_utils.hpp"
 #include "pipeline/temporal_geometry.hpp"
 #include <algorithm>
 #include <cmath>
@@ -134,14 +135,6 @@ namespace mark
 
     cv::Rect2f boundingBoxFromCorners(const std::array<cv::Point2f, 4> &p)
     {
-        float x = p[0].x, y = p[0].y, x1 = x, y1 = y;
-        for (auto q : p)
-        {
-            x = std::min(x, q.x);
-            y = std::min(y, q.y);
-            x1 = std::max(x1, q.x);
-            y1 = std::max(y1, q.y);
-        }
-        return {x, y, x1 - x, y1 - y};
+        return observed::four_corner_bounds(p);
     }
 }

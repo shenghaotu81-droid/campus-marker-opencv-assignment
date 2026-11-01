@@ -45,7 +45,7 @@ build/block3-fixture/block3_resources > build/resources-new.jsonl
 ```
 
 - block3_verify正式H：退出0为H门槛PASS，2为H未达门槛，1为输入/配置错误；C退出0是诊断回归完成，不冒称独立H。
-- verify的 `--diagnose-stage`、`--diagnose-one`、`--candidate-config`是辅助模式，不用它们代替默认正式验证。
+- verify的 `--diagnose-stage`、`--diagnose-one`是辅助模式，不用它们代替默认正式验证。
 - report_verification.py退出0表示报告写入完成，是否通过须读输出JSON中的H_acceptance；无视频标签时recall/Q保持null。
 - decode_audit退出0表示解码/请求帧处理完成，Detection数量不等于正确率；公共状态为NOT_EVALUATED，工具未调用process。
 - parent/video诊断中的isolated输出保留diagnostic_only，不用于宣传正式成功率。
@@ -61,7 +61,7 @@ build/block4/temporal_audit --experiment-grid --noise-csv build/block4-evidence/
 
 视频模式三参数均必填。实验模式用`--experiment-grid`与必填`--noise-csv`替代`--video`，`--config/--output`仍必填；CSV首列为C case_work_id，后八列为物理四角dx/dy，固定顺序至少32行。工具固定32次调用/段、7/14/28ms、100px方框、平移与旋转独立对照、已知/未知方向及有/无扰动、四档偏离，不从视频调值。r必须由独立EXPERIMENTAL配置提供；偏离档0.5/1/2/4仅用于网格，不写生产。原始grid行包含配置/扰动/模型/代码hash，统计方法、支持范围和可重放命令见[Block4预算](../docs/block4_budget.md)。
 
-输出父目录可创建，已有输出或`.effective.yaml`默认拒绝，显式`--overwrite`才覆盖指定产物；输入/配置/记录失败退出1，成功完成退出0。生产缺预算允许记录raw阶段但共享最终结果为NOT_READY、空有效载荷，不把实验配置当批准配置。两模式都不实现Block5计时框架。
+历史 Block4 输出协议曾允许 `--overwrite` 指定产物；现行 temporal_audit 已删除该无效选项，已有目录始终拒绝覆盖。输入/配置/记录失败退出1，成功完成退出0。生产缺预算允许记录raw阶段但共享最终结果为NOT_READY、空有效载荷，不把实验配置当批准配置。两模式都不实现Block5计时框架。
 
 ## Block5 当前工具接口
 
@@ -75,3 +75,5 @@ build/block4/temporal_audit --experiment-grid --noise-csv build/block4-evidence/
 统一FrameRecord、serializer与统计；没有公共process的工具不能给14ms性能结论。原H fixture复用输入，不重新生成网格，历史工具写盘缺口与本轮验证见[验收](../docs/block5_acceptance.md)；工具退出0也必须核产物。
 
 `validation/recovery112_check.py` 现行入口必须显式提供 `--source-root`、`--input-manifest`、`--output-root`、`--build-logs`，再选 `run LABEL BINARY EXPECTED` 或 `summarize`。输入 manifest 包含 input_root、video、config、failed_ids_file、expected_frames、expected_runs、expected_test_targets、historical_fast、historical_synthetic、protected_before、readme_current、readme_original、legacy_source_prefix；路径应明确指向保留的冻结输入/原文，legacy_source_prefix 仅适配旧 manifest 的来源键。缺输入会失败，输出目录不能指向历史 evidence 原件。CTest 按目标名称集合及全过摘要检查，允许新增测试；全部 Python 证据条件在普通与 `-O` 模式均执行。
+
+历史静态 recipe 导出 `--candidate-config` 和 temporal_audit 的无效 `--overwrite` 已删除，现行入口明确拒绝；已有目录仍禁止覆盖，measure 与独立验证入口保留。

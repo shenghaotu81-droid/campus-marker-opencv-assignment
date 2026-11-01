@@ -1,3 +1,6 @@
+#include "temporal_fixture.hpp"
+#include "assertions.hpp"
+#include "case_runner.hpp"
 // Path A 集成与反证：前置资格不允许豁免合法父的角点取证失败。
 #include "observability_fixture.hpp"
 #include "geometry/geometry_anchor_evidence.hpp"
@@ -15,7 +18,7 @@ using namespace mark;
 
 namespace
 {
-    using temporal_fixture::check;
+    using test_support::check;
 
     struct Chain
     {
@@ -218,5 +221,5 @@ namespace
 
 int main()
 {
-    return temporal_fixture::run({{"A10", a10}, {"A11", a11}, {"A12", a12}, {"A13", a13}});
+    return test_support::run({{"A10", a10}, {"A11", a11}, {"A12", a12}, {"A13", a13}});
 }

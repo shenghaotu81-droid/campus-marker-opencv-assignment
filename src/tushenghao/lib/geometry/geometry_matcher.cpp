@@ -123,7 +123,7 @@ namespace mark
      * 三个 L 搜索 + 六种模型对应。
      */
     std::vector<std::vector<ComponentAssignment>>
-    generateSixComponentCombinations(const std::vector<ShapeObservation> &observations,
+    generateThreeLAssignments(const std::vector<ShapeObservation> &observations,
                                      const MarkerGeometry &model_geometry,
                                      const GeometryConfig &config, bool &resource_truncated)
     {
@@ -244,86 +244,13 @@ namespace mark
      *
      * 拟合二维仿射。
      */
-    cv::Mat fitModelToImageAffine(const std::vector<ComponentAssignment> &assignment,
-                                  const std::vector<ShapeObservation> &observations,
-                                  const MarkerGeometry &model_geometry)
-    {
-        std::vector<cv::Point2f> model_points;
-
-        std::vector<cv::Point2f> image_points;
-
-        for (const auto &item : assignment)
-        {
-
-            auto model_it =
-                std::find_if(model_geometry.polygons.begin(), model_geometry.polygons.end(),
-                             [&](const GeometryPolygon &polygon)
-                             {
-                                 return polygon.id == item.model_part_id_;
-                             });
-
-            if (model_it == model_geometry.polygons.end())
-            {
-                continue;
-            }
-
-            const auto *source = findObservation(observations, item.component_id_);
-            if (!source)
-                continue;
-            const auto &observation = *source;
-
-            /*
-             * 没有 anchor 的观测不能参与 affine。
-             *
-             * 不允许：
-             * - 质心代替
-             * - bbox 中心代替
-             */
-            if (!observation.anchor_vertex_index_.has_value())
-            {
-                continue;
-            }
-
-            const std::size_t vertex_index = observation.anchor_vertex_index_.value();
-
-            if (vertex_index >= observation.simplified_polygon_.size())
-            {
-                continue;
-            }
-
-            model_points.push_back(model_it->anchor);
-
-            image_points.push_back(observation.simplified_polygon_[vertex_index]);
-        }
-
-        // debug
-        // std::cerr << "[DEBUG] affine points: " << model_points.size() << std::endl;
-
-        /*
-         * 二维仿射至少需要三个点。
-         */
-        if (model_points.size() < 3)
-        {
-            return cv::Mat();
-        }
-
-        // debug
-        // cv::Mat result = cv::estimateAffine2D(model_points, image_points);
-        // std::cerr << "[DEBUG] affine empty: " << result.empty() << std::endl;
-        // return result;
-
-        return cv::estimateAffine2D(model_points, image_points);
-    }
-
     /*
      * Step 6.4：
      *
      * 生成 GeometryHypothesis。
      */
     GeometryHypothesis buildGeometryHypothesis(const std::vector<ComponentAssignment> &assignment,
-                                               const cv::Mat &affine_transform,
-                                               const std::vector<ShapeObservation> &observations,
-                                               const MarkerGeometry &model_geometry)
+                                               const cv::Mat &affine_transform)
     {
         GeometryHypothesis hypothesis;
 
@@ -357,7 +284,7 @@ namespace mark
 
         bool resource_truncated = false;
 
-        auto combinations = generateSixComponentCombinations(observations, model_geometry, config,
+        auto combinations = generateThreeLAssignments(observations, model_geometry, config,
                                                              resource_truncated);
 
         if (resource_truncated)
@@ -415,7 +342,7 @@ namespace mark
                         return;
                     }
                     auto h =
-                        buildGeometryHypothesis(combination, affine, observations, model_geometry);
+                        buildGeometryHypothesis(combination, affine);
                     std::ostringstream proof;
                     proof << "observed concave anchors:";
                     for (auto p : tuple)

@@ -11,7 +11,6 @@ add_library(mark_detector
     lib/pipeline/diagnostics_recorder.cpp
     lib/pipeline/run_report.cpp
     lib/core/marker_geometry.cpp
-    lib/core/geometry_utils.cpp
     lib/config/config.cpp
     lib/preprocess/preprocess.cpp
     lib/geometry/geometry_matcher.cpp
@@ -59,7 +58,7 @@ add_executable(marker_app app/main.cpp)
 target_link_libraries(marker_app PRIVATE mark_offline)
 
 enable_testing()
-# 保持原16个CTest程序；新增Block3主动检查在Release也会报告失败。
+# 活跃测试逐项注册；删除的空测试与无业务消费者 helper 专属测试不计入覆盖。
 set(MARK_TEST_NAMES
     diagnostics_record_test
     debug_renderer_test
@@ -71,12 +70,10 @@ set(MARK_TEST_NAMES
     block3_contract_regression_test
     assignment_completion_test
     corner_edge_fit_test
-    config_contract_test
     config_error_test
     config_roundtrip_test
     detector_contract_test
     geometry_model_test
-    geometry_utils_test
     geometry_matcher_test
     manual_validation_check
     corner_resolver_test

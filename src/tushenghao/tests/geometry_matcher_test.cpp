@@ -1,3 +1,5 @@
+#include "assertions.hpp"
+#include "case_runner.hpp"
 #include "geometry/geometry_matcher.hpp"
 #include "geometry/geometry_observation.hpp"
 #include "geometry/geometry_validation.hpp"
@@ -7,7 +9,7 @@
 #include <set>
 #include <limits>
 #include <iomanip>
-using temporal_fixture::check;
+using test_support::check;
 
 namespace
 {
@@ -266,7 +268,7 @@ namespace
 
 int main()
 {
-    return temporal_fixture::run({{"actual_model_three_l", real_three_l},
+    return test_support::run({{"actual_model_three_l", real_three_l},
                                   {"G01_actual_zero", residualZero},
                                   {"G02_one_work_pixel", residualOne},
                                   {"G03_maximum_not_global_mean", residualMaximum},

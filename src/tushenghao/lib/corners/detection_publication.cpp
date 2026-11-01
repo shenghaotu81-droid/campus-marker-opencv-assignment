@@ -1,3 +1,4 @@
+#include "core/observed_geometry_utils.hpp"
 #include "corners/detection_publication.hpp"
 #include "corners/screen_order.hpp"
 #include <algorithm>
@@ -66,16 +67,7 @@ namespace mark
         detection.category = MarkCategory::Unknown;
         for (size_t i = 0; i < 4; ++i)
             detection.corners[i] = cv::Point2f(order->screen_points[i]);
-        float xmin = detection.corners[0].x, xmax = xmin, ymin = detection.corners[0].y,
-              ymax = ymin;
-        for (auto p : detection.corners)
-        {
-            xmin = std::min(xmin, p.x);
-            xmax = std::max(xmax, p.x);
-            ymin = std::min(ymin, p.y);
-            ymax = std::max(ymax, p.y);
-        }
-        detection.bbox = {xmin, ymin, xmax - xmin, ymax - ymin};
+        detection.bbox = observed::four_corner_bounds(detection.corners);
         if (orientation_unique)
             detection.attributes.orientation = order->input_to_screen;
         return detection;

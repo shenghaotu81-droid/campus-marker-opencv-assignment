@@ -285,28 +285,8 @@ int main(int argc, char **argv)
             }
             return 0;
         }
-        // 可review候选先由强类型导出，只写新文件，不改生产配置；审批在调用方记录。
-        if (argc == 3 && std::string(argv[1]) == "--candidate-config")
-        {
-            if (sg::fs::exists(argv[2]))
-                throw std::runtime_error("refusing overwrite candidate config");
-            auto app = mark::loadConfig(DETECTOR_CONFIG);
-            auto &c = app.detector_config.corner_;
-            c.min_line_points_ = 10;
-            c.max_line_fit_error_ = 0.5;
-            c.max_corner_error_ = 1.5;
-            c.approximation_epsilon_ = 1;
-            c.min_intersection_angle_deg_ = 5;
-            c.observation_budget_ = mark::CornerObservationBudget{1, 2, 4.5, 2, 13.5, 9.5, 14};
-            app.detector_config.assignment_completion_ =
-                mark::AssignmentCompletionConfig{3.5, 3, 30, 0.045, 1, 128, 4096, 64};
-            mark::writeEffectiveConfig(app, argv[2]);
-            std::cout << "CANDIDATE_ONLY " << argv[2] << '\n';
-            return 0;
-        }
-        if (argc != 4 && argc != 5)
-            throw std::runtime_error(
-                "用法: block3_verify <C/H目录> <冻结配置> <新jsonl> [C诊断原图上限]");
+        if (argc > 1 && std::string(argv[1]) == "--candidate-config")
+            throw std::runtime_error("unknown option: --candidate-config (historical recipe removed)");
         sg::fs::path dir = argv[1], path = argv[3];
         if (sg::fs::exists(path))
             throw std::runtime_error("refusing overwrite");

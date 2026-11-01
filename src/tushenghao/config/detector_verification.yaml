@@ -26,7 +26,7 @@ marker_geometry_path: "marker_geometry.yaml"
 detector:
   mode: SegmentedMark
 
-  # 本来不应该放这里，以后重构再说吧
+  # D11：原图角点恢复预算；与工作图几何观察分别配置。
   corner:
 
     # 拟合单条直线需要的最少观测点数量

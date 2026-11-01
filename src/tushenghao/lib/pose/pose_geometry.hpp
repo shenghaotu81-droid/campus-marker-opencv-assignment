@@ -3,8 +3,12 @@
 
 #include "mark/pose_types.hpp"
 
+namespace mark::pose { struct TagConfig; }
+
 namespace mark::pose::detail
 {
+bool validateTagConfig(const TagConfig &);
+
 // 只做数学合法性检查；像素可用域阈值另由显式预算控制。
 // 输入检查（解算前验时间戳、四边形合法）
 bool valid_stamp(const CaptureStamp &stamp_);

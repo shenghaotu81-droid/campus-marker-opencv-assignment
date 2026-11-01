@@ -1,4 +1,6 @@
+#include "case_runner.hpp"
 #include "observability_fixture.hpp"
+#include "temporal_fixture.hpp"
 #include <type_traits>
 #include "offline_runner.hpp"
 #include "input_completion.hpp"
@@ -513,7 +515,7 @@ namespace
 
 int main()
 {
-    return temporal_fixture::run({{"F12_video_sampling", video_sampling},
+    return test_support::run({{"F12_video_sampling", video_sampling},
                                   {"F13_console", console_contract},
                                   {"F11_output_config", output_config},
                                   {"F06_geometry_budget", geometry_budget_isolation},

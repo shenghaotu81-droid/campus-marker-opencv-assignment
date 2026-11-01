@@ -1,3 +1,4 @@
+#include "case_runner.hpp"
 #include "observability_fixture.hpp"
 #include <thread>
 #include "pipeline/diagnostics_recorder.hpp"
@@ -156,7 +157,7 @@ namespace
 
 int main()
 {
-    return temporal_fixture::run({{"M01", statistics},
+    return test_support::run({{"M01", statistics},
                                   {"M02", empty},
                                   {"M03", statuses},
                                   {"M04", raii},

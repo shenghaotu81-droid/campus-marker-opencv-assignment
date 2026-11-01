@@ -200,7 +200,6 @@ namespace mark
              * 不在 Block 2 提前假设。
              */
             // TODO: 待合成数据测量后填入
-            observation.simplification_error_ = 0.0;
 
             /*
              * 初步类别支持：

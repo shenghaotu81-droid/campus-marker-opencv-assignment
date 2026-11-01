@@ -2,12 +2,12 @@
 #include "config/config.hpp"
 #include "pipeline/detector_diagnostics_access.hpp"
 #include "block3_fixture.hpp"
-#include "temporal_fixture.hpp"
+#include "assertions.hpp"
 #include <filesystem>
 
 namespace observability_fixture
 {
-    using temporal_fixture::check;
+    using test_support::check;
 
     // 显式使用已批准生产配置，合成图像只作主动行为fixture，不反推门限。
     inline mark::AppConfig app()

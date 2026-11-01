@@ -28,10 +28,7 @@ struct TagDetector::Impl
         if (!family_ || !detector_)
             throw std::runtime_error("AprilTag 对象创建失败");
         const auto &c = config_;
-        if (c.nthreads_ < 1 || !std::isfinite(c.quad_decimate_) || c.quad_decimate_ < 1 ||
-            !std::isfinite(c.quad_sigma_) || c.quad_sigma_ < 0 ||
-            !std::isfinite(c.decode_sharpening_) || c.decode_sharpening_ < 0 ||
-            c.max_hamming_ < 0 || c.max_hamming_ > 2 ||
+        if (!detail::validateTagConfig(c) ||
             (c.min_decision_margin_ && (!std::isfinite(*c.min_decision_margin_) ||
                                        *c.min_decision_margin_ <= 0)))
             throw std::runtime_error("AprilTag 参数无效");

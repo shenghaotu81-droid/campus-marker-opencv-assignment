@@ -133,9 +133,6 @@ namespace mark
         // 没有可靠凹点时保持 nullopt，不强行猜测。
         std::optional<std::size_t> anchor_vertex_index_;
 
-        // 多边形简化相对原始轮廓的误差，用于判断结构观测是否仍可信。
-        double simplification_error_{0.0};
-
         // 当前观测支持的候选类别，字符串只允许 "L"、"M"、"S"。
         std::vector<std::string> supported_classes_;
     };

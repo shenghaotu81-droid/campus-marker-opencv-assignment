@@ -202,17 +202,10 @@ int main(int argc, char **argv)
     try
     {
         std::map<std::string, std::string> args;
-        bool overwrite = false, grid = false;
+        bool grid = false;
         for (int i = 1; i < argc; ++i)
         {
             std::string key = argv[i];
-            if (key == "--overwrite")
-            {
-                if (overwrite)
-                    throw std::runtime_error("duplicate overwrite");
-                overwrite = true;
-                continue;
-            }
             if (key == "--experiment-grid")
             {
                 if (grid)

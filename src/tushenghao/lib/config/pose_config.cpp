@@ -1,5 +1,6 @@
 // 配置解析/标定加载/模型转换
 #include "mark/pose_config.hpp"
+#include "pose/pose_geometry.hpp"
 #include "core/marker_geometry.hpp"
 
 #include <cmath>
@@ -244,10 +245,7 @@ void validate_pose_config(const G2Config &c)
         (s.prior_enabled_ && (!s.prior_max_age_s_ || !s.prior_max_translation_m_ ||
                              !s.prior_max_rotation_rad_)))
         throw std::runtime_error("G2 安装/历史约束缺字段或区间无效");
-    if (c.tag_.nthreads_ < 1 || !std::isfinite(c.tag_.quad_decimate_) ||
-        c.tag_.quad_decimate_ < 1 || !std::isfinite(c.tag_.quad_sigma_) || c.tag_.quad_sigma_ < 0 ||
-        !std::isfinite(c.tag_.decode_sharpening_) || c.tag_.decode_sharpening_ < 0 ||
-        c.tag_.max_hamming_ < 0 || c.tag_.max_hamming_ > 2)
+    if (!detail::validateTagConfig(c.tag_))
         throw std::runtime_error("G2 Tag 算法配置不合法");
     positive(c.tag_.min_decision_margin_, "min_decision_margin");
     for (int id_ : c.tag_.allowed_ids_)

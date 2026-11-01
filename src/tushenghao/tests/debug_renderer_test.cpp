@@ -1,4 +1,6 @@
+#include "case_runner.hpp"
 #include "observability_fixture.hpp"
+#include "temporal_fixture.hpp"
 #include "debug_renderer.hpp"
 #include <opencv2/imgproc.hpp>
 using namespace mark;
@@ -139,7 +141,7 @@ namespace
 
 int main()
 {
-    return temporal_fixture::run({{"V01", immutable},
+    return test_support::run({{"V01", immutable},
                                   {"V02", empty},
                                   {"V03", history},
                                   {"V04", unknown},

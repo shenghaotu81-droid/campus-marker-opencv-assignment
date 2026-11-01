@@ -1,3 +1,5 @@
+#include "assertions.hpp"
+#include "case_runner.hpp"
 // tests/detection_validator_test.cpp
 // Block3 Step 6：几何校验实现与测试:
 // 8 个用例，验证 Step 6 的 7 条拒绝路径 + 1 条通过路径：合法凸四边形放行；非有限值、映射非法（越界/重复）、退化边、非凸、蝴蝶结、出界全部拒绝并给出中文原因。
@@ -25,11 +27,7 @@ reorder
 // 普通C++检查在Release仍有效；每用例失败由main独立记录，不引入测试框架。
 namespace
 {
-    void check(bool ok, const char *message)
-    {
-        if (!ok)
-            throw std::runtime_error(message);
-    }
+    using test_support::check;
 }
 
 #include "corners/detection_validator.hpp"
@@ -235,8 +233,7 @@ namespace mark
 // 每个历史用例仍独立执行，失败不会跳过其它用例。
 int main()
 {
-    int failures = 0;
-    const std::pair<const char *, void (*)()> cases[] = {
+    const std::vector<std::pair<std::string, void (*)()>> cases = {
         {"ValidConvexQuadrilateral", mark::ValidConvexQuadrilateral},
         {"NonFinitePointFails", mark::NonFinitePointFails},
         {"InvalidMappingOutOfRangeFails", mark::InvalidMappingOutOfRangeFails},
@@ -246,18 +243,5 @@ int main()
         {"SelfIntersectingQuadrilateralFails", mark::SelfIntersectingQuadrilateralFails},
         {"PointOutsideImageFails", mark::PointOutsideImageFails},
     };
-    for (auto item : cases)
-    {
-        try
-        {
-            item.second();
-            std::cout << "PASS " << item.first << "\n";
-        }
-        catch (const std::exception &e)
-        {
-            ++failures;
-            std::cerr << "FAIL " << item.first << ": " << e.what() << "\n";
-        }
-    }
-    return failures ? 1 : 0;
+    return test_support::run(cases);
 }
