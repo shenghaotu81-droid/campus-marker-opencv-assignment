@@ -25,7 +25,7 @@ namespace fixture
     inline mark::MarkerGeometry model()
     {
         return mark::loadMarkerGeometry(
-            std::filesystem::path(__FILE__).parent_path().parent_path() /
+            std::filesystem::path(VISION_SOURCE_ROOT) /
             "config/marker_geometry.yaml");
     }
 

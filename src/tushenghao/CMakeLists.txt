@@ -50,6 +50,7 @@ target_include_directories(mark_detector_internal_headers INTERFACE "${CMAKE_CUR
 target_link_libraries(mark_detector_internal_headers INTERFACE mark_detector)
 add_library(mark_test_support INTERFACE)
 target_include_directories(mark_test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test_support")
+target_compile_definitions(mark_test_support INTERFACE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_library(mark_offline app/offline_runner.cpp app/debug_renderer.cpp app/input_completion.cpp app/display_session.cpp app/video_exporter.cpp app/run_console.cpp)
 target_include_directories(mark_offline PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/app")
@@ -102,8 +103,9 @@ target_include_directories(corner_edge_fit_test PRIVATE
 target_sources(corner_edge_fit_test PRIVATE tests/support/recovery112_reference.cpp)
 
 # 摘要/OpenSSL只属于审计可执行程序，Detector库不引入JSON/OpenSSL。
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 add_executable(decode_audit tools/audit/decode_audit.cpp)
+# B01：OpenSSL 只由实际使用 SHA 的审计工具请求；模块开关在搬家时划分。
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 target_include_directories(decode_audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 target_link_libraries(decode_audit PRIVATE mark_offline OpenSSL::Crypto)
 # 旧configure偷偷调用Git；改由调用方提供标签，真实工作树另以源hash标识。

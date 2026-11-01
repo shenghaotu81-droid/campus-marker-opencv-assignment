@@ -19,9 +19,11 @@ namespace mark
         void addExportTiming(uint64_t, std::chrono::nanoseconds);
         void complete_export(std::uint64_t frame_id, const StageTiming &completed,
                              bool selected_record);
-        RunSummary finishRun();
+        RunSummary finishRun(const RunOutcome & = {}, const RunOverhead & = {});
+        void addBookkeeping(std::chrono::nanoseconds elapsed) { summary_.bookkeeping += elapsed; }
+        void addRunExport(std::chrono::nanoseconds elapsed) { summary_.run_export += elapsed; }
 
-        RunSummary &summary()
+        const RunSummary &summary() const
         {
             return summary_;
         }

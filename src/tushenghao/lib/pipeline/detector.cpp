@@ -133,7 +133,7 @@ namespace mark
         if (!impl_->display)
             impl_->display = std::make_unique<DisplayHistory>(
                 DisplayHistoryConfig{c.temporal.display_hold_enabled, c.temporal.max_hold_frames});
-        auto decoded = runDecodePipeline(frame, c, impl_->marker_geometry, &context);
+        auto decoded = runDecodePipeline(frame, c, impl_->marker_geometry, ExecutionScope::Full, &context);
         result = finalizeDecodedFrame(decoded, stamp, frame.image.size(), *impl_->temporal,
                                       *impl_->display, &context);
         if (size_changed)
@@ -186,6 +186,32 @@ namespace mark
         auto record = std::move(*impl.completed);
         impl.completed.reset();
         return record;
+    }
+
+    RecordedExecution execute_and_record(Detector &detector, const FrameInput &frame,
+                                         const DiagnosticsRequest &request)
+    {
+        using Clock = std::chrono::steady_clock;
+        RecordedExecution execution;
+        const auto prepare_start = Clock::now();
+        DetectorDiagnosticsAccess::prepare(detector, request);
+        execution.bookkeeping = Clock::now() - prepare_start;
+        const auto start = Clock::now();
+        try { execution.result = detector.process(frame); }
+        catch (...) { execution.failure = std::current_exception(); }
+        const auto elapsed = Clock::now() - start;
+        const auto take_start = Clock::now();
+        execution.record = DetectorDiagnosticsAccess::take(detector);
+        if (execution.failure) execution.record.run_failed = true;
+        else
+        {
+            execution.record.timings.at(size_t(Stage::ProcessTotal)) = {
+                Stage::ProcessTotal, request.timing_enabled ? TimingStatus::MEASURED : TimingStatus::DISABLED,
+                request.timing_enabled ? std::optional<std::chrono::nanoseconds>(elapsed) : std::nullopt};
+            execution.record.process_total_boundary = "public_call";
+        }
+        execution.bookkeeping += Clock::now() - take_start;
+        return execution;
     }
 
 } // namespace mark

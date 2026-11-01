@@ -3,6 +3,7 @@
 #include "core/prepared_frame.hpp"
 #include "mark/detector_config.hpp"
 #include <map>
+#include <functional>
 #include <string>
 
 namespace mark
@@ -11,6 +12,12 @@ namespace mark
     {
         std::vector<cv::Point> contour;
         std::string reason;
+    };
+
+    struct OriginalContourSource
+    {
+        uint64_t frame_id{};
+        std::function<const OriginalContourResult &(const WhiteComponent &)> observe;
     };
 
     // 原来每个角/父假设都重新分割原图；一次 decode 共用索引，按组件 ID 缓存关联。
@@ -22,6 +29,7 @@ namespace mark
                              const CornerObservationBudget &budget);
         const OriginalContourResult &observe(const WhiteComponent &component);
         uint64_t frameId() const;
+        OriginalContourSource source() { return {frame_id_, [this](const WhiteComponent &c) -> const OriginalContourResult & { return observe(c); }}; }
 
       private:
         void prepare();

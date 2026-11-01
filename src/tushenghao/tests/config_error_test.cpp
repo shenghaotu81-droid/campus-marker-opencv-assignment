@@ -294,7 +294,7 @@ debug:
     // 新增时序字段同时测试直接配置与YAML类型/缺失/重复/溢出，防止Release空绿。
     bool temporalErrors()
     {
-        auto base = mark::loadConfig(std::filesystem::path(__FILE__).parent_path().parent_path() /
+        auto base = mark::loadConfig(std::filesystem::path(VISION_SOURCE_ROOT) /
                                      "config/detector.yaml");
         // 缺预算兼容测试是独立fixture，生产获批数值不能使负例失去覆盖。
         base.detector_config.temporal.correspondence_uncertainty_px.reset();
@@ -478,7 +478,7 @@ namespace
     bool rejectedOldProtocol()
     {
         const auto path = std::filesystem::temp_directory_path() / "lean-old-protocol.yaml";
-        auto config = mark::loadConfig(std::filesystem::path(__FILE__).parent_path().parent_path() /
+        auto config = mark::loadConfig(std::filesystem::path(VISION_SOURCE_ROOT) /
                                        "config/detector.yaml");
         mark::writeEffectiveConfig(config, path);
         std::ifstream input(path);

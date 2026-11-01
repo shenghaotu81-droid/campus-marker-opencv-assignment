@@ -45,6 +45,14 @@ namespace
                 a.process(frame(3, 42000));
             });
         DetectorDiagnosticsAccess::take(a);
+        Detector bridged(app().detector_config);
+        auto invalid = frame(); invalid.image.release();
+        auto rejected = execute_and_record(bridged, invalid, request());
+        check(!rejected.failure && rejected.result.status == Status::INVALID_INPUT &&
+              rejected.record.result_status == Status::INVALID_INPUT, "bridge invalid record lost");
+        auto recovered = execute_and_record(bridged, frame(), request());
+        check(!recovered.failure && recovered.result.status == Status::NOT_DETECTED &&
+              recovered.record.process_total_boundary == "public_call", "bridge did not consume pending state");
     }
 
     // 每次非法/NOT_READY也产生记录；非法之后允许低id新段，并保持有效载荷为空。
@@ -197,14 +205,14 @@ namespace
             writer.write(cv::Mat(240, 320, CV_8UC3, cv::Scalar(0, 0, 0)));
         writer.release();
         auto config_source =
-            std::filesystem::path(__FILE__).parent_path().parent_path() / "config/detector.yaml";
+            std::filesystem::path(VISION_SOURCE_ROOT) / "config/detector.yaml";
         auto a =
             loadConfig(std::filesystem::relative(config_source, std::filesystem::current_path()));
         a.offline.mode = "baseline";
         a.offline.directory = (path / "baseline").string();
         runOffline(
             a, video.string(),
-            (std::filesystem::path(__FILE__).parent_path().parent_path() / "config/detector.yaml")
+            (std::filesystem::path(VISION_SOURCE_ROOT) / "config/detector.yaml")
                 .string(),
             ExecutionScope::Full);
         a.offline.mode = "debug";
@@ -241,8 +249,16 @@ namespace
             auto req = request();
             req.scope = scope;
             c.begin(frame(0, 0, true), req);
-            auto d = runDecodePipeline(frame(0, 0, true), config, model, &c);
+            auto d = runDecodePipeline(frame(0, 0, true), config, model, c.request.scope, &c);
             c.finish();
+            auto without_observer = runDecodePipeline(frame(0, 0, true), config, model, scope);
+            ResultFingerprint observed_hash, plain_hash;
+            FrameResult observed_result{}, plain_result{};
+            observed_result.status = d.status; observed_result.detections = d.detections;
+            plain_result.status = without_observer.status; plain_result.detections = without_observer.detections;
+            observed_hash.add(observed_result); plain_hash.add(plain_result);
+            check(observed_hash.hex() == plain_hash.hex() &&
+                  d.measurements.size() == without_observer.measurements.size(), "observer changed execution scope/output");
             check(c.record.timings[5].status == TimingStatus::NOT_EXECUTED,
                   "I07 fake public total");
             if (scope == ExecutionScope::Geometry)
@@ -415,10 +431,10 @@ namespace
         summary.durations[2] = {std::chrono::nanoseconds(10)};
         summary.durations[8] = {std::chrono::nanoseconds(10000)};
         std::ostringstream on, off, failed;
-        write_run_console(on, metadata, summary, 1, true, ExecutionScope::Geometry);
+        write_run_console(on, metadata, summary, RunOutcome{false, true, 1, {}, "COMPLETE"}, true, ExecutionScope::Geometry);
         check(on.str().find("瓶颈阶段（已测样本平均值）：预处理") != std::string::npos,
               "bottleneck scope/tie wrong");
-        write_run_console(off, metadata, summary, 1, false, ExecutionScope::Full);
+        write_run_console(off, metadata, summary, RunOutcome{false, true, 1, {}, "COMPLETE"}, false, ExecutionScope::Full);
         check(off.str().find("阶段计时未启用；瓶颈阶段不可判定") != std::string::npos &&
                   off.str().find("0.000 ms") == std::string::npos,
               "disabled console fakes time");
@@ -446,7 +462,7 @@ namespace
             req.scope = scope;
             auto input = frame(0, 0, true);
             context.begin(input, req);
-            auto result = runDecodePipeline(input, config, model, &context);
+            auto result = runDecodePipeline(input, config, model, context.request.scope, &context);
             context.finish();
             if (scope == ExecutionScope::Geometry)
             {

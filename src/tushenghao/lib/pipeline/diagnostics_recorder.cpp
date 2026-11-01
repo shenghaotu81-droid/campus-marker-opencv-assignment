@@ -434,32 +434,7 @@ namespace mark
         // 原详情序列化嵌在超长函数；按载荷职责拆出，字节顺序及空值规则保持一致。
         void serialize_experiment(JsonStream &out, const StageDetails &d)
         {
-            if (d.experimental)
-            {
-                const auto &e = *d.experimental;
-                out << "{\"segment\":" << e.segment << ",\"sample\":" << e.sample
-                    << ",\"dt_ms\":" << e.dt_ms << ",\"mode\":" << e.mode << ",\"rate\":" << e.rate
-                    << ",\"r_experimental_px\":" << e.r_px
-                    << ",\"deviation_experimental_px\":" << e.deviation_px
-                    << ",\"known\":" << (e.known ? "true" : "false")
-                    << ",\"noisy\":" << (e.noisy ? "true" : "false") << ",\"truth_physical\":[";
-                for (size_t i = 0; i < 4; ++i)
-                {
-                    if (i)
-                        out << ',';
-                    point(out, e.truth_physical[i]);
-                }
-                out << "],\"raw_physical\":[";
-                for (size_t i = 0; i < 4; ++i)
-                {
-                    if (i)
-                        out << ',';
-                    point(out, e.raw_physical[i]);
-                }
-                out << "]}";
-            }
-            else
-                out << "null";
+            out << (d.experimental ? *d.experimental : "null");
         }
 
         // 原详情序列化嵌在超长函数；按载荷职责拆出，字节顺序及空值规则保持一致。
@@ -777,7 +752,7 @@ namespace mark
     }
 
     // 零帧和二次结束拒绝；最终文件成本单列，不能塞进最后一帧。
-    RunSummary DiagnosticsRecorder::finishRun()
+    RunSummary DiagnosticsRecorder::finishRun(const RunOutcome &outcome, const RunOverhead &overhead)
     {
         if (state_ != State::Running)
             throw std::logic_error("RECORDER_FINISH_SEQUENCE");
@@ -794,6 +769,10 @@ namespace mark
                 if ((frames_.is_open() && !frames_) || (side_.is_open() && !side_))
                     throw std::runtime_error("record flush failure");
             }
+            summary_.incomplete = outcome.incomplete;
+            summary_.wall = overhead.wall;
+            summary_.result_fingerprint = overhead.result_fingerprint;
+            summary_.fingerprint_frames = overhead.fingerprint_frames;
             auto start = std::chrono::steady_clock::now();
             writeRunSummary(summary_, (directory_ / "summary.yaml").string());
             summary_.run_export += std::chrono::steady_clock::now() - start;

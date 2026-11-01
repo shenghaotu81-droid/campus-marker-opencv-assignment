@@ -4,14 +4,19 @@ project(block3_fixture LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SYNTH_REF_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../synth_ref" CACHE PATH "已有synthetic_gen核心源码")
-add_subdirectory("${SYNTH_REF_SOURCE}" synthetic_ref EXCLUDE_FROM_ALL)
+if(NOT TARGET synthetic_gen_core)
+    add_subdirectory("${SYNTH_REF_SOURCE}" synthetic_ref EXCLUDE_FROM_ALL)
+endif()
 add_executable(block3_fixture generation/main.cpp)
 target_link_libraries(block3_fixture PRIVATE synthetic_gen_core)
 target_compile_definitions(block3_fixture PRIVATE MODEL_YAML="${CMAKE_CURRENT_SOURCE_DIR}/../../config/marker_geometry.yaml")
 
 # 用途分目录，CMake入口和可执行目标名保持兼容。
 # 隔离定位runner仅工具目标连接Detector与真值读取；正式Detector库无反向依赖。
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../.." detector EXCLUDE_FROM_ALL)
+# B02：父工程已有目标时只链接；独立入口仍需旧根装配，模块 CMake 拆分留搬家。
+if(NOT TARGET mark_detector_internal_headers)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../.." detector EXCLUDE_FROM_ALL)
+endif()
 add_executable(block3_measure calibration/measure.cpp)
 target_link_libraries(block3_measure PRIVATE mark_detector_internal_headers synthetic_gen_core)
 target_compile_definitions(block3_measure PRIVATE DETECTOR_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/../../config/detector.yaml")

@@ -374,7 +374,7 @@ namespace
     // 已保留H-v1失败数据；旧单简化段实现会断开直边末端，预算完全保持冻结v1。
     void splitRoundedBoundary()
     {
-        std::ifstream source(std::filesystem::path(__FILE__).parent_path() /
+        std::ifstream source(std::filesystem::path(VISION_SOURCE_ROOT) / "tests" /
                              "data/rounded_split_boundary.txt");
         check(bool(source), "rounded regression fixture missing");
         cv::Point2d expected;
@@ -432,7 +432,7 @@ namespace
     // 视频第1帧真实阈值轮廓含51个简化顶点，外边不能受1～2段候选上限阻断。
     void fragmentedVideoBoundary()
     {
-        std::ifstream source(std::filesystem::path(__FILE__).parent_path() /
+        std::ifstream source(std::filesystem::path(VISION_SOURCE_ROOT) / "tests" /
                              "data/video_fragmented_boundary.txt");
         check(bool(source), "video regression fixture missing");
         std::array<std::array<cv::Point2d, 2>, 2> edges{};

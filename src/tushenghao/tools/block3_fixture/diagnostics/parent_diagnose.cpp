@@ -1,3 +1,4 @@
+#include "pipeline/decode_stage.hpp"
 // 三L前半链路只读归因：所有阈值隔离/锚点枚举仅在工具内，不修改正式生成器。
 #include "config/config.hpp"
 #include "preprocess/preprocess.hpp"
@@ -357,11 +358,12 @@ int main(int argc, char **argv)
             mark::FrameInput input{};
             input.image = image;
             input.frame_id = id;
-            auto f = mark::preprocess(input, cfg.preprocess);
-            auto cs = mark::extractWhiteComponents(f, cfg.geometry_);
-            auto os = mark::observeShapes(cs, cfg.geometry_);
-            auto gen = mark::generateGeometryHypotheses(os, model, cfg.geometry_);
-            auto val = mark::validateGeometryBatch(gen, model, cs, cfg.geometry_);
+            auto steps = mark::runGeometrySteps(input, cfg, model, mark::GeometryStop::Validated);
+            const auto &f = steps.prepared;
+            const auto &cs = steps.components;
+            const auto &os = steps.observations;
+            const auto &gen = steps.generated;
+            const auto &val = steps.validated;
             size_t ls = 0, anchors = 0;
             for (auto &o : os)
                 if (std::find(o.supported_classes_.begin(), o.supported_classes_.end(), "L") !=

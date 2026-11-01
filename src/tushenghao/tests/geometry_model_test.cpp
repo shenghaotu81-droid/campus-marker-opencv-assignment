@@ -32,9 +32,7 @@ int main()
         ([]()
          {
     namespace fs = std::filesystem;
-    // __FILE__ = .../src/tushenghao/tests/geometry_model_test.cpp
-    // parent_path x2 = .../src/tushenghao
-    fs::path base = fs::path(__FILE__).parent_path().parent_path();
+    fs::path base = fs::path(VISION_SOURCE_ROOT);
     return (base / "config" / "marker_geometry.yaml").string(); })());
 
     mark::validateMarkerGeometry(

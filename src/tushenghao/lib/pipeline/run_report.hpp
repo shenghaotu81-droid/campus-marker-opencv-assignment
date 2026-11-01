@@ -15,6 +15,22 @@ namespace mark
         std::map<std::string, std::string> environment;
     };
 
+    // A11→A07/A12：输入完成判断的显式产物，manifest 仅在输出边界编码。
+    struct RunOutcome
+    {
+        bool incomplete{false}, coverage_verified{false};
+        std::uint64_t frames_read{0};
+        std::optional<std::uint64_t> expected_frames;
+        std::string reason;
+        bool explicit_subset{false};
+    };
+    struct RunOverhead
+    {
+        std::chrono::nanoseconds wall{};
+        std::string result_fingerprint;
+        std::uint64_t fingerprint_frames{};
+    };
+
     struct RunSummary
     {
         uint64_t submitted{}, selected{}, exported{};

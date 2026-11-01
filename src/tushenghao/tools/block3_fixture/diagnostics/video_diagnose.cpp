@@ -106,15 +106,13 @@ int main(int argc, char **argv)
                 mark::FrameInput input{};
                 input.image = image;
                 input.frame_id = id;
-                auto frame = mark::preprocess(input, cfg.preprocess);
-                frame.components_ = mark::extractWhiteComponents(frame, cfg.geometry_);
-                auto observations = mark::observeShapes(frame.components_, cfg.geometry_);
-                auto generated =
-                    mark::generateGeometryHypotheses(observations, model, cfg.geometry_);
-                auto parents =
-                    mark::validateGeometryBatch(generated, model, frame.components_, cfg.geometry_);
-                auto batch = mark::completeSegmentedAssignments(parents, frame.components_, model,
-                                                                *cfg.assignment_completion_);
+                auto steps = mark::runGeometrySteps(input, cfg, model, mark::GeometryStop::Completed);
+                auto &frame = steps.prepared;
+                const auto &generated = steps.generated;
+                const auto &parents = steps.validated;
+                // 旧单步探针入口继续使用兼容载体；主流程不借此回填共享状态。
+                frame.components_ = steps.components;
+                auto &batch = steps.completed;
                 Json r = {{"frame_id", id},
                           {"diagnostic_only", true},
                           {"original_size", {image.cols, image.rows}},

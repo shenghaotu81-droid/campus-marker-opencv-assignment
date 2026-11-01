@@ -5,6 +5,7 @@
 #include "corners/screen_order.hpp"
 #include "common/file_digest.hpp"
 #include <iostream>
+#include <locale>
 #include <map>
 #include <sstream>
 
@@ -149,21 +150,29 @@ namespace
                                              {result.diagnostics.association.reason,
                                               result.diagnostics.reset_or_fallback_reason}};
                                         context.details->temporal = result.diagnostics;
-                                        ExperimentalDetails detail;
-                                        detail.segment = segment;
-                                        detail.sample = n;
-                                        detail.dt_ms = dt;
-                                        detail.mode = mode;
-                                        detail.rate = rate;
-                                        detail.r_px = *c.correspondence_uncertainty_px;
-                                        detail.deviation_px = budget;
-                                        detail.known = known;
-                                        detail.noisy = noisy;
-                                        detail.truth_physical = truth;
-                                        detail.raw_physical = p;
-                                        for (auto &point : detail.raw_physical)
-                                            point = cv::Point2f(point);
-                                        context.details->experimental = detail;
+                                        std::ostringstream detail;
+                                        detail.imbue(std::locale::classic());
+                                        detail << std::setprecision(17)
+                                            << "{\"segment\":\"" << segment << "\",\"sample\":\"" << n
+                                            << "\",\"dt_ms\":" << dt << ",\"mode\":" << mode << ",\"rate\":" << rate
+                                            << ",\"r_experimental_px\":" << *c.correspondence_uncertainty_px
+                                            << ",\"deviation_experimental_px\":" << budget
+                                            << ",\"known\":" << (known ? "true" : "false")
+                                            << ",\"noisy\":" << (noisy ? "true" : "false") << ",\"truth_physical\":[";
+                                        for (size_t i = 0; i < 4; ++i)
+                                        {
+                                            if (i) detail << ',';
+                                            detail << '[' << truth[i].x << ',' << truth[i].y << ']';
+                                        }
+                                        detail << "],\"raw_physical\":[";
+                                        for (size_t i = 0; i < 4; ++i)
+                                        {
+                                            const cv::Point2d point = cv::Point2f(p[i]);
+                                            if (i) detail << ',';
+                                            detail << '[' << point.x << ',' << point.y << ']';
+                                        }
+                                        detail << "]}";
+                                        context.details->experimental = detail.str();
                                         context.output(r);
                                         for (const auto &reason : r.diagnostics)
                                             if (!reason.empty())
@@ -182,9 +191,7 @@ namespace
                                 ++segment;
                             }
                         }
-        recorder.summary().result_fingerprint = fingerprint.hex();
-        recorder.summary().fingerprint_frames = id;
-        auto s = recorder.finishRun();
+        auto s = recorder.finishRun({}, RunOverhead{{}, fingerprint.hex(), id});
         std::cout << "experimental_segments=" << segment << " records=" << s.submitted << '\n';
         return 0;
     }

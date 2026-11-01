@@ -114,7 +114,7 @@ namespace mark
 
     // 原英文技术行被脚本消费；保留格式，之后追加中文数量、范围、真实统计与原因标签。
     void write_run_console(std::ostream &out, const RunMetadata &metadata,
-                           const RunSummary &summary, uint64_t frames_read, bool timing_enabled,
+                           const RunSummary &summary, const RunOutcome &outcome, bool timing_enabled,
                            ExecutionScope scope)
     {
         out << "run=" << metadata.run_id << " frames=" << summary.submitted
@@ -130,12 +130,12 @@ namespace mark
             auto it = summary.statuses.find(std::to_string(int(status)));
             return it == summary.statuses.end() ? uint64_t{} : it->second;
         };
-        out << "帧数：读取 " << frames_read << "，处理 " << summary.submitted << "；"
+        out << "帧数：读取 " << outcome.frames_read << "，处理 " << summary.submitted << "；"
             << status_label(Status::DETECTED) << ' ' << count(Status::DETECTED) << "，"
             << status_label(Status::NOT_DETECTED) << ' ' << count(Status::NOT_DETECTED) << '\n';
-        out << "执行范围：" << scopeName(scope) << "；覆盖：" << metadata.environment.at("coverage")
+        out << "执行范围：" << scopeName(scope) << "；覆盖：" << (outcome.explicit_subset ? "explicit_subset" : "full_input")
             << '\n';
-        const auto &reason = metadata.environment.at("completion_reason");
+        const auto &reason = outcome.reason;
         out << "完整性：" << reason_label(reason) << "（" << reason << "）\n";
         out << std::fixed << std::setprecision(3);
         write_timing_console(out, summary, timing_enabled);

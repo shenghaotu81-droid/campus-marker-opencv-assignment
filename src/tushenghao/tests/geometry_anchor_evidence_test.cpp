@@ -274,7 +274,7 @@ namespace
         for (auto name :
              {"l-topology-rounded-L3.txt", "l-topology-video2-L.txt", "l-topology-short-M1.txt"})
         {
-            std::ifstream f(std::filesystem::path(__FILE__).parent_path() / "data" / name);
+            std::ifstream f(std::filesystem::path(VISION_SOURCE_ROOT) / "tests" / "data" / name);
             size_t n = 0;
             f >> n;
             WhiteComponent c;

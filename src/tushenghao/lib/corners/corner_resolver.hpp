@@ -10,11 +10,12 @@ namespace mark
 {
 
     // 原入口保留独立调用语义；decode 用此内部重载显式共享同帧只读来源索引。
-    class OriginalContourIndex;
+    struct OriginalContourSource;
     CornerResolution resolveObservedCorners(const PreparedFrame &frame,
+                                            const std::vector<WhiteComponent> &components,
                                             const GeometryHypothesis &hypothesis,
                                             const MarkerGeometry &model, const CornerConfig &config,
-                                            OriginalContourIndex &index);
+                                            const OriginalContourSource &source);
 
     /**
      * @brief 根据当前几何假设恢复四个物理角

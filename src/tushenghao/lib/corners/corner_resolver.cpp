@@ -17,19 +17,20 @@ namespace mark
         // 原 wrapper 每次创建新索引，不能因相同帧号/组件 ID 复用已修改的输入。
         validateCornerObservationBudget(config);
         OriginalContourIndex index(frame, frame.frame_id_, *config.observation_budget_);
-        return resolveObservedCorners(frame, hypothesis, model, config, index);
+        return resolveObservedCorners(frame, frame.components_, hypothesis, model, config, index.source());
     }
 
     CornerResolution resolveObservedCorners(const PreparedFrame &frame,
+                                            const std::vector<WhiteComponent> &observations,
                                             const GeometryHypothesis &hypothesis,
                                             const MarkerGeometry &model, const CornerConfig &config,
-                                            OriginalContourIndex &index)
+                                            const OriginalContourSource &source)
     {
         validateCornerObservationBudget(config);
         CornerResolution result{};
         result.status_ = CornerResolutionStatus::FAILED;
         // 来源绑定显式用 frame ID 检查；索引生命周期由 decode 的局部对象限定。
-        if (index.frameId() != frame.frame_id_)
+        if (source.frame_id != frame.frame_id_)
         {
             result.rejection_reason_ = "ORIGINAL_INDEX_FRAME_MISMATCH";
             return result;
@@ -59,7 +60,7 @@ namespace mark
             return result;
         }
         std::map<size_t, const WhiteComponent *> components;
-        for (const auto &c : frame.components_)
+        for (const auto &c : observations)
             if (!components.emplace(c.component_id_, &c).second)
             {
                 result.rejection_reason_ = "DUPLICATE_COMPONENT_ID";
@@ -101,7 +102,7 @@ namespace mark
                 return result;
             }
             // 多个父假设的同一组件共享关联结果；用引用保留完整原始轮廓而不反复复制。
-            const auto &contour = index.observe(*components.at(assignment->second));
+            const auto &contour = source.observe(*components.at(assignment->second));
             if (!contour.reason.empty())
             {
                 result.rejection_reason_ = contour.reason + ": P" + std::to_string(i);

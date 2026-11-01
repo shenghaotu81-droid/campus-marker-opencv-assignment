@@ -21,7 +21,7 @@ namespace
     // 数据来自H已确认的实例身份；测试侧读取固定像素，正式观察入口不读真值。
     mark::WhiteComponent contour(const char *name)
     {
-        std::ifstream in(std::filesystem::path(__FILE__).parent_path() / "data" / name);
+        std::ifstream in(std::filesystem::path(VISION_SOURCE_ROOT) / "tests" / "data" / name);
         size_t n;
         in >> n;
         mark::WhiteComponent c;

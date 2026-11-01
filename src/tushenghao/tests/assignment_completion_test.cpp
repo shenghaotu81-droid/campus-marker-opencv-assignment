@@ -85,7 +85,7 @@ namespace
     // 固定H栅格反例：原五比例均为4点；更细RDP的7点需保留凹口并消除额外凸点。
     void topologyFixture(const char *filename)
     {
-        std::ifstream source(std::filesystem::path(__FILE__).parent_path() / "data" / filename);
+        std::ifstream source(std::filesystem::path(VISION_SOURCE_ROOT) / "tests" / "data" / filename);
         std::string header;
         std::getline(source, header);
         cv::Mat matrix(2, 3, CV_64F);

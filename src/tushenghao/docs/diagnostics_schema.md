@@ -4,7 +4,7 @@
 
 ## 帧、范围与当前结果
 
-`FrameRecord` 是内部实例通道，公共 `FrameResult.diagnostics` 仍为 `vector<string>`；Detector只增加私有friend，公共四调用及Detection/FrameResult/DisplayState布局不变。内部消费顺序为prepare→process→take；重复prepare/take、未取记录就继续process主动失败。未使用内部访问器的普通公共消费继续工作。
+`FrameRecord` 是内部实例通道，公共 `FrameResult.diagnostics` 仍为 `vector<string>`；Detector只增加私有friend，公共四调用及Detection/FrameResult/DisplayState布局不变。应用内部使用 `execute_and_record` 一次取得公开结果、诊断记录及失败异常；桥内保持 prepare→process→take；重复prepare/take、未取记录就继续process主动失败。未使用内部访问器的普通公共消费继续工作。
 
 身份含run_id、十进制字符串frame_id/source_timestamp_us、timestamp_source及timestamp_recipe；原图/工作图尺寸为整数数组。`execution_scope` 为full/geometry/decode/temporal。geometry的result_status为null，geometry_scope_result为READY/NOT_READY/INVALID_INPUT，不把几何假设称DETECTED。audit的public_status为NOT_EVALUATED。
 
@@ -14,7 +14,7 @@
 
 九个固定顺序槽：capture、preprocess、detect、decode、stabilize、process_total、visualize、wait、export。MEASURED有有限非负elapsed_us（保留小数），DISABLED/SKIPPED/NOT_IMPLEMENTED/NOT_EXECUTED值为null。未进入stage不填0。计时用steady_clock，算法timestamp由输入视频fps生成，二者不混用。
 
-App包围一次真正公共调用，替换内部近似total，`process_total_boundary=public_call`；没有两项相加。process包含输入/预算检查、阶段、结果及内部诊断装配；不包括prepare/take、指纹、渲染、等待和文件写。audit的process_total为NOT_EXECUTED。
+内部单次桥包围一次真正公共调用，替换内部近似total，`process_total_boundary=public_call`；没有两项相加。process包含输入/预算检查、阶段、结果及内部诊断装配；不包括prepare/take、指纹、渲染、等待和文件写。audit的process_total为NOT_EXECUTED。
 
 `diagnostics_construct_intervals_us`只计实际包围的context.begin、事件push和context.output区间，**不是全部诊断开销**。细节复制在对应stage和process内；未单独隔离的复制成本不猜算，不把debug−baseline称精确诊断成本。框架差额只在四算法stage与total均MEASURED时计算。runner的bookkeeping计prepare/take/指纹及关联装配实测区间。
 
@@ -96,3 +96,7 @@ video_filename 固定 overlay.mp4，display_probe_timeout_ms 为正整数。
 
 输入路径不存在或 CLI/配置在创建 run 前被拒绝时，只保留退出码与 stderr，不保证有 run 目录；
 文件存在但解码器无法打开、以及已打开却零帧时，FAILED 生命周期已实跑验证，不生成成功 summary。
+
+运行完成判断以 `RunOutcome` 交给记录器与终端，外部耗时及结果指纹以 `RunOverhead` 交给 `finishRun`；`summary()` 只读。manifest 边界仍编码原 coverage/completion_reason 键。执行范围是算法入口的显式参数，观察请求仅保存记录属性。主链 `runGeometrySteps` 依次输出预处理、组件、形状观察、生成/验证/补全批次；旧独立探针仍可用 PreparedFrame.components_ 适配，主链不回填该兼容字段。渲染适配器将阶段快照转换为原图点线 `RenderInput`，证据检查只做一次；实验网格 JSON 由 temporal_audit 编码，检测与渲染不消费实验结构。
+
+测试资源由目标的 `VISION_SOURCE_ROOT` 显式定位，不再按测试源文件的父目录层数猜配置根。夹具 CMake 优先链接父工程已有目标；独立构建仍由旧根装配，完整模块开关与递归导入消除留待布局搬迁。

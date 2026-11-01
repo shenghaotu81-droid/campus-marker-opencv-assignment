@@ -12,7 +12,7 @@ namespace observability_fixture
     // 显式使用已批准生产配置，合成图像只作主动行为fixture，不反推门限。
     inline mark::AppConfig app()
     {
-        return mark::loadConfig(std::filesystem::path(__FILE__).parent_path().parent_path() /
+        return mark::loadConfig(std::filesystem::path(VISION_SOURCE_ROOT) /
                                 "config/detector.yaml");
     }
 

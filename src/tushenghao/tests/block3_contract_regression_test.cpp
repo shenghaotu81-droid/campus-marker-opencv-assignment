@@ -30,7 +30,7 @@ namespace
 
     mark::DetectorConfig config()
     {
-        return mark::loadConfig(std::filesystem::path(__FILE__).parent_path().parent_path() /
+        return mark::loadConfig(std::filesystem::path(VISION_SOURCE_ROOT) /
                                 "config/detector.yaml")
             .detector_config;
     }

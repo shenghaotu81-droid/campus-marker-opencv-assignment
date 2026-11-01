@@ -15,7 +15,7 @@ namespace g2_test
 // 测试专属理想成像预算，只验证算法/契约；严禁复制到生产 pose.yaml。
 inline mark::pose::G2Config config()
 {
-    const auto root = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path();
+    const auto root = std::filesystem::path(VISION_SOURCE_ROOT);
     auto c = mark::pose::load_pose_config(root / "config/pose.yaml");
     c.budgets_.max_rmse_px_ = 0.05;
     c.budgets_.max_corner_error_px_ = 0.1;

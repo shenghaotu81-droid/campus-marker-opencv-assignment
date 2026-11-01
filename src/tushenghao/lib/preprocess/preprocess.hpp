@@ -7,14 +7,7 @@
 namespace mark
 {
 
-    // Block1 preprocess:
-    // FrameInput -> PreparedFrame
-    //
-    // 职责：
-    // 1. resize 到工作尺寸
-    // 2. threshold 生成工作二值图
-    // 3. 保存原图到工作图坐标映射
-    // 4. 保存帧上下文
+    // D02：输入原帧，输出只读原图视图、resize 后 BGR8 与像素中心映射；二值化属于后续观察。
     PreparedFrame preprocess(
         const FrameInput &frame,
         const PreprocessConfig &config);

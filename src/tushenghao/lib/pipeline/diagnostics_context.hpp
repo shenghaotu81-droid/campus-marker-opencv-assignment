@@ -6,16 +6,6 @@
 
 namespace mark
 {
-    // 仅工具合成实验填写真值/条件，Detector从不生成或消费它，不把实验真值作为准入证据。
-    struct ExperimentalDetails
-    {
-        uint64_t segment{}, sample{};
-        int dt_ms{}, mode{};
-        double rate{}, r_px{}, deviation_px{};
-        bool known{}, noisy{};
-        std::array<cv::Point2d, 4> truth_physical{}, raw_physical{};
-    };
-
     // 原阶段详情散落在各audit；直接复用已生成结果，选中帧才复制，不重算几何或取证。
     struct StageDetails
     {
@@ -25,7 +15,7 @@ namespace mark
         GeometryBatch generated, validated, completed;
         DecodeStageResult decoded;
         TemporalDiagnostics temporal;
-        std::optional<ExperimentalDetails> experimental;
+        std::optional<std::string> experimental; // 工具编码的实验 JSON；算法与渲染均不消费。
     };
 
     struct DiagnosticsRequest

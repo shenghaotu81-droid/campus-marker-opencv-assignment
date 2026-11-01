@@ -1,4 +1,5 @@
 #include "debug_renderer.hpp"
+#include "pipeline/diagnostics_context.hpp"
 #include <opencv2/imgproc.hpp>
 #include <sstream>
 
@@ -19,6 +20,39 @@ namespace mark
                         return events;
                     }
         return events;
+    }
+
+    // A06→A08 适配器：证据检查只做一次，之后绘制只消费点线与检查结果。
+    RenderInput makeRenderInput(const FrameRecord &record)
+    {
+        RenderInput input;
+        input.frame_id = record.frame_id;
+        input.evidence_events = validateRenderEvidence(record);
+        if (!record.details) return input;
+        input.sampled = true;
+        const auto &details = *record.details;
+        input.candidates_current = details.prepared.frame_id_ == record.frame_id;
+        if (input.candidates_current)
+            for (const auto &component : details.components)
+            {
+                std::vector<cv::Point2d> points;
+                for (const auto &point : component.contour_) points.push_back(details.prepared.workToOriginal(point));
+                input.candidates.push_back(std::move(points));
+            }
+        if (input.evidence_events.empty())
+            for (const auto &measurement : details.decoded.measurements)
+                for (const auto &evidence : measurement.evidence_)
+                {
+                    for (const auto &arc : evidence.original_support_arcs_) input.support_arcs.push_back(arc);
+                    input.intersections.push_back(evidence.intersection_);
+                }
+        return input;
+    }
+
+    cv::Mat renderDebugFrame(const cv::Mat &original, const FrameResult &result,
+                             const FrameRecord &record, const RenderConfig &config)
+    {
+        return renderDebugFrame(original, result, record, config, makeRenderInput(record));
     }
 
     namespace
@@ -54,7 +88,7 @@ namespace mark
 
     // 当前有效图层按本帧状态绘制；empty清层，unknown不借用旧方向，历史仅文字。
     cv::Mat renderDebugFrame(const cv::Mat &original, const FrameResult &result,
-                             const FrameRecord &r, const RenderConfig &config)
+                             const FrameRecord &r, const RenderConfig &config, const RenderInput &input)
     {
         auto out = original.clone();
         if (out.empty())
@@ -95,24 +129,22 @@ namespace mark
             for (const auto &t : result.tracks)
                 if (t.detection_index < result.detections.size())
                     polygon(out, t.result, {0, 255, 0}, true);
-        const bool evidence_ok = validateRenderEvidence(r).empty();
+        const bool evidence_ok = input.evidence_events.empty();
         if (config.draw_candidates)
         {
             text(out, "CANDIDATE", {8, y}, {0, 165, 255});
             y += 18;
-            if (r.details && r.details->prepared.frame_id_ == r.frame_id)
-                for (const auto &c : r.details->components)
+            if (input.candidates_current)
+                for (const auto &points : input.candidates)
                 {
                     std::vector<cv::Point> contour;
-                    for (auto p : c.contour_)
-                        contour.push_back(r.details->prepared.workToOriginal(p));
-                    if (!contour.empty())
-                        cv::polylines(out, contour, true, {0, 165, 255}, 1);
+                    for (const auto &point : points) contour.push_back(point);
+                    if (!contour.empty()) cv::polylines(out, contour, true, {0, 165, 255}, 1);
                 }
         }
         if (config.draw_corner_evidence)
         {
-            if (!r.details)
+            if (!input.sampled)
             {
                 text(out, "EVIDENCE not sampled", {8, y}, {0, 165, 255});
                 y += 18;
@@ -123,14 +155,12 @@ namespace mark
                 y += 18;
             }
             else
-                for (const auto &m : r.details->decoded.measurements)
-                    for (const auto &e : m.evidence_)
-                    {
-                        for (const auto &arc : e.original_support_arcs_)
-                            for (size_t i = 1; i < arc.size(); ++i)
-                                cv::line(out, arc[i - 1], arc[i], {255, 0, 255}, 1);
-                        cv::circle(out, e.intersection_, 4, {255, 0, 255}, 1);
-                    }
+            {
+                for (const auto &arc : input.support_arcs)
+                    for (size_t i = 1; i < arc.size(); ++i)
+                        cv::line(out, arc[i - 1], arc[i], {255, 0, 255}, 1);
+                for (const auto &point : input.intersections) cv::circle(out, point, 4, {255, 0, 255}, 1);
+            }
         }
         if (config.show_held_state && result.display_state)
         {

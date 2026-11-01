@@ -27,9 +27,9 @@ namespace
 
         // 测试用几何模型路径：从本测试文件位置推导，不依赖 CWD。
         {
-            std::filesystem::path test_file(__FILE__);
+            std::filesystem::path source_root(VISION_SOURCE_ROOT);
             std::filesystem::path cfg =
-                test_file.parent_path().parent_path() / "config" / "marker_geometry.yaml";
+                source_root / "config" / "marker_geometry.yaml";
             config.marker_geometry_path_ = cfg.string();
         }
 

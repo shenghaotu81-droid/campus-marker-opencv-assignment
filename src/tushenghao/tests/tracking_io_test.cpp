@@ -13,7 +13,7 @@ void require(bool value, const char *reason)
     if (!value) throw std::runtime_error(reason);
 }
 
-// 小型可迁移fixture；读取根配置路径只从__FILE__推导，不引用用户机器目录。
+// Q04/V06：资源根由构建目标显式提供，测试位置和工作目录均不承担输入契约。
 mark::tracking::TrackingFrame frame()
 {
     mark::tracking::TrackingFrame f;
@@ -41,7 +41,7 @@ int main()
 {
     try
     {
-        const auto root = std::filesystem::path(__FILE__).parent_path().parent_path();
+        const auto root = std::filesystem::path(VISION_SOURCE_ROOT);
         const auto config = mark::tracking::load_tracking_config(root / "config/tracking.yaml");
         require(!config.profile_, "I01 默认未标定profile应保持空");
         const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();

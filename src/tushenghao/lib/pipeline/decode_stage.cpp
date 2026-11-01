@@ -26,8 +26,16 @@ namespace mark
         return decodeStage(frame, batch, model, config, nullptr);
     }
 
-    // 观察入口保留旧签名wrapper；计时与类型化原因在编排处提取，不向底层算法加入判据。
     DecodeStageResult decodeStage(const PreparedFrame &frame, const GeometryBatch &batch,
+                                  const MarkerGeometry &model, const CornerConfig &config,
+                                  FrameDiagnosticsContext *context)
+    {
+        return decodeStage(frame, frame.components_, batch, model, config, context);
+    }
+
+    // 观察入口保留旧签名wrapper；计时与类型化原因在编排处提取，不向底层算法加入判据。
+    DecodeStageResult decodeStage(const PreparedFrame &frame, const std::vector<WhiteComponent> &components,
+                                  const GeometryBatch &batch,
                                   const MarkerGeometry &model, const CornerConfig &config,
                                   FrameDiagnosticsContext *context)
     {
@@ -82,7 +90,7 @@ namespace mark
                 }
 
                 auto corner =
-                    resolveObservedCorners(frame, hypothesis, model, config, original_index);
+                    resolveObservedCorners(frame, components, hypothesis, model, config, original_index.source());
                 if (!corner.measurement_)
                 {
                     log("corner", corner.rejection_reason_);
@@ -174,49 +182,12 @@ namespace mark
         return result;
     }
 
-    DecodeStageResult runDecodePipeline(const FrameInput &input, const DetectorConfig &config,
-                                        const MarkerGeometry &model)
+    GeometryStepsOutput runGeometrySteps(const FrameInput &input, const DetectorConfig &config,
+                                         const MarkerGeometry &model, GeometryStop stop,
+                                         FrameDiagnosticsContext *context, bool pipeline_trace)
     {
-        return runDecodePipeline(input, config, model, nullptr);
-    }
-
-    // 分阶段包围实际调用，详细trace只在选中帧构造；旧wrapper保留旧行为供历史工具使用。
-    DecodeStageResult runDecodePipeline(const FrameInput &input, const DetectorConfig &config,
-                                        const MarkerGeometry &model,
-                                        FrameDiagnosticsContext *context)
-    {
-        DecodeStageResult result;
-        if (input.image.empty() || input.image.dims != 2 || input.image.type() != CV_8UC3 ||
-            input.timestamp_us < 0 || input.time_source != TimestampSource::Unknown)
-        {
-            result.status = Status::INVALID_INPUT;
-            result.diagnostics.push_back("INPUT_FORMAT");
-            if (context)
-            {
-                context->event(Stage::Preprocess, ReasonCode::InputFormat, "INPUT_FORMAT");
-                if (context->request.scope == ExecutionScope::Geometry)
-                    context->record.geometry_scope_result = "INVALID_INPUT";
-                else
-                    context->record.result_status = result.status;
-            }
-            return result;
-        }
-        // 原 Geometry 审计被后续 corner 预算拦住；此处只检查几何实际消费的 assignment 预算。
-        if (!config.assignment_completion_)
-        {
-            result.diagnostics.push_back("PIPELINE_NOT_READY: assignment及原图定位预算未配置");
-            if (context)
-            {
-                context->event(Stage::Preprocess, ReasonCode::BudgetMissing,
-                               result.diagnostics.back());
-                if (context->request.scope == ExecutionScope::Geometry)
-                    context->record.geometry_scope_result = "NOT_READY";
-                else
-                    context->record.result_status = result.status;
-            }
-            return result;
-        }
-        PreparedFrame prepared;
+        GeometryStepsOutput output;
+        auto &prepared = output.prepared;
         {
             std::optional<ScopedStageTimer> timer;
             if (context)
@@ -232,10 +203,12 @@ namespace mark
         std::optional<ScopedStageTimer> detect_timer;
         if (context)
             detect_timer.emplace(context->timing, Stage::Detect);
-        auto components = extractWhiteComponents(prepared, config.geometry_);
-        prepared.components_ = components;
-        auto observations = observeShapes(components, config.geometry_);
-        auto batch = generateGeometryHypotheses(observations, model, config.geometry_);
+        auto &components = output.components;
+        components = extractWhiteComponents(prepared, config.geometry_);
+        auto &observations = output.observations;
+        observations = observeShapes(components, config.geometry_);
+        output.generated = generateGeometryHypotheses(observations, model, config.geometry_);
+        auto batch = output.generated;
         if (context)
         {
             context->record.counts.components = components.size();
@@ -249,12 +222,17 @@ namespace mark
             }
         }
         batch = validateGeometryBatch(batch, model, components, config.geometry_);
+        output.validated = batch;
         if (context)
         {
             context->record.counts.validated = batch.hypotheses_.size();
             if (context->details)
                 context->details->validated = batch;
         }
+        if (stop == GeometryStop::Validated) return output;
+        if (!config.assignment_completion_) throw std::logic_error("GEOMETRY_ASSIGNMENT_BUDGET_MISSING");
+        if (pipeline_trace)
+        {
         batch.diagnostics_.push_back("geometry/components=" + std::to_string(components.size()) +
                                      "/hypotheses=" + std::to_string(batch.hypotheses_.size()));
         // 保存实际三L父变换/绑定以定位上游反例；不重估、不改变其算法或参数。
@@ -276,6 +254,7 @@ namespace mark
                       << "/completeness=" << int(h.completeness_);
                 batch.diagnostics_.push_back(trace.str());
             }
+        }
         batch =
             completeSegmentedAssignments(batch, components, model, *config.assignment_completion_);
         if (context)
@@ -291,11 +270,61 @@ namespace mark
                 context->details->completed = batch;
             }
         }
+        output.completed = std::move(batch);
         detect_timer.reset();
-        if (context && context->request.scope == ExecutionScope::Geometry)
+        return output;
+    }
+
+    DecodeStageResult runDecodePipeline(const FrameInput &input, const DetectorConfig &config,
+                                        const MarkerGeometry &model)
+    {
+        return runDecodePipeline(input, config, model, ExecutionScope::Full, nullptr);
+    }
+
+    // 分阶段包围实际调用，详细trace只在选中帧构造；旧wrapper保留旧行为供历史工具使用。
+    DecodeStageResult runDecodePipeline(const FrameInput &input, const DetectorConfig &config,
+                                        const MarkerGeometry &model,
+                                        ExecutionScope scope, FrameDiagnosticsContext *context)
+    {
+        DecodeStageResult result;
+        if (input.image.empty() || input.image.dims != 2 || input.image.type() != CV_8UC3 ||
+            input.timestamp_us < 0 || input.time_source != TimestampSource::Unknown)
         {
-            context->record.result_status.reset();
-            context->record.geometry_scope_result = "READY";
+            result.status = Status::INVALID_INPUT;
+            result.diagnostics.push_back("INPUT_FORMAT");
+            if (context)
+            {
+                context->event(Stage::Preprocess, ReasonCode::InputFormat, "INPUT_FORMAT");
+                if (scope == ExecutionScope::Geometry)
+                    context->record.geometry_scope_result = "INVALID_INPUT";
+                else
+                    context->record.result_status = result.status;
+            }
+            return result;
+        }
+        // 原 Geometry 审计被后续 corner 预算拦住；此处只检查几何实际消费的 assignment 预算。
+        if (!config.assignment_completion_)
+        {
+            result.diagnostics.push_back("PIPELINE_NOT_READY: assignment及原图定位预算未配置");
+            if (context)
+            {
+                context->event(Stage::Preprocess, ReasonCode::BudgetMissing,
+                               result.diagnostics.back());
+                if (scope == ExecutionScope::Geometry)
+                    context->record.geometry_scope_result = "NOT_READY";
+                else
+                    context->record.result_status = result.status;
+            }
+            return result;
+        }
+        auto geometry = runGeometrySteps(input, config, model, GeometryStop::Completed, context, true);
+        if (scope == ExecutionScope::Geometry)
+        {
+            if (context)
+            {
+                context->record.result_status.reset();
+                context->record.geometry_scope_result = "READY";
+            }
             return result;
         }
         // Geometry 已返回；角点预算只在其消费者之前检查，公共 Detector 原生产门控保留。
@@ -309,7 +338,7 @@ namespace mark
             }
             return result;
         }
-        result = decodeStage(prepared, batch, model, config.corner_, context);
+        result = decodeStage(geometry.prepared, geometry.components, geometry.completed, model, config.corner_, context);
         return result;
     }
 }

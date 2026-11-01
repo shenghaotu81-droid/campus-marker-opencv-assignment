@@ -279,7 +279,7 @@ namespace mark
                                              app_.offline.video_fourcc);
                         auto elapsed = Clock::now() - start;
                         video_run_export_ += elapsed;
-                        recorder_.summary().run_export += elapsed;
+                        recorder_.addRunExport(elapsed);
                     }
                     process_frame(read_elapsed);
                     pending_.erase(id_);
@@ -315,33 +315,22 @@ namespace mark
                 FrameResult result{};
                 if (detector_)
                 {
-                    auto prepare_start = Clock::now();
-                    DetectorDiagnosticsAccess::prepare(*detector_, request);
-                    recorder_.summary().bookkeeping += Clock::now() - prepare_start;
-                    auto start = Clock::now();
-                    try
+                    auto execution = execute_and_record(*detector_, input, request);
+                    recorder_.addBookkeeping(execution.bookkeeping);
+                    record = std::move(execution.record);
+                    if (execution.failure)
                     {
-                        result = detector_->process(input);
-                    }
-                    catch (...)
-                    {
-                        record = DetectorDiagnosticsAccess::take(*detector_);
-                        record.run_failed = true;
                         recorder_.submit(record);
-                        throw;
+                        std::rethrow_exception(execution.failure);
                     }
-                    auto elapsed = Clock::now() - start;
-                    auto take_start = Clock::now();
-                    record = DetectorDiagnosticsAccess::take(*detector_);
-                    external_timing(record, Stage::ProcessTotal, elapsed, timing_);
-                    recorder_.summary().bookkeeping += Clock::now() - take_start;
+                    result = std::move(execution.result);
                 }
                 else
                 {
                     FrameDiagnosticsContext context;
                     context.begin(input, request);
                     auto decoded =
-                        runDecodePipeline(input, app_.detector_config, *model_, &context);
+                        runDecodePipeline(input, app_.detector_config, *model_, scope_, &context);
                     result.frame_id = id_;
                     result.timestamp_us = input.timestamp_us;
                     result.status = decoded.status;
@@ -371,7 +360,7 @@ namespace mark
                 external_timing(record, Stage::Capture, read_elapsed, timing_);
                 if (scope_ != ExecutionScope::Geometry)
                     fingerprint_.add(result);
-                recorder_.summary().bookkeeping += Clock::now() - bookkeeping_start;
+                recorder_.addBookkeeping(Clock::now() - bookkeeping_start);
             }
 
             // 原 GUI/等待和算法混排；提取后仍只占 Visualize/Wait 槽。
@@ -382,9 +371,9 @@ namespace mark
                     return overlay;
                 auto start = Clock::now();
                 auto render = app_.render;
-                auto events = validateRenderEvidence(record);
-                record.events.insert(record.events.end(), events.begin(), events.end());
-                overlay = renderDebugFrame(image_, result, record, render);
+                auto render_input = makeRenderInput(record);
+                record.events.insert(record.events.end(), render_input.evidence_events.begin(), render_input.evidence_events.end());
+                overlay = renderDebugFrame(image_, result, record, render, render_input);
                 const auto rendered = Clock::now() - start;
                 const bool was_active = display_session_.active();
                 if (was_active)
@@ -455,8 +444,9 @@ namespace mark
             int finish_run()
             {
                 // 缺失子集也保留已处理记录，以 incomplete_ 结束而不是丢掉诊断。
-                const auto completion = evaluate_input_completion(id_, expected_, incomplete_,
+                auto completion = evaluate_input_completion(id_, expected_, incomplete_,
                                                                   !subset_.empty(), pending_);
+                completion.explicit_subset = !subset_.empty();
                 incomplete_ = completion.incomplete;
                 meta_.environment["coverage_verified"] =
                     completion.coverage_verified ? "true" : "false";
@@ -468,7 +458,7 @@ namespace mark
                     video_exporter_.finish(!incomplete_);
                     const auto elapsed = Clock::now() - start;
                     video_run_export_ += elapsed;
-                    recorder_.summary().run_export += elapsed;
+                    recorder_.addRunExport(elapsed);
                     meta_.environment["video_requested_fourcc"] = app_.offline.video_fourcc;
                     meta_.environment["video_backend"] = video_exporter_.backend();
                     meta_.environment["video_readback_frames"] =
@@ -486,17 +476,15 @@ namespace mark
                     if (!marker)
                         throw std::runtime_error("incomplete marker write failure");
                 }
-                auto &summary = recorder_.summary();
-                summary.incomplete = incomplete_;
-                summary.wall = std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() -
-                                                                                    wall_start_);
-                summary.result_fingerprint = fingerprint_.hex();
-                summary.fingerprint_frames = fingerprint_.frames();
+                RunOverhead overhead;
+                overhead.wall = std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - wall_start_);
+                overhead.result_fingerprint = fingerprint_.hex();
+                overhead.fingerprint_frames = fingerprint_.frames();
                 meta_.environment["eof_read_us"] = std::to_string(double(eof_read_.count()) / 1000);
                 meta_.environment["frames_read"] = std::to_string(id_);
                 meta_.environment["coverage"] = subset_.empty() ? "full_input" : "explicit_subset";
                 writeRunManifest(meta_, (recorder_.directory() / "manifest.yaml").string());
-                auto final = recorder_.finishRun();
+                auto final = recorder_.finishRun(completion, overhead);
                 std::ofstream export_report(recorder_.directory() / "run_export.yaml");
                 export_report
                     << "run_export_us: " << std::setprecision(17)
@@ -508,7 +496,7 @@ namespace mark
                 export_report.flush();
                 if (!export_report)
                     throw std::runtime_error("run export supplement write failure");
-                write_run_console(std::cout, meta_, final, id_, timing_, scope_);
+                write_run_console(std::cout, meta_, final, completion, timing_, scope_);
                 return incomplete_ ? 1 : 0;
             }
         };

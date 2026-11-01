@@ -1,20 +1,3 @@
-/*实现范围：预处理后的当前帧数据
-FrameInput
-    |
-    v
-preprocess()
-    |
-    +-- resize
-    |
-    +-- threshold
-    |
-    +-- coordinate mapping
-    |
-    +-- frame context
-    |
-    v
-PreparedFrame
-*/
 #pragma once
 
 #include <cstdint>
@@ -54,23 +37,12 @@ namespace mark
         }
 
         // 原图坐标 -> 工作图坐标的缩放比例。
-        // working_x = original_x * scale_x_
-        // working_y = original_y * scale_y_
+        // 像素中心偏移由上面的双向函数处理，不能直接乘比例。
         double scale_x_{1.0};
 
         double scale_y_{1.0};
 
-        /**
-         * @brief 当前帧白色连通区域
-         *
-         * Block 2 分割阶段生成。
-         *
-         * Block 3 根据 GeometryHypothesis 中的 component_id_
-         * 直接回查这里的真实观测轮廓。
-         * 加 components_ 以补这条链：component_id_ → 按ID查找frame.components_ → contour_
-         *
-         * 不重新分割，避免产生第二套观测结果。
-         */
+        // 旧独立 decode/resolver 夹具适配入口；主链组件单独由 GeometryStepsOutput 交付。
         std::vector<WhiteComponent> components_;
 
         // 帧上下文。

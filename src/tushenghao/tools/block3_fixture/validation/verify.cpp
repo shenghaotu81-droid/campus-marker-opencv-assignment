@@ -127,13 +127,12 @@ int main(int argc, char **argv)
                     "diagnostic requires explicit assignment budget and fixed work width");
             mark::FrameInput input{};
             input.image = cv::imread((dir / fixture["image"].get<std::string>()).string());
-            auto frame = mark::preprocess(input, config.preprocess);
-            frame.components_ = mark::extractWhiteComponents(frame, config.geometry_);
-            auto observations = mark::observeShapes(frame.components_, config.geometry_);
-            auto generated =
-                mark::generateGeometryHypotheses(observations, model, config.geometry_);
-            auto parents =
-                mark::validateGeometryBatch(generated, model, frame.components_, config.geometry_);
+            auto steps = mark::runGeometrySteps(input, config, model, mark::GeometryStop::Validated);
+                auto &frame = steps.prepared;
+                const auto &generated = steps.generated;
+                const auto &parents = steps.validated;
+                // 旧单步探针入口继续使用兼容载体；主流程不借此回填共享状态。
+                frame.components_ = steps.components;
             sg::Json row = {{"case_id", fixture["case_id"]},
                             {"work_width", config.preprocess.work_width},
                             {"diagnostic_only", true},

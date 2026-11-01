@@ -92,7 +92,7 @@ namespace
               "same ID reused old original contour");
         next.frame_id_ += 1;
         const auto wrong =
-            mark::resolveObservedCorners(next, scene.hypothesis, scene.geometry, config, index);
+            mark::resolveObservedCorners(next, next.components_, scene.hypothesis, scene.geometry, config, index.source());
         check(wrong.rejection_reason_ == "ORIGINAL_INDEX_FRAME_MISMATCH",
               "frame mismatch accepted");
     }
