@@ -1,3 +1,6 @@
 #pragma once
-// verify 模块入口；公共接口与类型集中声明以便各模块复用。
-#include "synthetic_gen/core.hpp"
+#include "synthetic_gen/records.hpp"
+namespace sg {
+// S08：独立重建语义真值与字节身份；公开包含路径保持兼容。
+Json verify(const Context&,const std::string&,bool save=true,bool pending_generation=false);
+}

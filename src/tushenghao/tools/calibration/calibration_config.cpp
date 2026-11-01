@@ -42,7 +42,7 @@ namespace
                     throw std::invalid_argument("标定整数超出可表示范围: " + value);
             }
         };
-        const std::regex fields(R"((?:^|[\n{,])[ \t]*['"]?(?:schema_version|board_rows|board_cols|start_frame|end_frame|frame_list)['"]?[ \t]*:[ \t]*(\[[^\]]*\]|[^\n,}]*))");
+        const std::regex fields(R"((?:^|[\n{,])[ \t]*['"]?(?:schema_version|board_rows|board_cols|frame_list)['"]?[ \t]*:[ \t]*(\[[^\]]*\]|[^\n,}]*))");
         for (std::sregex_iterator it(text.begin(), text.end(), fields), end; it != end; ++it)
             require_range((*it)[1].str());
         const std::regex block_frames(R"((?:^|\n)[ \t]*['"]?frame_list['"]?[ \t]*:[ \t]*\r?\n((?:[ \t]+-[^\n]*(?:\n|$))+))");
@@ -54,7 +54,7 @@ namespace
     std::map<std::string, std::string> parse_cli(int argc, char **argv)
     {
         const std::set<std::string> allowed{"--config", "--video", "--output", "--rows",
-                                            "--cols", "--spacing", "--start-frame", "--end-frame"};
+                                            "--cols", "--spacing"};
         std::map<std::string, std::string> values;
         for (int i = 1; i < argc; ++i)
         {
@@ -99,8 +99,6 @@ void initialize_default_config(CalibrationConfig &config)
     config.board_rows = 7;
     config.board_cols = 7;
     config.point_spacing = 0.03;
-    config.start_frame = 0;
-    config.end_frame = -1;
     const std::filesystem::path source_path(__FILE__);
     config.output_path =
         (source_path.parent_path().parent_path().parent_path() / "config" / "calibration.yaml").string();
@@ -121,7 +119,7 @@ bool load_config_yaml(const std::string &config_path, CalibrationConfig &config)
             throw std::invalid_argument("无法打开标定配置: " + config_path);
         const std::set<std::string> allowed{"schema_version", "video_path", "output_path",
                                             "board_rows", "board_cols", "point_spacing",
-                                            "start_frame", "end_frame", "frame_list"};
+                                            "frame_list"};
         std::set<std::string> seen;
         for (const auto &node : fs.root())
         {
@@ -135,8 +133,6 @@ bool load_config_yaml(const std::string &config_path, CalibrationConfig &config)
         if (seen.count("output_path")) config.output_path = yaml_text(fs["output_path"]);
         if (seen.count("board_rows")) config.board_rows = yaml_integer(fs["board_rows"]);
         if (seen.count("board_cols")) config.board_cols = yaml_integer(fs["board_cols"]);
-        if (seen.count("start_frame")) config.start_frame = yaml_integer(fs["start_frame"]);
-        if (seen.count("end_frame")) config.end_frame = yaml_integer(fs["end_frame"]);
         if (seen.count("point_spacing"))
         {
             const auto node = fs["point_spacing"];
@@ -192,8 +188,6 @@ void apply_cli_overrides(int argc, char **argv, CalibrationConfig &config)
             else if (key == "--output") config.output_path = value;
             else if (key == "--rows") config.board_rows = cli_integer(value);
             else if (key == "--cols") config.board_cols = cli_integer(value);
-            else if (key == "--start-frame") config.start_frame = cli_integer(value);
-            else if (key == "--end-frame") config.end_frame = cli_integer(value);
             else if (key == "--spacing")
             {
                 size_t used = 0;
@@ -231,16 +225,6 @@ bool validate_config(const CalibrationConfig &config)
     if (!std::isfinite(config.point_spacing) || config.point_spacing <= 0)
     {
         std::cerr << "标定点间距非法\n";
-        return false;
-    }
-    if (config.start_frame < 0)
-    {
-        std::cerr << "起始帧不能小于 0\n";
-        return false;
-    }
-    if (config.end_frame != -1 && config.end_frame < config.start_frame)
-    {
-        std::cerr << "结束帧不能小于起始帧\n";
         return false;
     }
     return true;

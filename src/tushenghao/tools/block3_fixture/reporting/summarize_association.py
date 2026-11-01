@@ -6,6 +6,12 @@ import sys
 from pathlib import Path
 from summarize import distribution
 
+
+# V03/V04：证据条件在 python -O 下也必须执行，失败保留具体条件位置。
+def require(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
 # V05：列由测量协议决定；没有可用分布时也输出同一表头，不从首行数据猜列。
 STAT_FIELDS = ('n', 'mean', 'sample_std', 'percentile', 'maximum', 'minimum', 'raw', 'rounded', 'step')
 CSV_FIELDS = ('work_width', 'radius', 'noisy', 'metric', 'total', 'failures',
@@ -15,7 +21,7 @@ CSV_FIELDS = ('work_width', 'radius', 'noisy', 'metric', 'total', 'failures',
 def main():
     source, report = map(Path, sys.argv[1:])
     records = [json.loads(line) for line in source.read_text().splitlines()]
-    assert len(records) == 720 and all(r['profile'] == 'C' for r in records)
+    require(len(records) == 720 and all((r['profile'] == 'C' for r in records)), "summarize_association.py:18: len(records) == 720 and all((r['profile'] == 'C' for r in records))")
     strata, failed = {}, []
     for r in records:
         key = (r['work_size'][0], r['radius_original_px'], bool(r['seed']))

@@ -28,16 +28,6 @@ struct CalibrationConfig
     // 相邻圆点之间的实际距离，单位：米
     double point_spacing = 0.0;
 
-    // 图像尺寸（可由视频读取后填充）
-    int image_width = 0;
-    int image_height = 0;
-
-    // 标定帧范围
-    // start_frame: 起始帧
-    // end_frame: 结束帧，-1 表示直到视频结束
-    int start_frame = 0;
-    int end_frame = -1;
-
     // 指定抽取的视频帧编号
     // 为空时表示不进行指定抽帧
     std::vector<int> frame_list;

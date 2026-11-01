@@ -11,6 +11,7 @@
 #include "config/config.hpp"
 #include "core/config_error.hpp"
 #include "../tools/calibration/calibration_config.hpp"
+#include "../tools/calibration/calibration_result.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -474,6 +475,44 @@ debug:
 // 平时 ctest 只告诉你 Passed/Failed，不给细节。现在测的是错误情况——万一挂了，必须看到底哪个 case 挂的、打印了啥，不然没法修。所以加上。
 namespace
 {
+    // C04/C05：成功/失败交错时保留源身份；不同尺寸由视频信息显式交给求解与写出。
+    bool calibrationFlow()
+    {
+        CalibrationConfig config; initialize_default_config(config);
+        cv::Mat board(480, 640, CV_8UC3, cv::Scalar(255,255,255));
+        for (int y = 0; y < 7; ++y) for (int x = 0; x < 7; ++x)
+            cv::circle(board, {120+x*50, 70+y*50}, 7, {0,0,0}, -1);
+        CalibrationDetectionResult detected;
+        if (!detect_calibration_points(config, {{7,board},{19,cv::Mat::zeros(board.size(), CV_8UC3)},{42,board}}, detected) ||
+            detected.observations.size()!=3 || !detected.observations[0].detected ||
+            detected.observations[1].detected || !detected.observations[2].detected ||
+            detected.observations[1].frame_id!=19) return false;
+        for (const auto size : {cv::Size(320,240),cv::Size(640,480)})
+        {
+            CalibrationDetectionResult samples; samples.object_points=detected.object_points;
+            const cv::Mat camera=(cv::Mat_<double>(3,3)<<size.width,0,size.width/2.,0,size.width,size.height/2.,0,0,1);
+            for (int i=0;i<6;++i)
+            {
+                std::vector<cv::Point2f> points;
+                cv::projectPoints(samples.object_points,cv::Vec3d(.04*i,.1-.02*i,.03*i),
+                                  cv::Vec3d(-.05+.01*i,-.04,.7+.03*i),camera,cv::Mat(),points);
+                samples.observations.push_back({10+i*3,points,true});
+                samples.observations.push_back({11+i*3,{},false});
+            }
+            CalibrationResult result;
+            CalibrationVideoInfo video; video.width=size.width;video.height=size.height;video.source_path="fixture";
+            if (!run_camera_calibration(video,samples,result) || result.image_size!=size ||
+                result.source_path!="fixture" || result.frame_ids!=std::vector<int>({10,13,16,19,22,25}) ||
+                !std::isfinite(result.reprojection_error) || result.reprojection_error>1e-3) return false;
+            config.output_path=(std::filesystem::temp_directory_path()/"lean-calibration-roundtrip.yaml").string();
+            if (!save_calibration_result(config,result)) return false;
+            cv::FileStorage stored(config.output_path,cv::FileStorage::READ);
+            if (int(stored["image_width"])!=size.width || int(stored["image_height"])!=size.height) return false;
+            stored.release(); std::filesystem::remove(config.output_path);
+        }
+        return true;
+    }
+
     // Q02：先确认完整新协议可读，再逐项注入旧键，避免缺字段负例掩盖兼容残留。
     bool rejectedOldProtocol()
     {
@@ -539,7 +578,9 @@ namespace
                  "schema_version: 4294967297\n",
                  "schema_version: 1\nboard_rows: 4294967297\n",
                  "schema_version: 1\nboard_cols: 0x100000001\n",
+                 "schema_version: 1\nstart_frame: 0\n",
                  "schema_version: 1\nstart_frame: 4294967296\n",
+                 "schema_version: 1\nend_frame: -1\n",
                  "schema_version: 1\nend_frame: 4294967295\n",
                  "schema_version: 1\nboard_cols: \"7\"\n",
                  "schema_version: 1\nvideo_path: 7\n",
@@ -585,6 +626,7 @@ namespace
 
         for (const auto &suffix : std::vector<std::vector<std::string>>{
                  {"--config", "again.yaml"}, {"--unknown", "1"}, {"--rows"},
+                 {"--start-frame", "0"}, {"--end-frame", "-1"},
                  {"--spacing", "--cols", "7"}, {"--rows", "7", "--rows", "8"},
                  {"--rows", "7junk"}, {"--rows", "4294967296"},
                  {"--spacing", "nan"}, {"--spacing", "inf"}, {"--spacing", "0.04junk"},
@@ -616,6 +658,7 @@ int main()
 {
     try
     {
+        if (!calibrationFlow()) return 1;
         if (!rejectedOldProtocol()) return 1;
         if (!calibrationConfigErrors()) return 1;
         if (!temporalErrors())

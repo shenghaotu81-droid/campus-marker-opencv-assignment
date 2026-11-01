@@ -6,6 +6,7 @@
 bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &capture,
                             CalibrationVideoInfo &info)
 {
+    info.source_path = config.video_path;
     capture.open(config.video_path);
 
     if (!capture.isOpened())
@@ -26,7 +27,7 @@ bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &c
 
 // 根据帧编号列表抽取图像
 bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &frame_list,
-                            std::vector<cv::Mat> &frames)
+                            std::vector<SampledFrame> &frames)
 {
     // 没有指定帧时直接跳过
     if (frame_list.empty())
@@ -47,7 +48,7 @@ bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &f
             return false;
         }
 
-        frames.push_back(frame);
+        frames.push_back({frame_index, frame});
     }
 
     return true;

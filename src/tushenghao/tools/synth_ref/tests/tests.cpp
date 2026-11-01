@@ -10,7 +10,12 @@
 using namespace sg;
 namespace  {
   // 证据跟随测试二进制所在的构建目录，支持从干净 build-review 验收。
-  fs::path evidence_directory;
+  struct TestPaths { fs::path source_root, evidence_root; };
+  struct ScopedDirectory {
+    fs::path previous=fs::current_path();
+    explicit ScopedDirectory(const fs::path &path) { fs::current_path(path); }
+    ~ScopedDirectory() { std::error_code error; fs::current_path(previous,error); }
+  };
   // 显式检查在 Release 同样执行，并说明失败的验收性质。
   void require(bool condition,const std::string& reason)  {
     if(!condition)throw std::runtime_error(reason);
@@ -447,18 +452,23 @@ namespace  {
     check_scene(joined,rasterize(joined,24,24));
   }
   // 测试目录隔离复制只读输入；无有效批准记录，仅造明确错误的审批负例。
-  void workflow_test()  {
-    auto original=fs::current_path();
+  void workflow_test(const TestPaths& paths)  {
+    const auto entry=fs::current_path();
+    try { ScopedDirectory guard(fs::temp_directory_path()); throw std::runtime_error("fixture interrupt"); }
+    catch(const std::runtime_error&) {}
+    require(fs::current_path()==entry,"中断后必须恢复调用方目录");
+    require(load_context(paths.source_root).config_hash==load_context().config_hash,"显式根加载身份不一致");
+    auto original=paths.source_root;
     auto stamp=std::chrono::high_resolution_clock::now().time_since_epoch().count();
     fs::path temp=fs::temp_directory_path()/("sg-selftest-"+std::to_string(stamp));
     fs::create_directory(temp);
     fs::copy(original/"inputs",temp/"inputs",fs::copy_options::recursive);
     fs::copy(original/"configs",temp/"configs",fs::copy_options::recursive);
     if(fs::exists(temp/"inputs/approval.json"))fs::remove(temp/"inputs/approval.json");
-    fs::current_path(temp);
+    ScopedDirectory working_directory(temp);
     Json evidence;
     try  {
-      auto c=load_context();
+      auto c=load_context(temp);
       rejects([&]()  {
         generate(c,"formal","no-approval");
       },"无批准正式运行必须退出3",3);
@@ -543,8 +553,8 @@ namespace  {
       fs::current_path(original);
       evidence["subset_verified_before_corruption"]=true;
       evidence["png_hash_corruption_rejected"]=true;
-      write_json(evidence_directory/"test-evidence-workflow.json",evidence);
-      std::cout<<"证据: "<<(evidence_directory/"test-evidence-workflow.json")<<"；临时运行: "<<temp<<'\n';
+      write_json(paths.evidence_root/"test-evidence-workflow.json",evidence);
+      std::cout<<"证据: "<<(paths.evidence_root/"test-evidence-workflow.json")<<"；临时运行: "<<temp<<'\n';
     }
     catch(...)  {
       fs::current_path(original);
@@ -555,7 +565,8 @@ namespace  {
 // CTest 单独选择测试名，使错误可定位到对应验收项。
 int main(int argc,char** argv)  {
   try  {
-    evidence_directory=fs::absolute(argv[0]).parent_path();
+    const TestPaths paths{SG_SOURCE_ROOT,fs::absolute(argv[0]).parent_path()};
+    ScopedDirectory source_directory(paths.source_root);
     if(argc!=2)throw std::runtime_error("需要测试名");
     std::string name=argv[1];
     if(name=="model")model_test();
@@ -564,7 +575,7 @@ int main(int argc,char** argv)  {
     else if(name=="raster")raster_test();
     else if(name=="perturb")perturb_test();
     else if(name=="cases")cases_test();
-    else if(name=="workflow")workflow_test();
+    else if(name=="workflow")workflow_test(paths);
     else throw std::runtime_error("未知测试名");
     std::cout<<name<<" PASS\n";
     return 0;

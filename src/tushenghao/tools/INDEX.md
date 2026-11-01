@@ -73,3 +73,5 @@ build/block4/temporal_audit --experiment-grid --noise-csv build/block4-evidence/
 - observability_verify：`--compare OLD NEW [--route-b]`、`--check-run RUN`、`--check-archive BLOCK5`，均另给`--report NEW.json`；未知/重复/缺输入及已有报告非零。
 
 统一FrameRecord、serializer与统计；没有公共process的工具不能给14ms性能结论。原H fixture复用输入，不重新生成网格，历史工具写盘缺口与本轮验证见[验收](../docs/block5_acceptance.md)；工具退出0也必须核产物。
+
+`validation/recovery112_check.py` 现行入口必须显式提供 `--source-root`、`--input-manifest`、`--output-root`、`--build-logs`，再选 `run LABEL BINARY EXPECTED` 或 `summarize`。输入 manifest 包含 input_root、video、config、failed_ids_file、expected_frames、expected_runs、expected_test_targets、historical_fast、historical_synthetic、protected_before、readme_current、readme_original、legacy_source_prefix；路径应明确指向保留的冻结输入/原文，legacy_source_prefix 仅适配旧 manifest 的来源键。缺输入会失败，输出目录不能指向历史 evidence 原件。CTest 按目标名称集合及全过摘要检查，允许新增测试；全部 Python 证据条件在普通与 `-O` 模式均执行。

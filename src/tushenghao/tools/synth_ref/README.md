@@ -102,3 +102,5 @@ sha256sum runs/formal-one-a/images/*.png runs/formal-one-b/images/*.png
 退出码：0 成功；2 输入/配置无效；3 正式资格缺批准；4 I/O 或产物校验失败。报错走 stderr；启动前错误明确没有创建运行目录，已有运行的失败保存在清单或验证报告。工具不接触视频、baseline、作业仓库构建配置及全局 Git/依赖设置。
 
 本轮验收实际使用 GNU 13.3.0、CMake 3.28.3、Release/C++17、OpenCV 4.6.0、nlohmann_json 3.11.3、OpenSSL 3.0.13。最终从全新 `build-acceptance/` 复核，记录与39分30秒墙钟耗时见 [acceptance](docs/acceptance.md)；原始 build 的二进制仍在 `build/synthetic_gen`。正式数据因缺批准尚未交付，外部算法验收未运行。
+
+现行步骤声明分别由 model/grid/transforms/perturb/cases/raster/records/verify 头拥有，core.hpp 只作兼容聚合。连续场景与真值编码内部只接收所需配置切片、坐标、场景及栅格；公开 Context 和入口保持。测试显式提供来源／证据根，load_context(source_root) 可直接指定输入根；旧 CLI 的零参入口仍使用工具根工作目录。workflow 的临时目录切换有局部恢复，异常不串用下一测试。

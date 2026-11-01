@@ -94,7 +94,9 @@ foreach(MARK_TEST_NAME IN LISTS MARK_TEST_NAMES)
 endforeach()
 
 # F61：配置负例直接调用标定解析器；只为已有测试追加实现，不新增目标。
-target_sources(config_error_test PRIVATE tools/calibration/calibration_config.cpp)
+target_sources(config_error_test PRIVATE tools/calibration/calibration_config.cpp
+    tools/calibration/calibration_video.cpp tools/calibration/calibration_detection.cpp
+    tools/calibration/calibration_result.cpp)
 
 # 计数 helper 仅给此工具口径测试使用，不向 Detector 或公共使用者传播。
 target_include_directories(corner_edge_fit_test PRIVATE

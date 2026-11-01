@@ -9,6 +9,12 @@ from pathlib import Path
 from summarize import quantile
 
 
+# V03/V04：证据条件在 python -O 下也必须执行，失败保留具体条件位置。
+def require(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
+
 def describe(corners):
     """分母包含每个尝试角；缺支持/冲突不属于有限误差，保持null并报告其原因。"""
     values = [c['error_px'] for c in corners if c['success']]
@@ -31,11 +37,11 @@ def main():
     baseline_path, expanded_path, report = map(Path,sys.argv[1:])
     baseline = [json.loads(l) for l in baseline_path.read_text().splitlines()]
     expanded = [json.loads(l) for l in expanded_path.read_text().splitlines()]
-    assert len(baseline)==len(expanded)==713
-    assert {r['frame_id'] for r in baseline}=={r['frame_id'] for r in expanded}
-    assert all(len(r['corners'])==4 for r in baseline+expanded)
+    require(len(baseline) == len(expanded) == 713, 'summarize_video_corners.py:34: len(baseline) == len(expanded) == 713')
+    require({r['frame_id'] for r in baseline} == {r['frame_id'] for r in expanded}, "summarize_video_corners.py:35: {r['frame_id'] for r in baseline} == {r['frame_id'] for r in expanded}")
+    require(all((len(r['corners']) == 4 for r in baseline + expanded)), "summarize_video_corners.py:36: all((len(r['corners']) == 4 for r in baseline + expanded))")
     original = {r['frame_id']:r['parent'] for r in baseline}
-    assert all(r['parent']==original[r['frame_id']] for r in expanded)
+    require(all((r['parent'] == original[r['frame_id']] for r in expanded)), "summarize_video_corners.py:38: all((r['parent'] == original[r['frame_id']] for r in expanded))")
     summary = {'synthetic_C_original_budget_px':1.5,'user_method':'nearest-rank P99 + 1 original px',
                'frame_denominator':713,'corner_denominator':2852,'input_sha256':{},'datasets':{}}
     for name, records, path in [('baseline',baseline,baseline_path),('expanded',expanded,expanded_path)]:

@@ -1,35 +1,15 @@
-// 标定帧检测（circles grid）
-/*
-frame
- ↓
-gray
- ↓
-findCirclesGrid()
- ↓ success
-image_points
- ↓
-generate object_points
- ↓
-object_points
-*/
 #pragma once
+#include "calibration_video.hpp"
 
-#include <opencv2/opencv.hpp>
-
-#include <vector>
-
-#include "calibration_config.hpp"
-
-// 标定检测结果
-struct CalibrationDetectionResult
-{
-    // 成功检测的图像点
-    std::vector<std::vector<cv::Point2f>> image_points;
-
-    // 对应的世界坐标点
-    std::vector<std::vector<cv::Point3f>> object_points;
+// C04：每个抽样帧对应一条观察；未检出只记信息，不伪造点对。
+struct BoardObservation {
+ int frame_id{};
+ std::vector<cv::Point2f> points;
+ bool detected{false};
 };
-
-// 在输入帧中检测圆点阵
-bool detect_calibration_points(const CalibrationConfig &config, const std::vector<cv::Mat> &frames,
-                               CalibrationDetectionResult &result);
+struct CalibrationDetectionResult {
+ std::vector<cv::Point3f> object_points;
+ std::vector<BoardObservation> observations;
+};
+bool detect_calibration_points(const CalibrationConfig &, const std::vector<SampledFrame> &,
+                               CalibrationDetectionResult &);

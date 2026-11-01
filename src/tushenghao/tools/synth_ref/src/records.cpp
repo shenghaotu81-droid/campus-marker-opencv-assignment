@@ -1,3 +1,5 @@
+#include "synthetic_gen/transforms.hpp"
+#include "synthetic_gen/verify.hpp"
 
 #include "synthetic_gen/records.hpp"
 #include "synthetic_gen/build_info.hpp"
@@ -150,12 +152,12 @@ namespace sg  {
     return false;
   }
   // 连续面积、原始身份和可见性分开；不把不可见点变成观测点。
-  Json truth_record(const Context& c,const Scene& s,const Raster* r)  {
+  static Json encode_truth_record(const Json& canvas,double model_stroke,const std::string& id,const Scene& s,const Raster* r)  {
     Json truth=  {
        {
         "schema_version",1
       },  {
-        "case_id",case_id(c,s.descriptor)
+        "case_id",id
       },  {
         "descriptor",s.descriptor
       },  {
@@ -171,7 +173,7 @@ namespace sg  {
       },  {
         "rendering",  {
            {
-            "canvas",c.grid.at("canvas")
+            "canvas",canvas
           },  {
             "subsamples",8
           },  {
@@ -279,7 +281,7 @@ namespace sg  {
       item["source_unit"]=model_piece?"u":"work_px";
       // 独立矩形和新增白桥没有模型的名义笔画宽，不能伪填 8px。
       if(model_piece&&p.transform(2,0)==0&&p.transform(2,1)==0)  {
-        auto widths=stroke_widths(p.transform,c.model.at("stroke_width").at("value"));
+        auto widths=stroke_widths(p.transform,model_stroke);
         item["stroke_widths_px"]=widths;
         item["minimum_stroke_width_px"]=std::min(widths[0],widths[1]);
         item["singular_value_ratio"]=singular_ratio(p.transform);
@@ -304,6 +306,9 @@ namespace sg  {
     truth["raster_null_reason"]=r?Json(nullptr):Json("样例无图像；查看 status/fixture_kind");
     return truth;
   }
+  Json truth_record(const Context& c,const Scene& s,const Raster* r) {
+    return encode_truth_record(c.grid.at("canvas"),c.model.at("stroke_width").at("value"),case_id(c,s.descriptor),s,r);
+  }
   // 安全单级名称保证所有写入在 runs 根目录，不接受 ../ 路径。
   fs::path run_path(const std::string& name)  {
     if(name.empty()||name=="."||name==".."||name.size()>100)throw Error(2,"run-id 无效");
@@ -315,7 +320,7 @@ namespace sg  {
   // 创建不覆盖已有目录；启动前审批和单例合法性已经完成。
   static void create_run(const fs::path& path)  {
     if(fs::exists(path)||fs::is_symlink(path))throw Error(4,"run 目录已存在，改用新 run-id: "+path.string()+"；未创建运行目录");
-    fs::create_directories("runs");
+    fs::create_directories(path.parent_path());
     if(!fs::create_directory(path))throw Error(4,"运行目录创建失败 "+path.string());
   }
   // 计划流式保存全部 case_id，以后可选择任意已计划单例。

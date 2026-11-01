@@ -1,20 +1,3 @@
-/* 全流程：
-yaml
- ↓
-config
- ↓
-video
- ↓
-frame_list
- ↓
-findCirclesGrid
- ↓
-image_points/object_points
- ↓
-calibrateCamera
- ↓
-calibration.yaml
-*/
 #include <opencv2/opencv.hpp>
 
 #include "calibration_config.hpp"
@@ -23,6 +6,7 @@ calibration.yaml
 #include "calibration_result.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <string>
 
 int main(int argc, char **argv)
@@ -75,11 +59,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    config.image_width = video_info.width;
-
-    config.image_height = video_info.height;
-
-    std::vector<cv::Mat> frames;
+    std::vector<SampledFrame> frames;
 
     // 根据配置抽帧
     if (!extract_frames_by_list(capture, config.frame_list, frames))
@@ -96,13 +76,12 @@ int main(int argc, char **argv)
     }
 
     // 调试信息：多少帧检测到了圆点
-    std::cout << "检测成功帧数量: " << detection_result.image_points.size() << std::endl;
+    std::cout << "检测成功帧数量: " << std::count_if(detection_result.observations.begin(), detection_result.observations.end(), [](const auto &o) { return o.detected; }) << std::endl;
 
     CalibrationResult calibration_result;
 
     // 执行相机标定
-    if (!run_camera_calibration(config, detection_result.object_points,
-                                detection_result.image_points, calibration_result))
+    if (!run_camera_calibration(video_info, detection_result, calibration_result))
     {
         return -1;
     }
@@ -116,7 +95,7 @@ int main(int argc, char **argv)
     // 输出摘要
     std::cout << "标定完成" << std::endl;
 
-    std::cout << "图像尺寸: " << config.image_width << " x " << config.image_height << std::endl;
+    std::cout << "图像尺寸: " << calibration_result.image_size.width << " x " << calibration_result.image_size.height << std::endl;
 
     std::cout << "重投影误差: " << calibration_result.reprojection_error << std::endl;
 

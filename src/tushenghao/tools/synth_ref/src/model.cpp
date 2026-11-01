@@ -1,3 +1,4 @@
+#include "synthetic_gen/transforms.hpp"
 
 #include "synthetic_gen/model.hpp"
 #include <fstream>
@@ -158,28 +159,9 @@ namespace sg  {
       }
     }
   }
-  // 验证约定网格不能被隐式缩减；取样值仅作为实验配置。
-  Context load_context()  {
-    if(!fs::exists("inputs/synthetic_gen_spec_Oyster_reviewed.md")||!fs::exists("configs/model.json"))throw Error(2,"工作目录错误：请在工具根目录执行；未创建运行目录");
-    Context c;
-    c.sources=read_json("inputs/sources.json");
-    std::set<std::string> source_paths;
-    for(const auto& s:c.sources.at("sources"))  {
-      std::string p=s.at("path");
-      if(p!="inputs/model_coordinates.md"&&p!="inputs/error_budget.md"&&p!="inputs/2.md"&&p!="inputs/synthetic_gen_spec_Oyster_reviewed.md") throw Error(2,"sources.json 不允许额外来源 "+p);
-      if(!source_paths.insert(p).second)throw Error(2,"sources.json 重复来源 "+p);
-      if(s.at("status").get<std::string>().empty())throw Error(2,"sources.json 缺文档状态 "+p);
-      if(p=="inputs/2.md"&&(s.at("original_filename")!="板块2_几何原语_完整冻结文档.md"||s.at("alias")!="2.md")) throw Error(2,"sources.json 冻结文档别名映射错误");
-      if(hash_file(p)!=s.at("sha256"))throw Error(2,p+" 来源 SHA-256 不符，请检查 inputs/sources.json");
-    }
-    for(const std::string p:  {
-      "inputs/model_coordinates.md","inputs/error_budget.md","inputs/2.md","inputs/synthetic_gen_spec_Oyster_reviewed.md"
-    })if(!source_paths.count(p))throw Error(2,"sources.json 缺少 "+p);
-    c.model=read_json("configs/model.json");
-    c.grid=read_json("configs/grid.json");
-    c.cases=read_json("configs/cases.json");
-    validate_model(c.model,read_text("inputs/model_coordinates.md"));
-    Json g=c.grid;
+  // S01：分别核验网格与负例描述；不读取模型 IO、来源或事务状态。
+  static void validate_grid_spec(const Json& grid) {
+    const auto &g=grid;
     Json expected=  {
        {
         "seed",0
@@ -273,6 +255,8 @@ namespace sg  {
     };
     if(g.at("local")!=local||g.at("shear")!=shear)throw Error(2,"grid.json local/shear 与 spec 不符");
     // 完整病例构造字段逐项固定，防止负例被删减后仍声称覆盖。
+  }
+  static void validate_case_spec(const Json& cases) {
     Json cases_expected=  {
        {
         "baseline",  {
@@ -362,9 +346,33 @@ namespace sg  {
         "near_collinear_offset",0.5
       }
     };
-    for(auto i=cases_expected.begin();i!=cases_expected.end();++i)if(c.cases.at(i.key())!=i.value())throw Error(2,"cases.json 字段不符: "+i.key());
+    for(auto i=cases_expected.begin();i!=cases_expected.end();++i)if(cases.at(i.key())!=i.value())throw Error(2,"cases.json 字段不符: "+i.key());
     Json blocks=Json::parse(R"([{"shape":"square","vertices":[[-8,-8],[8,-8],[8,8],[-8,8]]},{"shape":"rectangle","vertices":[[-16,-4],[16,-4],[16,4],[-16,4]]},{"shape":"triangle","vertices":[[-8,-8],[8,-8],[-8,8]]}])");
-    if(c.cases.at("blocks")!=blocks)throw Error(2,"cases.json blocks 不符");
+    if(cases.at("blocks")!=blocks)throw Error(2,"cases.json blocks 不符");
+  }
+  // 验证约定网格不能被隐式缩减；取样值仅作为实验配置。
+  Context load_context(const fs::path& source_root)  {
+    if(!fs::exists(source_root/"inputs/synthetic_gen_spec_Oyster_reviewed.md")||!fs::exists(source_root/"configs/model.json"))throw Error(2,"输入根目录缺少原文或模型；未创建运行目录");
+    Context c;
+    c.sources=read_json(source_root/"inputs/sources.json");
+    std::set<std::string> source_paths;
+    for(const auto& s:c.sources.at("sources"))  {
+      std::string p=s.at("path");
+      if(p!="inputs/model_coordinates.md"&&p!="inputs/error_budget.md"&&p!="inputs/2.md"&&p!="inputs/synthetic_gen_spec_Oyster_reviewed.md") throw Error(2,"sources.json 不允许额外来源 "+p);
+      if(!source_paths.insert(p).second)throw Error(2,"sources.json 重复来源 "+p);
+      if(s.at("status").get<std::string>().empty())throw Error(2,"sources.json 缺文档状态 "+p);
+      if(p=="inputs/2.md"&&(s.at("original_filename")!="板块2_几何原语_完整冻结文档.md"||s.at("alias")!="2.md")) throw Error(2,"sources.json 冻结文档别名映射错误");
+      if(hash_file(source_root/p)!=s.at("sha256"))throw Error(2,p+" 来源 SHA-256 不符，请检查 inputs/sources.json");
+    }
+    for(const std::string p:  {
+      "inputs/model_coordinates.md","inputs/error_budget.md","inputs/2.md","inputs/synthetic_gen_spec_Oyster_reviewed.md"
+    })if(!source_paths.count(p))throw Error(2,"sources.json 缺少 "+p);
+    c.model=read_json(source_root/"configs/model.json");
+    c.grid=read_json(source_root/"configs/grid.json");
+    c.cases=read_json(source_root/"configs/cases.json");
+    validate_model(c.model,read_text(source_root/"inputs/model_coordinates.md"));
+    validate_grid_spec(c.grid);
+    validate_case_spec(c.cases);
     double minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
     for(const auto& p:c.model.at("pieces"))for(auto v:polygon(p.at("vertices")))  {
       minx=std::min(minx,v.x);
@@ -386,6 +394,7 @@ namespace sg  {
     }));
     return c;
   }
+  Context load_context() { return load_context(fs::current_path()); }
   // 文本引用只能由用户提供，工具验证其绑定的三个配置/原文 hash。
   Json approval(const Context& c)  {
     if(!fs::exists("inputs/approval.json"))throw Error(3,"APPROVAL_REQUIRED: 缺 inputs/approval.json；模型/实验未获批准；未创建运行目录");

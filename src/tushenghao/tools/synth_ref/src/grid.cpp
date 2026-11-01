@@ -1,3 +1,4 @@
+#include "synthetic_gen/cases.hpp"
 
 #include "synthetic_gen/grid.hpp"
 namespace sg  {

@@ -11,6 +11,12 @@ from pathlib import Path
 from summarize import quantile
 
 
+# V03/V04：证据条件在 python -O 下也必须执行，失败保留具体条件位置。
+def require(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
+
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -50,9 +56,9 @@ def main():
     h_path, video_path, report = map(Path, sys.argv[1:])
     h = [json.loads(s) for s in h_path.read_text().splitlines()]
     video = [json.loads(s) for s in video_path.read_text().splitlines()]
-    assert len(h)==720 and len({r['case_work_id'] for r in h})==720 and all(r['profile']=='H' for r in h)
-    assert len(video)==1676 and [r['frame_id'] for r in video]==list(range(1676))
-    assert len({r['config_sha256'] for r in h+video})==1
+    require(len(h) == 720 and len({r['case_work_id'] for r in h}) == 720 and all((r['profile'] == 'H' for r in h)), "report_verification.py:53: len(h) == 720 and len({r['case_work_id'] for r in h}) == 720 and all((r['profile'] == 'H' for r in h))")
+    require(len(video) == 1676 and [r['frame_id'] for r in video] == list(range(1676)), "report_verification.py:54: len(video) == 1676 and [r['frame_id'] for r in video] == list(range(1676))")
+    require(len({r['config_sha256'] for r in h + video}) == 1, "report_verification.py:55: len({r['config_sha256'] for r in h + video}) == 1")
     failures, wrong_geometry, wrong_direction, bad_screen, bad_bbox, bad_evidence = [], 0, 0, 0, 0, 0
     worst = 0
     for r in h:
@@ -78,7 +84,7 @@ def main():
             if 'bbox' in d:
                 bbox = [min(p[0] for p in points),min(p[1] for p in points),max(p[0] for p in points)-min(p[0] for p in points),max(p[1] for p in points)-min(p[1] for p in points)]
                 bad_bbox += any(abs(a-b)>64*2**-23*max(1,abs(a),abs(b)) for a,b in zip(bbox,d['bbox']))
-        assert good==r['stage_correct'], 'runner result disagrees with independent truth evaluation'
+        require(good == r['stage_correct'], 'runner result disagrees with independent truth evaluation')
         if not good:
             failures.append({'case':r['case_work_id'],'diagnostics':r['diagnostics'],'isolated_reason':r['isolated_reason']})
     rows = []

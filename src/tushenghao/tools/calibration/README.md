@@ -47,7 +47,7 @@ python3 src/tushenghao/tools/calibration/scripts/frame_picker.py data/raw/calibr
 | `frame_list` | 选定的帧号列表 |
 | `output_path` | 输出 yaml 路径（默认 `config/calibration.yaml`） |
 
-CLI 可覆盖：`--video`、`--output`、`--rows`、`--cols`、`--spacing`、`--start-frame`、`--end-frame`。
+CLI 可覆盖：`--video`、`--output`、`--rows`、`--cols`、`--spacing`。
 
 配置步骤先检查完整 CLI，再按默认值 → YAML → CLI 覆盖。未知选项、重复选项和缺值均报错；数值必须完整解析，禁止 `7junk`、NaN/Inf。YAML 只接受已列出的配置字段及 `schema_version`，拒绝未知/重复键和错误类型；整数原始 token 必须落在 C++ `int` 可表示范围内，避免 OpenCV 先窄化再误接受。`frame_list` 必须是非负整数序列，圆心间距必须是有限正数。配置失败返回非零，不打开视频、不写标定结果。
 
@@ -80,3 +80,5 @@ reprojection_error: 0.095         # 重投影误差（像素）
 ## 验收标准
 
 见 `docs/acceptance.md`。重投影 RMSE < 0.5px 为优秀。
+
+现行选帧只使用 `frame_list`；旧 `start_frame/end_frame` YAML 与 `--start-frame/--end-frame` CLI 明确拒绝。抽样与圆点阵观察保留源 frame_id，未检出帧记信息且不进入求解。视频尺寸由 CalibrationVideoInfo 显式传到求解结果与保存步骤，不再回写静态配置。输出 YAML 字段保持既有协议。

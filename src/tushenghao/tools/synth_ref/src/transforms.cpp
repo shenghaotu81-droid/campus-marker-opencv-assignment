@@ -32,11 +32,11 @@ namespace sg  {
     return hi/std::abs(det);
   }
   // 按 x 右 y 下正角顺时针定义 R，按模型外框中心平移。
-  cv::Matx33d affine(const Context& c,const Json& d)  {
+  static cv::Matx33d affine_values(double model_stroke,Point center,const Json& d)  {
     double theta=d.value("theta",0.0)*std::acos(-1.0)/180,r=d.value("ratio",1.0),h=d.value("shear",0.0),w=d.value("width",8.0);
     double co=std::cos(theta),si=std::sin(theta);
     cv::Matx33d a(co*r,co*h-si,0,si*r,si*h+co,0,0,0,1);
-    auto widths=stroke_widths(a,c.model.at("stroke_width").at("value"));
+    auto widths=stroke_widths(a,model_stroke);
     double s=w/std::min(widths[0],widths[1]);
     for(int y=0;y<2;++y)for(int x=0;x<2;++x)a(y,x)*=s;
     double px=0,py=0;
@@ -44,8 +44,12 @@ namespace sg  {
       px=d["phase"][0];
       py=d["phase"][1];
     }
-    a(0,2)=480+px-a(0,0)*c.center.x-a(0,1)*c.center.y;
-    a(1,2)=360+py-a(1,0)*c.center.x-a(1,1)*c.center.y;
+    a(0,2)=480+px-a(0,0)*center.x-a(0,1)*center.y;
+    a(1,2)=360+py-a(1,0)*center.x-a(1,1)*center.y;
     return a;
   }
+  cv::Matx33d affine(const Context& c,const Json& d) {
+    return affine_values(c.model.at("stroke_width").at("value"),c.center,d);
+  }
+
 }

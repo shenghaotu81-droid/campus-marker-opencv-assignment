@@ -1,3 +1,6 @@
+#include "synthetic_gen/transforms.hpp"
+#include "synthetic_gen/perturb.hpp"
+#include "synthetic_gen/raster.hpp"
 
 #include "synthetic_gen/cases.hpp"
 #include <opencv2/imgproc.hpp>
@@ -5,32 +8,32 @@
 #include <cmath>
 namespace sg  {
   // 添加一个确定性特殊样例，基准参数来自 cases.json。
-  static Json special(const Context& c,const std::string& family)  {
-    Json d=c.cases.at("baseline");
+  static Json special(const Json& cases,const std::string& family)  {
+    Json d=cases.at("baseline");
     d["family"]=family;
     return d;
   }
   // §5 每行显式枚举，几何与计数描述也有 case_id，但不伪造图像。
-  void enumerate_special(const Context& c,const Visitor& visit)  {
+  static void enumerate_special_values(const Json& model,const Json& cases,const Visitor& visit)  {
     for(const std::string side:  {
       "left","right","top","bottom"
-    })for(const auto& depth:c.cases.at("crop_depths"))  {
-      auto d=special(c,"crop");
+    })for(const auto& depth:cases.at("crop_depths"))  {
+      auto d=special(cases,"crop");
       d["side"]=side;
       d["depth"]=depth;
       visit(d);
     }
-    for(const auto& p:c.model.at("pieces"))  {
-      auto d=special(c,"missing");
+    for(const auto& p:model.at("pieces"))  {
+      auto d=special(cases,"missing");
       d["delete"]=Json::array(  {
         p.at("id")
       });
       visit(d);
     }
-    auto d=special(c,"missing");
+    auto d=special(cases,"missing");
     d["delete"]="ALL";
     visit(d);
-    for(const auto& b:c.cases.at("blocks"))  {
+    for(const auto& b:cases.at("blocks"))  {
       d=Json {
          {
           "family","ordinary"
@@ -41,8 +44,8 @@ namespace sg  {
     }
     for(const std::string target:  {
       "S1a","S1b"
-    })for(const auto& w:c.cases.at("bridge_widths"))  {
-      d=special(c,"bridge");
+    })for(const auto& w:cases.at("bridge_widths"))  {
+      d=special(cases,"bridge");
       d["target"]=target;
       d["bridge_width"]=w;
       visit(d);
@@ -56,9 +59,9 @@ namespace sg  {
           "family",f
         }
       });
-      else visit(special(c,f));
+      else visit(special(cases,f));
     }
-    for(const auto& n:c.cases.at("white_counts"))  {
+    for(const auto& n:cases.at("white_counts"))  {
       d=Json {
          {
           "family","white_pressure"
@@ -67,18 +70,18 @@ namespace sg  {
       d["count"]=n;
       visit(d);
     }
-    for(const auto& n:c.cases.at("l_counts"))  {
+    for(const auto& n:cases.at("l_counts"))  {
       d=Json {
          {
           "family","l_pressure"
         }, {
-          "width",c.cases.at("l_grid").at("width")
+          "width",cases.at("l_grid").at("width")
         }
       };
       d["count"]=n;
       visit(d);
     }
-    for(const auto& n:c.cases.at("counter_limits"))for(int delta:  {
+    for(const auto& n:cases.at("counter_limits"))for(int delta:  {
       -1,0,1
     })  {
       d=  {
@@ -92,23 +95,26 @@ namespace sg  {
       };
       visit(d);
     }
-    for(const auto& w:c.cases.at("narrow_widths"))  {
-      d=special(c,"narrow");
+    for(const auto& w:cases.at("narrow_widths"))  {
+      d=special(cases,"narrow");
       d["width"]=w;
       visit(d);
     }
-    for(const auto& r:c.cases.at("strong_ratios"))for(const auto& theta:c.cases.at("strong_rotations"))  {
-      d=special(c,"strong_affine");
+    for(const auto& r:cases.at("strong_ratios"))for(const auto& theta:cases.at("strong_rotations"))  {
+      d=special(cases,"strong_affine");
       d["ratio"]=r;
       d["theta"]=theta;
       d["width"]=4;
       visit(d);
     }
-    for(const auto& k:c.cases.at("perspective_k"))  {
-      d=special(c,"perspective");
+    for(const auto& k:cases.at("perspective_k"))  {
+      d=special(cases,"perspective");
       d["k"]=k;
       visit(d);
     }
+  }
+  void enumerate_special(const Context& c,const Visitor& visit) {
+    enumerate_special_values(c.model,c.cases,visit);
   }
   // 自测片不含 MARK 标签或模型尺寸，保持未批准时的独立性。
   static Piece independent(const std::string& id,const Polygon& vertices,int instance,const std::string& type="INDEPENDENT_TEST_SHAPE")  {
@@ -124,7 +130,7 @@ namespace sg  {
     return p;
   }
   // 构造理想几何，先保留名义真值再做扰动，二者不相互替代。
-  Scene make_scene(const Context& c,const Json& d)  {
+  static Scene make_scene_values(const Json& model,Point model_center,const Json& d,cv::Matx33d m)  {
     Scene s;
     s.descriptor=d;
     std::string family=d.at("family");
@@ -188,18 +194,17 @@ namespace sg  {
       };
       return s;
     }
-    cv::Matx33d m=affine(c,d);
     if(family=="mirror")  {
-      cv::Matx33d reflection(-1,0,2*c.center.x,0,1,0,0,0,1);
+      cv::Matx33d reflection(-1,0,2*model_center.x,0,1,0,0,0,1);
       m=m*reflection;
     }
     if(family=="perspective")  {
       double k=d.at("k");
-      cv::Matx33d center(1,0,-c.center.x,0,1,-c.center.y,0,0,1),project(1,0,0,0,1,0,k/80,0,1),finish(1,0,480,0,1,360,0,0,1);
+      cv::Matx33d center(1,0,-model_center.x,0,1,-model_center.y,0,0,1),project(1,0,0,0,1,0,k/80,0,1),finish(1,0,480,0,1,360,0,0,1);
       m=finish*project*center;
       s.fixture["denominator_finite_checked"]=true;
     }
-    for(const auto& v:c.model.at("pieces"))  {
+    for(const auto& v:model.at("pieces"))  {
       Piece p;
       p.id=v.at("id");
       p.type=v.at("type");
@@ -220,7 +225,13 @@ namespace sg  {
       }
       s.pieces.push_back(p);
     }
-    apply_special(c,s);
+    return s;
+  }
+  Scene make_scene(const Context& c,const Json& d) {
+    const std::string family=d.at("family");
+    const bool base_only=family=="selftest"||family=="counter";
+    auto s=make_scene_values(c.model,c.center,d,base_only?cv::Matx33d::eye():affine(c,d));
+    if(!base_only)apply_special(c,s);
     return s;
   }
   // 对理想和扰动顶点同时平移，保存完整矩阵让裁切前坐标仍可复核。
@@ -266,7 +277,7 @@ namespace sg  {
     return result;
   }
   // 应用负例构造，不输出 REFUSED/RESOURCE_LIMIT 或任何检测结果。
-  void apply_special(const Context& c,Scene& s)  {
+  static void apply_special_values(const Json& model,const Json& cases,Scene& s)  {
     const auto& d=s.descriptor;
     std::string f=d.at("family");
     if(f=="narrow"||f=="strong_affine"||f=="perspective")s.status="OUT_OF_GRID";
@@ -351,9 +362,9 @@ namespace sg  {
       };
     }
     if(f=="wrong_combination")  {
-      Point delta(c.cases.at("wrong_shift")[0],c.cases.at("wrong_shift")[1]);
+      Point delta(cases.at("wrong_shift")[0],cases.at("wrong_shift")[1]);
       for(auto& p:s.pieces)if(p.type!="L")translate_piece(p,delta);
-      s.fixture["applied_shift"]=c.cases.at("wrong_shift");
+      s.fixture["applied_shift"]=cases.at("wrong_shift");
     }
     if(f=="permutations"||f=="symmetric")  {
       std::array<Point,3> src,obs;
@@ -390,7 +401,7 @@ namespace sg  {
       s.image=false;
       s.pieces.clear();
       s.evidence="GEOMETRY_FIXTURE_ONLY";
-      double y=f=="near_collinear"?c.cases.at("near_collinear_offset").get<double>():0;
+      double y=f=="near_collinear"?cases.at("near_collinear_offset").get<double>():0;
       s.fixture=  {
          {
           "anchors",  {
@@ -422,7 +433,7 @@ namespace sg  {
     if(f=="white_pressure"||f=="l_pressure")  {
       s.pieces.clear();
       int n=d.at("count");
-      const auto& grid=c.cases.at(f=="white_pressure"?"white_grid":"l_grid");
+      const auto& grid=cases.at(f=="white_pressure"?"white_grid":"l_grid");
       int columns=grid.at("columns");
       double step=grid.at("step"),ox=grid.at("origin")[0],oy=grid.at("origin")[1];
       for(int i=0;i<n;++i)  {
@@ -443,8 +454,8 @@ namespace sg  {
           };
         }
         else  {
-          p=polygon(c.model.at("templates")[0].at("vertices"));
-          double scale=grid.at("width").get<double>()/c.model.at("stroke_width").at("value").get<double>();
+          p=polygon(model.at("templates")[0].at("vertices"));
+          double scale=grid.at("width").get<double>()/model.at("stroke_width").at("value").get<double>();
           for(auto& v:p)v=Point(x,y)+(v-Point(15,15))*scale;
         }
         s.pieces.push_back(independent("pressure_"+std::to_string(i),p,i+1,f=="white_pressure"?"INDEPENDENT_SQUARE":"GENERATED_L_TEMPLATE"));
@@ -461,6 +472,9 @@ namespace sg  {
         }
       };
     }
+  }
+  void apply_special(const Context& c,Scene& s) {
+    apply_special_values(c.model,c.cases,s);
   }
   // 检查二值输入的连通事实，避免桥接构造未连上仍报告成功。
   void check_scene(const Scene& s,const Raster& r)  {

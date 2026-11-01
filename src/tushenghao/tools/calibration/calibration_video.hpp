@@ -1,17 +1,3 @@
-// 视频层
-/*
-video_path
-      ↓
-VideoCapture
-      ↓
-width
-height
-frame_count
-      ↓
-frame_list
-      ↓
-vector<cv::Mat>
-*/
 #pragma once
 
 #include <opencv2/opencv.hpp>
@@ -23,6 +9,8 @@ vector<cv::Mat>
 // 标定视频基本信息
 struct CalibrationVideoInfo
 {
+    std::string source_path;
+
     // 视频宽度
     int width = 0;
 
@@ -37,7 +25,9 @@ struct CalibrationVideoInfo
 bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &capture,
                             CalibrationVideoInfo &info);
 
+// C03：抽帧保留源身份；后续检测失败也不丢掉对应帧号。
+struct SampledFrame { int frame_id{}; cv::Mat image; };
 // 根据帧编号列表抽取图像
 // frame_list 为空时不执行抽帧
 bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &frame_list,
-                            std::vector<cv::Mat> &frames);
+                            std::vector<SampledFrame> &frames);

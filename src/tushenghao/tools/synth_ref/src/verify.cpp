@@ -1,3 +1,4 @@
+#include "synthetic_gen/transforms.hpp"
 
 #include "synthetic_gen/verify.hpp"
 #include <opencv2/imgcodecs.hpp>
@@ -6,10 +7,6 @@
 #include <cmath>
 namespace sg  {
   // 协议 helper 由 records 模块实现；验证仍独立重建场景与文件内容。
-  std::string record_index_line(const Json&,size_t);
-  std::string record_index_header();
-  std::string record_observation_header();
-  std::string record_png_bytes(const cv::Mat&);
   // 检查清单、独立覆盖和每个 PNG，错误集中报告并带 case_id。
   Json verify(const Context& c,const std::string& name,bool save,bool pending_generation)  {
     auto path=run_path(name);

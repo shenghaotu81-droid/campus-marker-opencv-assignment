@@ -1,3 +1,9 @@
 #pragma once
-// grid 模块入口；公共接口与类型集中声明以便各模块复用。
-#include "synthetic_gen/core.hpp"
+#include "synthetic_gen/model.hpp"
+#include <functional>
+namespace sg {
+// S03：流式产出描述与稳定身份，不保留全量网格。
+using Visitor=std::function<void(const Json&)>;
+void enumerate(const Context&,const std::string&,const Visitor&);
+std::string case_id(const Context&,const Json&);
+}

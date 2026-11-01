@@ -1,5 +1,7 @@
 """旧实验依赖临时目录；本轮把每次完整运行、输入身份和逐值对账固定归档。"""
 
+import argparse
+import re
 import hashlib
 import json
 import math
@@ -10,9 +12,31 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[4]
-SOURCE = ROOT / "src/tushenghao"
-ARCHIVE = SOURCE / "docs/evidence/112-recovery"
+
+# V03/V04：证据条件在 python -O 下也必须执行，失败保留具体条件位置。
+def require(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
+# V06：路径与冻结验收定义都由入口提供，缺输入立即失败，不创建成功产物。
+def load_paths(arguments):
+    arguments.source_root = arguments.source_root.resolve(strict=True)
+    arguments.build_logs = arguments.build_logs.resolve(strict=True)
+    arguments.output_root = arguments.output_root.resolve()
+    arguments.input_manifest = arguments.input_manifest.resolve(strict=True)
+    arguments.manifest = json.loads(arguments.input_manifest.read_text())
+    required = ("input_root", "video", "config", "failed_ids_file", "expected_frames",
+                "expected_runs", "expected_test_targets", "historical_fast", "historical_synthetic",
+                "protected_before", "readme_current", "readme_original", "legacy_source_prefix")
+    for key in required:
+        if key not in arguments.manifest:
+            raise ValueError(f"input_manifest missing {key}")
+    arguments.input_root = Path(arguments.manifest["input_root"]).resolve(strict=True)
+    for key in ("video", "config", "failed_ids_file", "historical_fast", "protected_before", "readme_original"):
+        Path(arguments.manifest[key]).resolve(strict=True)
+    if not arguments.manifest["expected_test_targets"]:
+        raise ValueError("expected_test_targets must name the required tests")
+    return arguments
 
 
 def digest(path):
@@ -23,16 +47,15 @@ def digest(path):
     return value.hexdigest()
 
 
-def records(path):
+def records(path, expected_frames):
     rows = [json.loads(line) for line in path.read_text().splitlines()]
-    if [row["frame"] for row in rows] != list(range(1676)):
+    if [row["frame"] for row in rows] != list(range(expected_frames)):
         raise ValueError(f"incomplete or unordered video: {path}")
     return rows
 
 
-def compare(rows, baseline):
-    targets = set(json.loads((SOURCE / "docs/evidence/112-forensics/deep/"
-                            "sample_definition.json").read_text())["failed_ids"])
+def compare(rows, baseline, paths):
+    targets = set(json.loads(Path(paths.manifest["failed_ids_file"]).read_text())["failed_ids"])
     added, lost, changed, outside_status = [], [], [], []
     for old, new in zip(baseline, rows):
         frame = new["frame"]
@@ -63,40 +86,40 @@ def distribution(rows):
             "max_ms": elapsed[-1], "over33": sum(value > 33 for value in elapsed)}
 
 
-def run(label, executable, expected):
-    destination = ARCHIVE / label
+def run(label, executable, expected, paths):
+    destination = paths.output_root / label
     destination.mkdir(parents=True, exist_ok=False)
     executable = Path(executable).resolve()
     # 缓存验收必须绑定真实源码；逐步快照让最终重写后仍能复核每一步。
-    inputs = [ROOT / "data/raw/marker_video.avi", SOURCE / "CMakeLists.txt"]
-    inputs.append(SOURCE / "docs/evidence/112-forensics/deep/sample_definition.json")
+    inputs = [Path(paths.manifest["video"]), paths.source_root / "CMakeLists.txt"]
+    inputs.append(Path(paths.manifest["failed_ids_file"]))
     for directory in ("lib", "include", "config"):
-        inputs.extend(sorted((SOURCE / directory).rglob("*.*")))
-    inputs.extend(sorted((SOURCE / "tools/validation").glob("recovery112_*")))
-    hashes = {str(path.relative_to(ROOT)): digest(path) for path in inputs if path.is_file()}
-    for path in sorted((SOURCE / "lib").rglob("*.*")):
+        inputs.extend(sorted((paths.source_root / directory).rglob("*.*")))
+    inputs.extend(sorted((paths.source_root / "tools/validation").glob("recovery112_*")))
+    hashes = {str(path.resolve()): digest(path) for path in inputs if path.is_file()}
+    for path in sorted((paths.source_root / "lib").rglob("*.*")):
         if path.is_file():
-            target = destination / "source" / path.relative_to(SOURCE)
+            target = destination / "source" / path.relative_to(paths.source_root)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
-    command = [str(executable), "src/tushenghao/config/detector_verification.yaml",
-               "data/raw/marker_video.avi"]
+    command = [str(executable), str(Path(paths.manifest["config"]).resolve()),
+               str(Path(paths.manifest["video"]).resolve())]
     manifest = {"label": label, "started_utc": datetime.now(timezone.utc).isoformat(),
                 "command": command, "binary_sha256": digest(executable), "inputs": hashes,
                 "platform": platform.platform(), "threads": 1, "build_type": "Release",
                 "timing": "steady_clock public process including Summary; decode/JSON excluded"}
     with (destination / "frames.jsonl").open("w") as output, \
             (destination / "run.log").open("w") as log:
-        result = subprocess.run(command, cwd=ROOT, stdout=output, stderr=log, check=False)
+        result = subprocess.run(command, cwd=paths.input_root, stdout=output, stderr=log, check=False)
     manifest["exit_code"] = result.returncode
     manifest["ended_utc"] = datetime.now(timezone.utc).isoformat()
     (destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     if result.returncode:
         raise RuntimeError(f"video failed; preserved in {destination}")
-    rows = records(destination / "frames.jsonl")
+    rows = records(destination / "frames.jsonl", paths.manifest["expected_frames"])
     summary = distribution(rows)
     if label != "baseline":
-        summary.update(compare(rows, records(ARCHIVE / "baseline/frames.jsonl")))
+        summary.update(compare(rows, records(paths.output_root / "baseline/frames.jsonl", paths.manifest["expected_frames"]), paths))
     manifest["outputs"] = {name: digest(destination / name)
                            for name in ("frames.jsonl", "run.log")}
     (destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -107,43 +130,54 @@ def run(label, executable, expected):
         raise AssertionError("video acceptance failed")
 
 
-def summarize():
+# B06：按明确目标集验收，允许日志包含新目标，不固定测试总数。
+def check_ctest(log, flags_path, build, expected_targets):
+    text = log.read_text()
+    total = re.search(r"100% tests passed, 0 tests failed out of (\d+)", text)
+    require(total is not None, f"CTest failed or summary missing: {log}")
+    passed = set(re.findall(r"Test\s+#\d+:\s+(\S+)\s+\.+\s+Passed", text))
+    require(set(expected_targets) <= passed,
+            f"required CTest targets missing: {log}")
+    flags = flags_path.read_text()
+    require(("-DNDEBUG" in flags) == (build == "release"), f"build mode mismatch: {build}")
+    return {"passed": int(total[1]), "total": int(total[1]),
+                              "assertions_enabled": build == "debug"}
+
+
+def summarize(paths):
     # 全帧/旧成功/集合外/长尾分别断言；未达标探索运行也保留，不能只汇总最好的样本。
-    expected = {"baseline": 976, "step1-index": 976, "step2-search": 976, "step3-ab": 996,
-                "step4-periodic": 1088, "step6-first": 1088, "step6-scratch": 1088,
-                "step6-model-scratch": 1088, "final-repeat1": 1088, "final-repeat2": 1088}
-    baseline = records(ARCHIVE / "baseline/frames.jsonl")
+    expected = paths.manifest["expected_runs"]
+    baseline = records(paths.output_root / "baseline/frames.jsonl", paths.manifest["expected_frames"])
     result = {"videos": {}}
     for label, count in expected.items():
-        directory = ARCHIVE / label
-        rows = records(directory / "frames.jsonl")
+        directory = paths.output_root / label
+        rows = records(directory / "frames.jsonl", paths.manifest["expected_frames"])
         summary = distribution(rows)
-        summary.update(compare(rows, baseline))
-        assert summary["detected"] == count == summary["detections_total"]
-        assert not any(summary[key] for key in ("lost_ids", "original_raw_changes",
-                                               "outside_added_ids", "outside_status_changes"))
+        summary.update(compare(rows, baseline, paths))
+        require(summary['detected'] == count == summary['detections_total'], "recovery112_check.py:122: summary['detected'] == count == summary['detections_total']")
+        require(not any((summary[key] for key in ('lost_ids', 'original_raw_changes', 'outside_added_ids', 'outside_status_changes'))), "recovery112_check.py:123: not any((summary[key] for key in ('lost_ids', 'original_raw_changes', 'outside_added_ids', 'outside_status_changes')))")
         if label in ("step1-index", "step2-search"):
-            assert [(r["status"], r["detections"]) for r in rows] == \
-                   [(r["status"], r["detections"]) for r in baseline]
+            require([(r['status'], r['detections']) for r in rows] == [(r['status'], r['detections']) for r in baseline], "recovery112_check.py:126: [(r['status'], r['detections']) for r in rows] == [(r['status'], r['detections']) for r in baseline]")
         if label.startswith("final-"):
-            assert summary["recovered"] == 112 and not summary["remaining_ids"]
-            assert summary["mean_ms"] <= 25 and summary["max_ms"] <= 33 and summary["over33"] == 0
+            require(summary['recovered'] == 112 and (not summary['remaining_ids']), "recovery112_check.py:129: summary['recovered'] == 112 and (not summary['remaining_ids'])")
+            require(summary['mean_ms'] <= 25 and summary['max_ms'] <= 33 and (summary['over33'] == 0), "recovery112_check.py:130: summary['mean_ms'] <= 25 and summary['max_ms'] <= 33 and (summary['over33'] == 0)")
         manifest = json.loads((directory / "manifest.json").read_text())
         for name, value in manifest["outputs"].items():
-            assert digest(directory / name) == value
+            require(digest(directory / name) == value, 'recovery112_check.py:133: digest(directory / name) == value')
         for name, value in manifest["inputs"].items():
-            if name.startswith("src/tushenghao/lib/"):
-                assert digest(directory / "source" / name.removeprefix("src/tushenghao/")) == value
+            if name.startswith(str(paths.source_root / "lib") + "/") or name.startswith(paths.manifest["legacy_source_prefix"] + "lib/"):
+                relative = (Path(name).relative_to(paths.source_root) if Path(name).is_absolute()
+                            else Path(name.removeprefix(paths.manifest["legacy_source_prefix"])))
+                require(digest(directory / "source" / relative) == value, f"source snapshot hash mismatch: {name}")
         result["videos"][label] = summary
 
-    first = records(ARCHIVE / "final-repeat1/frames.jsonl")
-    second = records(ARCHIVE / "final-repeat2/frames.jsonl")
-    assert [(r["status"], r["detections"]) for r in first] == \
-           [(r["status"], r["detections"]) for r in second]
-    previous = records(ARCHIVE / "step4-periodic/frames.jsonl")
+    first = records(paths.output_root / "final-repeat1/frames.jsonl", paths.manifest["expected_frames"])
+    second = records(paths.output_root / "final-repeat2/frames.jsonl", paths.manifest["expected_frames"])
+    require([(r['status'], r['detections']) for r in first] == [(r['status'], r['detections']) for r in second], "recovery112_check.py:141: [(r['status'], r['detections']) for r in first] == [(r['status'], r['detections']) for r in second]")
+    previous = records(paths.output_root / "step4-periodic/frames.jsonl", paths.manifest["expected_frames"])
     changes = []
     for old, new in zip(previous, first):
-        assert old["status"] == new["status"]
+        require(old['status'] == new['status'], "recovery112_check.py:146: old['status'] == new['status']")
         if old["detections"] != new["detections"]:
             delta = max(math.hypot(a[0] - b[0], a[1] - b[1])
                         for old_detection, new_detection in zip(old["detections"], new["detections"])
@@ -152,7 +186,7 @@ def summarize():
     result["priority_changes"] = changes
     result["priority_max_delta_px"] = max(change["max_corner_delta_px"] for change in changes)
     result["repeat_raw_equal"] = True
-    historical = records(SOURCE / "docs/evidence/112-worstframe/final-repeat1.jsonl")
+    historical = records(Path(paths.manifest["historical_fast"]), paths.manifest["expected_frames"])
     result["historical_fast_raw_equal"] = \
         [(r["status"], r["detections"]) for r in first] == \
         [(r["status"], r["detections"]) for r in historical]
@@ -160,21 +194,21 @@ def summarize():
     result["synthetic"] = {}
     for split, seed, positive_count, accepted, negative_count in \
             (("calibration", 112, 25, 24, 0), ("test", 7919, 68, 67, 20)):
-        rows = [json.loads(line) for line in (ARCHIVE / f"final-{split}.jsonl").read_text().splitlines()]
+        rows = [json.loads(line) for line in (paths.output_root / f"final-{split}.jsonl").read_text().splitlines()]
         historical_rows = [json.loads(line) for line in
-                           (SOURCE / f"docs/evidence/112-worstframe/independent-{split}.jsonl")
+                           Path(paths.manifest["historical_synthetic"][split])
                            .read_text().splitlines()]
         identity = lambda row: tuple(row[key] for key in ("id", "angle", "amplitude", "local", "negative"))
-        assert list(map(identity, rows)) == list(map(identity, historical_rows))
+        require(list(map(identity, rows)) == list(map(identity, historical_rows)), 'recovery112_check.py:168: list(map(identity, rows)) == list(map(identity, historical_rows))')
         positives = [row for row in rows if not row["negative"]]
         negatives = [row for row in rows if row["negative"]]
         passed = [row for row in positives if row["valid"]]
         modeled = [row for row in passed if row["modeled_edges"]]
         rejected = [row["id"] for row in positives if not row["valid"]]
-        assert len(positives) == positive_count and len(passed) == accepted
-        assert len(negatives) == negative_count and not any(row["valid"] for row in negatives)
-        assert rejected == [2] and all(row["tamper_rejected"] for row in modeled)
-        assert max(row["max_truth_error"] for row in passed) < 2
+        require(len(positives) == positive_count and len(passed) == accepted, 'recovery112_check.py:174: len(positives) == positive_count and len(passed) == accepted')
+        require(len(negatives) == negative_count and (not any((row['valid'] for row in negatives))), "recovery112_check.py:175: len(negatives) == negative_count and (not any((row['valid'] for row in negatives)))")
+        require(rejected == [2] and all((row['tamper_rejected'] for row in modeled)), "recovery112_check.py:176: rejected == [2] and all((row['tamper_rejected'] for row in modeled))")
+        require(max((row['max_truth_error'] for row in passed)) < 2, "recovery112_check.py:177: max((row['max_truth_error'] for row in passed)) < 2")
         result["synthetic"][split] = {"seed": seed, "samples": len(rows),
                                      "positives": positive_count, "accepted": accepted,
                                      "negative_rejected": len(negatives), "rejected_positive_ids": rejected,
@@ -184,30 +218,37 @@ def summarize():
 
     result["ctest"] = {}
     for build in ("release", "debug"):
-        log = ARCHIVE / f"final-{build}-ctest.log"
-        assert "100% tests passed, 0 tests failed out of 25" in log.read_text()
-        flags = (ARCHIVE / "build-metadata" / build / "flags.make").read_text()
-        assert ("-DNDEBUG" in flags) == (build == "release")
-        result["ctest"][build] = {"passed": 25, "total": 25, "assertions_enabled": build == "debug"}
-    protected = json.loads((ARCHIVE / "protected-before.json").read_text())
+        log = paths.build_logs / f"final-{build}-ctest.log"
+        result["ctest"][build] = check_ctest(log, paths.build_logs / "build-metadata" / build / "flags.make",
+                                               build, paths.manifest["expected_test_targets"])
+    protected = json.loads(Path(paths.manifest["protected_before"]).read_text())
     for name, value in protected.items():
-        if name != "src/tushenghao/README.md":
-            assert digest(ROOT / name) == value
-    assert digest(SOURCE / "docs/history/README_before_112_recovery.md") == protected["src/tushenghao/README.md"]
+        if name != paths.manifest["readme_current"]:
+            require(digest(paths.input_root / name) == value, 'recovery112_check.py:195: digest(paths.input_root / name) == value')
+    require(digest(Path(paths.manifest["readme_original"])) == protected[paths.manifest["readme_current"]], "historical README bytes differ")
     result["public_config_ref_unchanged"] = True
     result["readme_original_byte_equal"] = True
     result["reference_comparisons"] = 39
-    assert "reference comparisons=39 (all arcs/pairs/evidence exact)" in \
-           (ARCHIVE / "final-reference.log").read_text()
+    require('reference comparisons=39 (all arcs/pairs/evidence exact)' in (paths.output_root / 'final-reference.log').read_text(), "recovery112_check.py:200: 'reference comparisons=39 (all arcs/pairs/evidence exact)' in (paths.output_root / 'final-reference.log').read_text()")
     result["all_acceptance_passed"] = True
-    (ARCHIVE / "summary.json").write_text(json.dumps(result, indent=2) + "\n")
+    (paths.output_root / "summary.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({key: value for key, value in result.items() if key != "videos"}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2 and sys.argv[1] == "summarize":
-        summarize()
-    elif len(sys.argv) == 5 and sys.argv[1] == "run":
-        run(sys.argv[2], sys.argv[3], int(sys.argv[4]))
+    parser = argparse.ArgumentParser(description="显式输入的 112 回放验收；历史原文只读")
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--input-manifest", type=Path, required=True)
+    parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--build-logs", type=Path, required=True)
+    commands = parser.add_subparsers(dest="command", required=True)
+    replay = commands.add_parser("run")
+    replay.add_argument("label")
+    replay.add_argument("executable")
+    replay.add_argument("expected", type=int)
+    commands.add_parser("summarize")
+    paths = load_paths(parser.parse_args())
+    if paths.command == "summarize":
+        summarize(paths)
     else:
-        raise SystemExit("usage: recovery112_check.py run LABEL BINARY EXPECTED_DETECTED | summarize")
+        run(paths.label, paths.executable, paths.expected, paths)

@@ -1,3 +1,10 @@
 #pragma once
-// raster 模块入口；公共接口与类型集中声明以便各模块复用。
-#include "synthetic_gen/core.hpp"
+#include "synthetic_gen/cases.hpp"
+namespace sg {
+  struct Raster  {
+    cv::Mat image,mask,instances;
+  };
+
+// S05：固定子点覆盖规则，只消费场景，不读取总配置。
+Raster rasterize(const Scene&,int width=960,int height=720);
+}
