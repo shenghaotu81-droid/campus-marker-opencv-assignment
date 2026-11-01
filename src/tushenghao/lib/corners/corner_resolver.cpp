@@ -24,16 +24,13 @@ namespace mark
                                             const std::vector<WhiteComponent> &observations,
                                             const GeometryHypothesis &hypothesis,
                                             const MarkerGeometry &model, const CornerConfig &config,
-                                            const OriginalContourSource &source)
+                                            const OriginalContourSource &source, ScreenOrder *screen_order)
     {
         validateCornerObservationBudget(config);
-        CornerResolution result{};
-        result.status_ = CornerResolutionStatus::FAILED;
         // 来源绑定显式用 frame ID 检查；索引生命周期由 decode 的局部对象限定。
         if (source.frame_id != frame.frame_id_)
         {
-            result.rejection_reason_ = "ORIGINAL_INDEX_FRAME_MISMATCH";
-            return result;
+            return cornerFailure("ORIGINAL_INDEX_FRAME_MISMATCH");
         }
         // 格式/映射非法与图像缺边分开登记，严禁除零或访问非法affine。
         if (frame.original_image_.empty() || frame.original_image_.dims != 2 ||
@@ -44,27 +41,23 @@ namespace mark
             frame.original_white_threshold_ > 255 ||
             !observed::validAffine(hypothesis.affine_transform_))
         {
-            result.rejection_reason_ = "INVALID_CORNER_INPUT: 原图/映射/非镜像仿射非法";
-            return result;
+            return cornerFailure("INVALID_CORNER_INPUT: 原图/映射/非镜像仿射非法");
         }
         // 显式映射必须和真实resize尺寸吻合，不能让任意正scale把搜索域错映后“成功”。
         if (frame.scale_x_ != static_cast<double>(frame.image_.cols) / frame.original_image_.cols ||
             frame.scale_y_ != static_cast<double>(frame.image_.rows) / frame.original_image_.rows)
         {
-            result.rejection_reason_ = "INVALID_COORDINATE_MAPPING";
-            return result;
+            return cornerFailure("INVALID_COORDINATE_MAPPING");
         }
         if (hypothesis.completeness_ == GeometryCompleteness::CLEARLY_INCOMPLETE)
         {
-            result.rejection_reason_ = "CLEARLY_INCOMPLETE: 父假设已明确不完整";
-            return result;
+            return cornerFailure("CLEARLY_INCOMPLETE: 父假设已明确不完整");
         }
         std::map<size_t, const WhiteComponent *> components;
         for (const auto &c : observations)
             if (!components.emplace(c.component_id_, &c).second)
             {
-                result.rejection_reason_ = "DUPLICATE_COMPONENT_ID";
-                return result;
+                return cornerFailure("DUPLICATE_COMPONENT_ID");
             }
         std::map<std::string, size_t> assignments;
         std::set<size_t> used;
@@ -73,8 +66,7 @@ namespace mark
             if (!assignments.emplace(a.model_part_id_, a.component_id_).second ||
                 !used.insert(a.component_id_).second || !components.count(a.component_id_))
             {
-                result.rejection_reason_ = "INVALID_ASSIGNMENT: 重复身份/一片多身份/悬空引用";
-                return result;
+                return cornerFailure("INVALID_ASSIGNMENT: 重复身份/一片多身份/悬空引用");
             }
         }
 
@@ -87,8 +79,7 @@ namespace mark
             auto assignment = assignments.find(binding.part);
             if (assignment == assignments.end())
             {
-                result.rejection_reason_ = i == 1 ? "MISSING_M_ASSIGNMENT" : "MISSING_L_ASSIGNMENT";
-                return result;
+                return cornerFailure(i == 1 ? "MISSING_M_ASSIGNMENT" : "MISSING_L_ASSIGNMENT");
             }
             const GeometryPolygon *polygon = nullptr;
             for (const auto &p : model.polygons)
@@ -98,15 +89,13 @@ namespace mark
                 polygon->vertices.size() <=
                     static_cast<size_t>(std::max({binding.vertex, binding.a, binding.b})))
             {
-                result.rejection_reason_ = "INVALID_CORNER_BINDING";
-                return result;
+                return cornerFailure("INVALID_CORNER_BINDING");
             }
             // 多个父假设的同一组件共享关联结果；用引用保留完整原始轮廓而不反复复制。
             const auto &contour = source.observe(*components.at(assignment->second));
             if (!contour.reason.empty())
             {
-                result.rejection_reason_ = contour.reason + ": P" + std::to_string(i);
-                return result;
+                return cornerFailure(contour.reason + ": P" + std::to_string(i));
             }
             std::array<std::array<cv::Point2d, 2>, 2> edges;
             int edge_ids[] = {binding.a, binding.b};
@@ -118,15 +107,13 @@ namespace mark
                         observed::project(hypothesis.affine_transform_, polygon->vertices[vertex]));
                     if (!observed::finite(edges[e][end]))
                     {
-                        result.rejection_reason_ = "INVALID_MODEL_PROJECTION";
-                        return result;
+                        return cornerFailure("INVALID_MODEL_PROJECTION");
                     }
                 }
             auto fit = fitObservedEdgePair(contour.contour, edges, config);
             if (!fit.evidence)
             {
-                result.rejection_reason_ = fit.reason + ": P" + std::to_string(i);
-                return result;
+                return cornerFailure(fit.reason + ": P" + std::to_string(i));
             }
             auto &evidence = *fit.evidence;
             evidence.physical_corner_ = static_cast<PhysicalCorner>(i);
@@ -145,14 +132,9 @@ namespace mark
             measurement.physical_corners_[i] = evidence.intersection_;
             measurement.evidence_[i] = std::move(evidence);
         }
-        if (orderScreenCorners(measurement.physical_corners_, config).status_ !=
-            ScreenOrderStatus::SUCCESS)
-        {
-            result.rejection_reason_ = "INVALID_MEASURED_QUADRILATERAL";
-            return result;
-        }
-        result.status_ = CornerResolutionStatus::SUCCESS;
-        result.measurement_ = std::move(measurement);
-        return result;
+        const auto ordered = orderScreenCorners(measurement.physical_corners_,config);
+        if (!ordered.screen_order_) return cornerFailure("INVALID_MEASURED_QUADRILATERAL");
+        if (screen_order) *screen_order = *ordered.screen_order_;
+        return cornerSuccess(std::move(measurement));
     }
 }

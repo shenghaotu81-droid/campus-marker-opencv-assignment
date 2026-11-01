@@ -706,7 +706,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | `completed: GeometryBatch` | M/S 补全后的副本 | runDecodePipeline | 同上 |
 | `decoded: DecodeStageResult` | 本次 raw 检测、全部有效 measurement 和拒绝原因 | decodeStage | 角证据渲染/序列化 |
 | `temporal: TemporalDiagnostics` | 本次稳定层的关联/对应/回退 | finalizeDecodedFrame | 详情序列化 |
-| `experimental: optional<ExperimentalDetails>` | 工具实验的条件/真值载荷，非生产证据 | 仅实验工具可填；Detector 不产生或消费 | 工具/序列化；不得用作检测准入 |
+| `experimental: optional<string>` | 工具编码的条件/真值 JSON，算法与渲染不依赖实验结构 | 仅实验工具可填；Detector 不产生或消费 | 工具/序列化；不得用作检测准入 |
 
 ### 4.14 FrameRecord：应用观测载荷
 
@@ -828,7 +828,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 
 ### 5.2 FastRecovery 的完整真实顺序
 
-下表按实际调用顺序展开嵌套循环，**只有前面所有已尝试阶段都没有 evidence，才到下一行**。某阶段一旦有有效证据就返回，不继续在后续路径中选更低残差。
+下表按显式有序尝试表列出逻辑路线，**只有前面所有已尝试阶段都没有 evidence，才到下一行**。某阶段一旦有有效证据就返回，不继续在后续路径中选更低残差。
 
 | 顺序 | `stage(all, posterior, model)` | 路径及一句话机制 |
 | --- | --- | --- |
@@ -846,7 +846,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | 11 | `(false, true, PeriodicL1)` | L1 精化的原端点/后验位置阶段。 |
 | 12 | `(true, false, PeriodicL1)` | L1 精化的全端点/原位置阶段；仍无 evidence 则返回最终失败结果。 |
 
-1～4 的顺序来自先遍历 `posterior=false,true`、再遍历 `PhaseMedian,ZeroSlope`。7～12 则先遍历模型 `PhaseMedian,L1`，每个模型依次尝试三种端点/位置模式。7/8 与快速段已尝试的组合相同，源码仍保留再次调用，并复用本拟合实例的计算缓存，文档没有将这些调用省略成不存在。
+顺序、前路无证据才继续、首次成功即返回的规则保留。逻辑路线 7/8 与快速段的 1/3 参数相同：FastRecovery 复用前次完整结果，按原 stage 编号重放同样的弧与配对 trace；PeriodicRecovery 没有快速前缀，因此仍实际计算这两路。其余零命中但输入策略不同的路线保留，不把一次样本零命中当作永不触发。
 
 因此当前不是简单的 **A → B → C1**，也不是只执行“旧 → B → A → C1 → L1”；快速路线先插入四个原端点周期候选，然后才执行完整补查。
 
@@ -881,7 +881,7 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 | temporal | stabilization_enabled=1，TemporalStabilizer 和 DisplayHistory 已实现。生产文字源缺失另行说明。 |
 | 旧角点参数 | 历史三个无消费者旋钮已删除且旧键拒绝；当前原图定位路径保持既有搜索/截断检查；有效门控见 3.10。 |
 | 旧首凹点 helper | 生产三 L 生成使用明确 L 拓扑支持的全部合法锚点元组；首凹点 helper 只属于 parent_diagnose 的 fitFirstConcaveAnchorAffine 对照探针；生产按 generateThreeLAssignments 枚举，不按 anchor_vertex_index 推断只取首凹点。 |
-| 112 顺序 | 生产 FastRecovery 有四项周期快速前置及重复的完整路由组合，真实顺序以 §5 展开的 run 代码为准。 |
+| 112 顺序 | 生产 FastRecovery 使用显式 13 路有序表；两处相同尝试复用结果但保留 trace，见 §5。 |
 
 ### 6.3 参考缺失及未确认范围
 
@@ -890,3 +890,5 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 当前检测主体 `app/lib/include` 没有读取 [config/calibration.yaml](../config/calibration.yaml)，也没有 `solvePnP`、畸变校正或位姿输出接口。该文件存在相机内参与畸变系数，不表示已进入检测流水线；模型单位 80 对应的真实 MARK 长度、相机/目标坐标约定及后续 PnP 接线方案**未确认**。`feat/pnp` 分支名不能作为已经实现位姿估计的证据。
 
 `MarkCategory` 当前只有 Unknown，后续类别全集、marker_code 编码方案和 confidence 的评分定义**未确认**；严格方向输出差异的后续修复方案同样**未确认**。本次只生成说明文档，没有运行检测、构建、回归或重新验证历史“112 恢复”的性能/检出率结论。
+
+主链角点步骤同时交付同一 double 四角的 ScreenOrder，几何验证和语义归并显式复用；独立 resolver/semantic 入口仍自行核验，float 发布仍另作排序。成功／失败工厂统一状态、optional 与拒绝原因。绑定验证每次只投影一次，面积检查消费同一投影计量；M/S 廉价面积筛查把已算面积交给完整计量，独立计量入口保留坏输入检查。身份查找统一由 geometry_types.hpp 的只读函数按 ID 处理，重复所查 ID 的原拒绝与旧 fixture 未填来源的入口解释保持。

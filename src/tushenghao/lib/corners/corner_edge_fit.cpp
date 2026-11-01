@@ -745,34 +745,56 @@ namespace mark
         {
             if (polygon_.size() < 3)
                 return {std::nullopt, "SHORT_SUPPORT: 原图轮廓不足"};
-            auto result = stage(false, false, LineFitModel::Legacy);
-            if (result.evidence || strategy_ == EdgePairFitStrategy::OriginalOnly)
-                return result;
-            // 快速路线优先验证原端点上的合法周期候选；旧成功依然最先返回。
-            if (strategy_ == EdgePairFitStrategy::FastRecovery)
-                for (bool posterior : {false, true})
-                    for (auto model :
-                         {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicZeroSlope})
-                    {
-                        result = stage(false, posterior, model);
-                        if (result.evidence)
-                            return result;
-                    }
-            result = stage(false, true, LineFitModel::Legacy);
-            if (result.evidence)
-                return result;
-            result = stage(true, false, LineFitModel::Legacy);
-            if (result.evidence || strategy_ == EdgePairFitStrategy::LinearRecovery)
-                return result;
-            // 完整 B/A/C/L1 reference 路由保留；无资源上限、超时熔断或针对帧号的特殊分支。
-            for (auto model : {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicL1})
-                for (auto mode :
-                     {std::pair<bool, bool>{false, false}, {false, true}, {true, false}})
+            // D13：表序就是尝试序。位 0/1/2/3 分别为 Original/Linear/Periodic/Fast。
+            struct Route { bool all, posterior; LineFitModel model; unsigned strategies; int previous; };
+            static constexpr Route routes[] = {
+                {false,false,LineFitModel::Legacy,15,-1},
+                {false,false,LineFitModel::PeriodicPhaseMedian,8,-1},
+                {false,false,LineFitModel::PeriodicZeroSlope,8,-1},
+                {false,true,LineFitModel::PeriodicPhaseMedian,8,-1},
+                {false,true,LineFitModel::PeriodicZeroSlope,8,-1},
+                {false,true,LineFitModel::Legacy,14,-1},
+                {true,false,LineFitModel::Legacy,14,-1},
+                {false,false,LineFitModel::PeriodicPhaseMedian,12,1},
+                {false,true,LineFitModel::PeriodicPhaseMedian,12,3},
+                {true,false,LineFitModel::PeriodicPhaseMedian,12,-1},
+                {false,false,LineFitModel::PeriodicL1,12,-1},
+                {false,true,LineFitModel::PeriodicL1,12,-1},
+                {true,false,LineFitModel::PeriodicL1,12,-1}};
+            std::array<std::optional<EdgePairFitResult>,13> previous;
+            std::array<std::array<size_t,4>,13> trace_ranges{};
+            EdgePairFitResult result;
+            for(size_t i=0;i<std::size(routes);++i)
+            {
+                const auto &route=routes[i];
+                if(!(route.strategies & (1u<<static_cast<unsigned>(strategy_))))continue;
+                if(route.previous>=0 && previous[route.previous])
                 {
-                    result = stage(mode.first, mode.second, model);
-                    if (result.evidence)
-                        return result;
+                    // Fast 的第 8/9 路重用同输入失败结果；记录仍保留旧 stage 序号和完整弧/配对。
+                    result=*previous[route.previous];
+                    const auto stage=stage_number_++;
+                    if(trace_)
+                    {
+                        const auto &range=trace_ranges[route.previous];
+                        for(size_t j=range[0];j<range[1];++j) {
+                            auto entry=trace_->arcs[j];entry.stage=stage;trace_->arcs.push_back(std::move(entry));
+                        }
+                        for(size_t j=range[2];j<range[3];++j) {
+                            auto entry=trace_->pairs[j];entry.stage=stage;trace_->pairs.push_back(std::move(entry));
+                        }
+                    }
                 }
+                else
+                {
+                    const auto arcs=trace_?trace_->arcs.size():0, pairs=trace_?trace_->pairs.size():0;
+                    result=stage(route.all,route.posterior,route.model);
+                    if(i==1 || i==3) {
+                        previous[i]=result;
+                        trace_ranges[i]={arcs,trace_?trace_->arcs.size():0,pairs,trace_?trace_->pairs.size():0};
+                    }
+                }
+                if(result.evidence)return result;
+            }
             return result;
         }
     }

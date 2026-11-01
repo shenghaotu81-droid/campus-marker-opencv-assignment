@@ -331,48 +331,41 @@ namespace mark
      * - 屏幕排序。
      */
     SemanticResolution resolveSemantics(const std::vector<CornerMeasurement> &measurements,
-                                        bool search_truncated, const CornerConfig &config)
+                                        bool search_truncated,const CornerConfig &config)
     {
-        SemanticResolution result;
+        return resolveSemantics(measurements,search_truncated,config,nullptr);
+    }
 
-        result.geometry_consistent_ = false;
-
-        result.orientation_unique_ = false;
-
-        result.retained_measurements_.clear();
-
-        result.rejection_reason_.clear();
-
+    SemanticResolution resolveSemantics(const std::vector<CornerMeasurement> &measurements,
+                                        bool search_truncated, const CornerConfig &config,
+                                        const std::vector<ScreenOrder> *orders)
+    {
         /*
          * Step 0:
          * 空输入没有语义结果。
          */
         if (measurements.empty())
         {
-            result.rejection_reason_ = "没有可归并的几何测量";
-
-            return result;
+            return semanticFailure("没有可归并的几何测量");
         }
 
         // 非有限配置是调用错误，不能吞成“没有目标”。测量非法则明确拒绝。
         if (!std::isfinite(config.semantic_geometry_threshold_) ||
             config.semantic_geometry_threshold_ < 0)
             throw std::invalid_argument("SEMANTIC_CONFIG: invalid geometry threshold");
+        if (orders && orders->size()!=measurements.size()) throw std::invalid_argument("SEMANTIC_ORDER_COUNT_MISMATCH");
         for (const auto &measurement : measurements)
         {
-            auto order = orderScreenCorners(measurement.physical_corners_, config);
-            if (order.status_ != ScreenOrderStatus::SUCCESS ||
+            if ((!orders && orderScreenCorners(measurement.physical_corners_, config).status_ != ScreenOrderStatus::SUCCESS) ||
                 !std::isfinite(measurement_residual(measurement)))
             {
-                result.rejection_reason_ = "INVALID_MEASUREMENT: 非有限或非法四角/残差";
-                return result;
+                return semanticFailure("INVALID_MEASUREMENT: 非有限或非法四角/残差");
             }
             for (const auto &evidence : measurement.evidence_)
             {
                 if (!std::isfinite(evidence.error_) || evidence.error_ < 0)
                 {
-                    result.rejection_reason_ = "INVALID_MEASUREMENT: 非法观测残差";
-                    return result;
+                    return semanticFailure("INVALID_MEASUREMENT: 非法观测残差");
                 }
             }
         }
@@ -391,14 +384,12 @@ namespace mark
                 if (!geometry_equal(measurements[i], measurements[j],
                                     config.semantic_geometry_threshold_))
                 {
-                    result.rejection_reason_ = "存在几何冲突";
-
-                    return result;
+                    return semanticFailure("存在几何冲突");
                 }
             }
         }
 
-        result.geometry_consistent_ = true;
+
 
         /*
          * Step 2:
@@ -410,7 +401,7 @@ namespace mark
          * 使用已有 evidence.error_
          * 选择残差最小者。
          */
-        result.retained_measurements_.push_back(select_best_measurement(measurements));
+        auto retained = select_best_measurement(measurements);
 
         /*
          * Step 3:
@@ -432,21 +423,7 @@ namespace mark
             }
         }
 
-        result.orientation_unique_ = orientation_unique;
-
-        /*
-         * Step 4:
-         * 搜索截断覆盖。
-         *
-         * 即使当前没有发现冲突，
-         * 也不能因为搜索不完整而声明方向唯一。
-         */
-        if (search_truncated)
-        {
-            result.orientation_unique_ = false;
-        }
-
-        return result;
+        return semanticSuccess(orientation_unique && !search_truncated,{std::move(retained)});
     }
 
 } // namespace mark

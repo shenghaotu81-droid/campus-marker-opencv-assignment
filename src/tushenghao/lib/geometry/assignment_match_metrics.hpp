@@ -8,6 +8,13 @@
 
 namespace mark
 {
+    struct AssignmentAreaMetric { double relative_error; };
+    inline AssignmentAreaMetric measureAssignmentArea(const WhiteComponent &component,
+                                                      const GeometryPolygon &part,
+                                                      double reference,double model_reference) {
+        return {std::abs(component.area_/reference-part.area/model_reference)};
+    }
+
     struct AssignmentMatchMetrics
     {
         bool valid = false, topology_valid = false;
@@ -116,7 +123,8 @@ namespace mark
                                                          const GeometryPolygon &part,
                                                          const cv::Mat &affine, double reference,
                                                          double model_reference, double epsilon,
-                                                         double step)
+                                                         double step,
+                                                         std::optional<AssignmentAreaMetric> area = std::nullopt)
     {
         AssignmentMatchMetrics m;
         if (c.contour_.size() < 3 || c.touches_border_ || !std::isfinite(c.area_) || c.area_ <= 0 ||
@@ -135,7 +143,7 @@ namespace mark
         if (expected.size() < 3)
             return m;
         m.valid = true;
-        m.relative_area_error = std::abs(c.area_ / reference - part.area / model_reference);
+        m.relative_area_error = area ? area->relative_error : measureAssignmentArea(c,part,reference,model_reference).relative_error;
         m.boundary_distance = std::max(sampledBoundaryDistance(actual, expected, step),
                                        sampledBoundaryDistance(expected, actual, step));
         // 一个固定epsilon无法同时容纳小图细M与大图圆角。配置仍为简化上限，

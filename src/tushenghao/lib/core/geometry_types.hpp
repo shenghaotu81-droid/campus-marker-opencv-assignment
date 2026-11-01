@@ -48,6 +48,7 @@ GeometryHypothesis
 GeometryBatch
 */
 #pragma once
+#include <stdexcept>
 
 #include <cstddef>
 #include <optional>
@@ -188,4 +189,24 @@ namespace mark
         bool resource_truncated_{false};
     };
 
+    // D03→D08：身份查找只接收只读观察；legacy 未填来源仅在此以输入位置解释。
+    inline size_t observationSourceId(const ShapeObservation &value,size_t position) {
+        return value.source_component_id_==std::numeric_limits<size_t>::max()?position:value.source_component_id_;
+    }
+    inline const ShapeObservation *findObservationById(const std::vector<ShapeObservation> &values,size_t id) {
+        const ShapeObservation *found=nullptr;
+        for(size_t i=0;i<values.size();++i) if(observationSourceId(values[i],i)==id) {
+            if(found)throw std::invalid_argument("DUPLICATE_OBSERVATION_SOURCE_ID");
+            found=&values[i];
+        }
+        return found;
+    }
+    inline const WhiteComponent *findComponentById(const std::vector<WhiteComponent> &values,size_t id) {
+        const WhiteComponent *found=nullptr;
+        for(const auto &value:values) if(value.component_id_==id) {
+            if(found)throw std::invalid_argument("DUPLICATE_COMPONENT_ID");
+            found=&value;
+        }
+        return found;
+    }
 } // namespace mark

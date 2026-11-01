@@ -15,7 +15,7 @@ namespace mark
                                             const std::vector<WhiteComponent> &components,
                                             const GeometryHypothesis &hypothesis,
                                             const MarkerGeometry &model, const CornerConfig &config,
-                                            const OriginalContourSource &source);
+                                            const OriginalContourSource &source, ScreenOrder *screen_order = nullptr);
 
     /**
      * @brief 根据当前几何假设恢复四个物理角

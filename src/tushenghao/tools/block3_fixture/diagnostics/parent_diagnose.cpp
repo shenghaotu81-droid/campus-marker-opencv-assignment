@@ -67,15 +67,7 @@ namespace
                 continue;
             }
 
-            const mark::ShapeObservation *source = nullptr;
-            for (size_t i = 0; i < observations.size(); ++i)
-            {
-                const auto id = observations[i].source_component_id_ == std::numeric_limits<size_t>::max()
-                                  ? i : observations[i].source_component_id_;
-                if (id != item.component_id_) continue;
-                if (source) throw std::invalid_argument("DUPLICATE_OBSERVATION_SOURCE_ID");
-                source = &observations[i];
-            }
+            const auto *source = mark::findObservationById(observations,item.component_id_);
             if (!source)
                 continue;
             const auto &observation = *source;

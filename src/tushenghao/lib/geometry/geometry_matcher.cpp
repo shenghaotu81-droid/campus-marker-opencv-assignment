@@ -70,28 +70,6 @@ namespace mark
             return false;
         }
 
-        // 帧内身份不能被观察向量下标替代；兼容旧手工fixture未显式给ID的情况。
-        size_t sourceId(const ShapeObservation &observation, size_t index)
-        {
-            return observation.source_component_id_ == std::numeric_limits<size_t>::max()
-                       ? index
-                       : observation.source_component_id_;
-        }
-
-        const ShapeObservation *findObservation(const std::vector<ShapeObservation> &observations,
-                                                size_t id)
-        {
-            const ShapeObservation *found = nullptr;
-            for (size_t i = 0; i < observations.size(); ++i)
-                if (sourceId(observations[i], i) == id)
-                {
-                    if (found)
-                        throw std::invalid_argument("DUPLICATE_OBSERVATION_SOURCE_ID");
-                    found = &observations[i];
-                }
-            return found;
-        }
-
         // 三个模型凹点对三个实测凹点拟合，原三L仿射设计/模型坐标不变。
         cv::Mat fitAnchorTuple(const std::vector<ComponentAssignment> &assignment,
                                const std::array<cv::Point2f, 3> &anchors,
@@ -219,7 +197,7 @@ namespace mark
                              * 是候选解释，
                              * 不是已知 ID。
                              */
-                            item.component_id_ = sourceId(observations[observation_group[index]],
+                            item.component_id_ = observationSourceId(observations[observation_group[index]],
                                                           observation_group[index]);
 
                             item.model_part_id_ = model_L_ids[permutation[index]];
@@ -306,7 +284,7 @@ namespace mark
                 continue;
             for (size_t i = 0; i < 3; ++i)
             {
-                auto *o = findObservation(observations, combination[i].component_id_);
+                auto *o = findObservationById(observations, combination[i].component_id_);
                 if (!o)
                 {
                     complete = false;

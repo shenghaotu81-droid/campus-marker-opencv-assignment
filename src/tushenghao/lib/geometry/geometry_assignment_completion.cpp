@@ -17,13 +17,12 @@ namespace mark
                         const AssignmentCompletionConfig &budget)
         {
             // 正式匹配先按独立面积约束快拒绝；C原始测量直接调用helper，不先过滤尾部。
-            if (!std::isfinite(c.area_) || c.area_ <= 0 ||
-                std::abs(c.area_ / reference - part.area / model_reference) >
-                    budget.max_relative_area_error)
-                return false;
+            if (!std::isfinite(c.area_) || c.area_ <= 0) return false;
+            const auto area = measureAssignmentArea(c,part,reference,model_reference);
+            if (area.relative_error > budget.max_relative_area_error) return false;
             auto m = measureAssignmentMatch(c, part, affine, reference, model_reference,
                                             budget.approximation_epsilon_work_px,
-                                            budget.boundary_sample_step_work_px);
+                                            budget.boundary_sample_step_work_px, area);
             return m.valid && m.topology_valid &&
                    m.relative_area_error <= budget.max_relative_area_error &&
                    m.boundary_distance <= budget.max_boundary_distance_work_px &&

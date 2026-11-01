@@ -58,6 +58,7 @@ namespace mark
                                                 *config.observation_budget_);
             result.status = Status::NOT_DETECTED;
             bool unresolved = false;
+            std::vector<ScreenOrder> orders;
             for (size_t h = 0; h < batch.hypotheses_.size(); ++h)
             {
                 const auto &hypothesis = batch.hypotheses_[h];
@@ -89,8 +90,9 @@ namespace mark
                     continue;
                 }
 
+                ScreenOrder order;
                 auto corner =
-                    resolveObservedCorners(frame, components, hypothesis, model, config, original_index.source());
+                    resolveObservedCorners(frame, components, hypothesis, model, config, original_index.source(), &order);
                 if (!corner.measurement_)
                 {
                     log("corner", corner.rejection_reason_);
@@ -107,15 +109,7 @@ namespace mark
                     continue;
                 }
 
-                auto order = orderScreenCorners(corner.measurement_->physical_corners_, config);
-                if (!order.screen_order_)
-                {
-                    log("screen", order.rejection_reason_);
-                    unresolved = true;
-                    continue;
-                }
-
-                auto valid = validateDetectionGeometry(*corner.measurement_, *order.screen_order_,
+                auto valid = validateDetectionGeometry(*corner.measurement_, order,
                                                        frame.original_image_.size(), config);
                 if (!valid.valid_)
                 {
@@ -125,6 +119,7 @@ namespace mark
                 }
 
                 result.measurements.push_back(*corner.measurement_);
+                orders.push_back(std::move(order));
             }
             // 不能因一个竞争假设取证失败，就将剩下一个强行声明为唯一方向/几何。
             if (unresolved && !result.measurements.empty())
@@ -137,7 +132,7 @@ namespace mark
                 return result;
             }
 
-            auto semantics = resolveSemantics(result.measurements, result.search_truncated, config);
+            auto semantics = resolveSemantics(result.measurements, result.search_truncated, config, &orders);
             if (!semantics.geometry_consistent_)
             {
                 result.diagnostics.push_back("semantic/" + semantics.rejection_reason_);

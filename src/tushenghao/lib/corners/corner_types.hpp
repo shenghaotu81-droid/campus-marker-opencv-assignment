@@ -1,6 +1,7 @@
 // 接口契约:给四个物理角发"身份证"+ 证据 + 信封(BLOCK3)
 // 角是什么、证据是什么、结果怎么包装
 #pragma once
+#include <utility>
 
 #include <array>
 #include <string>
@@ -477,5 +478,13 @@ namespace mark
      */
     ScreenOrderResult orderScreenCorners(const std::array<cv::Point2d, 4> &physical_corners,
                                          const CornerConfig &config);
+
+    // D14/D15/D17：状态、可选载荷和原因作为一个事实构造，步骤边界保留。
+    inline CornerResolution cornerFailure(std::string reason) { return {CornerResolutionStatus::FAILED,std::nullopt,std::move(reason)}; }
+    inline CornerResolution cornerSuccess(CornerMeasurement value) { return {CornerResolutionStatus::SUCCESS,std::move(value),{}}; }
+    inline ScreenOrderResult screenFailure(std::string reason) { return {ScreenOrderStatus::FAILED,std::nullopt,std::move(reason)}; }
+    inline ScreenOrderResult screenSuccess(ScreenOrder value) { return {ScreenOrderStatus::SUCCESS,std::move(value),{}}; }
+    inline SemanticResolution semanticFailure(std::string reason) { return {false,false,{},std::move(reason)}; }
+    inline SemanticResolution semanticSuccess(bool unique,std::vector<CornerMeasurement> values) { return {true,unique,std::move(values),{}}; }
 
 } // namespace mark

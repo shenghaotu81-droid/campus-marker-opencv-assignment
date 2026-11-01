@@ -45,4 +45,7 @@ namespace mark
         bool search_truncated,
         const CornerConfig &config);
 
+    // D17 主链入口：orders 与 measurements 同序且来自同一批 double 四角，禁止跨帧/改点后复用。
+    SemanticResolution resolveSemantics(const std::vector<CornerMeasurement>&,bool,const CornerConfig&,
+                                         const std::vector<ScreenOrder>* orders);
 } // namespace mark

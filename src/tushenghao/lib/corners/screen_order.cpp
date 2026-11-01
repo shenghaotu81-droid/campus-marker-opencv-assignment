@@ -531,8 +531,7 @@ namespace mark
             // NaN 会穿过比较和凸性判断，须在任何几何运算之前明确拒绝。
             if (!std::isfinite(physical_corners[i].x) || !std::isfinite(physical_corners[i].y))
             {
-                result.rejection_reason_ = "输入物理角点非有限";
-                return result;
+                return screenFailure("输入物理角点非有限");
             }
             for (size_t j = i + 1;
                  j < 4;
@@ -542,10 +541,7 @@ namespace mark
                         physical_corners[i],
                         physical_corners[j]))
                 {
-                    result.rejection_reason_ =
-                        "输入物理角点重复";
-
-                    return result;
+                    return screenFailure("输入物理角点重复");
                 }
             }
         }
@@ -554,10 +550,7 @@ namespace mark
                 signed_area(
                     physical_corners)) < 1e-9)
         {
-            result.rejection_reason_ =
-                "输入物理角点面积退化";
-
-            return result;
+            return screenFailure("输入物理角点面积退化");
         }
 
         /*
@@ -567,10 +560,7 @@ namespace mark
         if (!is_convex(
                 physical_corners))
         {
-            result.rejection_reason_ =
-                "四点不是凸四边形";
-
-            return result;
+            return screenFailure("四点不是凸四边形");
         }
 
         std::vector<ScreenCandidate> candidates;
@@ -614,10 +604,7 @@ namespace mark
                     candidate,
                     normalized))
             {
-                result.rejection_reason_ =
-                    "归一化范围退化";
-
-                return result;
+                return screenFailure("归一化范围退化");
             }
 
             /*
@@ -666,14 +653,7 @@ namespace mark
         order.physical_to_screen_ = candidates[best_index].physical_to_screen_;
         order.screen_order_tie_ = tie;
 
-        result.status_ =
-            ScreenOrderStatus::SUCCESS;
-
-        result.screen_order_ = order;
-
-        result.rejection_reason_.clear();
-
-        return result;
+        return screenSuccess(std::move(order));
     }
 
 // 旧物理入口与新几何环入口共享同一排序核心；不复制能量/平局比较。
