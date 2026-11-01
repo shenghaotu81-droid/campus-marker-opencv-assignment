@@ -34,13 +34,8 @@ namespace mark
 
     Detector::Detector(DetectorConfig config) : impl_(std::make_unique<Impl>())
     {
-        // 防御式设计（工程接口可靠）二次校验
-        // 构造时再次校验配置，避免绕过配置文件(YAML)直接传入非法配置。（Detector 自己也保护接口边界，即使绕过 YAML 直接构造，也必须通过验证。）
-        AppConfig app_config; // 包装一层 AppConfig(防止传入类型接口不匹配)
-
-        app_config.detector_config = config;
-
-        validateConfig(app_config); // 验证函数站在应用配置总入口检查
+        // D01：直接构造同样核验检测参数，不借用无关的应用配置默认值。
+        validateDetectorConfig(config);
 
         impl_->config = std::move(config); // 检查是否合法后，保存到 Detector 内部
 

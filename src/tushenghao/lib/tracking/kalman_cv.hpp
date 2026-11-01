@@ -1,4 +1,5 @@
 #pragma once
+#include "core/observed_geometry_utils.hpp"
 
 #include "mark/tracking_config.hpp"
 
@@ -28,6 +29,6 @@ private:
 };
 
 bool finite_vector(const cv::Vec3d &value);
-bool positive_definite(const cv::Mat &matrix);
+using mark::observed::positive_definite;
 cv::Matx33d position_block(const Mat6 &matrix);
 } // namespace mark::tracking::detail

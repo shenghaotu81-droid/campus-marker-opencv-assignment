@@ -27,7 +27,8 @@ public:
         const std::string &target_id_,
         const std::optional<PosePrior> &prior = std::nullopt) const;
 
-    const G2Config &config() const noexcept { return config_; }
+    // P11：返回独立快照；cv::Mat 的 const 引用仍允许浅拷贝后改写底层数据。
+    G2Config config() const;
 
 private:
     G2Config config_;

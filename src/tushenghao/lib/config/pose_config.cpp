@@ -1,5 +1,6 @@
 // 配置解析/标定加载/模型转换
 #include "mark/pose_config.hpp"
+#include "core/marker_geometry.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -89,23 +90,22 @@ std::array<cv::Point3d, 4> load_points(const std::filesystem::path &path,
     cv::FileStorage fs(path.string(), cv::FileStorage::READ);
     if (!fs.isOpened() || !fs["polygons"].isSeq())
         throw std::runtime_error("G2 模型打不开或 polygons 非序列: " + path.string());
-    const std::array<std::string, 4> ids{{"L0", "M1", "L2", "L3"}};
-    const std::array<int, 4> vertex{{0, 1, 0, 0}};
+    const auto &bindings = model_corner_contract;
     std::array<cv::Point3d, 4> out{};
     std::array<bool, 4> found{};
     const double scale = unit == "mm" ? 0.001 : 1.0;
     for (const auto &poly : fs["polygons"])
     {
         const auto id_ = text(poly, "id");
-        for (std::size_t p = 0; p < ids.size(); ++p)
+        for (std::size_t p = 0; p < bindings.size(); ++p)
         {
-            if (id_ != ids[p])
+            if (id_ != bindings[p].part)
                 continue;
             const auto vertices = required(poly, "vertices");
             if (found[p] || !vertices.isSeq() ||
-                vertices.size() <= static_cast<std::size_t>(vertex[p]))
+                vertices.size() <= static_cast<std::size_t>(bindings[p].vertex))
                 throw std::runtime_error("G2 模型角部重复或缺顶点: " + id_);
-            const auto v = vertices[vertex[p]];
+            const auto v = vertices[bindings[p].vertex];
             if (!v.isSeq() || v.size() != 2)
                 throw std::runtime_error("G2 模型顶点必须为二维");
             out[p] = {number(v[0]) * scale, number(v[1]) * scale, 0};

@@ -1,12 +1,31 @@
 #include "pipeline/run_report.hpp"
-#include "pipeline/diagnostics_recorder.hpp"
 #include <fstream>
 #include <iomanip>
 #include <locale>
 #include <stdexcept>
+#include <sstream>
 
 namespace mark
 {
+    // A07/A12：输入原字符串，输出协议JSON字符串；保留原逐字节转义规则。
+    std::string quoteJson(const std::string &s)
+    {
+        std::ostringstream out;
+        out << '"';
+        for (unsigned char c : s)
+        {
+            if (c == '"' || c == '\\')
+                out << '\\' << c;
+            else if (c < 32)
+                out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << int(c);
+            else
+                out << c;
+        }
+        out << '"';
+        return out.str();
+    }
+
+
     // 每帧都进入分母；未执行耗时不填零，框架差额只在同边界的四阶段均实测时计算。
     void RunSummary::add(const FrameRecord &r)
     {

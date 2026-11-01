@@ -6,7 +6,6 @@
 
 namespace mark
 {
-    std::string quoteJson(const std::string &);
     std::string serializeFrameRecord(const FrameRecord &);
 
     // begin/submit/finish严格生命周期，已有目录与IO失败拒绝；失败只留标记，不造成功summary。

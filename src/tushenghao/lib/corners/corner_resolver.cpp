@@ -77,15 +77,8 @@ namespace mark
             }
         }
 
-        struct Binding
-        {
-            const char *part;
-            int vertex, a, b;
-        };
-
-        // 图纸绑定已核对；边编号ei=vi到v(i+1)，物理P1始终是M外凸角。
-        const Binding bindings[] = {
-            {"L0", 0, 5, 0}, {"M1", 1, 0, 1}, {"L2", 0, 5, 0}, {"L3", 0, 5, 0}};
+        // D11：读取唯一的只读物理角身份契约，替换拟合不需同步维护绑定表。
+        const auto &bindings = model_corner_contract;
         CornerMeasurement measurement{};
         for (int i = 0; i < 4; ++i)
         {

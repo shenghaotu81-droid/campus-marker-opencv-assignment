@@ -4,6 +4,9 @@
 
 namespace mark
 {
+    // A07/A12 编码契约：纯字符串转义，报告和记录器共用；不依赖记录生命周期。
+    std::string quoteJson(const std::string &);
+
     // 统计独立于采样；保存紧凑时长与枚举计数，不缓存整段视频的几何证据。
     struct RunMetadata
     {

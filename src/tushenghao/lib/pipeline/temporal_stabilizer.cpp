@@ -29,9 +29,7 @@ namespace mark
     TemporalStabilizer::TemporalStabilizer(TemporalConfig c)
         : config_(c), tau_(computeTimeConstantSeconds(c.reference_dt_ms, c.reference_alpha))
     {
-        AppConfig app;
-        app.detector_config.temporal = c;
-        validateConfig(app);
+        validateTemporalConfig(c);
         if (c.stabilization_enabled &&
             (!c.correspondence_uncertainty_px || !c.max_smoothing_deviation_px))
             throw std::invalid_argument("TEMPORAL_BUDGET_MISSING");

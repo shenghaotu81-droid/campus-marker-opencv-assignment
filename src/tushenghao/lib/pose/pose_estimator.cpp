@@ -58,6 +58,15 @@ PoseEstimator::PoseEstimator(G2Config config) : config_(std::move(config))
     config_.camera_.dist_ = config_.camera_.dist_.clone();
 }
 
+// P11 配置观察：输入本实例配置，输出无可写别名的值；求解仍只读内部副本。
+G2Config PoseEstimator::config() const
+{
+    G2Config snapshot = config_;
+    snapshot.camera_.K_ = config_.camera_.K_.clone();
+    snapshot.camera_.dist_ = config_.camera_.dist_.clone();
+    return snapshot;
+}
+
 // MARK完整处理：验输入、转物理序、调求解、定 control_usable_
 // estimate_mark 做 MARK 特有的预处理（查时间戳、转物理序），然后把 4 对 2D-3D 点丢给 estimate_planar 做真正的 IPPE 求解
 /*   MARK 特有处理流程：

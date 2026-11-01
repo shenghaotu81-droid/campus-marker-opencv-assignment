@@ -1,5 +1,5 @@
 #include "mark/tracking_config.hpp"
-#include "tracking/kalman_cv.hpp"
+#include "core/observed_geometry_utils.hpp"
 #include <cmath>
 #include <stdexcept>
 
@@ -155,7 +155,7 @@ TrackingConfig load_tracking_config(const std::filesystem::path &path)
 
 void validate_tracking_profile(const TrackingProfile &p)
 {
-    if (!detail::positive_definite(cv::Mat(p.camera_mse_m2_)))
+    if (!observed::positive_definite(cv::Mat(p.camera_mse_m2_)))
         throw std::runtime_error("G4_PROFILE_R_NOT_PD");
     for (double value : {p.acceleration_psd_m2ps3_, p.initial_velocity_variance_m2ps2_,
                         p.association_nis_limit_, p.bootstrap_nis_limit_,

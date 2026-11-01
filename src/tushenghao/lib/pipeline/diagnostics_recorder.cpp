@@ -66,23 +66,6 @@ namespace mark
             }
         };
 
-        inline std::string quote(const std::string &s)
-        {
-            std::ostringstream out;
-            out << '"';
-            for (unsigned char c : s)
-            {
-                if (c == '"' || c == '\\')
-                    out << '\\' << c;
-                else if (c < 32)
-                    out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << int(c);
-                else
-                    out << c;
-            }
-            out << '"';
-            return out.str();
-        }
-
         template <class T> void optional_number(JsonStream &out, const std::optional<T> &n)
         {
             if (n)
@@ -134,7 +117,7 @@ namespace mark
             optional_number(out, d.confidence);
             out << ",\"marker_code\":";
             if (d.attributes.marker_code)
-                out << "{\"scheme\":" << quote(d.attributes.marker_code->scheme)
+                out << "{\"scheme\":" << quoteJson(d.attributes.marker_code->scheme)
                     << ",\"value\":" << d.attributes.marker_code->value << '}';
             else
                 out << "null";
@@ -148,7 +131,7 @@ namespace mark
             {
                 if (i)
                     out << ',';
-                out << quote(s[i]);
+                out << quoteJson(s[i]);
             }
             out << ']';
         }
@@ -161,14 +144,14 @@ namespace mark
             optional_number(out, d.alpha);
             out << ",\"used_smoothing\":" << (d.used_smoothing ? "true" : "false")
                 << ",\"fell_back\":" << (d.fell_back ? "true" : "false")
-                << ",\"reset_or_fallback_reason\":" << quote(d.reset_or_fallback_reason)
+                << ",\"reset_or_fallback_reason\":" << quoteJson(d.reset_or_fallback_reason)
                 << ",\"association\":{\"current_index\":";
             optional_number(out, d.association.current_index);
             out << ",\"matched_history\":" << (d.association.matched_history ? "true" : "false")
                 << ",\"ambiguous\":" << (d.association.ambiguous ? "true" : "false")
-                << ",\"reason\":" << quote(d.association.reason)
+                << ",\"reason\":" << quoteJson(d.association.reason)
                 << "},\"correspondence\":{\"valid\":" << (d.correspondence.valid ? "true" : "false")
-                << ",\"reason\":" << quote(d.correspondence.reason) << ",\"mapping\":";
+                << ",\"reason\":" << quoteJson(d.correspondence.reason) << ",\"mapping\":";
             if (d.correspondence.valid)
                 array(out, d.correspondence.current_to_previous);
             else
@@ -204,7 +187,7 @@ namespace mark
             }
             out << "],\"display\":";
             if (r.display_state)
-                out << "{\"value\":" << quote(r.display_state->value)
+                out << "{\"value\":" << quoteJson(r.display_state->value)
                     << ",\"source_frame_id\":" << r.display_state->source_frame_id
                     << ",\"age\":" << r.display_state->age
                     << ",\"held\":" << (r.display_state->is_held ? "true" : "false") << '}';
@@ -223,7 +206,7 @@ namespace mark
                 << ",\"component_id\":" << e.component_id_
                 << ",\"model_vertex_id\":" << e.model_vertex_id_ << ",\"model_edge_ids\":["
                 << e.model_edge_ids_[0] << ',' << e.model_edge_ids_[1]
-                << "],\"evidence_id\":" << quote(e.stable_id_)
+                << "],\"evidence_id\":" << quoteJson(e.stable_id_)
                 << ",\"original_observation\":" << (e.original_observation_ ? "true" : "false")
                 << ",\"truncated\":" << (e.truncated_ ? "true" : "false")
                 << ",\"observed_segment_ids\":[";
@@ -411,7 +394,7 @@ namespace mark
         void serialize_batch(JsonStream &out, const char *name, const GeometryBatch &b)
         {
 
-            out << ',' << quote(name) << ":{\"segmented_assignments_ready\":"
+            out << ',' << quoteJson(name) << ":{\"segmented_assignments_ready\":"
                 << (b.segmented_assignments_ready_ ? "true" : "false")
                 << ",\"truncated\":" << (b.resource_truncated_ ? "true" : "false")
                 << ",\"hypotheses\":[";
@@ -425,7 +408,7 @@ namespace mark
                 {
                     if (j)
                         out << ',';
-                    out << "{\"model_part_id\":" << quote(h.assignments_[j].model_part_id_)
+                    out << "{\"model_part_id\":" << quoteJson(h.assignments_[j].model_part_id_)
                         << ",\"component_id\":" << h.assignments_[j].component_id_ << '}';
                 }
                 out << "],\"affine\":[";
@@ -516,12 +499,12 @@ namespace mark
         // 原帧字段与嵌套详情混排；按原顺序输出同一字段，不增加第二套格式。
         void serialize_header(JsonStream &out, const FrameRecord &r)
         {
-            out << "{\"record_schema_version\":1,\"run_id\":" << quote(r.run_id)
+            out << "{\"record_schema_version\":1,\"run_id\":" << quoteJson(r.run_id)
                 << ",\"frame_id\":" << r.frame_id
                 << ",\"source_timestamp_us\":" << r.source_timestamp_us
                 << ",\"timestamp_source\":" << int(r.timestamp_source)
-                << ",\"timestamp_recipe\":" << quote(r.timestamp_recipe)
-                << ",\"execution_scope\":" << quote(scopeName(r.execution_scope))
+                << ",\"timestamp_recipe\":" << quoteJson(r.timestamp_recipe)
+                << ",\"execution_scope\":" << quoteJson(scopeName(r.execution_scope))
                 << ",\"original_size\":[" << r.original_size.width << ',' << r.original_size.height
                 << "],\"work_size\":[" << r.work_size.width << ',' << r.work_size.height
                 << "],\"result_status\":";
@@ -530,18 +513,18 @@ namespace mark
             else
                 out << "null";
             out << ",\"geometry_scope_result\":"
-                << (r.geometry_scope_result ? quote(*r.geometry_scope_result) : "null")
+                << (r.geometry_scope_result ? quoteJson(*r.geometry_scope_result) : "null")
                 << ",\"public_status\":"
-                << quote(r.execution_scope == ExecutionScope::Full ? "EVALUATED" : "NOT_EVALUATED")
-                << ",\"process_total_boundary\":" << quote(r.process_total_boundary)
+                << quoteJson(r.execution_scope == ExecutionScope::Full ? "EVALUATED" : "NOT_EVALUATED")
+                << ",\"process_total_boundary\":" << quoteJson(r.process_total_boundary)
                 << ",\"timings\":[";
             for (size_t i = 0; i < 9; ++i)
             {
                 if (i)
                     out << ',';
                 const auto &t = r.timings[i];
-                out << "{\"stage\":" << quote(stageName(t.stage))
-                    << ",\"status\":" << quote(timingStatusName(t.status)) << ",\"elapsed_us\":";
+                out << "{\"stage\":" << quoteJson(stageName(t.stage))
+                    << ",\"status\":" << quoteJson(timingStatusName(t.status)) << ",\"elapsed_us\":";
                 if (t.status == TimingStatus::MEASURED && t.elapsed)
                     out << double(t.elapsed->count()) / 1000;
                 else
@@ -575,7 +558,7 @@ namespace mark
             else
                 out << "null";
             out << ",\"last_reset_reason\":"
-                << (r.last_reset_reason ? quote(reasonName(*r.last_reset_reason)) : "null")
+                << (r.last_reset_reason ? quoteJson(reasonName(*r.last_reset_reason)) : "null")
                 << ",\"last_reset_source_frame_id\":";
             optional_number(out, r.last_reset_source_frame_id);
             out << ",\"diagnostics_construct_intervals_us\":";
@@ -588,7 +571,7 @@ namespace mark
         // 原帧字段与嵌套详情混排；按原顺序输出同一字段，不增加第二套格式。
         void serialize_tail(JsonStream &out, const FrameRecord &r)
         {
-            out << ",\"realtime\":{\"applicability\":" << quote(r.realtime_applicability)
+            out << ",\"realtime\":{\"applicability\":" << quoteJson(r.realtime_applicability)
                 << ",\"slot_overwrite_count\":";
             optional_number(out, r.slot_overwrite_count);
             out << ",\"consumed_frame_count\":";
@@ -597,16 +580,16 @@ namespace mark
             optional_number(out, r.enqueue_timestamp_ns);
             out << ",\"enqueue_to_result_us\":";
             optional_number(out, r.enqueue_to_result_us);
-            out << ",\"clock_domain\":" << (r.clock_domain ? quote(*r.clock_domain) : "null")
+            out << ",\"clock_domain\":" << (r.clock_domain ? quoteJson(*r.clock_domain) : "null")
                 << "},\"run_failed\":" << (r.run_failed ? "true" : "false") << ",\"events\":[";
             for (size_t i = 0; i < r.events.size(); ++i)
             {
                 if (i)
                     out << ',';
                 const auto &e = r.events[i];
-                out << "{\"stage\":" << quote(stageName(e.stage))
-                    << ",\"reason\":" << quote(reasonName(e.reason))
-                    << ",\"detail\":" << quote(e.detail) << ",\"source_frame_id\":";
+                out << "{\"stage\":" << quoteJson(stageName(e.stage))
+                    << ",\"reason\":" << quoteJson(reasonName(e.reason))
+                    << ",\"detail\":" << quoteJson(e.detail) << ",\"source_frame_id\":";
                 optional_number(out, e.source_frame_id);
                 out << ",\"hypothesis_id\":";
                 optional_number(out, e.hypothesis_id);
@@ -627,10 +610,6 @@ namespace mark
         }
     } // namespace
 
-    std::string quoteJson(const std::string &s)
-    {
-        return quote(s);
-    }
 
     // 所有stage/audit共用此schema；只有选中详情才复制/输出证据，非有限字段追加明确事件。
     std::string serializeFrameRecord(const FrameRecord &r)

@@ -17,6 +17,15 @@ int main()
         const auto stamp_ = g2_test::stamp(c);
         const auto points = g2_test::pixels(c);
         PoseEstimator solver(c);
+        // F08：调用方复制/写入快照矩阵，不得改动求解器或另一个读取者。
+        auto snapshot = solver.config();
+        cv::Mat aliased_K = snapshot.camera_.K_;
+        aliased_K.setTo(42);
+        snapshot.camera_.dist_.setTo(42);
+        const auto unchanged = solver.config();
+        g2_test::require(cv::norm(unchanged.camera_.K_ - c.camera_.K_) == 0 &&
+                            cv::norm(unchanged.camera_.dist_ - c.camera_.dist_) == 0,
+                        "F08 snapshot Mat aliases internal camera storage");
         const auto base = solver.estimate_planar(c.mark_points_m_, points, c.camera_.image_size_,
                                                  stamp_, c.mark_target_id_);
         g2_test::require(base.status_ == PoseStatus::Unique && base.T_camera_target_,

@@ -1,6 +1,7 @@
 // 把 MARK 灯的“图纸”翻译成程序能理解的数据结构(图纸模型层建模)
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -9,6 +10,16 @@
 
 namespace mark
 {
+    // Q04→D11/P01/D16：固定图纸的四物理角身份；仅共享身份，不共享拟合/复算结果。
+    struct ModelCornerBinding
+    {
+        const char *part;
+        int vertex, a, b;
+    };
+    using ModelCornerContract = std::array<ModelCornerBinding, 4>;
+    inline constexpr ModelCornerContract model_corner_contract{{
+        {"L0", 0, 5, 0}, {"M1", 1, 0, 1}, {"L2", 0, 5, 0}, {"L3", 0, 5, 0}}};
+
     // 一个白色几何块（L/M/S）的模型
     // 几何多边形模型：描述一个 MARK 几何组件的顶点和锚点。
     struct GeometryPolygon

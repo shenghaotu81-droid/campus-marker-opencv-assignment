@@ -1,6 +1,7 @@
 // 旧Validator只看凸四点即可放行；这里要求四角真实来源并复算证据，失败给明确原因。
 #include "corners/corner_evidence_validation.hpp"
 #include "corners/periodic_line_fit.hpp"
+#include "core/marker_geometry.hpp"
 #include "core/observed_geometry_utils.hpp"
 #include <opencv2/imgproc.hpp>
 #include <set>
@@ -30,11 +31,12 @@ namespace mark
             return fail("CORNER_BUDGET_NOT_CONFIGURED");
         if (e.truncated_)
             return fail("TRUNCATED_EVIDENCE: 不能发布截断角");
-        const std::array<std::array<int, 2>, 4> edge_ids{{{5, 0}, {0, 1}, {5, 0}, {5, 0}}};
+        const auto &binding = model_corner_contract[index];
         if (!e.original_observation_ || e.stable_id_.empty() ||
             e.component_id_ == std::numeric_limits<size_t>::max() ||
             static_cast<int>(e.physical_corner_) != index ||
-            e.model_vertex_id_ != (index == 1 ? 1 : 0) || e.model_edge_ids_ != edge_ids[index] ||
+            e.model_vertex_id_ != binding.vertex ||
+            e.model_edge_ids_ != std::array<int, 2>{binding.a, binding.b} ||
             e.observed_segment_ids_.size() != 2 || e.observed_segment_ids_[0] < 0 ||
             e.observed_segment_ids_[1] < 0 ||
             e.observed_segment_ids_[0] == e.observed_segment_ids_[1] ||

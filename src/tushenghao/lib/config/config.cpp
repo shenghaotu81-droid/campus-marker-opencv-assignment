@@ -606,10 +606,40 @@ namespace mark
     }
 
     // 校验配置是否满足冻结字段要求和当前板块实现范围。（检查“配置虽然读进来了，但是能不能用”，即“格式正确，但参数错误”（合理性）；区别于loadConfig检查配置有没有。）
-    void validateConfig(const AppConfig &config)
+    // Q03：只校验时序参数，独立构造不依赖应用默认配置；缺预算由调用入口保留原状态处理。
+    void validateTemporalConfig(const TemporalConfig &t)
     {
-        const DetectorConfig &detector = config.detector_config;
+        // 新时序参数同时保护直接构造和YAML加载；缺预算允许NOT_READY审计。
+        auto positive = [](double v)
+        {
+            return std::isfinite(v) && v > 0;
+        };
+        if (!positive(t.reference_dt_ms) || !std::isfinite(t.reference_alpha) ||
+            t.reference_alpha <= 0 || t.reference_alpha >= 1 || !positive(t.history_max_gap_ms) ||
+            !positive(t.max_center_distance_diagonal_ratio) || !positive(t.min_area_ratio) ||
+            !positive(t.max_area_ratio) || t.min_area_ratio > 1 || t.max_area_ratio < 1)
+            throw ConfigError(
+                "Config error: field=temporal, reason=invalid finite temporal parameter");
+        if (t.correspondence_uncertainty_px && (!std::isfinite(*t.correspondence_uncertainty_px) ||
+                                                *t.correspondence_uncertainty_px < 0))
+            throw ConfigError(
+                "Config error: field=temporal.correspondence_uncertainty_px, reason=must be finite non-negative");
+        if (t.max_smoothing_deviation_px && !positive(*t.max_smoothing_deviation_px))
+            throw ConfigError(
+                "Config error: field=temporal.max_smoothing_deviation_px, reason=must be finite positive");
 
+        // temporal配置
+        if (t.max_hold_frames < 0)
+        {
+            throw ConfigError(
+                "Config error: field=temporal.max_hold_frames, reason=must be non-negative");
+        }
+
+    }
+
+    // Q03：检测输入/几何/角点与模式的合法性；不读取显示、导出或诊断配置。
+    void validateDetectorConfig(const DetectorConfig &detector)
+    {
         if (detector.schema_version != 1)
         {
             throw ConfigError("Config error: field=schema_version, reason=unsupported version");
@@ -766,38 +796,17 @@ namespace mark
                 "Config error: field=marker_geometry_path, reason=path must not be empty");
         }
 
-        // 新时序参数同时保护直接构造和YAML加载；缺预算允许NOT_READY审计。
-        const auto &t = detector.temporal;
-        auto positive = [](double v)
-        {
-            return std::isfinite(v) && v > 0;
-        };
-        if (!positive(t.reference_dt_ms) || !std::isfinite(t.reference_alpha) ||
-            t.reference_alpha <= 0 || t.reference_alpha >= 1 || !positive(t.history_max_gap_ms) ||
-            !positive(t.max_center_distance_diagonal_ratio) || !positive(t.min_area_ratio) ||
-            !positive(t.max_area_ratio) || t.min_area_ratio > 1 || t.max_area_ratio < 1)
-            throw ConfigError(
-                "Config error: field=temporal, reason=invalid finite temporal parameter");
-        if (t.correspondence_uncertainty_px && (!std::isfinite(*t.correspondence_uncertainty_px) ||
-                                                *t.correspondence_uncertainty_px < 0))
-            throw ConfigError(
-                "Config error: field=temporal.correspondence_uncertainty_px, reason=must be finite non-negative");
-        if (t.max_smoothing_deviation_px && !positive(*t.max_smoothing_deviation_px))
-            throw ConfigError(
-                "Config error: field=temporal.max_smoothing_deviation_px, reason=must be finite positive");
-
-        // temporal配置
-        if (detector.temporal.max_hold_frames < 0)
-        {
-            throw ConfigError(
-                "Config error: field=temporal.max_hold_frames, reason=must be non-negative");
-        }
-
+        validateTemporalConfig(detector.temporal);
         if (detector.mode != DetectorMode::Skeleton)
         {
             throw ConfigError("Config error: field=detector.mode, reason=unsupported mode");
         }
 
+    }
+
+    // Q03：应用独有的记录/导出参数；算法入口无须构造 AppConfig。
+    void validateObservabilityConfig(const AppConfig &config)
+    {
         // 已实现观测开关解除旧禁用；模式冲突留给runner检查，Detector构造只校验值域。
         if (config.diagnostics.level != "summary" && config.diagnostics.level != "frame" &&
             config.diagnostics.level != "evidence")
@@ -822,6 +831,13 @@ namespace mark
             config.offline.video_filename != "overlay.mp4" ||
             config.offline.display_probe_timeout_ms <= 0)
             throw ConfigError("Config error: output video/probe parameters");
+    }
+
+    // Q03 总入口保留原检查顺序和错误语义，组合各模块的独立校验。
+    void validateConfig(const AppConfig &config)
+    {
+        validateDetectorConfig(config.detector_config);
+        validateObservabilityConfig(config);
     }
 
     // 将当前有效配置写出，并保证重新加载后配置值保持一致。(把程序最终实际使用的配置保存下来,用于debug，复现实验，记录比赛参数)
