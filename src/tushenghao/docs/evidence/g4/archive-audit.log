@@ -1,0 +1,15 @@
+{
+  "exit_code": 0,
+  "zip_sha256_verified": true,
+  "zip_entries": 240,
+  "modified_source_snapshots_verified": 23,
+  "user_document_preserved": true,
+  "raw_data_files_verified": 36,
+  "missing_evidence_links": [],
+  "branch_head_staged_diff_preserved": true,
+  "gates": {
+    "G-01": "OPEN",
+    "G-02": "OPEN",
+    "G-03": "OPEN"
+  }
+}

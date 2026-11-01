@@ -1,0 +1,10 @@
+{
+  "time": "2026-11-01T07:23:26.113983+00:00",
+  "step0_evidence_intact": true,
+  "all_20_before_resume": "exact section 4",
+  "initial_files_unchanged": 5095,
+  "g2_diff_bytes": 0,
+  "branch": "feat/tracking",
+  "head": "30ac7ab43e3c54576fbeba5264d66f5d61d6bad9",
+  "exit_code": 0
+}

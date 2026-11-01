@@ -1,0 +1,36 @@
+Start testing: Nov 01 15:28 CST
+----------------------------------------------------------
+28/29 Testing: tracking_contract_test
+28/29 Test: tracking_contract_test
+Command: "/home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan/tracking_contract_test"
+Directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan
+"tracking_contract_test" start time: Nov 01 15:28 CST
+Output:
+----------------------------------------------------------
+G4 bounded profile missing-bound / explicit-zero PASS
+G4 tracking contract M01-M12 / T01-T51 PASS
+<end of output>
+Test time =   0.31 sec
+----------------------------------------------------------
+Test Passed.
+"tracking_contract_test" end time: Nov 01 15:28 CST
+"tracking_contract_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/29 Testing: tracking_io_test
+29/29 Test: tracking_io_test
+Command: "/home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan/tracking_io_test"
+Directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan
+"tracking_io_test" start time: Nov 01 15:28 CST
+Output:
+----------------------------------------------------------
+G4 IO I01-I09 PASS
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"tracking_io_test" end time: Nov 01 15:28 CST
+"tracking_io_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 01 15:28 CST

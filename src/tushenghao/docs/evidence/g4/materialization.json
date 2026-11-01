@@ -1,0 +1,6 @@
+{
+  "files": 20,
+  "source": "src/tushenghao/docs/ref/G4-Codex.md",
+  "method": "extract first full fenced block in each section 4.1–4.20; LF; no algorithm edits",
+  "exit_code": 0
+}

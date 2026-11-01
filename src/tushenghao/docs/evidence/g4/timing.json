@@ -1,0 +1,9 @@
+{
+  "as_of": "2026-11-01T07:33:45.126756+00:00",
+  "baseline_started": "2026-11-01T07:16:03.764493+00:00",
+  "resumed_at": "2026-11-01T07:23:26.113983+00:00",
+  "elapsed_since_baseline_s": 1061.362263,
+  "elapsed_since_resume_s": 619.012773,
+  "cumulative_recorded_command_s": 195.30467885604594,
+  "note": "自然历时含中断；命令累计耗时不是独占CPU或人工工时"
+}

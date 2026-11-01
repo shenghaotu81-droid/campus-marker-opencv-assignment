@@ -1,0 +1,15 @@
+%YAML:1.0
+---
+frames: "1676"
+measured: "0"
+coasting: "0"
+lost: "0"
+rejected_inputs: "0"
+qualified_for_g5: "0"
+velocity_output_frames: "0"
+source_completeness_verified: 0
+hardware_confirmed: 0
+input_path: "src/tushenghao/docs/evidence/g2/runs/g2-video-001/observations.yaml"
+tracking_step_mean_us: 3.7131264916467666e-01
+tracking_step_p95_us: 4.2799999999999999e-01
+note: "未经过实车确认；零测量不算端到端速度通过"

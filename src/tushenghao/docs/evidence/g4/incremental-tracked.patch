@@ -1,0 +1,40 @@
+diff --git a/src/tushenghao/CMakeLists.txt b/src/tushenghao/CMakeLists.txt
+index 9ac3d85..0cacb77 100644
+--- a/src/tushenghao/CMakeLists.txt
++++ b/src/tushenghao/CMakeLists.txt
+@@ -190,3 +190,5 @@ target_link_libraries(calibration_tool PRIVATE ${OpenCV_LIBS})
+ 
+ # G2 独立感知层，默认关闭；不改变原检测器目标。
+ include(cmake/g2.cmake)
++# G4独立感知估计层，原G2保持冻结。
++include(cmake/g4.cmake)
+diff --git a/src/tushenghao/README.md b/src/tushenghao/README.md
+index e01b958..344c7ca 100644
+--- a/src/tushenghao/README.md
++++ b/src/tushenghao/README.md
+@@ -75,6 +75,10 @@ G2 是独立构建选项，原 MARK 检测器接口保持不变。安装/构建/
+ 
+ 默认位姿预算和退出 Tag 信息尚未实测，候选解可用于离线验证；未经过实车确认。
+ 
++## G4 帧间跟踪与速度估计
++
++构建/运行/参数与[后续关闭流程](docs/g4.md#后续关闭流程)见[G4使用说明](docs/g4.md)，软件实测与三项OPEN关卡见[G4验收记录](docs/g4_acceptance.md)。本期只感知，不做控制；G2当前无真实Unique、速度误差界和有界时间仍待实测，未经过实车确认。
++
+ ## 文档导航
+ 
+ - [完整文档索引](docs/INDEX.md)
+diff --git a/src/tushenghao/docs/INDEX.md b/src/tushenghao/docs/INDEX.md
+index 7598a3d..8fa9cae 100644
+--- a/src/tushenghao/docs/INDEX.md
++++ b/src/tushenghao/docs/INDEX.md
+@@ -42,3 +42,10 @@ Path A 推荐顺序：[专项验收](path_a_acceptance.md) → [施工日志](pa
+ - [G2 位姿与退出感知：构建、运行、参数与限制](g2.md)
+ - [G2 实施验收与待验证事项](g2_acceptance.md)
+ - G2 证据归档：`evidence/g2/`（测试日志、配置、敏感性与录像结果；不放编译产物）
++
++## G4 动态目标估计
++
++- [G4使用说明与后续关闭流程](g4.md)
++- [G4实施验收记录](g4_acceptance.md)
++- [G4 Codex执行依据](ref/G4-Codex.md)
++- 本期证据：`evidence/g4/`；编译产物留在build，不归档到docs。

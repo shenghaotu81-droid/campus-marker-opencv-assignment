@@ -1,0 +1,47 @@
+%YAML:1.0
+---
+schema_version: 1
+basis: synthetic_assumptions_bypass_G2
+hardware_verified: 0
+time_model: integer_us_exact_clock_declared_bounds_no_exposure_error_injection
+sessions:
+   -
+      split: train
+      name: train-seed-2026202901
+      frames: "train/train-seed-2026202901/frames.yaml"
+      truth: "train/train-seed-2026202901/truth.csv"
+   -
+      split: train
+      name: train-seed-2026202902
+      frames: "train/train-seed-2026202902/frames.yaml"
+      truth: "train/train-seed-2026202902/truth.csv"
+   -
+      split: train
+      name: train-seed-2026202903
+      frames: "train/train-seed-2026202903/frames.yaml"
+      truth: "train/train-seed-2026202903/truth.csv"
+   -
+      split: selection
+      name: selection-seed-2026203901
+      frames: "selection/selection-seed-2026203901/frames.yaml"
+      truth: "selection/selection-seed-2026203901/truth.csv"
+   -
+      split: selection
+      name: selection-seed-2026203902
+      frames: "selection/selection-seed-2026203902/frames.yaml"
+      truth: "selection/selection-seed-2026203902/truth.csv"
+   -
+      split: holdout
+      name: holdout-seed-2026204901
+      frames: "holdout/holdout-seed-2026204901/frames.yaml"
+      truth: "holdout/holdout-seed-2026204901/truth.csv"
+   -
+      split: holdout
+      name: holdout-seed-2026204902
+      frames: "holdout/holdout-seed-2026204902/frames.yaml"
+      truth: "holdout/holdout-seed-2026204902/truth.csv"
+   -
+      split: holdout
+      name: holdout-seed-2026204903
+      frames: "holdout/holdout-seed-2026204903/frames.yaml"
+      truth: "holdout/holdout-seed-2026204903/truth.csv"

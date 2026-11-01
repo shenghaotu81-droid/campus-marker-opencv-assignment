@@ -1,0 +1,4030 @@
+diff --git a/src/tushenghao/include/mark/tracking_types.hpp b/src/tushenghao/include/mark/tracking_types.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/include/mark/tracking_types.hpp
+@@ -0,0 +1,101 @@
++#pragma once
++
++#include "mark/pose_types.hpp"
++#include <optional>
++#include <string>
++#include <vector>
++
++namespace mark::tracking
++{
++using Vec6 = cv::Vec<double, 6>;
++using Mat6 = cv::Matx<double, 6, 6>;
++
++enum class TrackState { Measured, Coasting, Lost };
++enum class CoordinateMode { CameraRelative, LocalWorld };
++enum class InputOrigin { TypedMemory, Synthetic, LegacyG2Replay };
++
++// G2 的 SE3 数组尚无排列约定；独立旁路明确只提供“相机系位置误差二阶矩”。
++struct PositionNoise
++{
++    std::size_t detection_index_{0};
++    cv::Matx33d camera_mse_m2_{cv::Matx33d::zeros()};
++    std::string evidence_id_;
++    bool hardware_verified_{false};
++};
++
++// 由外部里程/安装适配器提供同曝光时刻的 ^W T_C；本模块不读取 IMU/轮速驱动。
++// 6维误差顺序[平移W xyz,小旋转W xyz]，旋转绕相机原点；未知协方差保持空。
++struct CameraTransform
++{
++    pose::CaptureStamp stamp_;
++    std::string world_frame_id_;
++    cv::Matx33d R_world_camera_{cv::Matx33d::eye()};
++    cv::Vec3d t_world_camera_m_{0, 0, 0};
++    std::optional<Mat6> covariance_;
++    bool hardware_verified_{false};
++};
++
++// 空 observations 也必须每帧调用；否则遮挡期间时钟/协方差/LOST不会推进。
++struct TrackingFrame
++{
++    pose::CaptureStamp stamp_;
++    InputOrigin origin_{InputOrigin::TypedMemory};
++    std::vector<pose::PoseObservation> observations_;
++    std::vector<PositionNoise> position_noise_;
++    std::optional<CameraTransform> camera_transform_;
++};
++
++struct TargetTrack
++{
++    std::uint64_t track_id_{0};
++    TrackState state_{TrackState::Lost};
++    std::string source_;
++    std::string target_class_;
++    std::string coordinate_frame_;
++    // 相机模式为 d(p_camera)/dt，含本车平移/旋转表观运动，绝非世界目标速度。
++    std::string velocity_meaning_;
++    pose::CaptureStamp last_measurement_stamp_;
++    std::optional<std::size_t> last_detection_index_;
++    std::int64_t state_time_us_{0};
++    std::optional<cv::Vec3d> position_m_;
++    std::optional<cv::Vec3d> velocity_mps_;
++    std::optional<Mat6> covariance_;
++    bool confirmed_{false};
++    bool time_bounded_{false};
++    bool model_hardware_verified_{false};
++    bool qualified_for_g5_{false};
++    std::optional<double> observation_age_s_;
++    std::optional<double> input_time_bound_s_;
++    // 协方差是给定噪声/时间模型下的估计；非无条件物理保证、非置信度概率。
++    std::string uncertainty_scope_{"MODEL_CONDITIONAL"};
++};
++
++struct TrackingResult
++{
++    pose::CaptureStamp input_stamp_;
++    bool input_accepted_{false};
++    bool ready_{false};
++    // 保留集合接口，本期最多一个；LOST记录不携带旧位置/速度作为新测量。
++    std::vector<TargetTrack> tracks_;
++    std::vector<std::string> events_;
++    std::optional<double> association_nis_;
++};
++
++struct TargetForecast
++{
++    bool available_{false};
++    std::uint64_t track_id_{0};
++    std::string coordinate_frame_;
++    std::string session_id_;
++    std::string clock_domain_;
++    bool time_bounded_{false};
++    std::int64_t state_time_us_{0};
++    std::int64_t last_measurement_us_{0};
++    std::optional<cv::Vec3d> position_m_;
++    std::optional<cv::Vec3d> velocity_mps_;
++    std::optional<Mat6> covariance_;
++    std::string reason_;
++};
++
++const char *track_state_name(TrackState state) noexcept;
++} // namespace mark::tracking
+diff --git a/src/tushenghao/include/mark/tracking_config.hpp b/src/tushenghao/include/mark/tracking_config.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/include/mark/tracking_config.hpp
+@@ -0,0 +1,46 @@
++#pragma once
++
++#include "mark/tracking_types.hpp"
++#include <filesystem>
++
++namespace mark::tracking
++{
++// Q/R是模型二阶矩，不是“阈值”；门控值才由同口径统计量 mean+3*sample_std 产生。
++struct TrackingProfile
++{
++    cv::Matx33d camera_mse_m2_{cv::Matx33d::zeros()};
++    double acceleration_psd_m2ps3_{0};
++    double initial_velocity_variance_m2ps2_{0};
++    double association_nis_limit_{0};
++    double bootstrap_nis_limit_{0};
++    double position_std_limit_m_{0};
++    double velocity_std_limit_mps_{0};
++    double max_dt_s_{0};
++    std::optional<double> validated_time_bound_s_;
++    std::string evidence_id_;
++    std::string camera_id_;
++    std::string basis_;
++    std::string coordinate_mode_{"camera_relative"};
++    std::string time_policy_{"nominal_research"};
++    bool hardware_verified_{false};
++};
++
++struct TrackingConfig
++{
++    std::string source_{"MARK"};
++    std::string target_class_{"mark-white-structure-v1"};
++    CoordinateMode coordinate_mode_{CoordinateMode::CameraRelative};
++    std::string world_frame_id_{"local-world"};
++    // nominal_research允许数值研究，始终不赋予时间资格；bounded_only要求真曝光与有界误差。
++    std::string time_policy_{"nominal_research"};
++    std::string stamp_uncertainty_semantics_{"unknown"};
++    std::optional<double> max_time_uncertainty_s_;
++    std::optional<TrackingProfile> profile_;
++};
++
++TrackingProfile load_tracking_profile(const std::filesystem::path &path);
++void write_tracking_profile(const TrackingProfile &profile, const std::filesystem::path &path);
++TrackingConfig load_tracking_config(const std::filesystem::path &path);
++void validate_tracking_profile(const TrackingProfile &profile);
++void validate_tracking_config(const TrackingConfig &config);
++} // namespace mark::tracking
+diff --git a/src/tushenghao/include/mark/target_tracker.hpp b/src/tushenghao/include/mark/target_tracker.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/include/mark/target_tracker.hpp
+@@ -0,0 +1,26 @@
++#pragma once
++
++#include "mark/tracking_config.hpp"
++#include <memory>
++
++namespace mark::tracking
++{
++// 单实例顺序调用；不修改G2，不回灌PosePrior，不输出控制指令。
++class TargetTracker
++{
++public:
++    explicit TargetTracker(TrackingConfig config);
++    ~TargetTracker();
++    TargetTracker(const TargetTracker &) = delete;
++    TargetTracker &operator=(const TargetTracker &) = delete;
++
++    TrackingResult step(const TrackingFrame &frame);
++    TargetForecast predict_to(std::int64_t target_time_us) const;
++    void reset() noexcept;
++    const TrackingConfig &config() const noexcept;
++
++private:
++    struct Impl;
++    std::unique_ptr<Impl> impl_;
++};
++} // namespace mark::tracking
+diff --git a/src/tushenghao/config/tracking.yaml b/src/tushenghao/config/tracking.yaml
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/config/tracking.yaml
+@@ -0,0 +1,13 @@
++%YAML:1.0
++---
++schema_version: 1
++source: "MARK"
++target_class: "mark-white-structure-v1"
++coordinate_mode: "camera_relative"
++world_frame_id: "local-world"
++time_policy: "nominal_research"
++stamp_uncertainty_semantics: "unknown"
++# 空值保持未知；不能把G2空时间预算或接收时刻冒充真曝光精度。
++max_time_uncertainty_s: ""
++# --profile 可覆盖本字段；先由tracking_lab标定生成，禁止手填经验数值。
++profile: ""
+diff --git a/src/tushenghao/config/tracking_lab.yaml b/src/tushenghao/config/tracking_lab.yaml
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/config/tracking_lab.yaml
+@@ -0,0 +1,45 @@
++%YAML:1.0
++---
++# 本文件只定义离线假设实验，不是实车参数或跟踪阈值。阈值由calibrate写新profile。
++schema_version: 1
++source: "MARK"
++target_class: "mark-white-structure-v1"
++camera_id: "synthetic-camera-g4"
++# profile严格记录适用坐标/时间政策；改变模式必须重新calibrate，不借用旧门槛冒充覆盖。
++tracking_coordinate_mode: "camera_relative"
++tracking_time_policy: "nominal_research"
++duration_s: 60.0
++# 0.5m/s来自V1.0.2规则参考；实际轨道速度/加速度仍需硬件测量。
++rule_reference_speed_mps: 0.5
++# 以下采样/动力学/成像/时间值均为明确的合成假设，不声称来自现场。
++nominal_dt_s: 0.014
++dt_jitter_fraction: 0.15
++acceleration_mps2: 1.0
++segment_min_s: 0.4
++segment_max_s: 2.0
++stop_probability: 0.2
++position_noise_std_m: [0.002, 0.003, 0.004]
++position_bias_m: [0.0005, -0.0003, 0.0002]
++initial_world_position_m: [0.0, 0.0, 1.2]
++occlusion_start_s: 20.0
++occlusion_duration_s: 0.3
++random_missing_probability: 0.03
++ambiguous_probability: 0.02
++budget_missing_probability: 0.02
++injected_wrong_probability: 0.01
++injected_offset_m: [0.3, 0.15, 0.0]
++camera_translation_amplitude_m: 0.03
++camera_translation_frequency_hz: 0.2
++camera_yaw_amplitude_rad: 0.04
++camera_yaw_frequency_hz: 0.15
++synthetic_time_bound_s: 0.0001
++# 完整session先分集，随机种子不共享；不把相邻帧拆成训练/验证。
++train_sessions: 3
++selection_sessions: 2
++holdout_sessions: 3
++train_seed: 2026102901
++selection_seed: 2026103901
++holdout_seed: 2026104901
++# 对照沿用原一阶平滑的强度；这是3D位置对照，不是旧二维稳定器逐值复刻。
++baseline_reference_dt_s: 0.014
++baseline_reference_alpha: 0.7
+diff --git a/src/tushenghao/lib/config/tracking_config.cpp b/src/tushenghao/lib/config/tracking_config.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/config/tracking_config.cpp
+@@ -0,0 +1,194 @@
++#include "mark/tracking_config.hpp"
++#include "tracking/kalman_cv.hpp"
++#include <cmath>
++#include <stdexcept>
++
++namespace mark::tracking
++{
++namespace
++{
++cv::FileNode require(const cv::FileNode &node, const char *key)
++{
++    auto value = node[key];
++    if (value.empty())
++        throw std::runtime_error(std::string("G4_CONFIG_MISSING:") + key);
++    return value;
++}
++
++std::string text(const cv::FileNode &node, const char *key)
++{
++    const auto value = require(node, key);
++    if (!value.isString())
++        throw std::runtime_error(std::string("G4_CONFIG_EXPECT_STRING:") + key);
++    return static_cast<std::string>(value);
++}
++
++// 同时接受YAML数值和完整的数值字符串；拒绝31px/NaN等静默截断。
++double number(const cv::FileNode &node)
++{
++    double result = 0;
++    if (node.isInt() || node.isReal())
++        result = static_cast<double>(node);
++    else if (node.isString())
++    {
++        const auto token = static_cast<std::string>(node);
++        std::size_t used = 0;
++        result = std::stod(token, &used);
++        if (used != token.size())
++            throw std::runtime_error("G4_CONFIG_PARTIAL_NUMBER");
++    }
++    else
++        throw std::runtime_error("G4_CONFIG_EXPECT_NUMBER");
++    if (!std::isfinite(result))
++        throw std::runtime_error("G4_CONFIG_NONFINITE");
++    return result;
++}
++
++bool flag(const cv::FileNode &node, const char *key)
++{
++    auto value = require(node, key);
++    if (!value.isInt() || (static_cast<int>(value) != 0 && static_cast<int>(value) != 1))
++        throw std::runtime_error(std::string("G4_CONFIG_EXPECT_BOOL01:") + key);
++    return static_cast<int>(value) == 1;
++}
++
++std::optional<double> optional_number(const cv::FileNode &node, const char *key)
++{
++    const auto value = require(node, key);
++    if (value.isString() && static_cast<std::string>(value).empty())
++        return std::nullopt;
++    return number(value);
++}
++
++void version(const cv::FileStorage &fs)
++{
++    const auto v = require(fs.root(), "schema_version");
++    if (!v.isInt() || static_cast<int>(v) != 1)
++        throw std::runtime_error("G4_CONFIG_SCHEMA_UNSUPPORTED");
++}
++} // namespace
++
++// Profile是独立标定产物；不改G2配置，不将已有二维拟合阈值挪用作3D噪声。
++TrackingProfile load_tracking_profile(const std::filesystem::path &path)
++{
++    cv::FileStorage fs(path.string(), cv::FileStorage::READ);
++    if (!fs.isOpened())
++        throw std::runtime_error("G4_PROFILE_OPEN_FAILED:" + path.string());
++    version(fs);
++    TrackingProfile p;
++    cv::Mat r;
++    require(fs.root(), "camera_mse_m2") >> r;
++    if (r.type() != CV_64F || r.rows != 3 || r.cols != 3)
++        throw std::runtime_error("G4_PROFILE_R_SHAPE");
++    r.copyTo(cv::Mat(p.camera_mse_m2_, false));
++    p.acceleration_psd_m2ps3_ = number(require(fs.root(), "acceleration_psd_m2ps3"));
++    p.initial_velocity_variance_m2ps2_ = number(require(fs.root(), "initial_velocity_variance_m2ps2"));
++    p.association_nis_limit_ = number(require(fs.root(), "association_nis_limit"));
++    p.bootstrap_nis_limit_ = number(require(fs.root(), "bootstrap_nis_limit"));
++    p.position_std_limit_m_ = number(require(fs.root(), "position_std_limit_m"));
++    p.velocity_std_limit_mps_ = number(require(fs.root(), "velocity_std_limit_mps"));
++    p.max_dt_s_ = number(require(fs.root(), "max_dt_s"));
++    p.validated_time_bound_s_ = optional_number(fs.root(), "validated_time_bound_s");
++    p.evidence_id_ = text(fs.root(), "evidence_id");
++    p.camera_id_ = text(fs.root(), "camera_id");
++    p.basis_ = text(fs.root(), "basis");
++    p.coordinate_mode_ = text(fs.root(), "coordinate_mode");
++    p.time_policy_ = text(fs.root(), "time_policy");
++    p.hardware_verified_ = flag(fs.root(), "hardware_verified");
++    validate_tracking_profile(p);
++    return p;
++}
++
++// 有效配置产物可复读；未批准的硬件状态不会因写盘自动变为true。
++void write_tracking_profile(const TrackingProfile &p, const std::filesystem::path &path)
++{
++    validate_tracking_profile(p);
++    cv::FileStorage fs(path.string(), cv::FileStorage::WRITE);
++    if (!fs.isOpened())
++        throw std::runtime_error("G4_PROFILE_WRITE_FAILED");
++    fs << "schema_version" << 1 << "camera_mse_m2" << cv::Mat(p.camera_mse_m2_)
++       << "acceleration_psd_m2ps3" << p.acceleration_psd_m2ps3_
++       << "initial_velocity_variance_m2ps2" << p.initial_velocity_variance_m2ps2_
++       << "association_nis_limit" << p.association_nis_limit_
++       << "bootstrap_nis_limit" << p.bootstrap_nis_limit_
++       << "position_std_limit_m" << p.position_std_limit_m_
++       << "velocity_std_limit_mps" << p.velocity_std_limit_mps_
++       << "max_dt_s" << p.max_dt_s_ << "validated_time_bound_s";
++    if (p.validated_time_bound_s_)
++        fs << *p.validated_time_bound_s_;
++    else
++        fs << "";
++    fs << "evidence_id" << p.evidence_id_ << "camera_id" << p.camera_id_
++       << "basis" << p.basis_ << "coordinate_mode" << p.coordinate_mode_
++       << "time_policy" << p.time_policy_
++       << "hardware_verified" << static_cast<int>(p.hardware_verified_);
++}
++
++TrackingConfig load_tracking_config(const std::filesystem::path &path)
++{
++    cv::FileStorage fs(path.string(), cv::FileStorage::READ);
++    if (!fs.isOpened())
++        throw std::runtime_error("G4_CONFIG_OPEN_FAILED:" + path.string());
++    version(fs);
++    TrackingConfig c;
++    c.source_ = text(fs.root(), "source");
++    c.target_class_ = text(fs.root(), "target_class");
++    const auto coordinate = text(fs.root(), "coordinate_mode");
++    if (coordinate != "camera_relative" && coordinate != "local_world")
++        throw std::runtime_error("G4_CONFIG_COORDINATE_MODE");
++    c.coordinate_mode_ = coordinate == "camera_relative" ? CoordinateMode::CameraRelative :
++                                                          CoordinateMode::LocalWorld;
++    c.world_frame_id_ = text(fs.root(), "world_frame_id");
++    c.time_policy_ = text(fs.root(), "time_policy");
++    c.stamp_uncertainty_semantics_ = text(fs.root(), "stamp_uncertainty_semantics");
++    c.max_time_uncertainty_s_ = optional_number(fs.root(), "max_time_uncertainty_s");
++    const std::filesystem::path profile(text(fs.root(), "profile"));
++    if (!profile.empty())
++    {
++        if (profile.is_absolute())
++            throw std::runtime_error("G4_CONFIG_PROFILE_MUST_BE_RELATIVE");
++        c.profile_ = load_tracking_profile((path.parent_path() / profile).lexically_normal());
++    }
++    validate_tracking_config(c);
++    return c;
++}
++
++void validate_tracking_profile(const TrackingProfile &p)
++{
++    if (!detail::positive_definite(cv::Mat(p.camera_mse_m2_)))
++        throw std::runtime_error("G4_PROFILE_R_NOT_PD");
++    for (double value : {p.acceleration_psd_m2ps3_, p.initial_velocity_variance_m2ps2_,
++                        p.association_nis_limit_, p.bootstrap_nis_limit_,
++                        p.position_std_limit_m_, p.velocity_std_limit_mps_, p.max_dt_s_})
++        if (!std::isfinite(value) || value <= 0)
++            throw std::runtime_error("G4_PROFILE_NONPOSITIVE_VALUE");
++    // 有界域必须显式声明单帧时间界；构造时拒绝缺项，避免重建途中访问空optional。
++    if (p.time_policy_ == "bounded_only" && !p.validated_time_bound_s_)
++        throw std::runtime_error("G4_PROFILE_BOUNDED_TIME_BOUND_MISSING");
++    if (p.evidence_id_.empty() || p.basis_.empty() || (p.hardware_verified_ && p.camera_id_.empty()) ||
++        (p.coordinate_mode_ != "camera_relative" && p.coordinate_mode_ != "local_world") ||
++        (p.time_policy_ != "nominal_research" && p.time_policy_ != "bounded_only") ||
++        (p.validated_time_bound_s_ && (!std::isfinite(*p.validated_time_bound_s_) ||
++                                     *p.validated_time_bound_s_ < 0)))
++        throw std::runtime_error("G4_PROFILE_NO_PROVENANCE_OR_TIME_BOUND");
++}
++
++void validate_tracking_config(const TrackingConfig &c)
++{
++    if (c.source_.empty() || c.target_class_.empty() || c.world_frame_id_.empty() ||
++        (c.time_policy_ != "nominal_research" && c.time_policy_ != "bounded_only") ||
++        (c.stamp_uncertainty_semantics_ != "unknown" &&
++         c.stamp_uncertainty_semantics_ != "absolute_bound") ||
++        (c.max_time_uncertainty_s_ && (!std::isfinite(*c.max_time_uncertainty_s_) ||
++                                      *c.max_time_uncertainty_s_ < 0)))
++        throw std::runtime_error("G4_CONFIG_INVALID");
++    if (c.profile_)
++    {
++        validate_tracking_profile(*c.profile_);
++        const auto mode = c.coordinate_mode_ == CoordinateMode::LocalWorld ? "local_world" : "camera_relative";
++        if (c.profile_->hardware_verified_ &&
++            (c.profile_->coordinate_mode_ != mode || c.profile_->time_policy_ != c.time_policy_))
++            throw std::runtime_error("G4_PROFILE_COORDINATE_DOMAIN_MISMATCH");
++    }
++}
++} // namespace mark::tracking
+diff --git a/src/tushenghao/lib/tracking/kalman_cv.hpp b/src/tushenghao/lib/tracking/kalman_cv.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/kalman_cv.hpp
+@@ -0,0 +1,33 @@
++#pragma once
++
++#include "mark/tracking_config.hpp"
++
++namespace mark::tracking::detail
++{
++// 数学单元可独立测试；不用默认CV_32F，也不依赖OpenCV的简化协方差更新。
++class CvFilter
++{
++public:
++    void initialize(const cv::Vec3d &position, const cv::Matx33d &R, double velocity_variance);
++    void bootstrap(const cv::Vec3d &previous, const cv::Matx33d &previous_R,
++                   const cv::Vec3d &current, const cv::Matx33d &current_R,
++                   double dt, double acceleration_psd, double dt_error_bound = 0,
++                   double position_time_bound_s = 0);
++    void predict(double dt, double acceleration_psd, double dt_error_bound = 0);
++    double nis(const cv::Vec3d &measurement, const cv::Matx33d &R) const;
++    void correct(const cv::Vec3d &measurement, const cv::Matx33d &R);
++    cv::Vec3d position() const;
++    cv::Vec3d velocity() const;
++    double position_std() const;
++    double velocity_std() const;
++    const Mat6 &covariance() const noexcept { return P_; }
++
++private:
++    Vec6 x_{Vec6::all(0)};
++    Mat6 P_{Mat6::zeros()};
++};
++
++bool finite_vector(const cv::Vec3d &value);
++bool positive_definite(const cv::Mat &matrix);
++cv::Matx33d position_block(const Mat6 &matrix);
++} // namespace mark::tracking::detail
+diff --git a/src/tushenghao/lib/tracking/kalman_cv.cpp b/src/tushenghao/lib/tracking/kalman_cv.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/kalman_cv.cpp
+@@ -0,0 +1,202 @@
++#include "tracking/kalman_cv.hpp"
++#include <algorithm>
++#include <cmath>
++#include <limits>
++#include <stdexcept>
++
++namespace mark::tracking::detail
++{
++namespace
++{
++// 这里只处理浮点舍入对称性，不给物理预算添加隐形epsilon或对角“救场”噪声。
++Mat6 checked_covariance(const cv::Mat &matrix)
++{
++    const cv::Mat symmetric = (matrix + matrix.t()) * 0.5;
++    if (!positive_definite(symmetric))
++        throw std::runtime_error("TRACK_COVARIANCE_NOT_POSITIVE_DEFINITE");
++    Mat6 result;
++    symmetric.copyTo(cv::Mat(result, false));
++    return result;
++}
++
++double block_std(const Mat6 &p, int start)
++{
++    cv::Matx33d block;
++    for (int i = 0; i < 3; ++i)
++        for (int j = 0; j < 3; ++j)
++            block(i, j) = p(i + start, j + start);
++    cv::Mat values;
++    if (!cv::eigen(cv::Mat(block), values) || values.at<double>(0) < 0)
++        throw std::runtime_error("TRACK_INVALID_STD_BLOCK");
++    return std::sqrt(values.at<double>(0));
++}
++} // namespace
++
++bool finite_vector(const cv::Vec3d &v)
++{
++    return std::isfinite(v[0]) && std::isfinite(v[1]) && std::isfinite(v[2]);
++}
++
++// 输入协方差必须明确为正定且对称；未知/零/负数绝不解释成“非常准确”。
++bool positive_definite(const cv::Mat &m)
++{
++    if (m.empty() || m.type() != CV_64F || m.rows != m.cols || !cv::checkRange(m))
++        return false;
++    const double scale = std::max(1.0, cv::norm(m, cv::NORM_INF));
++    const double roundoff = std::numeric_limits<double>::epsilon() * m.rows * scale;
++    if (cv::norm(m - m.t(), cv::NORM_INF) > roundoff)
++        return false;
++    cv::Mat eigenvalues;
++    return cv::eigen(m, eigenvalues) && eigenvalues.at<double>(m.rows - 1) > 0;
++}
++
++cv::Matx33d position_block(const Mat6 &p)
++{
++    cv::Matx33d out;
++    for (int i = 0; i < 3; ++i)
++        for (int j = 0; j < 3; ++j)
++            out(i, j) = p(i, j);
++    return out;
++}
++
++// 首帧速度只是零均值先验，不对外发布“测得零速”；方差来自独立数据二阶矩。
++void CvFilter::initialize(const cv::Vec3d &p, const cv::Matx33d &r, double vv)
++{
++    if (!finite_vector(p) || !positive_definite(cv::Mat(r)) || !std::isfinite(vv) || vv <= 0)
++        throw std::runtime_error("TRACK_BAD_INITIAL_STATE");
++    x_ = Vec6::all(0);
++    P_ = Mat6::zeros();
++    for (int i = 0; i < 3; ++i)
++    {
++        x_[i] = p[i];
++        for (int j = 0; j < 3; ++j)
++            P_(i, j) = r(i, j);
++        P_(i + 3, i + 3) = vv;
++    }
++}
++
++// 两个不同时刻才可观测速度；保留p-v交叉项，并补连续白加速度的端点速度误差。
++void CvFilter::bootstrap(const cv::Vec3d &p0, const cv::Matx33d &r0,
++                         const cv::Vec3d &p1, const cv::Matx33d &r1, double dt, double q, double bound, double position_bound)
++{
++    if (!finite_vector(p0) || !finite_vector(p1) || !positive_definite(cv::Mat(r0)) ||
++        !positive_definite(cv::Mat(r1)) || !std::isfinite(dt) || dt <= 0 ||
++        !std::isfinite(q) || q < 0 || !std::isfinite(bound) || bound < 0 || bound >= dt ||
++        !std::isfinite(position_bound) || position_bound < 0)
++        throw std::runtime_error("TRACK_BAD_BOOTSTRAP");
++    const auto v = (p1 - p0) / dt;
++    if (!finite_vector(v))
++        throw std::runtime_error("TRACK_BOOTSTRAP_VELOCITY_OVERFLOW");
++    if (bound > 0)
++    {
++        // 时间绝对界不是sigma。用最小可能dt限制除法误差，再用块MSE的2倍包络处理未知相关。
++        const double lower = dt - bound;
++        const auto velocity_mse = 2 * (2 * (r0 + r1) / (lower * lower) +
++            (v * v.t()) * (bound * bound / (lower * lower))) +
++            cv::Matx33d::eye() * (q * (dt + bound) / 3);
++        P_ = Mat6::zeros();
++        for (int i = 0; i < 3; ++i)
++        {
++            x_[i] = p1[i];
++            x_[i + 3] = v[i];
++            for (int j = 0; j < 3; ++j)
++            {
++                // R2：原有界初始化遗漏观测时偏导致的位置位移项。
++                // 单帧界来自profile；用本次bootstrap自身速度二阶矩估计，不借旧track速度。
++                P_(i, j) = 2 * (r1(i, j) + position_bound * position_bound *
++                    (v[i] * v[j] + velocity_mse(i, j)));
++                P_(i + 3, j + 3) = 2 * velocity_mse(i, j);
++            }
++        }
++        P_ = checked_covariance(cv::Mat(P_));
++        return;
++    }
++    P_ = Mat6::zeros();
++    for (int i = 0; i < 3; ++i)
++    {
++        x_[i] = p1[i];
++        x_[i + 3] = v[i];
++        for (int j = 0; j < 3; ++j)
++        {
++            P_(i, j) = r1(i, j);
++            P_(i, j + 3) = P_(j + 3, i) = r1(i, j) / dt;
++            P_(i + 3, j + 3) = (r0(i, j) + r1(i, j)) / (dt * dt);
++        }
++        P_(i + 3, i + 3) += q * dt / 3;
++    }
++    P_ = checked_covariance(cv::Mat(P_));
++}
++
++// 实际dt的连续白加速度CV模型；q单位m²/s³，不与离散常加速度dt⁴模型混用。
++void CvFilter::predict(double dt, double q, double bound)
++{
++    if (!std::isfinite(dt) || dt < 0 || !std::isfinite(q) || q < 0 ||
++        !std::isfinite(bound) || bound < 0 || (bound > 0 && dt <= bound))
++        throw std::runtime_error("TRACK_BAD_PREDICTION_INTERVAL");
++    Mat6 f = Mat6::eye(), noise = Mat6::zeros();
++    const double upper = dt + bound;
++    for (int i = 0; i < 3; ++i)
++    {
++        f(i, i + 3) = dt;
++        noise(i, i) = q * upper * upper * upper / 3;
++        noise(i, i + 3) = noise(i + 3, i) = q * upper * upper / 2;
++        noise(i + 3, i + 3) = q * upper;
++    }
++    Mat6 propagated = f * P_ * f.t() + noise;
++    if (bound > 0)
++    {
++        // Young不等式控制未知时偏与状态误差的相关项；bound/dt由量纲给出，不是经验调参。
++        Mat6 a = Mat6::zeros();
++        for (int i = 0; i < 3; ++i) a(i, i + 3) = 1;
++        const double ratio = bound / dt;
++        const auto second_moment_bound = 2 * (P_ + x_ * x_.t());
++        propagated = (1 + ratio) * (f * P_ * f.t()) + noise +
++            (1 + 1 / ratio) * bound * bound * (a * second_moment_bound * a.t());
++    }
++    x_ = f * x_;
++    for (double value : x_.val)
++        if (!std::isfinite(value)) throw std::runtime_error("TRACK_PREDICTION_STATE_OVERFLOW");
++    P_ = checked_covariance(cv::Mat(propagated));
++}
++
++// 用Cholesky解线性方程，不显式求逆；创新门槛由未截断的正例分布标定。
++double CvFilter::nis(const cv::Vec3d &z, const cv::Matx33d &r) const
++{
++    if (!finite_vector(z) || !positive_definite(cv::Mat(r)))
++        throw std::runtime_error("TRACK_BAD_MEASUREMENT_NOISE");
++    const auto innovation = z - position();
++    const auto s = position_block(P_) + r;
++    cv::Mat solved;
++    if (!cv::solve(cv::Mat(s), cv::Mat(innovation), solved, cv::DECOMP_CHOLESKY))
++        throw std::runtime_error("TRACK_NIS_SOLVE_FAILED");
++    const double score = cv::Mat(innovation).dot(solved);
++    if (!std::isfinite(score) || score < 0)
++        throw std::runtime_error("TRACK_INVALID_NIS");
++    return score;
++}
++
++// Joseph更新比(I-KH)P更能保持数值对称/正定；它仍依赖声明的线性噪声模型。
++void CvFilter::correct(const cv::Vec3d &z, const cv::Matx33d &r)
++{
++    (void)nis(z, r);
++    cv::Mat h = cv::Mat::zeros(3, 6, CV_64F);
++    for (int i = 0; i < 3; ++i)
++        h.at<double>(i, i) = 1;
++    cv::Mat p(P_), solved;
++    const cv::Mat s = h * p * h.t() + cv::Mat(r);
++    const cv::Mat pht = p * h.t();
++    if (!cv::solve(s, pht.t(), solved, cv::DECOMP_CHOLESKY))
++        throw std::runtime_error("TRACK_GAIN_SOLVE_FAILED");
++    const cv::Mat gain = solved.t();
++    const cv::Mat state = cv::Mat(x_) + gain * cv::Mat(z - position());
++    if (!cv::checkRange(state)) throw std::runtime_error("TRACK_CORRECTION_STATE_OVERFLOW");
++    state.copyTo(cv::Mat(x_, false));
++    const cv::Mat a = cv::Mat::eye(6, 6, CV_64F) - gain * h;
++    P_ = checked_covariance(a * p * a.t() + gain * cv::Mat(r) * gain.t());
++}
++
++cv::Vec3d CvFilter::position() const { return {x_[0], x_[1], x_[2]}; }
++cv::Vec3d CvFilter::velocity() const { return {x_[3], x_[4], x_[5]}; }
++double CvFilter::position_std() const { return block_std(P_, 0); }
++double CvFilter::velocity_std() const { return block_std(P_, 3); }
++} // namespace mark::tracking::detail
+diff --git a/src/tushenghao/lib/tracking/measurement_adapter.hpp b/src/tushenghao/lib/tracking/measurement_adapter.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/measurement_adapter.hpp
+@@ -0,0 +1,28 @@
++#pragma once
++
++#include "mark/tracking_config.hpp"
++
++namespace mark::tracking::detail
++{
++// 原G2位姿/协方差没有跟踪位置噪声约定；适配后固定为所选坐标系下的m与m²。
++// detection_index只用于联回本帧证据，不能承担跨帧身份。
++struct PositionMeasurement
++{
++    std::size_t detection_index_{0};
++    cv::Vec3d position_m_{0, 0, 0};
++    cv::Matx33d R_m2_{cv::Matx33d::zeros()};
++    bool hardware_verified_{false};
++};
++
++// 时间与来源分别验证：缺曝光可研究，但不能借接收时刻获得真实时间资格。
++std::int64_t sample_time(const pose::CaptureStamp &stamp);
++bool valid_stamp(const pose::CaptureStamp &stamp);
++bool same_sample(const pose::CaptureStamp &a, const pose::CaptureStamp &b);
++bool time_bounded(const TrackingFrame &frame, const TrackingConfig &config);
++// 把明确的绝对时偏界传播为局部模型MSE包络，避免把上界误写成高斯标准差。
++cv::Matx33d time_augmented_noise(const cv::Matx33d &R, const cv::Vec3d &velocity,
++    const cv::Matx33d &velocity_covariance, double absolute_bound_s, double acceleration_psd);
++// 只转换当前Unique及其完整选中证据；世界模式还必须提供同曝光的相机变换。
++std::vector<PositionMeasurement> adapt_measurements(
++    const TrackingFrame &frame, const TrackingConfig &config, std::vector<std::string> &events);
++} // namespace mark::tracking::detail
+diff --git a/src/tushenghao/lib/tracking/measurement_adapter.cpp b/src/tushenghao/lib/tracking/measurement_adapter.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/measurement_adapter.cpp
+@@ -0,0 +1,190 @@
++#include "tracking/measurement_adapter.hpp"
++#include "tracking/kalman_cv.hpp"
++#include <cmath>
++#include <limits>
++#include <map>
++#include <stdexcept>
++
++namespace mark::tracking::detail
++{
++std::int64_t sample_time(const pose::CaptureStamp &s)
++{
++    return s.exposure_us_.value_or(s.received_us_);
++}
++
++bool valid_stamp(const pose::CaptureStamp &s)
++{
++    return !s.session_id_.empty() && !s.camera_id_.empty() && !s.clock_domain_.empty() &&
++        s.pixel_domain_ == pose::PixelDomain::RawDistorted && s.received_us_ >= 0 &&
++        (!s.exposure_us_ || (*s.exposure_us_ >= 0 && *s.exposure_us_ <= s.received_us_)) &&
++        (!s.time_uncertainty_s_ || (std::isfinite(*s.time_uncertainty_s_) && *s.time_uncertainty_s_ >= 0));
++}
++
++// 不只比较frame_id，避免同编号的旧会话或其他相机结果混进当前测量。
++bool same_sample(const pose::CaptureStamp &a, const pose::CaptureStamp &b)
++{
++    return a.session_id_ == b.session_id_ && a.camera_id_ == b.camera_id_ &&
++        a.clock_domain_ == b.clock_domain_ && a.pixel_domain_ == b.pixel_domain_ &&
++        a.frame_id_ == b.frame_id_ && a.received_us_ == b.received_us_ &&
++        a.exposure_us_ == b.exposure_us_ && a.time_uncertainty_s_ == b.time_uncertainty_s_;
++}
++
++// time_uncertainty不是σ；仅在旁路语义明确为绝对界且处于标定域时授予时间资格。
++bool time_bounded(const TrackingFrame &f, const TrackingConfig &c)
++{
++    return f.origin_ != InputOrigin::LegacyG2Replay &&
++        c.stamp_uncertainty_semantics_ == "absolute_bound" && c.max_time_uncertainty_s_ &&
++        c.profile_ && c.profile_->validated_time_bound_s_ && f.stamp_.exposure_us_ &&
++        f.stamp_.time_uncertainty_s_ &&
++        *f.stamp_.time_uncertainty_s_ <= *c.max_time_uncertainty_s_ &&
++        *f.stamp_.time_uncertainty_s_ <= *c.profile_->validated_time_bound_s_;
++}
++
++// 有界时偏产生的位置MSE包络：显式保留状态二阶矩/过程项，未知相关用Cauchy的2倍和。
++// 它是局部CV模型的包络，不是“time_uncertainty=高斯sigma”，不宣称实车绝对误差保证。
++cv::Matx33d time_augmented_noise(const cv::Matx33d &r, const cv::Vec3d &velocity,
++    const cv::Matx33d &velocity_covariance, double b, double q)
++{
++    if (b == 0) return r;
++    if (!std::isfinite(b) || b < 0 || !std::isfinite(q) || q < 0)
++        throw std::runtime_error("TRACK_TIME_NOISE_BOUND_INVALID");
++    const auto velocity_second_bound = 2 * (velocity_covariance + velocity * velocity.t());
++    const auto time_mse = b * b * velocity_second_bound + cv::Matx33d::eye() * (q * b * b * b / 3);
++    return 2 * (r + time_mse);
++}
++
++namespace
++{
++// 变换只接收严格刚体；sqrt(eps)是SO(3)浮点检查，不是实物安装误差预算。
++bool valid_transform(const CameraTransform &t, const TrackingFrame &f, const TrackingConfig &c)
++{
++    const auto &r = t.R_world_camera_;
++    const double eps = std::sqrt(std::numeric_limits<double>::epsilon());
++    if (!same_sample(t.stamp_, f.stamp_) || t.world_frame_id_ != c.world_frame_id_ ||
++        !finite_vector(t.t_world_camera_m_) || !cv::checkRange(cv::Mat(r)) ||
++        cv::norm(cv::Mat(r.t() * r - cv::Matx33d::eye())) > eps ||
++        std::abs(cv::determinant(cv::Mat(r)) - 1) > eps)
++        return false;
++    if (t.covariance_)
++    {
++        cv::Mat values;
++        const cv::Mat covariance(*t.covariance_);
++        if (!cv::checkRange(covariance) || cv::norm(covariance - covariance.t()) > eps ||
++            !cv::eigen(covariance, values) || values.at<double>(5) < 0)
++            return false;
++    }
++    return true;
++}
++
++// 不猜SE3可选数组的排列；相机位置误差用独立PositionNoise或标定Profile。
++std::optional<PositionMeasurement> one_measurement(
++    const pose::PoseObservation &p, const TrackingFrame &f,
++    const TrackingConfig &c, std::vector<std::string> &events)
++{
++    if (p.source_ != c.source_ || p.target_id_ != c.target_class_)
++        return std::nullopt;
++    if (!same_sample(p.stamp_, f.stamp_) || p.status_ != pose::PoseStatus::Unique ||
++        !p.T_camera_target_ || !p.selected_index_ || *p.selected_index_ >= p.candidates_.size())
++    {
++        events.push_back("POSE_NOT_A_CURRENT_UNIQUE_MEASUREMENT");
++        return std::nullopt;
++    }
++    const auto &candidate = p.candidates_[*p.selected_index_];
++    std::size_t eligible_count = 0;
++    for (const auto &item : p.candidates_)
++        eligible_count += item.eligible_;
++    if (eligible_count != 1 || !candidate.eligible_ || !candidate.metrics_valid_ || !candidate.reasons_.empty() ||
++        candidate.min_depth_m_ <= 0 || candidate.rmse_px_ < 0 || candidate.max_error_px_ < 0 ||
++        !std::isfinite(candidate.min_depth_m_) || !std::isfinite(candidate.rmse_px_) ||
++        !std::isfinite(candidate.max_error_px_) || !finite_vector(candidate.pose_.rvec_) ||
++        !finite_vector(candidate.pose_.t_m_) || !finite_vector(p.T_camera_target_->rvec_) ||
++        !finite_vector(p.T_camera_target_->t_m_) || p.T_camera_target_->t_m_[2] <= 0)
++    {
++        events.push_back("POSE_SELECTED_EVIDENCE_INVALID");
++        return std::nullopt;
++    }
++    PositionMeasurement m;
++    m.detection_index_ = p.detection_index_;
++    m.position_m_ = p.T_camera_target_->t_m_;
++    m.R_m2_ = c.profile_->camera_mse_m2_;
++    m.hardware_verified_ = p.control_usable_ && c.profile_->hardware_verified_ &&
++        f.origin_ == InputOrigin::TypedMemory;
++    std::size_t matched = 0;
++    for (const auto &noise : f.position_noise_)
++        if (noise.detection_index_ == p.detection_index_)
++        {
++            ++matched;
++            if (noise.evidence_id_.empty() || !positive_definite(cv::Mat(noise.camera_mse_m2_)))
++            {
++                events.push_back("POSITION_NOISE_INVALID");
++                return std::nullopt;
++            }
++            m.R_m2_ = noise.camera_mse_m2_;
++            m.hardware_verified_ = m.hardware_verified_ && noise.hardware_verified_;
++        }
++    if (matched > 1)
++    {
++        events.push_back("POSITION_NOISE_AMBIGUOUS_BINDING");
++        return std::nullopt;
++    }
++    if (c.coordinate_mode_ == CoordinateMode::LocalWorld)
++    {
++        if (!f.camera_transform_ || !valid_transform(*f.camera_transform_, f, c))
++        {
++            events.push_back("WORLD_TRANSFORM_MISSING_OR_INVALID");
++            return std::nullopt;
++        }
++        const auto &t = *f.camera_transform_;
++        const auto rotated = t.R_world_camera_ * m.position_m_;
++        m.position_m_ = rotated + t.t_world_camera_m_;
++        m.R_m2_ = t.R_world_camera_ * m.R_m2_ * t.R_world_camera_.t();
++        if (t.covariance_)
++        {
++            const cv::Matx33d skew(0, -rotated[2], rotated[1], rotated[2], 0, -rotated[0],
++                                   -rotated[1], rotated[0], 0);
++            cv::Matx<double, 3, 6> j = cv::Matx<double, 3, 6>::zeros();
++            for (int row = 0; row < 3; ++row)
++                for (int col = 0; col < 3; ++col)
++                {
++                    j(row, col) = row == col ? 1 : 0;
++                    j(row, col + 3) = -skew(row, col);
++                }
++            // 未假定视觉误差与ego独立：Cov(a+b) <= 2(Cov(a)+Cov(b))，仍是局部线性模型。
++            m.R_m2_ = 2 * (m.R_m2_ + j * *t.covariance_ * j.t());
++        }
++        else
++        {
++            events.push_back("WORLD_EGO_UNCERTAINTY_UNKNOWN_CONDITIONAL_ONLY");
++            m.hardware_verified_ = false;
++        }
++        m.hardware_verified_ = m.hardware_verified_ && t.hardware_verified_;
++    }
++    if (!positive_definite(cv::Mat(m.R_m2_)))
++        return std::nullopt;
++    return m;
++}
++} // namespace
++
++std::vector<PositionMeasurement> adapt_measurements(
++    const TrackingFrame &f, const TrackingConfig &c, std::vector<std::string> &events)
++{
++    std::vector<PositionMeasurement> out;
++    std::map<std::size_t, int> index_count;
++    for (const auto &p : f.observations_)
++        if (p.source_ == c.source_ && p.target_id_ == c.target_class_ &&
++            p.status_ == pose::PoseStatus::Unique)
++            ++index_count[p.detection_index_];
++    for (const auto &p : f.observations_)
++    {
++        if (index_count[p.detection_index_] > 1)
++        {
++            events.push_back("DUPLICATE_DETECTION_INDEX");
++            continue;
++        }
++        auto m = one_measurement(p, f, c, events);
++        if (m)
++            out.push_back(*m);
++    }
++    return out;
++}
++} // namespace mark::tracking::detail
+diff --git a/src/tushenghao/lib/tracking/target_tracker.cpp b/src/tushenghao/lib/tracking/target_tracker.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/target_tracker.cpp
+@@ -0,0 +1,411 @@
++#include "mark/target_tracker.hpp"
++#include "tracking/kalman_cv.hpp"
++#include "tracking/measurement_adapter.hpp"
++#include <limits>
++#include <stdexcept>
++
++namespace mark::tracking
++{
++const char *track_state_name(TrackState state) noexcept
++{
++    switch (state)
++    {
++    case TrackState::Measured: return "MEASURED";
++    case TrackState::Coasting: return "COASTING";
++    case TrackState::Lost: return "LOST";
++    }
++    return "LOST";
++}
++
++namespace
++{
++double elapsed(std::int64_t newer, std::int64_t older)
++{
++    return static_cast<double>((static_cast<long double>(newer) - older) / 1e6L);
++}
++
++// 曝光/接收时钟不能中途混用；同名模型不是实例，track_id只标记本模块连续估计区间。
++bool same_context(const pose::CaptureStamp &a, const pose::CaptureStamp &b)
++{
++    return a.session_id_ == b.session_id_ && a.camera_id_ == b.camera_id_ &&
++        a.clock_domain_ == b.clock_domain_ && a.pixel_domain_ == b.pixel_domain_ &&
++        a.exposure_us_.has_value() == b.exposure_us_.has_value();
++}
++} // namespace
++
++struct TargetTracker::Impl
++{
++    TrackingConfig config_;
++    detail::CvFilter filter_;
++    bool live_{false};
++    bool confirmed_{false};
++    bool all_time_bounded_{false};
++    bool current_time_bounded_{false};
++    bool all_measurements_verified_{false};
++    std::uint64_t next_id_{1};
++    std::uint64_t id_{0};
++    std::optional<pose::CaptureStamp> last_input_;
++    pose::CaptureStamp last_measurement_;
++    std::int64_t state_time_us_{0};
++    detail::PositionMeasurement seed_;
++    std::optional<detail::PositionMeasurement> pending_;
++    pose::CaptureStamp pending_stamp_;
++    std::optional<TargetTrack> lost_;
++    TrackState state_{TrackState::Lost};
++
++    explicit Impl(TrackingConfig c) : config_(std::move(c)) {}
++
++    // reset不复用旧ID；无持久物理ID的前提下，重建必须能被下游察觉。
++    void clear() noexcept
++    {
++        live_ = false;
++        confirmed_ = false;
++        pending_.reset();
++        lost_.reset();
++        last_input_.reset();
++        state_ = TrackState::Lost;
++    }
++
++    std::string frame_name() const
++    {
++        return config_.coordinate_mode_ == CoordinateMode::LocalWorld ?
++            config_.world_frame_id_ : "camera-relative:" + last_measurement_.camera_id_;
++    }
++
++    // 首帧只测得位置；速度留空。这里的零均值仅是滤波先验，绝不发布零速事实。
++    void create(const detail::PositionMeasurement &m, const TrackingFrame &f,
++                std::vector<std::string> &events)
++    {
++        if (next_id_ == std::numeric_limits<std::uint64_t>::max())
++            throw std::runtime_error("TRACK_ID_EXHAUSTED");
++        id_ = next_id_++;
++        filter_.initialize(m.position_m_, m.R_m2_, config_.profile_->initial_velocity_variance_m2ps2_);
++        seed_ = m;
++        last_measurement_ = f.stamp_;
++        state_time_us_ = detail::sample_time(f.stamp_);
++        live_ = true;
++        confirmed_ = false;
++        all_time_bounded_ = detail::time_bounded(f, config_);
++        all_measurements_verified_ = m.hardware_verified_ && f.origin_ == InputOrigin::TypedMemory;
++        state_ = TrackState::Measured;
++        lost_.reset();
++        pending_.reset();
++        events.push_back("TRACK_CREATED:" + std::to_string(id_));
++    }
++
++    TargetTrack snapshot() const
++    {
++        TargetTrack t;
++        t.track_id_ = id_;
++        t.state_ = state_;
++        t.source_ = config_.source_;
++        t.target_class_ = config_.target_class_;
++        t.coordinate_frame_ = frame_name();
++        t.velocity_meaning_ = config_.coordinate_mode_ == CoordinateMode::LocalWorld ?
++            "TARGET_VELOCITY_IN_LOCAL_WORLD" : "CAMERA_COORDINATE_RATE_INCLUDES_EGO_MOTION";
++        t.last_measurement_stamp_ = last_measurement_;
++        t.last_detection_index_ = seed_.detection_index_;
++        t.state_time_us_ = state_time_us_;
++        t.confirmed_ = confirmed_;
++        t.time_bounded_ = all_time_bounded_ && current_time_bounded_;
++        t.model_hardware_verified_ = all_measurements_verified_ && config_.profile_->hardware_verified_;
++        t.input_time_bound_s_ = last_input_ ? last_input_->time_uncertainty_s_ : std::nullopt;
++        t.uncertainty_scope_ = config_.time_policy_ == "bounded_only" && t.time_bounded_ ?
++            "LOCAL_LINEAR_MSE_ENVELOPE_WITH_TIME_BOUNDS" : "MODEL_CONDITIONAL_ON_NOMINAL_TIME";
++        t.observation_age_s_ = elapsed(state_time_us_, detail::sample_time(last_measurement_));
++        if (live_)
++        {
++            t.position_m_ = filter_.position();
++            t.covariance_ = filter_.covariance();
++            if (confirmed_ && filter_.velocity_std() <= config_.profile_->velocity_std_limit_mps_)
++                t.velocity_mps_ = filter_.velocity();
++            t.qualified_for_g5_ = state_ == TrackState::Measured && t.velocity_mps_ &&
++                filter_.position_std() <= config_.profile_->position_std_limit_m_ &&
++                all_time_bounded_ && t.model_hardware_verified_ && config_.time_policy_ == "bounded_only";
++        }
++        return t;
++    }
++
++    // 失效按误差增长/标定时间域，不按随意“丢5帧”；LOST记录清空旧位置与速度。
++    void lose(const std::string &reason, std::vector<std::string> &events)
++    {
++        live_ = false;
++        state_ = TrackState::Lost;
++        lost_ = snapshot();
++        lost_->confirmed_ = false;
++        events.push_back("TRACK_LOST:" + std::to_string(id_) + ":" + reason);
++    }
++
++    // 时间界不能被当标准差；区间下界<=0时不做两点速度除法。
++    bool interval_resolved(const pose::CaptureStamp &previous, const TrackingFrame &f) const
++    {
++        if (config_.time_policy_ != "bounded_only")
++            return true;
++        return previous.time_uncertainty_s_ && f.stamp_.time_uncertainty_s_ &&
++            elapsed(detail::sample_time(f.stamp_), detail::sample_time(previous)) >
++            *previous.time_uncertainty_s_ + *f.stamp_.time_uncertainty_s_;
++    }
++
++    // 两点候选独立于旧滤波中心；旧模型失配时可重新建立，避免随机反转被永久拒绝。
++    bool reseed(const detail::PositionMeasurement &m, const TrackingFrame &f,
++                std::vector<std::string> &events)
++    {
++        const auto &p = *config_.profile_;
++        if (pending_)
++        {
++            const double dt = elapsed(detail::sample_time(f.stamp_), detail::sample_time(pending_stamp_));
++            if (dt > 0 && dt <= p.max_dt_s_ && interval_resolved(pending_stamp_, f))
++            {
++                detail::CvFilter candidate;
++                candidate.initialize(pending_->position_m_, pending_->R_m2_, p.initial_velocity_variance_m2ps2_);
++                const double bound = config_.time_policy_ == "bounded_only" ?
++                    *f.stamp_.time_uncertainty_s_ + *pending_stamp_.time_uncertainty_s_ : 0;
++                candidate.predict(dt, p.acceleration_psd_m2ps3_, bound);
++                if (candidate.nis(m.position_m_, m.R_m2_) <= p.bootstrap_nis_limit_)
++                {
++                    const auto previous = *pending_;
++                    const auto previous_stamp = pending_stamp_;
++                    events.push_back("TRACK_RESEEDED_NEW_ID_OLD:" + std::to_string(id_));
++                    create(m, f, events);
++                    // profile已在构造时验证；有界测量还须通过time_bounded的非空检查。
++                    filter_.bootstrap(previous.position_m_, previous.R_m2_, m.position_m_, m.R_m2_,
++                                      dt, p.acceleration_psd_m2ps3_, bound,
++                                      bound > 0 ? *p.validated_time_bound_s_ : 0);
++                    confirmed_ = true;
++                    all_time_bounded_ = all_time_bounded_ && previous_stamp.exposure_us_ &&
++                        previous_stamp.time_uncertainty_s_;
++                    all_measurements_verified_ = all_measurements_verified_ && previous.hardware_verified_;
++                    return true;
++                }
++            }
++        }
++        pending_ = m;
++        pending_stamp_ = f.stamp_;
++        events.push_back("PENDING_RESEED_POSITION_ONLY");
++        return false;
++    }
++
++    TrackingResult advance(const TrackingFrame &f)
++    {
++        TrackingResult result;
++        result.input_stamp_ = f.stamp_;
++        result.ready_ = config_.profile_.has_value();
++        if (!detail::valid_stamp(f.stamp_))
++        {
++            result.events_.push_back("INVALID_FRAME_STAMP");
++            return result;
++        }
++        if (last_input_ && !same_context(*last_input_, f.stamp_))
++        {
++            clear();
++            result.events_.push_back("CONTEXT_CHANGED_RESET");
++        }
++        if (last_input_ && (f.stamp_.frame_id_ <= last_input_->frame_id_ ||
++            detail::sample_time(f.stamp_) <= detail::sample_time(*last_input_) ||
++            f.stamp_.received_us_ < last_input_->received_us_))
++        {
++            result.events_.push_back("DUPLICATE_REORDERED_OR_ZERO_DT_REJECTED");
++            return result;
++        }
++        const auto previous_input = last_input_;
++        const bool previous_time_bounded = current_time_bounded_;
++        result.input_accepted_ = true;
++        last_input_ = f.stamp_;
++        current_time_bounded_ = detail::time_bounded(f, config_);
++        if (!result.ready_)
++        {
++            result.events_.push_back("TRACKING_PROFILE_NOT_READY");
++            return result;
++        }
++        const auto &p = *config_.profile_;
++        const auto process_mode = config_.coordinate_mode_ == CoordinateMode::LocalWorld ? "local_world" : "camera_relative";
++        const bool profile_frame_matches = p.coordinate_mode_ == process_mode && p.time_policy_ == config_.time_policy_ &&
++            p.camera_id_ == f.stamp_.camera_id_;
++        if (!profile_frame_matches)
++            result.events_.push_back("PROFILE_PROCESS_FRAME_UNVALIDATED_RESEARCH_ONLY");
++        auto measurements = detail::adapt_measurements(f, config_, result.events_);
++        if (config_.time_policy_ == "bounded_only" && !detail::time_bounded(f, config_))
++        {
++            measurements.clear();
++            result.events_.push_back("TIME_QUALITY_UNKNOWN_OR_OUTSIDE_VALIDATED_DOMAIN");
++        }
++        const auto now = detail::sample_time(f.stamp_);
++        if (live_)
++        {
++            const double dt = elapsed(now, state_time_us_);
++            state_time_us_ = now;
++            if (config_.time_policy_ == "bounded_only" && current_time_bounded_ && !previous_time_bounded)
++                lose("TIME_DOMAIN_REACQUIRED_REBUILD", result.events_);
++            else if (dt > p.max_dt_s_)
++                lose("STEP_OUTSIDE_CALIBRATED_DT_DOMAIN", result.events_);
++            else
++            {
++                double bound = 0;
++                if (config_.time_policy_ == "bounded_only" && current_time_bounded_ &&
++                    previous_time_bounded && previous_input)
++                    bound = *f.stamp_.time_uncertainty_s_ + *previous_input->time_uncertainty_s_;
++                filter_.predict(dt, p.acceleration_psd_m2ps3_, bound);
++            }
++        }
++        for (auto &m : measurements)
++        {
++            m.hardware_verified_ = m.hardware_verified_ && profile_frame_matches;
++            if (config_.time_policy_ == "bounded_only" && current_time_bounded_ &&
++                *f.stamp_.time_uncertainty_s_ > 0)
++            {
++                // 绝对时偏界产生位移误差MSE包络，绝不把界直接当高斯sigma。
++                const double b = *f.stamp_.time_uncertainty_s_;
++                cv::Vec3d velocity(0, 0, 0);
++                cv::Matx33d velocity_second = cv::Matx33d::eye() * p.initial_velocity_variance_m2ps2_;
++                if (live_)
++                {
++                    velocity = filter_.velocity();
++                    for (int i = 0; i < 3; ++i)
++                        for (int j = 0; j < 3; ++j)
++                            velocity_second(i, j) = filter_.covariance()(i + 3, j + 3);
++                }
++                m.R_m2_ = detail::time_augmented_noise(m.R_m2_, velocity, velocity_second,
++                                                       b, p.acceleration_psd_m2ps3_);
++            }
++        }
++        if (!live_)
++        {
++            if (measurements.size() == 1)
++                create(measurements.front(), f, result.events_);
++            else if (measurements.size() > 1)
++                result.events_.push_back("INITIAL_TARGET_COMPETITION_NO_SELECTION");
++        }
++        else
++        {
++            std::vector<std::size_t> accepted;
++            const double gate = confirmed_ ? p.association_nis_limit_ : p.bootstrap_nis_limit_;
++            for (std::size_t i = 0; i < measurements.size(); ++i)
++            {
++                const double score = filter_.nis(measurements[i].position_m_, measurements[i].R_m2_);
++                if (score <= gate)
++                    accepted.push_back(i);
++            }
++            bool updated = false;
++            if (accepted.size() == 1 && interval_resolved(last_measurement_, f))
++            {
++                const auto &m = measurements[accepted.front()];
++                result.association_nis_ = filter_.nis(m.position_m_, m.R_m2_);
++                if (!confirmed_)
++                {
++                    const double dt = elapsed(now, detail::sample_time(last_measurement_));
++                    filter_.bootstrap(seed_.position_m_, seed_.R_m2_, m.position_m_, m.R_m2_,
++                                      dt, p.acceleration_psd_m2ps3_,
++                        config_.time_policy_ == "bounded_only" && all_time_bounded_ && current_time_bounded_ ?
++                        *f.stamp_.time_uncertainty_s_ + *last_measurement_.time_uncertainty_s_ : 0,
++                        config_.time_policy_ == "bounded_only" && all_time_bounded_ && current_time_bounded_ ?
++                        *p.validated_time_bound_s_ : 0);
++                    confirmed_ = true;
++                }
++                else
++                    filter_.correct(m.position_m_, m.R_m2_);
++                last_measurement_ = f.stamp_;
++                seed_ = m;
++                all_time_bounded_ = all_time_bounded_ && detail::time_bounded(f, config_);
++                all_measurements_verified_ = all_measurements_verified_ && m.hardware_verified_ &&
++                    f.origin_ == InputOrigin::TypedMemory;
++                state_ = TrackState::Measured;
++                pending_.reset();
++                updated = true;
++            }
++            else if (accepted.empty() && measurements.size() == 1)
++                updated = reseed(measurements.front(), f, result.events_);
++            else
++            {
++                pending_.reset();
++                if (accepted.size() > 1)
++                    result.events_.push_back("ASSOCIATION_COMPETITION_COAST_ONLY");
++            }
++            if (!updated)
++                state_ = TrackState::Coasting;
++            // 预测沿用域只终止COASTING，不能删除当前有效测量/阻止初始化收敛。
++            // 当前MEASURED不够精确时保留估计和P，但qualified_for_g5仍为false。
++            if (!updated && filter_.position_std() > p.position_std_limit_m_)
++                lose("POSITION_UNCERTAINTY_EXCEEDED", result.events_);
++        }
++        if (live_)
++            result.tracks_.push_back(snapshot());
++        else if (lost_)
++        {
++            auto lost = *lost_;
++            lost.state_time_us_ = now;
++            lost.observation_age_s_ = elapsed(now, detail::sample_time(lost.last_measurement_stamp_));
++            result.tracks_.push_back(lost);
++        }
++        return result;
++    }
++};
++
++TargetTracker::TargetTracker(TrackingConfig config) : impl_(std::make_unique<Impl>(std::move(config)))
++{
++    validate_tracking_config(impl_->config_);
++}
++
++TargetTracker::~TargetTracker() = default;
++
++// 按值事务：坏帧/数学失败不污染内部时间或轨迹，下一合法帧仍能继续。
++TrackingResult TargetTracker::step(const TrackingFrame &frame)
++{
++    try
++    {
++        Impl candidate = *impl_;
++        auto result = candidate.advance(frame);
++        if (result.input_accepted_)
++            *impl_ = std::move(candidate);
++        return result;
++    }
++    catch (const std::exception &error)
++    {
++        TrackingResult result;
++        result.input_stamp_ = frame.stamp_;
++        result.ready_ = impl_->config_.profile_.has_value();
++        result.events_.push_back(std::string("TRACK_MATH_REJECTED_NO_COMMIT:") + error.what());
++        return result;
++    }
++}
++
++// 查询未来状态不推进滤波历史、不产生新测量；G5自行决定查询的作用时刻。
++TargetForecast TargetTracker::predict_to(std::int64_t time) const
++{
++    TargetForecast out;
++    if (!impl_->live_ || !impl_->confirmed_)
++    {
++        out.reason_ = "NO_CONFIRMED_TRACK";
++        return out;
++    }
++    const double dt = elapsed(time, impl_->state_time_us_);
++    if (dt < 0)
++    {
++        out.reason_ = "FORECAST_BEFORE_CURRENT_STATE";
++        return out;
++    }
++    auto filter = impl_->filter_;
++    filter.predict(dt, impl_->config_.profile_->acceleration_psd_m2ps3_);
++    if (filter.position_std() > impl_->config_.profile_->position_std_limit_m_ ||
++        filter.velocity_std() > impl_->config_.profile_->velocity_std_limit_mps_)
++    {
++        out.reason_ = "FORECAST_UNCERTAINTY_EXCEEDED";
++        return out;
++    }
++    out.available_ = true;
++    out.track_id_ = impl_->id_;
++    out.coordinate_frame_ = impl_->frame_name();
++    out.session_id_ = impl_->last_measurement_.session_id_;
++    out.clock_domain_ = impl_->last_measurement_.clock_domain_;
++    out.time_bounded_ = impl_->all_time_bounded_ && impl_->current_time_bounded_;
++    out.state_time_us_ = time;
++    out.last_measurement_us_ = detail::sample_time(impl_->last_measurement_);
++    out.position_m_ = filter.position();
++    out.velocity_mps_ = filter.velocity();
++    out.covariance_ = filter.covariance();
++    out.reason_ = "MODEL_CONDITIONAL_PREDICTION_NOT_A_MEASUREMENT";
++    return out;
++}
++
++void TargetTracker::reset() noexcept { impl_->clear(); }
++const TrackingConfig &TargetTracker::config() const noexcept { return impl_->config_; }
++} // namespace mark::tracking
+diff --git a/src/tushenghao/lib/tracking/tracking_io.hpp b/src/tushenghao/lib/tracking/tracking_io.hpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/tracking_io.hpp
+@@ -0,0 +1,14 @@
++#pragma once
++
++#include "mark/tracking_types.hpp"
++#include <filesystem>
++
++namespace mark::tracking
++{
++// 原G2文件缺曝光/时间误差/协方差；兼容reader明确降级，不解析人类diagnostics字符串。
++std::vector<TrackingFrame> read_tracking_frames(const std::filesystem::path &path);
++void write_tracking_frames(const std::vector<TrackingFrame> &frames,
++                           const std::filesystem::path &path);
++void write_tracking_results(const std::vector<TrackingResult> &results,
++                            const std::filesystem::path &path);
++} // namespace mark::tracking
+diff --git a/src/tushenghao/lib/tracking/tracking_io.cpp b/src/tushenghao/lib/tracking/tracking_io.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/lib/tracking/tracking_io.cpp
+@@ -0,0 +1,343 @@
++#include "tracking/tracking_io.hpp"
++#include <cmath>
++#include <limits>
++#include <stdexcept>
++
++namespace mark::tracking
++{
++namespace
++{
++std::string text(const cv::FileNode &n, const char *key)
++{
++    if (!n[key].isString())
++        throw std::runtime_error(std::string("G4_REPLAY_EXPECT_STRING:") + key);
++    return static_cast<std::string>(n[key]);
++}
++
++// 64位帧号/时间以十进制字符串保存，避免OpenCV FileStorage窄化为32位整数。
++std::string integer_token(const cv::FileNode &n)
++{
++    if (n.isString())
++        return static_cast<std::string>(n);
++    if (n.isInt())
++        return std::to_string(static_cast<int>(n));
++    throw std::runtime_error("G4_REPLAY_EXPECT_INTEGER");
++}
++
++std::uint64_t unsigned_integer(const cv::FileNode &n)
++{
++    const auto token = integer_token(n);
++    if (token.empty() || token.find_first_not_of("0123456789") != std::string::npos)
++        throw std::runtime_error("G4_REPLAY_BAD_UNSIGNED_INTEGER");
++    return std::stoull(token);
++}
++
++std::int64_t signed_integer(const cv::FileNode &n)
++{
++    const auto token = integer_token(n);
++    std::size_t used = 0;
++    const auto value = std::stoll(token, &used);
++    if (used != token.size())
++        throw std::runtime_error("G4_REPLAY_PARTIAL_INTEGER");
++    return value;
++}
++
++double number(const cv::FileNode &n)
++{
++    if ((!n.isInt() && !n.isReal()) || !std::isfinite(static_cast<double>(n)))
++        throw std::runtime_error("G4_REPLAY_EXPECT_FINITE_NUMBER");
++    return static_cast<double>(n);
++}
++
++bool flag(const cv::FileNode &n, const char *key)
++{
++    if (!n[key].isInt() || (static_cast<int>(n[key]) != 0 && static_cast<int>(n[key]) != 1))
++        throw std::runtime_error(std::string("G4_REPLAY_EXPECT_BOOL01:") + key);
++    return static_cast<int>(n[key]) == 1;
++}
++
++bool absent(const cv::FileNode &n)
++{
++    return n.empty() || (n.isString() && static_cast<std::string>(n).empty());
++}
++
++template<int Rows, int Cols>
++cv::Matx<double, Rows, Cols> matrix(const cv::FileNode &n)
++{
++    cv::Mat m;
++    n >> m;
++    if (m.rows != Rows || m.cols != Cols || m.type() != CV_64F || !cv::checkRange(m))
++        throw std::runtime_error("G4_REPLAY_MATRIX_SHAPE_OR_FINITE");
++    cv::Matx<double, Rows, Cols> result;
++    m.copyTo(cv::Mat(result, false));
++    return result;
++}
++
++cv::Vec3d vector3(const cv::FileNode &n)
++{
++    const auto m = matrix<3, 1>(n);
++    return {m(0, 0), m(1, 0), m(2, 0)};
++}
++
++void write_stamp(cv::FileStorage &fs, const pose::CaptureStamp &s)
++{
++    fs << "{" << "session_id" << s.session_id_ << "camera_id" << s.camera_id_
++       << "clock_domain" << s.clock_domain_ << "pixel_domain" << static_cast<int>(s.pixel_domain_)
++       << "frame_id" << std::to_string(s.frame_id_) << "received_us" << std::to_string(s.received_us_)
++       << "exposure_us" << (s.exposure_us_ ? std::to_string(*s.exposure_us_) : "")
++       << "time_uncertainty_s";
++    if (s.time_uncertainty_s_)
++        fs << *s.time_uncertainty_s_;
++    else
++        fs << "";
++    fs << "}";
++}
++
++pose::CaptureStamp read_stamp(const cv::FileNode &n)
++{
++    pose::CaptureStamp s;
++    s.session_id_ = text(n, "session_id");
++    s.camera_id_ = text(n, "camera_id");
++    s.clock_domain_ = text(n, "clock_domain");
++    if (!n["pixel_domain"].isInt() || static_cast<int>(n["pixel_domain"]) !=
++        static_cast<int>(pose::PixelDomain::RawDistorted))
++        throw std::runtime_error("G4_REPLAY_PIXEL_DOMAIN");
++    s.pixel_domain_ = pose::PixelDomain::RawDistorted;
++    s.frame_id_ = unsigned_integer(n["frame_id"]);
++    s.received_us_ = signed_integer(n["received_us"]);
++    if (!absent(n["exposure_us"]))
++        s.exposure_us_ = signed_integer(n["exposure_us"]);
++    if (!absent(n["time_uncertainty_s"]))
++        s.time_uncertainty_s_ = number(n["time_uncertainty_s"]);
++    return s;
++}
++
++pose::PoseStatus read_status(const cv::FileNode &n)
++{
++    const auto value = static_cast<std::string>(n);
++    for (auto status : {pose::PoseStatus::InvalidInput, pose::PoseStatus::CorrespondenceMissing,
++                       pose::PoseStatus::NotDetected, pose::PoseStatus::NoSolution,
++                       pose::PoseStatus::BudgetMissing, pose::PoseStatus::Ambiguous,
++                       pose::PoseStatus::Unique})
++        if (value == pose::pose_status_name(status))
++            return status;
++    throw std::runtime_error("G4_REPLAY_UNKNOWN_POSE_STATUS");
++}
++
++void write_pose(cv::FileStorage &fs, const pose::PoseObservation &p)
++{
++    fs << "{" << "stamp";
++    write_stamp(fs, p.stamp_);
++    fs << "source" << p.source_ << "target_id" << p.target_id_
++       << "detection_index" << std::to_string(p.detection_index_)
++       << "status" << pose::pose_status_name(p.status_)
++       << "control_usable" << static_cast<int>(p.control_usable_) << "candidates" << "[";
++    for (const auto &c : p.candidates_)
++    {
++        fs << "{" << "rvec" << cv::Mat(c.pose_.rvec_) << "t_m" << cv::Mat(c.pose_.t_m_)
++           << "metrics_valid" << static_cast<int>(c.metrics_valid_) << "eligible" << static_cast<int>(c.eligible_)
++           << "rmse_px" << c.rmse_px_ << "max_error_px" << c.max_error_px_
++           << "min_depth_m" << c.min_depth_m_ << "reasons" << "[";
++        for (const auto &reason : c.reasons_) fs << reason;
++        fs << "]" << "}";
++    }
++    fs << "]";
++    if (p.selected_index_)
++        fs << "selected_index" << std::to_string(*p.selected_index_);
++    if (p.T_camera_target_)
++        fs << "rvec" << cv::Mat(p.T_camera_target_->rvec_) << "t_m" << cv::Mat(p.T_camera_target_->t_m_);
++    fs << "reasons" << "[";
++    for (const auto &reason : p.reasons_)
++        fs << reason;
++    fs << "]" << "}";
++}
++
++// 兼容读取只恢复原文件确实保存的字段；旧covariance_available不能还原协方差数值。
++pose::PoseObservation read_pose(const cv::FileNode &n, const pose::CaptureStamp &stamp, bool legacy)
++{
++    pose::PoseObservation p;
++    p.stamp_ = legacy ? stamp : read_stamp(n["stamp"]);
++    p.source_ = text(n, "source");
++    p.target_id_ = text(n, "target_id");
++    p.detection_index_ = unsigned_integer(n["detection_index"]);
++    p.status_ = read_status(n["status"]);
++    p.control_usable_ = !legacy && flag(n, "control_usable");
++    if (n["reasons"].isSeq())
++        for (const auto &reason : n["reasons"])
++            p.reasons_.push_back(static_cast<std::string>(reason));
++    // 非Unique帧只恢复拒绝状态；不解析/使用可能非有限的失败候选，原文件作为证据保留。
++    if (p.status_ != pose::PoseStatus::Unique)
++        return p;
++    if (!n["candidates"].isSeq())
++        throw std::runtime_error("G4_REPLAY_CANDIDATES_NOT_SEQUENCE");
++    for (const auto &c : n["candidates"])
++    {
++        pose::PoseCandidate candidate;
++        candidate.metrics_valid_ = flag(c, "metrics_valid");
++        candidate.eligible_ = flag(c, "eligible");
++        if (c["reasons"].isSeq())
++            for (const auto &reason : c["reasons"])
++                candidate.reasons_.push_back(static_cast<std::string>(reason));
++        if (candidate.eligible_)
++        {
++            candidate.pose_.rvec_ = vector3(c["rvec"]);
++            candidate.pose_.t_m_ = vector3(c["t_m"]);
++        }
++        if (!c["rmse_px"].empty()) candidate.rmse_px_ = number(c["rmse_px"]);
++        if (!c["max_error_px"].empty()) candidate.max_error_px_ = number(c["max_error_px"]);
++        if (!c["min_depth_m"].empty()) candidate.min_depth_m_ = number(c["min_depth_m"]);
++        p.candidates_.push_back(candidate);
++    }
++    if (!n["selected_index"].empty())
++        p.selected_index_ = unsigned_integer(n["selected_index"]);
++    if (!n["t_m"].empty())
++        p.T_camera_target_ = pose::RigidPose{vector3(n["rvec"]), vector3(n["t_m"])};
++    return p;
++}
++} // namespace
++
++// native v4完整保存时间与旁路；legacy v1只允许回放，不能伪造曝光/硬件资格。
++std::vector<TrackingFrame> read_tracking_frames(const std::filesystem::path &path)
++{
++    cv::FileStorage fs(path.string(), cv::FileStorage::READ);
++    if (!fs.isOpened() || !fs["schema_version"].isInt() || !fs["frames"].isSeq())
++        throw std::runtime_error("G4_REPLAY_OPEN_OR_SCHEMA_FAILED");
++    const int version = static_cast<int>(fs["schema_version"]);
++    if (version != 1 && version != 4)
++        throw std::runtime_error("G4_REPLAY_UNSUPPORTED_VERSION");
++    if (version == 4 && (text(fs.root(), "position_unit") != "m" ||
++                         text(fs.root(), "time_unit") != "us"))
++        throw std::runtime_error("G4_REPLAY_UNIT_MISMATCH");
++    std::vector<TrackingFrame> result;
++    for (const auto &n : fs["frames"])
++    {
++        TrackingFrame f;
++        if (version == 1)
++        {
++            f.origin_ = InputOrigin::LegacyG2Replay;
++            f.stamp_.session_id_ = text(fs.root(), "session_id");
++            f.stamp_.camera_id_ = text(fs.root(), "camera_id");
++            f.stamp_.clock_domain_ = text(fs.root(), "clock_domain");
++            f.stamp_.pixel_domain_ = pose::PixelDomain::RawDistorted;
++            f.stamp_.frame_id_ = unsigned_integer(n["frame_id"]);
++            f.stamp_.received_us_ = signed_integer(n["timestamp_us"]);
++            if (!n["mark"].isSeq())
++                throw std::runtime_error("G4_LEGACY_MARK_NOT_SEQUENCE");
++            for (const auto &p : n["mark"])
++                f.observations_.push_back(read_pose(p, f.stamp_, true));
++        }
++        else
++        {
++            f.stamp_ = read_stamp(n["stamp"]);
++            if (!n["origin"].isInt() || static_cast<int>(n["origin"]) < 0 ||
++                static_cast<int>(n["origin"]) > 2 || !n["observations"].isSeq() || !n["position_noise"].isSeq())
++                throw std::runtime_error("G4_NATIVE_FRAME_SCHEMA");
++            f.origin_ = static_cast<InputOrigin>(static_cast<int>(n["origin"]));
++            for (const auto &p : n["observations"])
++                f.observations_.push_back(read_pose(p, f.stamp_, false));
++            for (const auto &noise : n["position_noise"])
++            {
++                PositionNoise p;
++                p.detection_index_ = unsigned_integer(noise["detection_index"]);
++                p.camera_mse_m2_ = matrix<3, 3>(noise["camera_mse_m2"]);
++                p.evidence_id_ = text(noise, "evidence_id");
++                p.hardware_verified_ = flag(noise, "hardware_verified");
++                f.position_noise_.push_back(p);
++            }
++            if (!n["camera_transform"].empty())
++            {
++                const auto t = n["camera_transform"];
++                CameraTransform transform;
++                transform.stamp_ = read_stamp(t["stamp"]);
++                transform.world_frame_id_ = text(t, "world_frame_id");
++                transform.R_world_camera_ = matrix<3, 3>(t["R_world_camera"]);
++                transform.t_world_camera_m_ = vector3(t["t_world_camera_m"]);
++                if (!t["covariance"].empty()) transform.covariance_ = matrix<6, 6>(t["covariance"]);
++                transform.hardware_verified_ = flag(t, "hardware_verified");
++                f.camera_transform_ = transform;
++            }
++        }
++        result.push_back(std::move(f));
++    }
++    if (result.empty())
++        throw std::runtime_error("G4_REPLAY_EMPTY_INPUT_REJECTED");
++    return result;
++}
++
++void write_tracking_frames(const std::vector<TrackingFrame> &frames, const std::filesystem::path &path)
++{
++    if (frames.empty()) throw std::runtime_error("G4_CANNOT_WRITE_EMPTY_DATASET");
++    cv::FileStorage fs(path.string(), cv::FileStorage::WRITE);
++    if (!fs.isOpened()) throw std::runtime_error("G4_FRAME_WRITE_FAILED");
++    fs << "schema_version" << 4 << "stream_type" << "G4PoseReplay"
++       << "position_unit" << "m" << "time_unit" << "us" << "frames" << "[";
++    for (const auto &f : frames)
++    {
++        fs << "{" << "stamp";
++        write_stamp(fs, f.stamp_);
++        fs << "origin" << static_cast<int>(f.origin_) << "observations" << "[";
++        for (const auto &p : f.observations_) write_pose(fs, p);
++        fs << "]" << "position_noise" << "[";
++        for (const auto &p : f.position_noise_)
++            fs << "{" << "detection_index" << std::to_string(p.detection_index_)
++               << "camera_mse_m2" << cv::Mat(p.camera_mse_m2_) << "evidence_id" << p.evidence_id_
++               << "hardware_verified" << static_cast<int>(p.hardware_verified_) << "}";
++        fs << "]";
++        if (f.camera_transform_)
++        {
++            const auto &t = *f.camera_transform_;
++            fs << "camera_transform" << "{" << "stamp";
++            write_stamp(fs, t.stamp_);
++            fs << "world_frame_id" << t.world_frame_id_ << "R_world_camera" << cv::Mat(t.R_world_camera_)
++               << "t_world_camera_m" << cv::Mat(t.t_world_camera_m_)
++               << "hardware_verified" << static_cast<int>(t.hardware_verified_);
++            if (t.covariance_) fs << "covariance" << cv::Mat(*t.covariance_);
++            fs << "}";
++        }
++        fs << "}";
++    }
++    fs << "]";
++}
++
++// 每帧连同拒绝事件写出，LOST不补旧位置；时间/资格/协方差口径随结果保存。
++void write_tracking_results(const std::vector<TrackingResult> &results, const std::filesystem::path &path)
++{
++    if (results.empty()) throw std::runtime_error("G4_CANNOT_WRITE_EMPTY_RESULT");
++    cv::FileStorage fs(path.string(), cv::FileStorage::WRITE);
++    if (!fs.isOpened()) throw std::runtime_error("G4_RESULT_WRITE_FAILED");
++    fs << "schema_version" << 1 << "stream_type" << "G4TrackingResult" << "frames" << "[";
++    for (const auto &r : results)
++    {
++        fs << "{" << "stamp";
++        write_stamp(fs, r.input_stamp_);
++        fs << "input_accepted" << static_cast<int>(r.input_accepted_) << "ready" << static_cast<int>(r.ready_)
++           << "events" << "[";
++        for (const auto &event : r.events_) fs << event;
++        fs << "]";
++        if (r.association_nis_) fs << "association_nis" << *r.association_nis_;
++        fs << "tracks" << "[";
++        for (const auto &t : r.tracks_)
++        {
++            fs << "{" << "track_id" << std::to_string(t.track_id_) << "state" << track_state_name(t.state_)
++               << "source" << t.source_ << "target_class" << t.target_class_
++               << "coordinate_frame" << t.coordinate_frame_ << "velocity_meaning" << t.velocity_meaning_
++               << "state_time_us" << std::to_string(t.state_time_us_) << "last_measurement_stamp";
++            write_stamp(fs, t.last_measurement_stamp_);
++            if (t.last_detection_index_)
++                fs << "last_detection_index" << std::to_string(*t.last_detection_index_);
++            fs << "confirmed" << static_cast<int>(t.confirmed_) << "time_bounded" << static_cast<int>(t.time_bounded_)
++               << "model_hardware_verified" << static_cast<int>(t.model_hardware_verified_)
++               << "qualified_for_g5" << static_cast<int>(t.qualified_for_g5_)
++               << "uncertainty_scope" << t.uncertainty_scope_;
++            if (t.position_m_) fs << "position_m" << cv::Mat(*t.position_m_);
++            if (t.velocity_mps_) fs << "velocity_mps" << cv::Mat(*t.velocity_mps_);
++            if (t.covariance_) fs << "covariance" << cv::Mat(*t.covariance_);
++            if (t.observation_age_s_) fs << "observation_age_s" << *t.observation_age_s_;
++            if (t.input_time_bound_s_) fs << "input_time_bound_s" << *t.input_time_bound_s_;
++            fs << "}";
++        }
++        fs << "]" << "}";
++    }
++    fs << "]";
++}
++} // namespace mark::tracking
+diff --git a/src/tushenghao/app/tracking_main.cpp b/src/tushenghao/app/tracking_main.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/app/tracking_main.cpp
+@@ -0,0 +1,121 @@
++#include "mark/target_tracker.hpp"
++#include "tracking/tracking_io.hpp"
++#include <filesystem>
++#include <iostream>
++#include <map>
++#include <set>
++#include <stdexcept>
++#include <chrono>
++#include <algorithm>
++
++namespace
++{
++// 严格CLI避免拼错参数后静默使用默认；配置未测仍可检查，但不假称有速度。
++std::map<std::string, std::string> parse_cli(int argc, char **argv)
++{
++    std::map<std::string, std::string> options;
++    const std::set<std::string> valued{"--config", "--profile", "--input", "--out"};
++    for (int i = 1; i < argc; ++i)
++    {
++        const std::string key = argv[i];
++        if (key == "--check-config")
++        {
++            if (!options.emplace(key, "1").second) throw std::runtime_error("重复check-config");
++        }
++        else if (!valued.count(key) || i + 1 == argc ||
++            std::string(argv[i + 1]).rfind("--", 0) == 0 || !options.emplace(key, argv[++i]).second)
++            throw std::runtime_error("未知/重复/缺值参数:" + key);
++    }
++    if (options.count("--check-config"))
++    {
++        if (options.count("--input") || options.count("--out"))
++            throw std::runtime_error("check-config不能带输入输出");
++    }
++    else if (!options.count("--input") || !options.count("--out"))
++        throw std::runtime_error("用法: tracking_app --check-config | --input YAML --out 新目录 [--config YAML] [--profile YAML]");
++    return options;
++}
++} // namespace
++
++// 离线执行器每帧tick，保留全部状态/失败；不改G2 writer，不输出决策或控制。
++int main(int argc, char **argv)
++{
++    try
++    {
++        const auto options = parse_cli(argc, argv);
++        const auto root = std::filesystem::path(__FILE__).parent_path().parent_path();
++        const auto config_path = options.count("--config") ? std::filesystem::path(options.at("--config")) :
++                                                           root / "config/tracking.yaml";
++        auto config = mark::tracking::load_tracking_config(config_path);
++        if (options.count("--profile"))
++            config.profile_ = mark::tracking::load_tracking_profile(options.at("--profile"));
++        mark::tracking::validate_tracking_config(config);
++        if (options.count("--check-config"))
++        {
++            std::cout << "G4配置合法；profile=" << (config.profile_ ? "已加载" : "未测/NOT_READY")
++                      << "；不代表实车速度已验证\n";
++            return 0;
++        }
++        if (!config.profile_)
++            throw std::runtime_error("G4缺独立标定profile；先运行tracking_lab，不填经验值");
++        const auto frames = mark::tracking::read_tracking_frames(options.at("--input"));
++        const std::filesystem::path out(options.at("--out"));
++        if (std::filesystem::exists(out)) throw std::runtime_error("拒绝覆盖现有输出目录");
++        std::filesystem::create_directories(out);
++        std::filesystem::copy_file(config_path, out / "tracking_config_input.yaml");
++        mark::tracking::write_tracking_profile(*config.profile_, out / "effective_profile.yaml");
++        mark::tracking::TargetTracker tracker(config);
++        std::vector<mark::tracking::TrackingResult> results;
++        std::vector<double> step_us;
++        std::size_t measured = 0, coast = 0, lost = 0, rejected = 0, qualified = 0, velocity_frames = 0;
++        for (auto frame : frames)
++        {
++            // 文件回放不能继承内存流的实车资格；保留时间字段，但来源降为离线。
++            if (frame.origin_ == mark::tracking::InputOrigin::TypedMemory)
++                frame.origin_ = mark::tracking::InputOrigin::Synthetic;
++            const auto begin = std::chrono::steady_clock::now();
++            auto result = tracker.step(frame);
++            step_us.push_back(std::chrono::duration<double, std::micro>(
++                std::chrono::steady_clock::now() - begin).count());
++            rejected += !result.input_accepted_;
++            for (const auto &track : result.tracks_)
++            {
++                measured += track.state_ == mark::tracking::TrackState::Measured;
++                coast += track.state_ == mark::tracking::TrackState::Coasting;
++                lost += track.state_ == mark::tracking::TrackState::Lost;
++                qualified += track.qualified_for_g5_;
++                velocity_frames += track.velocity_mps_.has_value();
++            }
++            results.push_back(std::move(result));
++        }
++        mark::tracking::write_tracking_results(results, out / "tracks.yaml");
++        cv::FileStorage summary((out / "summary.yaml").string(), cv::FileStorage::WRITE);
++        if (!summary.isOpened()) throw std::runtime_error("摘要写入失败");
++        double total_us = 0;
++        for (double value : step_us) total_us += value;
++        std::sort(step_us.begin(), step_us.end());
++        summary << "frames" << std::to_string(frames.size()) << "measured" << std::to_string(measured)
++                << "coasting" << std::to_string(coast) << "lost" << std::to_string(lost)
++                << "rejected_inputs" << std::to_string(rejected) << "qualified_for_g5" << std::to_string(qualified)
++                << "velocity_output_frames" << std::to_string(velocity_frames)
++                << "source_completeness_verified" << 0
++                << "hardware_confirmed" << 0 << "input_path" << options.at("--input")
++                << "tracking_step_mean_us" << total_us / step_us.size()
++                << "tracking_step_p95_us" << step_us[(step_us.size() * 95 + 99) / 100 - 1]
++                << "note" << "未经过实车确认；零测量不算端到端速度通过";
++        std::cout << "G4帧数=" << frames.size() << "，实测更新=" << measured << "，预测=" << coast
++                  << "，LOST=" << lost << "，拒绝输入=" << rejected << "；未经过实车确认\n";
++        // 零测量保留诊断但非零退出，防止现G2 BudgetMissing链被误写为完成。
++        if (measured == 0 || velocity_frames == 0)
++        {
++            std::cerr << "没有可输出速度，速度链未验收；检查G2 Unique及G4时间/坐标/噪声/关联事件\n";
++            return 2;
++        }
++        return rejected ? 3 : 0;
++    }
++    catch (const std::exception &e)
++    {
++        std::cerr << "G4错误:" << e.what() << '\n';
++        return 1;
++    }
++}
+diff --git a/src/tushenghao/tools/validation/tracking_lab.cpp b/src/tushenghao/tools/validation/tracking_lab.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/tools/validation/tracking_lab.cpp
+@@ -0,0 +1,1049 @@
++#include "mark/target_tracker.hpp"
++#include "tracking/kalman_cv.hpp"
++#include "tracking/measurement_adapter.hpp"
++#include "tracking/tracking_io.hpp"
++
++#include <algorithm>
++#include <array>
++#include <cmath>
++#include <cstdint>
++#include <filesystem>
++#include <fstream>
++#include <iomanip>
++#include <iostream>
++#include <limits>
++#include <map>
++#include <numeric>
++#include <optional>
++#include <random>
++#include <set>
++#include <sstream>
++#include <stdexcept>
++#include <vector>
++#include <opencv2/calib3d.hpp>
++
++namespace
++{
++namespace fs = std::filesystem;
++namespace tr = mark::tracking;
++using Vec3 = cv::Vec3d;
++
++// 真值只属于lab评分器，不进入TargetTracker；每个session保留自己的完整时间序列。
++struct Truth
++{
++    std::string session_;
++    std::uint64_t frame_{0};
++    double time_s_{0};
++    Vec3 p_camera_{0, 0, 0};
++    Vec3 v_camera_{0, 0, 0};
++    Vec3 p_world_{0, 0, 0};
++    Vec3 v_world_{0, 0, 0};
++    bool true_association_{true};
++    bool injected_error_{false};
++    bool reversed_{false};
++};
++
++struct Session
++{
++    std::string split_;
++    std::string name_;
++    fs::path frames_;
++    fs::path truth_;
++};
++
++// 机械读配置不提供经验fallback；缺字段、错类型和非有限值均明确失败。
++cv::FileNode required(const cv::FileNode &node, const std::string &key)
++{
++    const auto value = node[key];
++    if (value.empty())
++        throw std::runtime_error("lab 缺配置: " + key);
++    return value;
++}
++
++double number(const cv::FileNode &node, const std::string &key)
++{
++    const auto value = required(node, key);
++    if (!value.isReal() && !value.isInt())
++        throw std::runtime_error("lab 应为数值: " + key);
++    const double result = static_cast<double>(value);
++    if (!std::isfinite(result))
++        throw std::runtime_error("lab 非有限数: " + key);
++    return result;
++}
++
++std::string string_value(const cv::FileNode &node, const std::string &key)
++{
++    const auto value = required(node, key);
++    if (!value.isString())
++        throw std::runtime_error("lab 应为字符串: " + key);
++    return static_cast<std::string>(value);
++}
++
++Vec3 vector_value(const cv::FileNode &node, const std::string &key)
++{
++    const auto value = required(node, key);
++    if (!value.isSeq() || value.size() != 3)
++        throw std::runtime_error("lab 向量必须三维: " + key);
++    Vec3 result;
++    for (int i = 0; i < 3; ++i)
++    {
++        if (!value[i].isReal() && !value[i].isInt())
++            throw std::runtime_error("lab 向量含非数值: " + key);
++        result[i] = static_cast<double>(value[i]);
++    }
++    if (!tr::detail::finite_vector(result))
++        throw std::runtime_error("lab 向量非有限: " + key);
++    return result;
++}
++
++// 固定语义的结构属性不是阈值；所有场景数值都读自YAML并以假设身份写入证据。
++struct LabConfig
++{
++    cv::FileStorage storage_;
++    explicit LabConfig(const fs::path &path)
++        : storage_(path.string(), cv::FileStorage::READ)
++    {
++        if (!storage_.isOpened() || number(storage_.root(), "schema_version") != 1)
++            throw std::runtime_error("lab 文件打不开或版本不支持");
++        if ((text("tracking_coordinate_mode") != "camera_relative" &&
++             text("tracking_coordinate_mode") != "local_world") ||
++            (text("tracking_time_policy") != "nominal_research" &&
++             text("tracking_time_policy") != "bounded_only"))
++            throw std::runtime_error("lab tracking_coordinate_mode/time_policy非法");
++        for (const auto &key : {"duration_s", "nominal_dt_s", "acceleration_mps2",
++                                "segment_min_s", "segment_max_s", "synthetic_time_bound_s"})
++            if (get(key) <= 0)
++                throw std::runtime_error(std::string("lab 必须正数: ") + key);
++        for (const auto &key : {"dt_jitter_fraction", "stop_probability", "random_missing_probability",
++                                "ambiguous_probability", "budget_missing_probability", "injected_wrong_probability"})
++            if (get(key) < 0 || get(key) >= 1)
++                throw std::runtime_error(std::string("lab 概率/比例须在[0,1): ") + key);
++        if (get("segment_max_s") < get("segment_min_s") ||
++            get("rule_reference_speed_mps") <= 0 || get("occlusion_start_s") < 0 ||
++            get("occlusion_duration_s") < 0 || get("baseline_reference_dt_s") <= 0 ||
++            get("baseline_reference_alpha") <= 0 || get("baseline_reference_alpha") >= 1)
++            throw std::runtime_error("lab 区间/基线配置非法");
++        if (get("ambiguous_probability") + get("budget_missing_probability") > 1)
++            throw std::runtime_error("lab 不同状态概率之和不可超过1");
++        for (const auto &key : {"camera_translation_amplitude_m", "camera_translation_frequency_hz",
++                                "camera_yaw_amplitude_rad", "camera_yaw_frequency_hz"})
++            if (get(key) < 0)
++                throw std::runtime_error(std::string("lab 相机假设须非负: ") + key);
++        std::vector<std::pair<double, double>> seed_ranges;
++        for (const auto &split : {"train", "selection", "holdout"})
++        {
++            const double count = get(std::string(split) + "_sessions");
++            if (count < 1 || count != std::floor(count))
++                throw std::runtime_error("lab session数须为正整数");
++            const double seed = get(std::string(split) + "_seed");
++            if (seed < 0 || seed != std::floor(seed) ||
++                seed + count - 1 > std::numeric_limits<std::uint32_t>::max())
++                throw std::runtime_error("lab seed必须为uint32范围内整数");
++            for (const auto &range : seed_ranges)
++                if (std::max(seed, range.first) <= std::min(seed + count - 1, range.second))
++                    throw std::runtime_error("lab train/selection/holdout种子范围重叠，拒绝数据泄漏");
++            seed_ranges.emplace_back(seed, seed + count - 1);
++        }
++        const auto sigma = vector_value(storage_.root(), "position_noise_std_m");
++        for (double value : sigma.val)
++            if (!(value > 0))
++                throw std::runtime_error("lab 位置噪声标准差须严格正，禁止退化R");
++    }
++    double get(const std::string &key) const { return number(storage_.root(), key); }
++    std::string text(const std::string &key) const { return string_value(storage_.root(), key); }
++    Vec3 vec(const std::string &key) const { return vector_value(storage_.root(), key); }
++};
++
++// 路径/选项集中校验，拒绝未知与重复；输出只允许新目录，不覆盖既有证据。
++std::map<std::string, std::string> parse_cli(int argc, char **argv)
++{
++    std::map<std::string, std::string> result;
++    if (argc < 2)
++        throw std::runtime_error("用法: tracking_lab generate|calibrate|verify --config YAML --out NEW_DIR [--input DATASET] [--profile PROFILE]");
++    result["command"] = argv[1];
++    if (result["command"] != "generate" && result["command"] != "calibrate" && result["command"] != "verify")
++        throw std::runtime_error("lab 子命令仅generate/calibrate/verify");
++    for (int i = 2; i < argc; ++i)
++    {
++        const std::string key = argv[i];
++        if ((key != "--config" && key != "--out" && key != "--input" && key != "--profile") ||
++            i + 1 >= argc || std::string(argv[i + 1]).rfind("--", 0) == 0 ||
++            !result.emplace(key, argv[++i]).second)
++            throw std::runtime_error("lab 参数未知/缺值/重复: " + key);
++    }
++    if (!result.count("--out") || (result["command"] != "generate" && !result.count("--input")) ||
++        (result["command"] == "verify" && !result.count("--profile")))
++        throw std::runtime_error("lab 缺--out/--input/--profile");
++    if (result["command"] == "generate" && (result.count("--input") || result.count("--profile")))
++        throw std::runtime_error("lab generate不接收--input/--profile，避免静默忽略参数");
++    return result;
++}
++
++void new_directory(const fs::path &path)
++{
++    if (fs::exists(path))
++        throw std::runtime_error("lab 拒绝覆盖输出: " + path.string());
++    fs::create_directories(path);
++}
++
++// CSV采用无逗号session名；对齐frame与truth的检查在读入后执行，不能靠行数猜。
++void write_truth(const std::vector<Truth> &truth, const fs::path &path)
++{
++    std::ofstream out(path);
++    if (!out)
++        throw std::runtime_error("lab truth文件写不开");
++    out << "session,frame,time_s,px,py,pz,vx,vy,vz,world_px,world_py,world_pz,world_vx,world_vy,world_vz,true_association,injected_error,reversed\n";
++    out << std::setprecision(17);
++    for (const auto &t : truth)
++    {
++        out << t.session_ << ',' << t.frame_ << ',' << t.time_s_;
++        for (const auto &value : {t.p_camera_, t.v_camera_, t.p_world_, t.v_world_})
++            for (double x : value.val)
++                out << ',' << x;
++        out << ',' << t.true_association_ << ',' << t.injected_error_ << ',' << t.reversed_ << '\n';
++    }
++    if (!out.good())
++        throw std::runtime_error("lab truth文件写入失败");
++}
++
++std::vector<Truth> read_truth(const fs::path &path)
++{
++    std::ifstream in(path);
++    std::string line;
++    if (!in || !std::getline(in, line))
++        throw std::runtime_error("lab truth文件打不开/为空");
++    std::vector<Truth> result;
++    while (std::getline(in, line))
++    {
++        if (line.empty())
++            continue;
++        std::vector<std::string> cells;
++        std::stringstream stream(line);
++        std::string cell;
++        while (std::getline(stream, cell, ','))
++            cells.push_back(cell);
++        if (cells.size() != 18)
++            throw std::runtime_error("lab truth列数错误");
++        Truth t;
++        t.session_ = cells[0];
++        t.frame_ = std::stoull(cells[1]);
++        t.time_s_ = std::stod(cells[2]);
++        for (int i = 0; i < 3; ++i)
++        {
++            t.p_camera_[i] = std::stod(cells[3 + i]);
++            t.v_camera_[i] = std::stod(cells[6 + i]);
++            t.p_world_[i] = std::stod(cells[9 + i]);
++            t.v_world_[i] = std::stod(cells[12 + i]);
++        }
++        t.true_association_ = std::stoi(cells[15]) != 0;
++        t.injected_error_ = std::stoi(cells[16]) != 0;
++        t.reversed_ = std::stoi(cells[17]) != 0;
++        if (!std::isfinite(t.time_s_) || !tr::detail::finite_vector(t.p_camera_) ||
++            !tr::detail::finite_vector(t.v_camera_))
++            throw std::runtime_error("lab truth含非有限值");
++        result.push_back(t);
++    }
++    return result;
++}
++
++// manifest固定存相对路径，整个数据集移动后仍可读；不在源码嵌机器目录。
++std::vector<Session> read_manifest(const fs::path &root)
++{
++    cv::FileStorage input((root / "manifest.yaml").string(), cv::FileStorage::READ);
++    if (!input.isOpened() || number(input.root(), "schema_version") != 1 || !input["sessions"].isSeq())
++        throw std::runtime_error("lab 数据集manifest无效");
++    std::vector<Session> result;
++    std::set<std::string> names, frame_paths;
++    for (const auto &entry : input["sessions"])
++    {
++        Session s;
++        s.split_ = string_value(entry, "split");
++        s.name_ = string_value(entry, "name");
++        const fs::path frame_path(string_value(entry, "frames"));
++        const fs::path truth_path(string_value(entry, "truth"));
++        if ((s.split_ != "train" && s.split_ != "selection" && s.split_ != "holdout") ||
++            s.name_.empty() || s.name_.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") != std::string::npos ||
++            !names.insert(s.name_).second || !frame_paths.insert(frame_path.generic_string()).second)
++            throw std::runtime_error("lab session/split重复或非法，拒绝重复数据");
++        for (const auto &path : {frame_path, truth_path})
++        {
++            if (path.empty() || path.is_absolute())
++                throw std::runtime_error("lab manifest资源必须为相对路径");
++            for (const auto &component : path)
++                if (component == "..")
++                    throw std::runtime_error("lab manifest资源不能逃出数据集");
++        }
++        s.frames_ = root / frame_path;
++        s.truth_ = root / truth_path;
++        result.push_back(s);
++    }
++    return result;
++}
++
++void aligned(const std::vector<tr::TrackingFrame> &frames, const std::vector<Truth> &truth)
++{
++    if (frames.empty() || frames.size() != truth.size())
++        throw std::runtime_error("lab 帧与truth为空/数量不等");
++    for (std::size_t i = 0; i < frames.size(); ++i)
++        if (frames[i].stamp_.session_id_ != truth[i].session_ ||
++            frames[i].stamp_.frame_id_ != truth[i].frame_)
++            throw std::runtime_error("lab frame/session与truth不对齐");
++}
++
++// 数据生成器完整模拟“框世界运动+相机运动”；相机变化率真值含本车平移与旋转。
++void generate_session(const LabConfig &cfg, std::uint32_t seed, const std::string &name,
++                      const fs::path &directory)
++{
++    fs::create_directories(directory);
++    std::mt19937 rng(seed);
++    std::uniform_real_distribution<double> uniform(0, 1);
++    std::normal_distribution<double> normal(0, 1);
++    std::vector<tr::TrackingFrame> frames;
++    std::vector<Truth> truth;
++    Vec3 p_world = cfg.vec("initial_world_position_m"), v_world(0, 0, 0);
++    const auto sigma = cfg.vec("position_noise_std_m"), bias = cfg.vec("position_bias_m");
++    double time = 0, remaining = 0, desired = cfg.get("rule_reference_speed_mps");
++    std::int64_t time_us = 0;
++    double previous_nonzero_world_vx = 0;
++    while (time <= cfg.get("duration_s"))
++    {
++        const double raw_dt = cfg.get("nominal_dt_s") *
++            (1 + cfg.get("dt_jitter_fraction") * (2 * uniform(rng) - 1));
++        const long double proposed_us = static_cast<long double>(time_us) + raw_dt * 1e6L;
++        if (!std::isfinite(proposed_us) || proposed_us > std::numeric_limits<std::int64_t>::max())
++            throw std::runtime_error("lab 合成时间轴溢出");
++        const auto next_us = static_cast<std::int64_t>(std::llround(proposed_us));
++        if (next_us <= time_us)
++            throw std::runtime_error("lab dt小于整数us分辨率，不能生成重复时刻");
++        if (static_cast<long double>(next_us) / 1e6L > cfg.get("duration_s"))
++            break;
++        // 真合成时钟先落定到整数us，再用同一dt积分；不让四舍五入误差超出声明时间界。
++        const double dt = static_cast<double>(next_us - time_us) / 1e6;
++        if (remaining <= 0)
++        {
++            desired = uniform(rng) < cfg.get("stop_probability") ? 0 :
++                -std::copysign(cfg.get("rule_reference_speed_mps"), desired == 0 ? 1.0 : desired);
++            remaining = cfg.get("segment_min_s") + uniform(rng) *
++                (cfg.get("segment_max_s") - cfg.get("segment_min_s"));
++        }
++        const auto old_v = v_world;
++        v_world[0] += std::clamp(desired - v_world[0],
++            -cfg.get("acceleration_mps2") * dt, cfg.get("acceleration_mps2") * dt);
++        p_world += (old_v + v_world) * (dt / 2);
++        remaining -= dt;
++        // 状态积分与记录时刻必须一起推进，不能用下一随机dt积分却标上上一帧时间。
++        time_us = next_us;
++        time = static_cast<double>(time_us) / 1e6;
++        const double translation_omega = 2 * CV_PI * cfg.get("camera_translation_frequency_hz");
++        const double rotation_omega = 2 * CV_PI * cfg.get("camera_yaw_frequency_hz");
++        const double cx = cfg.get("camera_translation_amplitude_m") * std::sin(translation_omega * time);
++        const double cvx = cfg.get("camera_translation_amplitude_m") * translation_omega * std::cos(translation_omega * time);
++        const double yaw = cfg.get("camera_yaw_amplitude_rad") * std::sin(rotation_omega * time);
++        const double yaw_rate = cfg.get("camera_yaw_amplitude_rad") * rotation_omega * std::cos(rotation_omega * time);
++        cv::Matx33d R_world_camera;
++        cv::Rodrigues(Vec3(0, yaw, 0), R_world_camera);
++        const Vec3 t_world_camera(cx, 0, 0);
++        const Vec3 p_camera = R_world_camera.t() * (p_world - t_world_camera);
++        const Vec3 v_camera = R_world_camera.t() * (v_world - Vec3(cvx, 0, 0)) -
++                              Vec3(0, yaw_rate, 0).cross(p_camera);
++        tr::TrackingFrame frame;
++        frame.origin_ = tr::InputOrigin::Synthetic;
++        frame.stamp_.session_id_ = name;
++        frame.stamp_.camera_id_ = cfg.text("camera_id");
++        frame.stamp_.clock_domain_ = "synthetic-exposure-clock";
++        frame.stamp_.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
++        frame.stamp_.frame_id_ = frames.size();
++        frame.stamp_.exposure_us_ = time_us;
++        frame.stamp_.received_us_ = *frame.stamp_.exposure_us_;
++        frame.stamp_.time_uncertainty_s_ = cfg.get("synthetic_time_bound_s") * uniform(rng);
++        tr::CameraTransform transform;
++        transform.stamp_ = frame.stamp_;
++        transform.world_frame_id_ = "synthetic-world";
++        transform.R_world_camera_ = R_world_camera;
++        transform.t_world_camera_m_ = t_world_camera;
++        transform.covariance_ = tr::Mat6::zeros(); // 明确真值仿真中的精确变换，不代表硬件零误差。
++        frame.camera_transform_ = transform;
++        Truth t;
++        t.session_ = name;
++        t.frame_ = frame.stamp_.frame_id_;
++        t.time_s_ = time;
++        t.p_camera_ = p_camera;
++        t.v_camera_ = v_camera;
++        t.p_world_ = p_world;
++        t.v_world_ = v_world;
++        t.reversed_ = previous_nonzero_world_vx != 0 && v_world[0] != 0 &&
++                      previous_nonzero_world_vx * v_world[0] < 0;
++        if (v_world[0] != 0)
++            previous_nonzero_world_vx = v_world[0];
++        const bool occluded = time >= cfg.get("occlusion_start_s") &&
++            time < cfg.get("occlusion_start_s") + cfg.get("occlusion_duration_s");
++        if (!occluded && uniform(rng) >= cfg.get("random_missing_probability"))
++        {
++            mark::pose::PoseObservation observation;
++            observation.stamp_ = frame.stamp_;
++            observation.source_ = cfg.text("source");
++            observation.target_id_ = cfg.text("target_class");
++            observation.status_ = mark::pose::PoseStatus::Unique;
++            mark::pose::RigidPose pose;
++            cv::Rodrigues(R_world_camera.t(), pose.rvec_);
++            pose.t_m_ = p_camera + bias;
++            for (int axis = 0; axis < 3; ++axis)
++                pose.t_m_[axis] += sigma[axis] * normal(rng);
++            if (uniform(rng) < cfg.get("injected_wrong_probability"))
++            {
++                pose.t_m_ += cfg.vec("injected_offset_m");
++                t.true_association_ = false;
++                t.injected_error_ = true;
++            }
++            observation.T_camera_target_ = pose;
++            observation.selected_index_ = 0;
++            mark::pose::PoseCandidate candidate;
++            candidate.pose_ = pose;
++            // 这是绕过G2的点目标夹具，需补齐所声明的正深度证据；不是实图四角验收。
++            candidate.min_depth_m_ = pose.t_m_[2];
++            candidate.metrics_valid_ = true;
++            candidate.eligible_ = true;
++            observation.candidates_.push_back(candidate);
++            const double status = uniform(rng);
++            if (status < cfg.get("ambiguous_probability"))
++                observation.status_ = mark::pose::PoseStatus::Ambiguous;
++            else if (status < cfg.get("ambiguous_probability") + cfg.get("budget_missing_probability"))
++                observation.status_ = mark::pose::PoseStatus::BudgetMissing;
++            if (observation.status_ != mark::pose::PoseStatus::Unique)
++            {
++                observation.T_camera_target_.reset();
++                observation.selected_index_.reset();
++            }
++            frame.observations_.push_back(std::move(observation));
++        }
++        frames.push_back(std::move(frame));
++        truth.push_back(t);
++    }
++    tr::write_tracking_frames(frames, directory / "frames.yaml");
++    write_truth(truth, directory / "truth.csv");
++}
++
++// 先按完整session分集；种子各自独立，manifest保留来源而非让verify重新抽样。
++void generate(const LabConfig &cfg, const fs::path &out)
++{
++    cv::FileStorage manifest((out / "manifest.yaml").string(), cv::FileStorage::WRITE);
++    if (!manifest.isOpened())
++        throw std::runtime_error("lab manifest写不开");
++    manifest << "schema_version" << 1 << "basis" << "synthetic_assumptions_bypass_G2"
++             << "hardware_verified" << 0
++             << "time_model" << "integer_us_exact_clock_declared_bounds_no_exposure_error_injection"
++             << "sessions" << "[";
++    for (const auto &split : {"train", "selection", "holdout"})
++        for (int i = 0; i < cfg.get(std::string(split) + "_sessions"); ++i)
++        {
++            const auto seed = static_cast<std::uint32_t>(cfg.get(std::string(split) + "_seed")) + i;
++            const std::string name = std::string(split) + "-seed-" + std::to_string(seed);
++            const fs::path relative = fs::path(split) / name;
++            generate_session(cfg, seed, name, out / relative);
++            manifest << "{" << "split" << split << "name" << name
++                     << "frames" << (relative / "frames.yaml").generic_string()
++                     << "truth" << (relative / "truth.csv").generic_string() << "}";
++        }
++    manifest << "]";
++}
++
++// 样本标准差用n-1；没有足够样本就报错，不用经验floor造出一个可用profile。
++struct Statistics
++{
++    std::vector<double> samples_;
++    void add(double value)
++    {
++        if (!std::isfinite(value))
++            throw std::runtime_error("lab 统计输入非有限");
++        samples_.push_back(value);
++    }
++    double mean() const
++    {
++        if (samples_.size() < 2)
++            throw std::runtime_error("lab 统计不足两个样本");
++        return std::accumulate(samples_.begin(), samples_.end(), 0.0) / samples_.size();
++    }
++    double stddev() const
++    {
++        const double mu = mean();
++        double sum = 0;
++        for (double x : samples_)
++            sum += (x - mu) * (x - mu);
++        return std::sqrt(sum / (samples_.size() - 1));
++    }
++    double limit() const { return mean() + 3 * stddev(); }
++};
++
++bool current_unique(const tr::TrackingFrame &f)
++{
++    return f.observations_.size() == 1 &&
++        f.observations_[0].status_ == mark::pose::PoseStatus::Unique &&
++        f.observations_[0].T_camera_target_.has_value();
++}
++
++// 与生产适配器使用同一坐标/时间政策；partial profile只用于无gate的离线统计。
++tr::TrackingConfig tracker_config(const LabConfig &cfg, const tr::TrackingProfile &profile)
++{
++    tr::TrackingConfig result;
++    result.source_ = cfg.text("source");
++    result.target_class_ = cfg.text("target_class");
++    result.coordinate_mode_ = cfg.text("tracking_coordinate_mode") == "local_world" ?
++        tr::CoordinateMode::LocalWorld : tr::CoordinateMode::CameraRelative;
++    result.world_frame_id_ = "synthetic-world";
++    result.time_policy_ = cfg.text("tracking_time_policy");
++    result.stamp_uncertainty_semantics_ = "absolute_bound";
++    result.max_time_uncertainty_s_ = profile.validated_time_bound_s_;
++    result.profile_ = profile;
++    return result;
++}
++
++Vec3 truth_position(const Truth &truth, tr::CoordinateMode mode)
++{
++    return mode == tr::CoordinateMode::LocalWorld ? truth.p_world_ : truth.p_camera_;
++}
++
++Vec3 truth_velocity(const Truth &truth, tr::CoordinateMode mode)
++{
++    return mode == tr::CoordinateMode::LocalWorld ? truth.v_world_ : truth.v_camera_;
++}
++
++// 公共滤波状态顺序已固定[p,v]；这里只取vv块，不把6D矩阵重新解释为其他排列。
++cv::Matx33d velocity_block(const tr::Mat6 &covariance)
++{
++    cv::Matx33d result;
++    for (int i = 0; i < 3; ++i)
++        for (int j = 0; j < 3; ++j)
++            result(i, j) = covariance(i + 3, j + 3);
++    return result;
++}
++
++// 绝对界与sigma不同；复用生产helper建立相同的保守时间MSE口径，不重复发明公式。
++double frame_bound(const tr::TrackingFrame &frame, bool bounded)
++{
++    if (!bounded)
++        return 0;
++    if (!frame.stamp_.exposure_us_ || !frame.stamp_.time_uncertainty_s_ ||
++        !std::isfinite(*frame.stamp_.time_uncertainty_s_) || *frame.stamp_.time_uncertainty_s_ < 0)
++        throw std::runtime_error("lab bounded_only缺有效曝光时间/绝对时间界");
++    return *frame.stamp_.time_uncertainty_s_;
++}
++
++// 时间差用实际输入stamp，不用truth时刻帮助参考滤波器获得生产中不存在的时钟。
++double input_time(const tr::TrackingFrame &frame)
++{
++    return static_cast<double>(tr::detail::sample_time(frame.stamp_)) / 1e6;
++}
++
++// R/Q只用train，固定后在selection无gate截断地收门控统计；holdout完全不参与定值。
++void calibrate(const LabConfig &cfg, const fs::path &input, const fs::path &out,
++               const fs::path &profile_path)
++{
++    const auto sessions = read_manifest(input);
++    const auto coordinate_mode = cfg.text("tracking_coordinate_mode") == "local_world" ?
++        tr::CoordinateMode::LocalWorld : tr::CoordinateMode::CameraRelative;
++    const bool bounded = cfg.text("tracking_time_policy") == "bounded_only";
++    cv::Matx33d error_second = cv::Matx33d::zeros();
++    Vec3 error_mean(0, 0, 0);
++    double delta_v_second = 0, total_dt = 0, speed_second = 0;
++    std::size_t errors = 0, velocities = 0;
++    Statistics dt_stats, time_stats;
++    for (const auto &session : sessions)
++    {
++        if (session.split_ != "train")
++            continue;
++        const auto frames = tr::read_tracking_frames(session.frames_);
++        const auto truth = read_truth(session.truth_);
++        aligned(frames, truth);
++        for (std::size_t i = 0; i < frames.size(); ++i)
++        {
++            const auto true_velocity = truth_velocity(truth[i], coordinate_mode);
++            speed_second += true_velocity.dot(true_velocity);
++            ++velocities;
++            if (i)
++            {
++                const double dt = truth[i].time_s_ - truth[i - 1].time_s_;
++                if (!(dt > 0))
++                    throw std::runtime_error("lab truth时间不严格递增");
++                const auto dv = true_velocity - truth_velocity(truth[i - 1], coordinate_mode);
++                delta_v_second += dv.dot(dv);
++                total_dt += dt;
++            }
++            if (!current_unique(frames[i]) || !truth[i].true_association_)
++                continue;
++            const auto e = frames[i].observations_[0].T_camera_target_->t_m_ - truth[i].p_camera_;
++            error_second += e * e.t();
++            error_mean += e;
++            ++errors;
++        }
++    }
++    if (!errors || !velocities || !(total_dt > 0))
++        throw std::runtime_error("lab train有效样本不足");
++    tr::TrackingProfile profile;
++    profile.camera_id_ = cfg.text("camera_id");
++    profile.camera_mse_m2_ = error_second * (1.0 / errors);
++    // 单轴往复不能把能量除3平均到三轴；用trace*I包络各方向二阶矩，避免主轴低估。
++    // 这是等方参考模型的保守定义，并不声称真实随机反转满足白加速度假设。
++    profile.acceleration_psd_m2ps3_ = delta_v_second / total_dt;
++    profile.initial_velocity_variance_m2ps2_ = speed_second / velocities;
++    profile.coordinate_mode_ = cfg.text("tracking_coordinate_mode");
++    profile.time_policy_ = cfg.text("tracking_time_policy");
++    if (!tr::detail::positive_definite(cv::Mat(profile.camera_mse_m2_)) ||
++        !(profile.acceleration_psd_m2ps3_ > 0) ||
++        !(profile.initial_velocity_variance_m2ps2_ > 0))
++        throw std::runtime_error("lab R非正定/q或初速度方差非正；禁止补经验floor");
++    Statistics association, bootstrap, position_std, velocity_std;
++    std::map<std::string, std::array<Statistics, 6>> session_statistics;
++    // R2需要先有profile单帧时间界；预读同一selection统计，不借用holdout或手填界。
++    // 原流程最后才写此值，直接传入bootstrap会访问空optional。
++    Statistics position_time_stats;
++    for (const auto &session : sessions)
++        if (session.split_ == "selection")
++            for (const auto &frame : tr::read_tracking_frames(session.frames_))
++                if (frame.stamp_.time_uncertainty_s_)
++                    position_time_stats.add(*frame.stamp_.time_uncertainty_s_);
++    profile.validated_time_bound_s_ = position_time_stats.limit();
++    const auto reference_config = tracker_config(cfg, profile);
++    for (const auto &session : sessions)
++    {
++        if (session.split_ != "selection")
++            continue;
++        const auto frames = tr::read_tracking_frames(session.frames_);
++        const auto truth = read_truth(session.truth_);
++        aligned(frames, truth);
++        tr::detail::CvFilter filter;
++        bool initialized = false, confirmed = false;
++        auto &stratum = session_statistics[session.name_];
++        std::optional<Vec3> previous_observed;
++        cv::Matx33d previous_R = cv::Matx33d::zeros();
++        double previous_time = 0, last_observed_time = 0, last_observed_bound = 0;
++        for (std::size_t i = 0; i < frames.size(); ++i)
++        {
++            const double now = input_time(frames[i]);
++            const double bound = frame_bound(frames[i], bounded);
++            if (frames[i].stamp_.time_uncertainty_s_)
++                stratum[5].add(*frames[i].stamp_.time_uncertainty_s_);
++            if (i)
++                stratum[4].add(now - input_time(frames[i - 1]));
++            // 阈值与时间适用域也仅用selection；不混train，更不读holdout补宽。
++            if (frames[i].stamp_.time_uncertainty_s_)
++                time_stats.add(*frames[i].stamp_.time_uncertainty_s_);
++            if (i)
++                dt_stats.add(now - input_time(frames[i - 1]));
++            if (initialized)
++            {
++                const double dt = now - previous_time;
++                const double interval_bound = bounded ?
++                    bound + frame_bound(frames[i - 1], true) : 0;
++                filter.predict(dt, profile.acceleration_psd_m2ps3_, interval_bound);
++                position_std.add(filter.position_std());
++                velocity_std.add(filter.velocity_std());
++                stratum[2].add(filter.position_std());
++                stratum[3].add(filter.velocity_std());
++            }
++            previous_time = now;
++            std::vector<std::string> adapter_events;
++            const auto observations = tr::detail::adapt_measurements(frames[i], reference_config, adapter_events);
++            // 只在离线selection用true_association排除故意注入负例；生产不读取该真值标签。
++            if (observations.size() != 1 || !truth[i].true_association_)
++                continue;
++            const auto observed = observations.front().position_m_;
++            auto current_R = observations.front().R_m2_;
++            if (bounded)
++                current_R = tr::detail::time_augmented_noise(current_R,
++                    initialized ? filter.velocity() : Vec3(0, 0, 0),
++                    initialized ? velocity_block(filter.covariance()) :
++                        cv::Matx33d::eye() * profile.initial_velocity_variance_m2ps2_,
++                    bound, profile.acceleration_psd_m2ps3_);
++            if (previous_observed)
++            {
++                tr::detail::CvFilter seed;
++                seed.initialize(*previous_observed, previous_R,
++                                 profile.initial_velocity_variance_m2ps2_);
++                seed.predict(now - last_observed_time, profile.acceleration_psd_m2ps3_,
++                             bounded ? bound + last_observed_bound : 0);
++                const double bootstrap_score = seed.nis(observed, current_R);
++                bootstrap.add(bootstrap_score);
++                stratum[1].add(bootstrap_score);
++            }
++            if (!initialized)
++            {
++                filter.initialize(observed, current_R,
++                                  profile.initial_velocity_variance_m2ps2_);
++                initialized = true;
++            }
++            else if (!confirmed)
++            {
++                // 第二个真Unique与生产一样用两点bootstrap，不用零速先验连续correct替代。
++                filter.bootstrap(*previous_observed, previous_R, observed, current_R,
++                    now - last_observed_time, profile.acceleration_psd_m2ps3_,
++                    bounded ? bound + last_observed_bound : 0,
++                    bounded ? *profile.validated_time_bound_s_ : 0);
++                confirmed = true;
++            }
++            else
++            {
++                // 创新先记录再correct；没有gate截尾，也不会为报告好看丢弃反转残差。
++                const double association_score = filter.nis(observed, current_R);
++                association.add(association_score);
++                stratum[0].add(association_score);
++                filter.correct(observed, current_R);
++            }
++            previous_observed = observed;
++            previous_R = current_R;
++            last_observed_time = now;
++            last_observed_bound = bound;
++        }
++    }
++    profile.association_nis_limit_ = association.limit();
++    profile.bootstrap_nis_limit_ = bootstrap.limit();
++    profile.position_std_limit_m_ = position_std.limit();
++    profile.velocity_std_limit_mps_ = velocity_std.limit();
++    profile.max_dt_s_ = dt_stats.limit();
++    profile.validated_time_bound_s_ = time_stats.limit();
++    profile.basis_ = "synthetic_3sigma";
++    profile.evidence_id_ = "g4lab-train-" + std::to_string(static_cast<std::uint32_t>(cfg.get("train_seed"))) +
++        "-selection-" + std::to_string(static_cast<std::uint32_t>(cfg.get("selection_seed"))) +
++        "-" + profile.coordinate_mode_ + "-" + profile.time_policy_;
++    profile.hardware_verified_ = false;
++    tr::validate_tracking_profile(profile);
++    if (fs::exists(profile_path))
++        throw std::runtime_error("lab 拒绝覆盖已有profile");
++    if (!profile_path.parent_path().empty())
++        fs::create_directories(profile_path.parent_path());
++    tr::write_tracking_profile(profile, profile_path);
++    // 为该合成标定域输出可直接回放的研究配置，不触碰默认生产配置或硬件资格。
++    {
++        const auto relative_profile = fs::relative(profile_path, out);
++        if (relative_profile.empty() || relative_profile.is_absolute())
++            throw std::runtime_error("lab profile无法相对研究配置定位，请放同一文件系统");
++        cv::FileStorage config((out / "tracking_research.yaml").string(), cv::FileStorage::WRITE);
++        if (!config.isOpened()) throw std::runtime_error("lab研究配置写失败");
++        config.writeComment("仅匹配本次合成条件；未经过实车确认，禁止冒充硬件预算");
++        config << "schema_version" << 1 << "source" << cfg.text("source")
++               << "target_class" << cfg.text("target_class") << "coordinate_mode" << profile.coordinate_mode_
++               << "world_frame_id" << "synthetic-world" << "time_policy" << profile.time_policy_
++               << "stamp_uncertainty_semantics" << "absolute_bound" << "max_time_uncertainty_s";
++        if (profile.validated_time_bound_s_) config << *profile.validated_time_bound_s_;
++        else config << "";
++        config << "profile" << relative_profile.generic_string();
++    }
++    std::ofstream report(out / "calibration.md");
++    report << "# G4合成标定记录\n\n未经过实车确认。完整session先分train/selection/holdout；"
++              "R/Q/初速度方差仅train，阈值仅selection，holdout只验证。"
++              "R为误差二阶矩而非去均值协方差，单独报告系统偏差；固定偏差具有跨帧相关性，"
++              "不能仅凭该R证明长期协方差覆盖。q与初速度方差是二阶矩，不是3sigma阈值。\n\n"
++              "|统计量|样本数|均值|样本标准差|最终阈值(mu+3sigma)|来源|\n|---|---:|---:|---:|---:|---|\n";
++    report << std::setprecision(17);
++    for (const auto &entry : std::vector<std::pair<std::string, const Statistics *>>{
++             {"association_nis", &association}, {"bootstrap_nis", &bootstrap},
++             {"position_std_m", &position_std}, {"velocity_std_mps", &velocity_std},
++             {"max_dt_s", &dt_stats}, {"time_bound_reference_s", &time_stats}})
++        report << '|' << entry.first << '|' << entry.second->samples_.size() << '|'
++               << entry.second->mean() << '|' << entry.second->stddev() << '|'
++               << entry.second->limit() << "|" << profile.evidence_id_ << "|\n";
++    report << "\nR样本=" << errors << "，bias=[" << error_mean[0] / errors << ','
++           << error_mean[1] / errors << ',' << error_mean[2] / errors << "]m；q="
++           << profile.acceleration_psd_m2ps3_ << "m²/s³；初速度方差="
++           << profile.initial_velocity_variance_m2ps2_ << "m²/s²。\n\n"
++              "等方q=Σ||Δv||²/Σdt，初速variance=E||v||²；用trace*I包络避免单轴运动除3低估主轴。"
++              "代价是其他轴的预测协方差可能更大、平滑收益可能下降，由独立holdout如实比较，"
++              "不据此宣称真实过程是白加速度。\n\n"
++              "NIS不是正态，mu+3sigma不代表固定99.7%覆盖。位置/速度std门槛是模型适用域，"
++              "不是G5毫米物理容差；时间界只是合成数据支持范围，不能冒充真实设备界。"
++              "全部创新在定gate前收集，没有先gate掉大误差再标定。实车参数不得直接复制本profile。\n";
++    report << "\n坐标域=" << profile.coordinate_mode_ << "；时间政策=" << profile.time_policy_
++           << "。R始终以相机误差定值；q/初速度方差采用该坐标域truth；selection复用生产适配与时间MSE helper。"
++              "world模式只验证给定精确ego变换的假设，仍不是实物外参/里程计验证。"
++              "合成时钟为精确整数us，时间上界是声明的保守输入；本实验没有注入真实曝光偏移。\n";
++    report << "\n## 按完整session分层检查\n\n同一假设域下总体门槛采用上表mu+3sigma；"
++              "以下逐层保留明细，便于发现混池掩盖的尾部，不将不同硬件/噪声域直接合并。\n\n"
++              "|session|指标|n|mu|sample_std|mu+3sigma|\n|---|---|---:|---:|---:|---:|\n";
++    const std::array<const char *, 6> stat_names{{"association_nis", "bootstrap_nis", "position_std_m",
++                                                  "velocity_std_mps", "dt_s", "time_bound_s"}};
++    for (const auto &[name, values] : session_statistics)
++        for (std::size_t i = 0; i < values.size(); ++i)
++        {
++            report << '|' << name << '|' << stat_names[i] << '|' << values[i].samples_.size() << '|';
++            if (values[i].samples_.size() >= 2)
++                report << values[i].mean() << '|' << values[i].stddev() << '|' << values[i].limit();
++            else
++                report << "不足|不足|不足";
++            report << "|\n";
++        }
++    if (!report.good())
++        throw std::runtime_error("lab 标定报告写失败");
++}
++
++// 对照输入只来自当前测量；truth只进入add_error，不参与任何算法选测量/校正。
++struct Metric
++{
++    std::size_t count_{0};
++    double p_sq_{0}, v_sq_{0}, max_v_{0};
++    void add(const Vec3 &p, const Vec3 &v, const Truth &truth)
++    {
++        const double pe = cv::norm(p - truth.p_camera_), ve = cv::norm(v - truth.v_camera_);
++        p_sq_ += pe * pe;
++        v_sq_ += ve * ve;
++        max_v_ = std::max(max_v_, ve);
++        ++count_;
++    }
++};
++
++// 经验包含率按最大特征值3sigma球计数；它不是固定概率保证，也不反向改门槛。
++double three_sigma_radius(const tr::Mat6 &covariance, int start)
++{
++    cv::Matx33d block;
++    for (int i = 0; i < 3; ++i)
++        for (int j = 0; j < 3; ++j)
++            block(i, j) = covariance(i + start, j + start);
++    cv::Mat values;
++    if (!cv::eigen(cv::Mat(block), values) || values.at<double>(0) < 0)
++        throw std::runtime_error("lab covariance块非法，不能计算包含率");
++    return 3 * std::sqrt(values.at<double>(0));
++}
++
++// 独立holdout固定运行；报告失败/覆盖/误关联，绝不在verify中重定profile。
++void verify(const LabConfig &cfg, const fs::path &input, const fs::path &out,
++            const fs::path &profile_path)
++{
++    const auto profile = tr::load_tracking_profile(profile_path);
++    if (profile.camera_id_ != cfg.text("camera_id"))
++        throw std::runtime_error("lab profile相机数据身份不匹配");
++    if (profile.coordinate_mode_ != cfg.text("tracking_coordinate_mode") ||
++        profile.time_policy_ != cfg.text("tracking_time_policy"))
++        throw std::runtime_error("lab profile坐标/时间域不匹配，必须在所选域重新calibrate");
++    const auto prototype = tracker_config(cfg, profile);
++    Metric raw_metric, smooth_metric, tracker_metric, paired_raw, paired_smooth, paired_tracker;
++    std::size_t frames_total = 0, wrong_accepted = 0, wrong_confirmed = 0, wrong_injected = 0, qualified = 0;
++    std::size_t measured = 0, coast = 0, lost = 0, reversals = 0, recovered = 0, unbounded = 0;
++    Statistics recovery;
++    // 每状态分别记录[position n, position contained, velocity n, velocity contained]。
++    std::map<std::string, std::array<std::size_t, 4>> coverage;
++    std::ofstream csv(out / "holdout_errors.csv");
++    if (!csv)
++        throw std::runtime_error("lab holdout CSV写不开");
++    csv << "session,frame,status,true_association,position_error_m,velocity_error_mps,track_id,"
++           "position_3sigma_radius_m,position_contained,velocity_3sigma_radius_mps,velocity_contained\n";
++    csv << std::setprecision(17);
++    for (const auto &session : read_manifest(input))
++    {
++        if (session.split_ != "holdout")
++            continue;
++        const auto frames = tr::read_tracking_frames(session.frames_);
++        const auto truth = read_truth(session.truth_);
++        aligned(frames, truth);
++        const auto tracker_cfg = prototype;
++        tr::TargetTracker tracker(tracker_cfg);
++        std::vector<tr::TrackingResult> results;
++        std::optional<Vec3> previous_raw, previous_smooth;
++        double previous_measurement_time = 0;
++        std::optional<double> reversal_time;
++        const double tau = -cfg.get("baseline_reference_dt_s") /
++                            std::log(1 - cfg.get("baseline_reference_alpha"));
++        for (std::size_t i = 0; i < frames.size(); ++i)
++        {
++            const double now = input_time(frames[i]);
++            // 评分局部副本换到所选坐标；真值绝不进入tracker或基线的输入分支。
++            auto scoring_truth = truth[i];
++            scoring_truth.p_camera_ = truth_position(truth[i], tracker_cfg.coordinate_mode_);
++            scoring_truth.v_camera_ = truth_velocity(truth[i], tracker_cfg.coordinate_mode_);
++            ++frames_total;
++            wrong_injected += truth[i].injected_error_;
++            if (truth[i].reversed_)
++            {
++                ++reversals;
++                reversal_time = truth[i].time_s_;
++            }
++            std::optional<Vec3> raw_p, raw_v, smooth_p, smooth_v;
++            std::vector<std::string> adapter_events;
++            const auto observations = tr::detail::adapt_measurements(frames[i], tracker_cfg, adapter_events);
++            if (observations.size() == 1)
++            {
++                // world观测由输入的^W T_C变换而来，不取truth.p_world给基线或tracker。
++                raw_p = observations.front().position_m_;
++                if (previous_raw)
++                {
++                    const double dt = now - previous_measurement_time;
++                    raw_v = (*raw_p - *previous_raw) / dt;
++                    const double alpha = 1 - std::exp(-dt / tau);
++                    smooth_p = *previous_smooth + alpha * (*raw_p - *previous_smooth);
++                    smooth_v = (*smooth_p - *previous_smooth) / dt;
++                    raw_metric.add(*raw_p, *raw_v, scoring_truth);
++                    smooth_metric.add(*smooth_p, *smooth_v, scoring_truth);
++                }
++                else
++                    smooth_p = raw_p;
++                previous_raw = raw_p;
++                previous_smooth = smooth_p;
++                previous_measurement_time = now;
++            }
++            auto result = tracker.step(frames[i]);
++            results.push_back(result);
++            if (result.tracks_.empty())
++            {
++                csv << session.name_ << ',' << truth[i].frame_ << ",NO_TRACK,"
++                    << truth[i].true_association_ << ",,,,,,,\n";
++                continue;
++            }
++            const auto &track = result.tracks_.front();
++            measured += track.state_ == tr::TrackState::Measured;
++            coast += track.state_ == tr::TrackState::Coasting;
++            lost += track.state_ == tr::TrackState::Lost;
++            unbounded += !track.time_bounded_;
++            qualified += track.qualified_for_g5_;
++            if (truth[i].injected_error_ && track.state_ == tr::TrackState::Measured &&
++                track.last_measurement_stamp_.frame_id_ == frames[i].stamp_.frame_id_)
++            {
++                ++wrong_accepted;
++                wrong_confirmed += track.confirmed_;
++            }
++            csv << session.name_ << ',' << truth[i].frame_ << ',' << tr::track_state_name(track.state_)
++                << ',' << truth[i].true_association_ << ',';
++            std::optional<double> pe, ve, pr, vr;
++            bool p_contained = false, v_contained = false;
++            if (track.position_m_)
++            {
++                pe = cv::norm(*track.position_m_ - scoring_truth.p_camera_);
++                csv << *pe;
++            }
++            csv << ',';
++            if (track.velocity_mps_)
++            {
++                ve = cv::norm(*track.velocity_mps_ - scoring_truth.v_camera_);
++                csv << *ve;
++            }
++            if (track.covariance_)
++            {
++                auto &counts = coverage[tr::track_state_name(track.state_)];
++                if (pe)
++                {
++                    pr = three_sigma_radius(*track.covariance_, 0);
++                    p_contained = *pe <= *pr;
++                    ++counts[0];
++                    counts[1] += p_contained;
++                }
++                if (ve)
++                {
++                    vr = three_sigma_radius(*track.covariance_, 3);
++                    v_contained = *ve <= *vr;
++                    ++counts[2];
++                    counts[3] += v_contained;
++                }
++            }
++            if (track.position_m_ && track.velocity_mps_)
++            {
++                tracker_metric.add(*track.position_m_, *track.velocity_mps_, scoring_truth);
++                if (raw_v && smooth_v)
++                {
++                    paired_raw.add(*raw_p, *raw_v, scoring_truth);
++                    paired_smooth.add(*smooth_p, *smooth_v, scoring_truth);
++                    paired_tracker.add(*track.position_m_, *track.velocity_mps_, scoring_truth);
++                }
++                // 恢复指标用冻结profile尺度，仅作对照，不转成机械投放许可。
++                if (reversal_time && *ve <= profile.velocity_std_limit_mps_)
++                {
++                    recovery.add(truth[i].time_s_ - *reversal_time);
++                    ++recovered;
++                    reversal_time.reset();
++                }
++            }
++            csv << ',' << track.track_id_ << ',';
++            if (pr) csv << *pr;
++            csv << ',';
++            if (pr) csv << p_contained;
++            csv << ',';
++            if (vr) csv << *vr;
++            csv << ',';
++            if (vr) csv << v_contained;
++            csv << '\n';
++        }
++        tr::write_tracking_results(results, out / (session.name_ + "-tracks.yaml"));
++    }
++    if (!frames_total)
++        throw std::runtime_error("lab holdout为空，不能判PASS");
++    std::ofstream report(out / "verification.md");
++    report << "# G4独立holdout对照\n\n未经过实车确认。输入绕过G2，是声明假设的3D测量流。"
++           << "坐标域=" << profile.coordinate_mode_ << "，时间政策=" << profile.time_policy_
++           << "。camera模式比较含ego的相机变化率；world模式在给定精确ego的假设下比较世界速度。"
++              "一阶位置平滑是参考对照，不是旧二维稳定器逐值复刻。\n\n"
++              "|方法|有速度样本数|位置RMSE(m)|速度RMSE(m/s)|最大速度误差(m/s)|\n|---|---:|---:|---:|---:|\n";
++    report << std::setprecision(17);
++    for (const auto &entry : std::vector<std::pair<std::string, const Metric *>>{
++             {"raw有限差分", &raw_metric}, {"时间感知一阶平滑", &smooth_metric},
++             {"TargetTracker全部可用输出", &tracker_metric}, {"共同样本raw", &paired_raw},
++             {"共同样本平滑", &paired_smooth}, {"共同样本tracker", &paired_tracker}})
++    {
++        report << '|' << entry.first << '|' << entry.second->count_ << '|';
++        if (entry.second->count_)
++            report << std::sqrt(entry.second->p_sq_ / entry.second->count_) << '|'
++                   << std::sqrt(entry.second->v_sq_ / entry.second->count_) << '|'
++                   << entry.second->max_v_;
++        else
++            report << "不可计算|不可计算|不可计算";
++        report << "|\n";
++    }
++    report << "\n总帧=" << frames_total << "，MEASURED=" << measured << "，COASTING=" << coast
++           << "，LOST=" << lost << "，无速度/无track等其余样本亦保留CSV。\n\n错误测量注入="
++           << wrong_injected << "，被当新测量接受=" << wrong_accepted
++           << "（其中已确认track接受=" << wrong_confirmed << "；未确认seed也计入总接受数）"
++           << "；未经时间资格输出=" << unbounded << "，G5资格输出=" << qualified << "。\n\n"
++           << "世界目标实际反转=" << reversals << "，在profile条件速度尺度内恢复=" << recovered
++           << "；未恢复/被后续反转覆盖的情况未强行填零。";
++    if (recovery.samples_.size() >= 2)
++        report << "已恢复延迟均值=" << recovery.mean() << "s，样本std=" << recovery.stddev() << "s。";
++    report << "\n\n## 条件3sigma球经验包含率\n\n半径=3*sqrt(该P块最大特征值)，逐帧位置/速度真值误差范数与其比较。"
++              "这是该假设域上的经验评分，不声称正态、固定99.7%覆盖或实车绝对界；超界不调参。\n\n"
++              "|状态|位置包含/样本|位置比例|速度包含/样本|速度比例|\n|---|---:|---:|---:|---:|\n";
++    for (const auto &[state, counts] : coverage)
++    {
++        report << '|' << state << '|' << counts[1] << '/' << counts[0] << '|';
++        if (counts[0]) report << static_cast<double>(counts[1]) / counts[0];
++        else report << "不可计算";
++        report << '|' << counts[3] << '/' << counts[2] << '|';
++        if (counts[2]) report << static_cast<double>(counts[3]) / counts[2];
++        else report << "不可计算";
++        report << "|\n";
++    }
++    report << "\n\n恢复判据只作条件对照，原始逐帧误差完整保留；不调profile追求全绿。"
++              "高覆盖也不代表关联正确，须同时审错误接受数、共同样本误差及尾部。"
++              "本工具无实车噪声/曝光/侧滑证据；不填生产阈值、不改G2、不输出控制。\n";
++    if (!csv.good() || !report.good())
++        throw std::runtime_error("lab 验证报告写失败");
++    if (qualified != 0)
++        throw std::runtime_error("lab 合成未验证输入错误获得G5资格");
++    if (tracker_metric.count_ == 0 || paired_tracker.count_ == 0)
++        throw std::runtime_error("lab 无速度输出或无共同对照样本；报告保留，但不能判实验通过");
++}
++} // namespace
++
++// 三个命令共享配置与证据原件；生成/标定/独立验证职责分离，绝不在验证时调参数。
++int main(int argc, char **argv)
++{
++    try
++    {
++        const auto args = parse_cli(argc, argv);
++        const auto root = fs::path(__FILE__).parent_path().parent_path().parent_path();
++        const auto config_path = args.count("--config") ? fs::path(args.at("--config")) :
++                                                        root / "config/tracking_lab.yaml";
++        const LabConfig config(config_path);
++        const fs::path out(args.at("--out"));
++        new_directory(out);
++        fs::copy_file(config_path, out / "lab_config_input.yaml");
++        const auto command = args.at("command");
++        if (command == "generate")
++            generate(config, out);
++        else if (command == "calibrate")
++            calibrate(config, args.at("--input"), out,
++                      args.count("--profile") ? fs::path(args.at("--profile")) : out / "profile.yaml");
++        else
++            verify(config, args.at("--input"), out, args.at("--profile"));
++        std::cout << "tracking_lab " << command << "完成，结果=" << out.string()
++                  << "；仅合成/离线证据，未经过实车确认\n";
++        return 0;
++    }
++    catch (const std::exception &e)
++    {
++        std::cerr << "tracking_lab错误: " << e.what() << '\n';
++        return 1;
++    }
++}
+diff --git a/src/tushenghao/tests/tracking_contract_test.cpp b/src/tushenghao/tests/tracking_contract_test.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/tests/tracking_contract_test.cpp
+@@ -0,0 +1,783 @@
++// G4 主动契约测试：所有数值均为精确/理想 fixture 条件，绝不是生产阈值建议。
++// 原 Release 下 assert 会消失；本文件用抛异常的主动检查，失败必须返回非零。
++#include "mark/target_tracker.hpp"
++#include "tracking/kalman_cv.hpp"
++
++#include <cmath>
++#include <iostream>
++#include <limits>
++#include <stdexcept>
++#include <string>
++#include <vector>
++
++namespace
++{
++using namespace mark::tracking;
++using mark::pose::PoseStatus;
++
++void require(bool value, const std::string &message)
++{
++    if (!value)
++        throw std::runtime_error(message);
++}
++
++void near(double actual, double expected, double epsilon, const std::string &message)
++{
++    require(std::isfinite(actual) && std::abs(actual - expected) <= epsilon, message);
++}
++
++// 理想场景的手算参数用于激发分支；生产参数必须由独立标定工具给出。
++TrackingConfig fixture_config()
++{
++    TrackingConfig config;
++    TrackingProfile profile;
++    profile.camera_mse_m2_ = cv::Matx33d::eye() * 1e-4;
++    profile.camera_id_ = "contract-camera";
++    profile.acceleration_psd_m2ps3_ = 0.1;
++    profile.initial_velocity_variance_m2ps2_ = 4.0;
++    profile.association_nis_limit_ = 9.0;
++    profile.bootstrap_nis_limit_ = 9.0;
++    profile.position_std_limit_m_ = 10.0;
++    profile.velocity_std_limit_mps_ = 10.0;
++    profile.max_dt_s_ = 2.0;
++    profile.evidence_id_ = "ideal-contract-fixture-not-production";
++    profile.basis_ = "synthetic";
++    config.profile_ = profile;
++    return config;
++}
++
++// 曝光和接收显式分开；Synthetic 只代表已知测试时间轴，不能获得实车资格。
++TrackingFrame empty_frame(std::uint64_t sequence, double seconds)
++{
++    TrackingFrame frame;
++    frame.origin_ = InputOrigin::Synthetic;
++    frame.stamp_.session_id_ = "contract-session";
++    frame.stamp_.camera_id_ = "contract-camera";
++    frame.stamp_.clock_domain_ = "contract-monotonic";
++    frame.stamp_.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
++    frame.stamp_.frame_id_ = sequence;
++    const auto time = static_cast<std::int64_t>(1000000 + std::llround(seconds * 1e6));
++    frame.stamp_.exposure_us_ = time;
++    frame.stamp_.received_us_ = time + 1000;
++    frame.stamp_.time_uncertainty_s_ = 0;
++    return frame;
++}
++
++// 模拟 G2 真正发布的 Unique：选中索引、候选证据、来源时间与最终位姿缺一不可。
++mark::pose::PoseObservation measurement(const TrackingFrame &frame, cv::Vec3d position,
++                                      std::size_t index = 0)
++{
++    mark::pose::PoseObservation observation;
++    observation.stamp_ = frame.stamp_;
++    observation.source_ = "MARK";
++    observation.target_id_ = "mark-white-structure-v1";
++    observation.detection_index_ = index;
++    observation.status_ = PoseStatus::Unique;
++    mark::pose::PoseCandidate candidate;
++    candidate.pose_.t_m_ = position;
++    candidate.rmse_px_ = 0;
++    candidate.max_error_px_ = 0;
++    candidate.min_depth_m_ = position[2];
++    candidate.metrics_valid_ = true;
++    candidate.eligible_ = true;
++    observation.candidates_.push_back(candidate);
++    observation.selected_index_ = 0;
++    observation.T_camera_target_ = candidate.pose_;
++    observation.selected_rmse_px_ = 0;
++    return observation;
++}
++
++TrackingFrame observed_frame(std::uint64_t sequence, double seconds, cv::Vec3d position)
++{
++    auto frame = empty_frame(sequence, seconds);
++    frame.observations_.push_back(measurement(frame, position));
++    return frame;
++}
++
++// 测试读取快照副本，避免 step 临时结果析构后留下悬空引用。
++TargetTrack one_track(const TrackingResult &result, const std::string &where)
++{
++    require(result.input_accepted_ && result.ready_ && result.tracks_.size() == 1,
++            where + ": 必须返回一条有效生命周期记录");
++    return result.tracks_.front();
++}
++
++void establish(TargetTracker &tracker)
++{
++    tracker.step(observed_frame(1, 0.0, {0, 0, 2}));
++    const auto result = tracker.step(observed_frame(2, 0.1, {0.05, 0, 2}));
++    const auto &track = one_track(result, "建立两点轨迹");
++    require(track.state_ == TrackState::Measured && track.confirmed_ && track.velocity_mps_,
++            "两次独立测量后必须确认速度");
++}
++
++// F/Q 与两点初始化的交叉协方差用手算值核验，不让“输出平滑”掩盖矩阵错误。
++void test_filter_math()
++{
++    detail::CvFilter filter;
++    const cv::Matx33d noise(0.04, 0, 0, 0, 0.09, 0, 0, 0, 0.16);
++    filter.initialize({1, 2, 3}, noise, 2.0);
++    filter.predict(0.2, 0.6);
++    const auto predicted = filter.covariance();
++    for (int axis = 0; axis < 3; ++axis)
++    {
++        near(predicted(axis, axis), noise(axis, axis) + 2.0 * 0.04 + 0.6 * 0.008 / 3,
++             1e-12, "M01 实际 dt 的 Qpp/F 必须正确");
++        near(predicted(axis, axis + 3), 2.0 * 0.2 + 0.6 * 0.04 / 2,
++             1e-12, "M02 实际 dt 的 Qpv 必须正确");
++        near(predicted(axis + 3, axis + 3), 2.0 + 0.6 * 0.2,
++             1e-12, "M03 实际 dt 的 Qvv 必须正确");
++    }
++    const auto p = cv::Mat(predicted).clone();
++    cv::Mat h = cv::Mat::zeros(3, 6, CV_64F);
++    const cv::Mat identity = cv::Mat::eye(3, 3, CV_64F);
++    identity.copyTo(h.colRange(0, 3));
++    const cv::Mat r(noise);
++    const cv::Mat s = h * p * h.t() + r;
++    const cv::Mat k = p * h.t() * s.inv();
++    const cv::Mat a = cv::Mat::eye(6, 6, CV_64F) - k * h;
++    const cv::Mat expected = a * p * a.t() + k * r * k.t();
++    filter.correct({1.1, 2.2, 2.9}, noise);
++    require(cv::norm(cv::Mat(filter.covariance()), expected, cv::NORM_INF) < 1e-12,
++            "M04 Joseph 更新必须符合完整公式");
++    for (int i = 0; i < 80; ++i)
++    {
++        filter.predict(0.01 + (i % 4) * 0.003, 0.6);
++        filter.correct({1.1, 2.2, 2.9}, noise);
++        const auto covariance = cv::Mat(filter.covariance());
++        require(cv::checkRange(covariance) &&
++                cv::norm(covariance, covariance.t(), cv::NORM_INF) < 1e-10,
++                "M05 重复预测/更新的协方差必须有限、对称");
++        cv::Mat eigenvalues;
++        require(cv::eigen(covariance, eigenvalues) && eigenvalues.at<double>(5) >= -1e-12,
++                "M06 Joseph 更新必须保持半正定");
++    }
++    detail::CvFilter bootstrap;
++    const cv::Matx33d previous = cv::Matx33d::eye() * 0.01;
++    const cv::Matx33d current = cv::Matx33d::eye() * 0.04;
++    bootstrap.bootstrap({1, 2, 3}, previous, {1.2, 2.4, 2.8}, current, 0.2, 0);
++    near(bootstrap.velocity()[0], 1, 1e-12, "M07 两点速度必须除实际 dt");
++    near(bootstrap.velocity()[1], 2, 1e-12, "M08 y 速度符号/单位必须正确");
++    near(bootstrap.velocity()[2], -1, 1e-12, "M09 z 速度符号/单位必须正确");
++    for (int axis = 0; axis < 3; ++axis)
++    {
++        near(bootstrap.covariance()(axis, axis), 0.04, 1e-12,
++             "M10 两点初始化位置协方差来自当前样本");
++        near(bootstrap.covariance()(axis, axis + 3), 0.04 / 0.2, 1e-12,
++             "M11 位置与速度使用同一当前样本，交叉协方差不能漏掉或写负");
++        near(bootstrap.covariance()(axis + 3, axis + 3), 0.05 / 0.04, 1e-12,
++             "M12 两点速度方差必须传播两次位置误差");
++    }
++}
++
++void test_readiness_and_bootstrap()
++{
++    TrackingConfig empty;
++    TargetTracker not_ready(empty);
++    const auto blocked = not_ready.step(observed_frame(1, 0, {0, 0, 2}));
++    require(!blocked.ready_ && blocked.tracks_.empty(), "T01 未标定 profile 不能创建轨迹");
++    TargetTracker tracker(fixture_config());
++    auto result = tracker.step(observed_frame(1, 0, {0, 0, 2}));
++    const auto first_id = one_track(result, "T02").track_id_;
++    require(result.tracks_[0].state_ == TrackState::Measured &&
++            !result.tracks_[0].confirmed_ && !result.tracks_[0].velocity_mps_,
++            "T02 单帧只有位置，不能捏造零速度为已估速度");
++    result = tracker.step(observed_frame(2, 0.2, {0.2, 0, 2}));
++    const auto &track = one_track(result, "T03");
++    require(track.track_id_ == first_id && track.confirmed_ && track.velocity_mps_,
++            "T03 两帧必须确认同一轨迹");
++    near((*track.velocity_mps_)[0], 1, 1e-9,
++         "T04 相机相对速度不应被规则0.5m/s限幅");
++    require(!track.qualified_for_g5_ && !track.time_bounded_,
++            "T05 nominal_research 数值通过不能赋予实车时间/任务资格");
++}
++
++// 七态不得压成“有候选就有测量”；所有非 Unique 状态都只会推进缺测生命周期。
++void test_pose_statuses_and_evidence()
++{
++    const std::vector<PoseStatus> missing{
++        PoseStatus::InvalidInput, PoseStatus::CorrespondenceMissing,
++        PoseStatus::NotDetected, PoseStatus::NoSolution,
++        PoseStatus::BudgetMissing, PoseStatus::Ambiguous};
++    for (const auto status : missing)
++    {
++        TargetTracker tracker(fixture_config());
++        establish(tracker);
++        auto frame = observed_frame(3, 0.2, {0.1, 0, 2});
++        frame.observations_[0].status_ = status;
++        // 刻意留下貌似完整的 T 和候选，证明状态本身不能被绕过。
++        const auto result = tracker.step(frame);
++        require(one_track(result, "T06").state_ == TrackState::Coasting,
++                "T06 非 Unique 不得更新为实测");
++        require(result.tracks_[0].last_measurement_stamp_.frame_id_ == 2,
++                "T07 非 Unique 不得刷新最近实测时间");
++    }
++    for (int defect = 0; defect < 6; ++defect)
++    {
++        TargetTracker tracker(fixture_config());
++        establish(tracker);
++        auto frame = observed_frame(3, 0.2, {0.1, 0, 2});
++        auto &observation = frame.observations_[0];
++        if (defect == 0) observation.selected_index_.reset();
++        if (defect == 1) observation.T_camera_target_.reset();
++        if (defect == 2) observation.candidates_[0].eligible_ = false;
++        if (defect == 3) observation.candidates_[0].metrics_valid_ = false;
++        if (defect == 4) observation.candidates_[0].reasons_.push_back("REJECTED_FIXTURE");
++        if (defect == 5) ++observation.stamp_.frame_id_;
++        require(one_track(tracker.step(frame), "T08").state_ == TrackState::Coasting,
++                "T08 Unique 的选中证据/帧绑定缺失不能当测量");
++    }
++    TargetTracker wrong_source(fixture_config());
++    auto frame = observed_frame(1, 0, {0, 0, 2});
++    frame.observations_[0].source_ = "APRILTAG";
++    require(wrong_source.step(frame).tracks_.empty(), "T09 不混入退出Tag来源");
++    frame.observations_[0].source_ = "MARK";
++    frame.observations_[0].target_id_ = "another-model";
++    ++frame.stamp_.frame_id_;
++    frame.observations_[0].stamp_ = frame.stamp_;
++    frame.stamp_.received_us_ += 1000;
++    frame.stamp_.exposure_us_ = *frame.stamp_.exposure_us_ + 1000;
++    frame.observations_[0].stamp_ = frame.stamp_;
++    require(wrong_source.step(frame).tracks_.empty(), "T10 不混入其他目标模型");
++}
++
++void test_association_and_reseed()
++{
++    TargetTracker tracker(fixture_config());
++    establish(tracker);
++    auto frame = observed_frame(3, 0.2, {0.1, 0, 2});
++    frame.observations_.push_back(measurement(frame, {0.11, 0, 2}, 1));
++    const auto competing = tracker.step(frame);
++    const auto old_id = one_track(competing, "T11").track_id_;
++    require(competing.tracks_[0].state_ == TrackState::Coasting,
++            "T11 多个关联候选都合格必须拒绝，不能挑最近者");
++    auto jump = tracker.step(observed_frame(4, 0.3, {20, 0, 2}));
++    require(one_track(jump, "T12").track_id_ == old_id &&
++            jump.tracks_[0].state_ == TrackState::Coasting,
++            "T12 首次门外测量只建立独立pending，不污染旧track");
++    auto reseeded = tracker.step(observed_frame(5, 0.4, {20.05, 0, 2}));
++    const auto &new_track = one_track(reseeded, "T13");
++    require(new_track.track_id_ != old_id && new_track.state_ == TrackState::Measured &&
++            new_track.confirmed_ && !reseeded.events_.empty(),
++            "T13 独立两点一致后新ID替代旧轨迹，且事件不可丢失");
++    // 极小门控故意使反转落在门外；独立pending必须允许恢复，不能永远拒绝机动。
++    auto cfg = fixture_config();
++    cfg.profile_->association_nis_limit_ = 1e-4;
++    cfg.profile_->bootstrap_nis_limit_ = 9;
++    TargetTracker reversal(cfg);
++    establish(reversal);
++    const auto before = reversal.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    const auto before_id = one_track(before, "T14").track_id_;
++    reversal.step(observed_frame(4, 0.3, {0.05, 0, 2}));
++    const auto after = reversal.step(observed_frame(5, 0.4, {0, 0, 2}));
++    const auto &after_track = one_track(after, "T14");
++    require(after_track.state_ == TrackState::Measured && after_track.confirmed_ &&
++            after_track.track_id_ != before_id && after_track.velocity_mps_ &&
++            (*after_track.velocity_mps_)[0] < 0,
++            "T14 随机反转须可由独立两点重建恢复，不允许永久被门控拒绝");
++}
++
++void test_time_order_and_source_changes()
++{
++    TargetTracker tracker(fixture_config());
++    TargetTracker reference(fixture_config());
++    establish(tracker);
++    establish(reference);
++    auto duplicate = observed_frame(2, 0.1, {999, 0, 2});
++    require(!tracker.step(duplicate).input_accepted_, "T15 重复帧必须拒绝");
++    auto backward = observed_frame(3, 0.05, {999, 0, 2});
++    require(!tracker.step(backward).input_accepted_, "T16 倒序时间必须拒绝");
++    auto zero_dt = observed_frame(3, 0.1, {999, 0, 2});
++    require(!tracker.step(zero_dt).input_accepted_, "T17 零dt必须拒绝，不能除零或造速度");
++    const auto valid = tracker.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    const auto clean = reference.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    require(valid.tracks_[0].track_id_ == clean.tracks_[0].track_id_ &&
++            cv::norm(*valid.tracks_[0].position_m_ - *clean.tracks_[0].position_m_) < 1e-12 &&
++            cv::norm(cv::Mat(*valid.tracks_[0].covariance_),
++                     cv::Mat(*clean.tracks_[0].covariance_), cv::NORM_INF) < 1e-12,
++            "T18 拒绝帧不能污染下一个合法结果");
++    const auto old_id = valid.tracks_[0].track_id_;
++    auto changed = observed_frame(1, 0, {0, 0, 2});
++    changed.stamp_.session_id_ = "new-session";
++    changed.observations_[0].stamp_ = changed.stamp_;
++    const auto reset = tracker.step(changed);
++    const auto &fresh = one_track(reset, "T19");
++    require(fresh.track_id_ != old_id && !fresh.confirmed_ && !fresh.velocity_mps_,
++            "T19 新会话可重启计时，但不能复用旧速度或ID");
++    for (int change = 0; change < 2; ++change)
++    {
++        TargetTracker separate(fixture_config());
++        establish(separate);
++        auto old = separate.predict_to(1100000);
++        auto frame = observed_frame(3, 0.2, {0.1, 0, 2});
++        if (change == 0) frame.stamp_.camera_id_ = "another-camera";
++        if (change == 1) frame.stamp_.clock_domain_ = "another-clock";
++        frame.observations_[0].stamp_ = frame.stamp_;
++        const auto result = separate.step(frame);
++        require(one_track(result, "T20").track_id_ != old.track_id_ &&
++                !result.tracks_[0].confirmed_, "T20 相机/时钟变更必须断旧状态");
++    }
++}
++
++void test_bounded_time()
++{
++    auto cfg = fixture_config();
++    cfg.time_policy_ = "bounded_only";
++    cfg.stamp_uncertainty_semantics_ = "absolute_bound";
++    cfg.max_time_uncertainty_s_ = 0.003;
++    cfg.profile_->validated_time_bound_s_ = 0.003;
++    TargetTracker tracker(cfg);
++    auto first = observed_frame(1, 0, {0, 0, 2});
++    first.stamp_.time_uncertainty_s_ = 0.001;
++    first.observations_[0].stamp_ = first.stamp_;
++    const auto initial = tracker.step(first);
++    require(one_track(initial, "T21").time_bounded_, "T21 已知绝对时间界可进入有界模型");
++    auto unknown = observed_frame(2, 0.1, {0.05, 0, 2});
++    unknown.stamp_.time_uncertainty_s_.reset();
++    unknown.observations_[0].stamp_ = unknown.stamp_;
++    const auto coast = tracker.step(unknown);
++    require(one_track(coast, "T22").state_ == TrackState::Coasting &&
++            coast.tracks_[0].last_measurement_stamp_.frame_id_ == 1,
++            "T22 有界模式缺时间界时只能缺测，不可用0代替");
++    auto excessive = observed_frame(3, 0.2, {0.1, 0, 2});
++    excessive.stamp_.time_uncertainty_s_ = 0.02;
++    excessive.observations_[0].stamp_ = excessive.stamp_;
++    require(one_track(tracker.step(excessive), "T23").state_ == TrackState::Coasting,
++            "T23 超过已验证时间域不能更新");
++    auto recovered = observed_frame(4, 0.3, {0.15, 0, 2});
++    recovered.stamp_.time_uncertainty_s_ = 0.001;
++    recovered.observations_[0].stamp_ = recovered.stamp_;
++    require(one_track(tracker.step(recovered), "T24").state_ == TrackState::Measured,
++            "T24 合法时间重新出现后可恢复测量");
++}
++
++void test_uncertainty_and_invalid_values()
++{
++    auto cfg = fixture_config();
++    TargetTracker tracker(cfg);
++    auto first = observed_frame(1, 0, {0, 0, 2});
++    first.observations_[0].covariance_se3_ = std::array<double, 36>{};
++    const auto initial = tracker.step(first);
++    require(one_track(initial, "T25").covariance_ &&
++            (*initial.tracks_[0].covariance_)(0, 0) > 0,
++            "T25 G2空/零SE3占位不能冒充零位置误差");
++    TargetTracker sidecar(cfg);
++    first.position_noise_.push_back({0, cv::Matx33d::eye() * 0.04, "known-fixture-R", false});
++    const auto independent = sidecar.step(first);
++    near((*one_track(independent, "T26").covariance_)(0, 0), 0.04, 1e-12,
++         "T26 独立PositionNoise按唯一检测索引匹配，不能忽略或复用别项");
++    auto invalid = observed_frame(2, 0.1, {0.05, 0, 2});
++    invalid.position_noise_.push_back({0, cv::Matx33d::eye() * -1, "bad-R", false});
++    require(one_track(tracker.step(invalid), "T27").state_ == TrackState::Coasting,
++            "T27 负定位置R必须拒绝，不可偷偷改成正数或退回profile");
++    auto nan = observed_frame(3, 0.2, {0.1, 0, 2});
++    nan.observations_[0].T_camera_target_->t_m_[0] = std::numeric_limits<double>::quiet_NaN();
++    require(one_track(tracker.step(nan), "T28").state_ == TrackState::Coasting,
++            "T28 NaN不能进入滤波矩阵");
++    TargetTracker duplicate_noise(cfg);
++    first.position_noise_.push_back({0, cv::Matx33d::eye() * 0.09, "duplicate-index-R", false});
++    require(duplicate_noise.step(first).tracks_.empty(),
++            "T29 同一检测索引存在两个位置R必须拒绝，不能随便选一个");
++}
++
++// 预测只读，LOST不带旧测量，恢复新建ID，三者共同防止旧结果被包装成当前观察。
++void test_forecast_and_loss()
++{
++    TargetTracker tracker(fixture_config());
++    TargetTracker reference(fixture_config());
++    establish(tracker);
++    establish(reference);
++    const auto predicted = tracker.predict_to(1150000);
++    require(predicted.available_ && predicted.position_m_ && predicted.velocity_mps_,
++            "T30 合法短期预测应独立返回");
++    const auto a = tracker.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    const auto b = reference.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    require(cv::norm(*a.tracks_[0].position_m_ - *b.tracks_[0].position_m_) < 1e-12 &&
++            cv::norm(cv::Mat(*a.tracks_[0].covariance_),
++                     cv::Mat(*b.tracks_[0].covariance_), cv::NORM_INF) < 1e-12,
++            "T31 predict_to不得推进step历史或改后续滤波");
++    auto cfg = fixture_config();
++    cfg.profile_->position_std_limit_m_ = 0.03;
++    TargetTracker loss(cfg);
++    establish(loss);
++    const auto old_id = loss.predict_to(1100000).track_id_;
++    bool lost = false;
++    std::uint64_t next = 3;
++    double time = 0.2;
++    for (; next < 40; ++next, time += 0.1)
++    {
++        const auto result = loss.step(empty_frame(next, time));
++        const auto &track = one_track(result, "T32");
++        if (track.state_ == TrackState::Lost)
++        {
++            require(!track.position_m_ && !track.velocity_mps_,
++                    "T32 LOST不得带旧位置/速度伪装当前测量");
++            lost = true;
++            break;
++        }
++    }
++    require(lost, "T33 连续缺测的误差增长必须使轨迹LOST");
++    const auto reacquired = loss.step(observed_frame(next + 1, time + 0.1, {0.2, 0, 2}));
++    require(one_track(reacquired, "T34").track_id_ != old_id &&
++            !reacquired.tracks_[0].confirmed_ && !reacquired.tracks_[0].velocity_mps_,
++            "T34 LOST后重现新ID，从位置重新初始化速度");
++    TargetTracker gap(fixture_config());
++    establish(gap);
++    const auto long_gap = gap.step(empty_frame(3, 3.0));
++    require(one_track(long_gap, "T35").state_ == TrackState::Lost,
++            "T35 超过已标定max_dt必须LOST，不能大步外推");
++}
++
++// 实际同一静止目标：补偿前相机表观移动，补偿后世界位置/速度保持不动。
++void test_world_coordinates()
++{
++    auto cfg = fixture_config();
++    cfg.coordinate_mode_ = CoordinateMode::LocalWorld;
++    cfg.world_frame_id_ = "contract-world";
++    TargetTracker world(cfg);
++    TargetTracker camera(fixture_config());
++    TrackingResult last_world, last_camera;
++    for (std::uint64_t n = 0; n < 8; ++n)
++    {
++        auto frame = observed_frame(n + 1, n * 0.1, {1.0 - n * 0.05, 0, 2});
++        last_camera = camera.step(frame);
++        CameraTransform transform;
++        transform.stamp_ = frame.stamp_;
++        transform.world_frame_id_ = cfg.world_frame_id_;
++        transform.t_world_camera_m_ = {n * 0.05, 0, 0};
++        transform.covariance_ = Mat6::eye() * 1e-12;
++        frame.camera_transform_ = transform;
++        last_world = world.step(frame);
++    }
++    require(one_track(last_world, "T36").velocity_mps_ &&
++            cv::norm(*last_world.tracks_[0].velocity_mps_) < 1e-10,
++            "T36 自身平动补偿后静止世界目标速度应为0");
++    require(one_track(last_camera, "T37").velocity_mps_ &&
++            (*last_camera.tracks_[0].velocity_mps_)[0] < -0.4,
++            "T37 相机相对导数必须诚实反映本车运动，不能叫世界速度");
++    auto no_transform = observed_frame(9, 0.8, {0.6, 0, 2});
++    const auto coast = world.step(no_transform);
++    require(one_track(coast, "T38").state_ == TrackState::Coasting &&
++            coast.tracks_[0].coordinate_frame_ == last_world.tracks_[0].coordinate_frame_,
++            "T38 world缺自身变换只能缺测，不能静默切camera坐标继续滤波");
++    TargetTracker rotating(cfg);
++    const cv::Vec3d fixed(1, 0.4, 2);
++    TrackingResult last;
++    for (std::uint64_t n = 0; n < 8; ++n)
++    {
++        const double angle = n * 0.03;
++        const cv::Matx33d rotation(std::cos(angle), -std::sin(angle), 0,
++                                  std::sin(angle), std::cos(angle), 0, 0, 0, 1);
++        const cv::Vec3d translation(n * 0.02, 0, 0);
++        auto frame = observed_frame(n + 1, n * 0.1, rotation.t() * (fixed - translation));
++        CameraTransform transform;
++        transform.stamp_ = frame.stamp_;
++        transform.world_frame_id_ = cfg.world_frame_id_;
++        transform.R_world_camera_ = rotation;
++        transform.t_world_camera_m_ = translation;
++        transform.covariance_ = Mat6::eye() * 1e-12;
++        frame.camera_transform_ = transform;
++        last = rotating.step(frame);
++    }
++    require(one_track(last, "T39").position_m_ && last.tracks_[0].velocity_mps_ &&
++            cv::norm(*last.tracks_[0].position_m_ - fixed) < 1e-10 &&
++            cv::norm(*last.tracks_[0].velocity_mps_) < 1e-10,
++            "T39 相机转动和平动同时补偿，不能只相加底盘速度");
++}
++
++// 非法像素域是坏输入；拒绝不能偷偷清旧历史，再让下一合法帧失去连续性。
++void test_context_edge_cases()
++{
++    TargetTracker tracker(fixture_config());
++    TargetTracker reference(fixture_config());
++    establish(tracker);
++    establish(reference);
++    auto invalid = observed_frame(3, 0.2, {0.1, 0, 2});
++    invalid.stamp_.pixel_domain_ = mark::pose::PixelDomain::Unknown;
++    invalid.observations_[0].stamp_ = invalid.stamp_;
++    require(!tracker.step(invalid).input_accepted_, "T40 Unknown像素域必须拒绝");
++    const auto actual = tracker.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    const auto expected = reference.step(observed_frame(3, 0.2, {0.1, 0, 2}));
++    require(one_track(actual, "T40").track_id_ == one_track(expected, "T40").track_id_ &&
++            cv::norm(*actual.tracks_[0].position_m_ - *expected.tracks_[0].position_m_) < 1e-12 &&
++            cv::norm(cv::Mat(*actual.tracks_[0].covariance_),
++                     cv::Mat(*expected.tracks_[0].covariance_), cv::NORM_INF) < 1e-12,
++            "T40 非法像素域不得污染下一个合法结果");
++    const auto old_id = actual.tracks_[0].track_id_;
++    auto receive_time = observed_frame(4, 0.3, {0.15, 0, 2});
++    receive_time.stamp_.exposure_us_.reset();
++    receive_time.observations_[0].stamp_ = receive_time.stamp_;
++    auto changed = tracker.step(receive_time);
++    require(one_track(changed, "T41").track_id_ != old_id &&
++            !changed.tracks_[0].confirmed_ && !changed.tracks_[0].velocity_mps_,
++            "T41 exposure切receive必须重建，不能混入旧时间源速度");
++    const auto received_id = changed.tracks_[0].track_id_;
++    changed = tracker.step(observed_frame(5, 0.4, {0.2, 0, 2}));
++    require(one_track(changed, "T41").track_id_ != received_id && !changed.tracks_[0].confirmed_,
++            "T41 receive切回exposure也必须重建");
++
++    auto world_config = fixture_config();
++    world_config.coordinate_mode_ = CoordinateMode::LocalWorld;
++    world_config.world_frame_id_ = "fixed-world-frame";
++    TargetTracker world(world_config);
++    TrackingResult last;
++    for (std::uint64_t n = 1; n <= 2; ++n)
++    {
++        auto frame = observed_frame(n, (n - 1) * 0.1, {0, 0, 2});
++        CameraTransform transform;
++        transform.stamp_ = frame.stamp_;
++        transform.world_frame_id_ = world_config.world_frame_id_;
++        transform.covariance_ = Mat6::eye() * 1e-12;
++        frame.camera_transform_ = transform;
++        last = world.step(frame);
++    }
++    const auto world_id = one_track(last, "T42").track_id_;
++    auto wrong_world = observed_frame(3, 0.2, {5, 0, 2});
++    CameraTransform changed_transform;
++    changed_transform.stamp_ = wrong_world.stamp_;
++    changed_transform.world_frame_id_ = "a-different-world";
++    changed_transform.covariance_ = Mat6::eye() * 1e-12;
++    wrong_world.camera_transform_ = changed_transform;
++    const auto refused = world.step(wrong_world);
++    require(one_track(refused, "T42").state_ == TrackState::Coasting &&
++            refused.tracks_[0].track_id_ == world_id &&
++            refused.tracks_[0].coordinate_frame_ == "fixed-world-frame",
++            "T42 外部world_frame不匹配必须原坐标coast，不能偷偷切坐标或接收该测量");
++}
++
++// 输入采样最大间隔和未来查询跨度是两种量；预测是否可用由误差预算决定。
++void test_forecast_horizon_and_time_envelopes()
++{
++    auto cfg = fixture_config();
++    cfg.profile_->max_dt_s_ = 0.11;
++    TargetTracker tracker(cfg);
++    establish(tracker);
++    const auto forecast = tracker.predict_to(1400000);
++    require(forecast.available_ && forecast.state_time_us_ == 1400000 && forecast.position_m_,
++            "T43 forecast跨度大于max_frame_dt仍可按协方差预算预测，不能混用采样间隔门槛");
++    near((*forecast.position_m_)[0], 0.2, 1e-10, "T44 未来查询位置必须使用真实查询dt");
++
++    const auto r = cv::Matx33d::eye() * 0.01;
++    detail::CvFilter exact, bounded;
++    exact.initialize({1, 2, 3}, r, 2);
++    bounded.initialize({1, 2, 3}, r, 2);
++    exact.predict(0.2, 0.6, 0);
++    bounded.predict(0.2, 0.6, 0.02);
++    cv::Mat eigenvalues;
++    require(cv::eigen(cv::Mat(bounded.covariance() - exact.covariance()), eigenvalues) &&
++            eigenvalues.at<double>(5) >= -1e-12,
++            "T45 有界时偏的预测MSE包络不得小于精确时间模型");
++    exact.bootstrap({0, 0, 2}, r, {0.2, 0.1, 2}, r, 0.2, 0.6, 0);
++    bounded.bootstrap({0, 0, 2}, r, {0.2, 0.1, 2}, r, 0.2, 0.6, 0.02, 0.01);
++    require(cv::eigen(cv::Mat(bounded.covariance() - exact.covariance()), eigenvalues) &&
++            eigenvalues.at<double>(5) >= -1e-12,
++            "T45 有界两点初始化不得产生更小的无依据不确定度");
++    // R2回归：零过程噪声时可直接复核位置补项，profile单帧界与区间界分别传入。
++    detail::CvFilter position_bound_test;
++    position_bound_test.bootstrap({0, 0, 2}, r, {0.2, 0.1, 2}, r, 0.2, 0, 0.02, 0.01);
++    const double velocity_mse_x = 4 * 0.02 / (0.18 * 0.18) +
++        2 * 0.02 * 0.02 / (0.18 * 0.18);
++    near(position_bound_test.covariance()(0, 0),
++         2 * (0.01 + 0.01 * 0.01 * (1 + velocity_mse_x)), 1e-12,
++         "R2 profile界平方乘bootstrap速度二阶矩必须进入Ppp");
++    bool refused_predict = false, refused_bootstrap = false;
++    try { bounded.predict(0.1, 0.6, 0.1); }
++    catch (const std::exception &) { refused_predict = true; }
++    try { bounded.bootstrap({0, 0, 2}, r, {0.1, 0, 2}, r, 0.1, 0.6, 0.1); }
++    catch (const std::exception &) { refused_bootstrap = true; }
++    require(refused_predict && refused_bootstrap,
++            "T46 B>=dt时可能真实时间不正，预测/两点速度必须拒绝而非继续除法");
++}
++
++// 明确构造“当前硬件声明齐全但历史pending来自合成”的混源场景，检查资格不能被洗白。
++void test_pending_provenance_and_lost_age()
++{
++    auto cfg = fixture_config();
++    cfg.time_policy_ = "bounded_only";
++    cfg.stamp_uncertainty_semantics_ = "absolute_bound";
++    cfg.max_time_uncertainty_s_ = 0.001;
++    cfg.profile_->time_policy_ = "bounded_only";
++    cfg.profile_->validated_time_bound_s_ = 0.001;
++    cfg.profile_->hardware_verified_ = true;
++    TargetTracker tracker(cfg);
++    auto verified_frame = [](std::uint64_t n, double seconds, cv::Vec3d p)
++    {
++        auto frame = observed_frame(n, seconds, p);
++        frame.origin_ = InputOrigin::TypedMemory;
++        frame.observations_[0].control_usable_ = true;
++        return frame;
++    };
++    tracker.step(verified_frame(1, 0, {0, 0, 2}));
++    const auto trusted = tracker.step(verified_frame(2, 0.1, {0.05, 0, 2}));
++    require(one_track(trusted, "T47").qualified_for_g5_,
++            "T47 fixture前置条件必须实际激活资格路径，不能以始终false空验");
++    auto synthetic_pending = verified_frame(3, 0.2, {20, 0, 2});
++    synthetic_pending.origin_ = InputOrigin::Synthetic;
++    tracker.step(synthetic_pending);
++    const auto mixed = tracker.step(verified_frame(4, 0.3, {20.05, 0, 2}));
++    require(one_track(mixed, "T47").track_id_ != trusted.tracks_[0].track_id_ &&
++            mixed.tracks_[0].confirmed_ && !mixed.tracks_[0].model_hardware_verified_ &&
++            !mixed.tracks_[0].qualified_for_g5_,
++            "T47 合成pending即使被后续TypedMemory确认也不得获得硬件/下游资格");
++
++    TargetTracker invalid_candidate(fixture_config());
++    establish(invalid_candidate);
++    auto invalid = observed_frame(3, 0.2, {0.1, 0, 2});
++    invalid.observations_[0].candidates_[0].pose_.rvec_[0] =
++        std::numeric_limits<double>::quiet_NaN();
++    require(one_track(invalid_candidate.step(invalid), "T48").state_ == TrackState::Coasting,
++            "T48 候选pose含NaN而最终T正常也是矛盾证据，不能只检查最终T");
++
++    auto loss_config = fixture_config();
++    loss_config.profile_->max_dt_s_ = 0.15;
++    TargetTracker loss(loss_config);
++    establish(loss);
++    const auto first_lost = loss.step(empty_frame(3, 0.4));
++    require(one_track(first_lost, "T49").state_ == TrackState::Lost &&
++            first_lost.tracks_[0].observation_age_s_, "T49 必须先形成带年龄的LOST记录");
++    const auto later_lost = loss.step(empty_frame(4, 0.5));
++    require(one_track(later_lost, "T49").state_ == TrackState::Lost &&
++            later_lost.tracks_[0].observation_age_s_ &&
++            *later_lost.tracks_[0].observation_age_s_ > *first_lost.tracks_[0].observation_age_s_,
++            "T49 LOST年龄必须随每帧增长，不能冻结在首次丢失时刻");
++    near(*later_lost.tracks_[0].observation_age_s_ - *first_lost.tracks_[0].observation_age_s_,
++         0.1, 1e-12, "T49 LOST年龄增长必须与当前帧时刻一致");
++}
++
++// 初始化测量噪声略大于“预测沿用域”是合法情形：应允许当前观测连续收敛，不能永远删轨迹。
++void test_measured_convergence_vs_coast_budget()
++{
++    auto cfg = fixture_config();
++    // 这只是复现分类错误的精确fixture：R的标准差0.01m，沿用域略低于该值。
++    // 禁止将这组数字复制为生产阈值，也不为了测试修改实际标定产物。
++    cfg.profile_->position_std_limit_m_ = 0.0095;
++    cfg.time_policy_ = "bounded_only";
++    cfg.stamp_uncertainty_semantics_ = "absolute_bound";
++    cfg.max_time_uncertainty_s_ = 0.001;
++    cfg.profile_->time_policy_ = "bounded_only";
++    cfg.profile_->validated_time_bound_s_ = 0.001;
++    cfg.profile_->hardware_verified_ = true;
++    TargetTracker tracker(cfg);
++    std::uint64_t id = 0;
++    for (std::uint64_t n = 0; n < 12; ++n)
++    {
++        auto frame = observed_frame(n + 1, n * 0.1, {n * 0.05, 0, 2});
++        frame.origin_ = InputOrigin::TypedMemory;
++        frame.observations_[0].control_usable_ = true;
++        const auto result = tracker.step(frame);
++        const auto track = one_track(result, "T50");
++        if (n == 0)
++            id = track.track_id_;
++        require(track.state_ == TrackState::Measured && track.track_id_ == id,
++                "T50 每帧有效Unique测量必须持续更新同一ID，不能因初始P稍大而循环LOST/重建");
++        if (n == 1)
++        {
++            require(track.confirmed_ && track.velocity_mps_ && track.time_bounded_ &&
++                    track.model_hardware_verified_ && track.covariance_,
++                    "T50 二点时其他资格前置必须实际激活，不能用hw=false空验");
++            require(std::sqrt((*track.covariance_)(0, 0)) > cfg.profile_->position_std_limit_m_ &&
++                    !track.qualified_for_g5_,
++                    "T50 有当前测量和速度但位置精度未达域时应仅禁止下游资格，不能删除测量");
++        }
++    }
++    const auto missing = tracker.step(empty_frame(13, 1.2));
++    const auto lost = one_track(missing, "T50");
++    require(lost.state_ == TrackState::Lost && lost.track_id_ == id &&
++            !lost.position_m_ && !lost.velocity_mps_ && !lost.qualified_for_g5_,
++            "T50 真正缺测进入预测后仍必须按同一位置误差预算LOST，不能一概关闭门控");
++}
++
++// 相机标识改变既要重建轨迹，也要重验噪声来源；旧相机的硬件标定不能随新ID自动借用。
++void test_profile_camera_provenance()
++{
++    auto cfg = fixture_config();
++    cfg.time_policy_ = "bounded_only";
++    cfg.stamp_uncertainty_semantics_ = "absolute_bound";
++    cfg.max_time_uncertainty_s_ = 0.001;
++    cfg.profile_->time_policy_ = "bounded_only";
++    cfg.profile_->validated_time_bound_s_ = 0.001;
++    cfg.profile_->hardware_verified_ = true;
++    TargetTracker tracker(cfg);
++    auto typed_frame = [](std::uint64_t n, double seconds, cv::Vec3d p,
++                          const std::string &camera)
++    {
++        auto frame = observed_frame(n, seconds, p);
++        frame.origin_ = InputOrigin::TypedMemory;
++        frame.stamp_.camera_id_ = camera;
++        frame.observations_[0].stamp_ = frame.stamp_;
++        frame.observations_[0].control_usable_ = true;
++        return frame;
++    };
++    tracker.step(typed_frame(1, 0, {0, 0, 2}, "contract-camera"));
++    const auto original = tracker.step(typed_frame(2, 0.1, {0.05, 0, 2}, "contract-camera"));
++    const auto old = one_track(original, "T51");
++    require(old.confirmed_ && old.velocity_mps_ && old.time_bounded_ &&
++            old.model_hardware_verified_ && old.qualified_for_g5_,
++            "T51 旧相机两样本必须确实激活硬件/时间/速度资格，不能以始终false空验");
++    const auto first_new = tracker.step(typed_frame(3, 0.2, {0.1, 0, 2}, "replacement-camera"));
++    const auto fresh = one_track(first_new, "T51");
++    require(fresh.track_id_ != old.track_id_ && !fresh.confirmed_,
++            "T51 换相机必须新ID并从位置重新估速度");
++    const auto second_new = tracker.step(typed_frame(4, 0.3, {0.15, 0, 2}, "replacement-camera"));
++    const auto recovered = one_track(second_new, "T51");
++    require(recovered.track_id_ == fresh.track_id_ && recovered.state_ == TrackState::Measured &&
++            recovered.confirmed_ && recovered.velocity_mps_ && recovered.time_bounded_,
++            "T51 新相机两样本后必须恢复数值速度，不能仅以首帧未确认挡住资格");
++    require(!recovered.model_hardware_verified_ && !recovered.qualified_for_g5_,
++            "T51 相机与profile来源不匹配时，即使数值速度已恢复也禁止借用旧硬件资格");
++}
++// 审查回归：缺界应在profile验证/构造阶段命名拒绝，不能等重建时抛bad_optional_access。
++void test_bounded_profile_requires_time_bound()
++{
++    auto cfg = fixture_config();
++    validate_tracking_profile(*cfg.profile_);
++    cfg.time_policy_ = "bounded_only";
++    cfg.profile_->time_policy_ = "bounded_only";
++    bool validation_rejected = false, construction_rejected = false;
++    try { validate_tracking_profile(*cfg.profile_); }
++    catch (const std::runtime_error &error)
++    {
++        validation_rejected = std::string(error.what()) == "G4_PROFILE_BOUNDED_TIME_BOUND_MISSING";
++    }
++    try { TargetTracker tracker(cfg); }
++    catch (const std::runtime_error &error)
++    {
++        construction_rejected = std::string(error.what()) == "G4_PROFILE_BOUNDED_TIME_BOUND_MISSING";
++    }
++    require(validation_rejected && construction_rejected,
++            "审查回归 bounded_only缺validated_time_bound_s必须在验证和构造时命名拒绝");
++    cfg.profile_->validated_time_bound_s_ = 0;
++    validate_tracking_profile(*cfg.profile_);
++    TargetTracker exact_time(cfg);
++    std::cout << "G4 bounded profile missing-bound / explicit-zero PASS\n";
++}
++} // namespace
++
++int main()
++{
++    try
++    {
++        test_filter_math();
++        test_readiness_and_bootstrap();
++        test_pose_statuses_and_evidence();
++        test_association_and_reseed();
++        test_time_order_and_source_changes();
++        test_bounded_time();
++        test_uncertainty_and_invalid_values();
++        test_forecast_and_loss();
++        test_world_coordinates();
++        test_context_edge_cases();
++        test_forecast_horizon_and_time_envelopes();
++        test_pending_provenance_and_lost_age();
++        test_measured_convergence_vs_coast_budget();
++        test_profile_camera_provenance();
++        test_bounded_profile_requires_time_bound();
++        std::cout << "G4 tracking contract M01-M12 / T01-T51 PASS\n";
++        return 0;
++    }
++    catch (const std::exception &error)
++    {
++        std::cerr << "G4 tracking contract FAIL: " << error.what() << '\n';
++        return 1;
++    }
++}
+diff --git a/src/tushenghao/tests/tracking_io_test.cpp b/src/tushenghao/tests/tracking_io_test.cpp
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/tests/tracking_io_test.cpp
+@@ -0,0 +1,111 @@
++#include "mark/target_tracker.hpp"
++#include "tracking/tracking_io.hpp"
++#include <chrono>
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++#include <stdexcept>
++
++namespace
++{
++void require(bool value, const char *reason)
++{
++    if (!value) throw std::runtime_error(reason);
++}
++
++// 小型可迁移fixture；读取根配置路径只从__FILE__推导，不引用用户机器目录。
++mark::tracking::TrackingFrame frame()
++{
++    mark::tracking::TrackingFrame f;
++    f.origin_ = mark::tracking::InputOrigin::Synthetic;
++    f.stamp_.session_id_ = "io-session";
++    f.stamp_.camera_id_ = "io-camera";
++    f.stamp_.clock_domain_ = "io-clock";
++    f.stamp_.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
++    f.stamp_.frame_id_ = 5000000000ULL;
++    f.stamp_.received_us_ = 1000000000100LL;
++    f.stamp_.exposure_us_ = 1000000000000LL;
++    f.stamp_.time_uncertainty_s_ = 0;
++    mark::pose::PoseObservation p;
++    p.stamp_ = f.stamp_;
++    p.source_ = "MARK";
++    p.target_id_ = "mark-white-structure-v1";
++    p.status_ = mark::pose::PoseStatus::BudgetMissing;
++    f.observations_.push_back(p);
++    return f;
++}
++} // namespace
++
++// 主动检查大整数、空帧、旧G2兼容、坏输入与profile往返，不能把空比较当PASS。
++int main()
++{
++    try
++    {
++        const auto root = std::filesystem::path(__FILE__).parent_path().parent_path();
++        const auto config = mark::tracking::load_tracking_config(root / "config/tracking.yaml");
++        require(!config.profile_, "I01 默认未标定profile应保持空");
++        const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
++        const auto out = std::filesystem::current_path() / ("g4-io-test-" + std::to_string(nonce));
++        require(std::filesystem::create_directory(out), "I02 测试输出必须独占新目录");
++        auto a = frame(), b = a;
++        ++b.stamp_.frame_id_;
++        b.stamp_.received_us_ += 14000;
++        *b.stamp_.exposure_us_ += 14000;
++        b.observations_.clear();
++        mark::tracking::write_tracking_frames({a, b}, out / "native.yaml");
++        const auto restored = mark::tracking::read_tracking_frames(out / "native.yaml");
++        require(restored.size() == 2 && restored[1].observations_.empty(), "I03 空帧不得丢弃");
++        require(restored[0].stamp_.frame_id_ == a.stamp_.frame_id_ &&
++            restored[0].stamp_.exposure_us_ == a.stamp_.exposure_us_ &&
++            restored[0].stamp_.time_uncertainty_s_ == a.stamp_.time_uncertainty_s_,
++            "I04 64位帧号时间及已知零时间误差必须往返");
++        require(restored[0].observations_[0].status_ == mark::pose::PoseStatus::BudgetMissing,
++            "I05 非Unique不得伪造位姿");
++        {
++            cv::FileStorage fs((out / "legacy.yaml").string(), cv::FileStorage::WRITE);
++            fs << "schema_version" << 1 << "session_id" << "legacy" << "camera_id" << "old-camera"
++               << "clock_domain" << "video-index-clock" << "frames" << "["
++               << "{" << "frame_id" << "0" << "timestamp_us" << "0" << "mark" << "[" << "]" << "}"
++               << "{" << "frame_id" << "1" << "timestamp_us" << "14000" << "mark" << "[" << "]" << "}" << "]";
++        }
++        const auto legacy = mark::tracking::read_tracking_frames(out / "legacy.yaml");
++        require(legacy.size() == 2 && legacy[0].origin_ == mark::tracking::InputOrigin::LegacyG2Replay &&
++            !legacy[0].stamp_.exposure_us_ && !legacy[0].stamp_.time_uncertainty_s_,
++            "I06 旧回放不能补曝光/时间误差或硬件资格");
++        bool rejected = false;
++        try { mark::tracking::write_tracking_frames({}, out / "empty.yaml"); }
++        catch (const std::exception &) { rejected = true; }
++        require(rejected, "I07 空数据集写入必须拒绝");
++        {
++            std::ofstream file(out / "wrong.yaml");
++            file << "%YAML:1.0\n---\nschema_version: 99\nframes: []\n";
++        }
++        rejected = false;
++        try { (void)mark::tracking::read_tracking_frames(out / "wrong.yaml"); }
++        catch (const std::exception &) { rejected = true; }
++        require(rejected, "I08 错版本必须拒绝");
++        mark::tracking::TrackingProfile profile;
++        profile.camera_mse_m2_ = cv::Matx33d::eye() * 0.001;
++        profile.acceleration_psd_m2ps3_ = 0.1;
++        profile.initial_velocity_variance_m2ps2_ = 1;
++        profile.association_nis_limit_ = profile.bootstrap_nis_limit_ = 9;
++        profile.position_std_limit_m_ = profile.velocity_std_limit_mps_ = 1;
++        profile.max_dt_s_ = 1;
++        profile.evidence_id_ = "io-fixture-not-production";
++        profile.basis_ = "contract_fixture";
++        profile.validated_time_bound_s_ = 0;
++        mark::tracking::write_tracking_profile(profile, out / "profile.yaml");
++        const auto roundtrip = mark::tracking::load_tracking_profile(out / "profile.yaml");
++        require(roundtrip.validated_time_bound_s_ && *roundtrip.validated_time_bound_s_ == 0 &&
++            roundtrip.evidence_id_ == profile.evidence_id_ && !roundtrip.hardware_verified_ &&
++            cv::norm(cv::Mat(roundtrip.camera_mse_m2_ - profile.camera_mse_m2_)) == 0,
++            "I09 profile数值来源与未验证状态必须往返");
++        std::cout << "G4 IO I01-I09 PASS\n";
++        return 0;
++    }
++    catch (const std::exception &e)
++    {
++        std::cerr << e.what() << '\n';
++        return 1;
++    }
++}
+diff --git a/src/tushenghao/cmake/g4.cmake b/src/tushenghao/cmake/g4.cmake
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/cmake/g4.cmake
+@@ -0,0 +1,34 @@
++# G4独立上层库；不把跟踪状态塞进Detector或冻结G2类型。
++option(MARK_BUILD_G4 "构建G4帧间跟踪与速度估计" OFF)
++if(MARK_BUILD_G4)
++    if(NOT MARK_BUILD_G2)
++        message(FATAL_ERROR "G4使用已冻结G2类型，请同时指定-DMARK_BUILD_G2=ON")
++    endif()
++    add_library(mark_tracking
++        lib/config/tracking_config.cpp
++        lib/tracking/kalman_cv.cpp
++        lib/tracking/measurement_adapter.cpp
++        lib/tracking/target_tracker.cpp
++        lib/tracking/tracking_io.cpp
++    )
++    target_include_directories(mark_tracking PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
++        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
++    target_link_libraries(mark_tracking PUBLIC mark_pose)
++    target_compile_options(mark_tracking PRIVATE
++        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic>)
++
++    add_executable(tracking_app app/tracking_main.cpp)
++    target_include_directories(tracking_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
++    target_link_libraries(tracking_app PRIVATE mark_tracking)
++
++    add_executable(tracking_lab tools/validation/tracking_lab.cpp)
++    target_include_directories(tracking_lab PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
++    target_link_libraries(tracking_lab PRIVATE mark_tracking)
++
++    foreach(test_name tracking_contract_test tracking_io_test)
++        add_executable(${test_name} "tests/${test_name}.cpp")
++        target_include_directories(${test_name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
++        target_link_libraries(${test_name} PRIVATE mark_tracking)
++        add_test(NAME ${test_name} COMMAND ${test_name})
++    endforeach()
++endif()
+diff --git a/src/tushenghao/docs/g4.md b/src/tushenghao/docs/g4.md
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/docs/g4.md
+@@ -0,0 +1,96 @@
++# G4 帧间跟踪与速度估计
++
++## 完成内容
++
++G4是独立`mark_tracking`库：消费G2当前`Unique`位姿，输出MARK物理原点P0的位置、速度、状态与模型条件下的不确定度。不改变Detector/G2接口，不写回Detection，不反馈PosePrior，不做决策或控制。
++
++选用实际Δt的6维CV-KF，状态顺序固定`[px,py,pz,vx,vy,vz]`，单位m、m/s。首帧只有位置；两次不同时刻的有效观测才形成速度。原屏幕四角排序和姿态多解由G2负责，G4不猜。
++
++关联采用位置创新NIS门控。多个候选同时合格则拒绝关联；门外唯一观测进入独立pending，两点一致可重建新ID，防止反转永久失锁。ID只表示几何连续估计区间，不保证遮挡期间物理身份没换。
++
++状态为`MEASURED/COASTING/LOST`。非Unique状态或空帧不刷新最近实测时间；预测误差域超限后LOST，不带旧位置或速度。必须每帧调用step，包括没有观测的帧。
++
++## 验证方法
++
++从仓库根目录运行，保持单行命令：
++
++```bash
++sudo apt-get update && sudo apt-get install --no-install-recommends build-essential cmake pkg-config libopencv-dev libssl-dev libapriltag-dev
++cmake -S src/tushenghao -B build/g4-release -DCMAKE_BUILD_TYPE=Release -DMARK_BUILD_G2=ON -DMARK_BUILD_G4=ON
++cmake --build build/g4-release -j4
++ctest --test-dir build/g4-release --output-on-failure
++build/g4-release/tracking_app --check-config
++build/g4-release/tracking_lab generate --out runs/g4-data-001
++build/g4-release/tracking_lab calibrate --input runs/g4-data-001 --out runs/g4-calibration-001
++build/g4-release/tracking_lab verify --input runs/g4-data-001 --profile runs/g4-calibration-001/profile.yaml --out runs/g4-holdout-001
++build/g4-release/tracking_app --config runs/g4-calibration-001/tracking_research.yaml --input runs/g4-data-001/holdout/holdout-seed-2026104901/frames.yaml --out runs/g4-replay-001
++```
++
++输出目录必须不存在。默认tracking.yaml不带profile，检查配置可以通过，正式处理会要求先标定。默认实验是合成camera_relative/nominal_research，不能复制为实车profile。
++
++`tracking_lab.yaml`中的坐标模式、时间政策改变后，重新calibrate到新目录；profile会保存模式，verify拒绝借用其他模式的profile。可用模式是camera_relative/local_world与nominal_research/bounded_only四个组合。实验时的world_frame_id为synthetic-world；实际车辆必须换成真实约定。
++
++旧G2回放：
++
++```bash
++POSES=src/tushenghao/docs/evidence/g2/runs/g2-video-001/observations.yaml
++build/g4-release/tracking_app --input "$POSES" --profile runs/g4-calibration-001/profile.yaml --out runs/g4-legacy-001
++```
++
++旧文件没有曝光/时间误差/完整协方差，reader明确降为LegacyG2Replay；不补字段、不授予硬件资格。若没有任何可用Unique，仍写诊断但退出码为2，不能写“端到端速度通过”。
++
++`tracks.yaml`保存逐帧状态、事件、last_measurement_stamp、last_detection_index、协方差和资格；`summary.yaml`保存计数与step耗时；`effective_profile.yaml`与`tracking_config_input.yaml`保留有效配置。step耗时不含文件解析/写盘/上游检测。
++
++## 踩坑记录
++
++- 当前上游`30ac7ab`仍要求三项PnP预算齐全，而`min_quad_area_px2`为空，实际只能BudgetMissing。G4不能偷用其候选；真实端到端测量验收被该前置关卡阻塞。
++- G2`covariance_se3_`没有数值和排列约定，不能取左上3×3或当零。用独立PositionNoise旁路或独立标定的camera位置MSE。
++- target_id是模型类名、detection_index只是当前帧索引；不能作为永久ID。与G2方向衔接要用最近实测stamp+last_detection_index。
++- 相机模式输出`d(p_camera)/dt`，包含自身平动/转动。场地0.5m/s不是该量的上限，不做限幅。
++- 世界模式必须提供同曝光时刻的`^W T_C`；缺反馈只能在原坐标系coast，不能静默切回camera。Q/门控/std域也必须在所选坐标重新标定。
++- 接收时刻不等于曝光。未知时间预算只允许名义研究；bounded_only缺时间质量则不更新，质量恢复后必要时重建，避免旧名义状态提权。
++- 时间绝对界不是高斯σ。有界模式用保守MSE传播，未知相关用数学包络；这些仍以局部CV/噪声假设为条件，不能称物理绝对保证。
++- 输入最大采样间隔与未来预测horizon不同。predict_to只读，以预测协方差域判可用；查询时刻必须属于当前clock_domain，执行时刻误差归G3/G5预算。
++- observation_age_s是状态时刻减最近测量时刻，不是曝光到运行结束的总延迟。G5须用自己的当前单调时钟与stamp计算真实观测年龄。
++- __FILE__定位默认配置；源树搬迁后重新编译，单独搬二进制需显式传--config与--profile。
++
++## 已知限制
++
++本期单track，不估计角速度；MARK P0不是框口中心。G5若转移到有偏置的框口，需同时间G2方向；旋转时的ω×r项不在本期估计结果内。
++
++同类完全重合、遮挡中换位无法仅凭当前接口证明身份。两点确认是速度可观测与几何连续条件，不是物理实例证明。`Forecast.available`仅表示模型预测有数值可用；不能单独当资格，需同ID/会话当前结果、最新测量和误差预算。
++
++三倍标准差仅用于同口径统计门槛；NIS/范数不一定正态，不承诺99.7%。R/Q是二阶矩而非门槛，固定偏差/时间相关也不能靠给R加大自动解决，需看独立holdout包含率。
++
++合成实验直接生成3D观测，绕过G2，没有真实图像/FOV/轨道净行程/曝光偏移/轮滑验证。规则与图纸为参考，不是实物测量。所有实验均未经过实车确认。
++
++## 后续关闭流程
++
++以下是未来拿到硬件数据后的执行流程，不授权本次修改冻结G2，也不把合成实验升级为实车结论。关闭记录统一追加到docs/g4_acceptance.md，原始证据放docs/evidence/g4/hardware/；用户审核前状态保持OPEN。
++
++| 关卡 | 取得数据后按此顺序执行 | 关闭标准 |
++|---|---|---|
++| G-01：当前G2无真实Unique | 另提G2预算审批，记录实际相机/镜头、K/dist、物理角尺寸与独立真值；用独立完整会话划分标定/验证，按G2预算语义计算重投影上界与最小可辨面积，不能把负下界截成0塞进positive参数；用户批准后才在单独的G2变更中填入有效预算或修正空值语义；重跑G2 27项、原1676帧raw回归及新硬件正负例，然后把实际Unique旁路接入G4 | 独立G2审批及回归证据齐全；完整可辨实测集确有可验证的Unique与正确物理对应，歧义/坏数据仍拒绝；G4产生真实测量/速度而非候选补点；误差满足事先批准的实测适用域。仅Unique数量增加不能关闭 |
++| G-02：速度不确定度低估 | 采集独立位置/速度真值，覆盖静止、0.5m/s往复、随机反转、遮挡、自车平动/旋转；按会话分train/selection/holdout，在选定坐标/时间域重标定R/Q与3σ门槛；冻结后在未看过的holdout逐状态报告偏差、RMSE、尾部、经验包含率、错误接受、覆盖与反转恢复。若仍低估则单列模型修订审批，不对已见holdout加大P或改门限 | 每个声明适用域的独立holdout实测误差均处于事先冻结的误差包络，且满足G5另行批准的物理误差预算；测量/预测段、反转与坏测量分别有证据，不能靠删除失败达标；用户批准模型和适用域后才能登记硬件profile。没有G5预算时本关保持OPEN |
++| G-03：bounded_only待硬件验证 | 用SDK/硬件记录曝光、接收、时钟映射与抖动，含重启/掉帧/缓冲压力；独立测量单帧绝对时间界，保持界与σ区别。先审核时间数据，再独立批准G2时间预算和G4配置上界/profile适用域；按新数据运行有界两点初始化、关联、预测、恢复和相机/世界两域对照；对异常时钟、界超域与dt≤两端界之和逐项验拒绝 | 独立留出实测的时间偏移没有超出已声明绝对界；有界模式正常样本可输出、异常样本按既有规则拒绝/重建；R2位置补项与速度不确定度都经真值验证且G-02已关闭；用户确认后关闭。合成时钟或加一个b²项均不构成关闭证据 |
++
++本次交付将三关均记为OPEN；后续关闭不自动授权G5动作，不自动反馈G2 PosePrior。
++
++## 本次本地施工实测
++
++2026-11-01T15:33:45+08:00，feat/tracking / 30ac7ab。20文件按执行依据落盘；CMake/README/INDEX指定追加，原Detector/G2及原配置/接口/测试保持，用户已暂存执行文档未改，未做Git写操作。
++
++Release=29/29、Debug=29/29；M01–M12/T01–T51/I01–I09及R2直接数值断言均通过。ASan/UBSan首轮因沙箱ptrace退出8；经授权沙箱外原参数重跑2/2，退出0且无报告，首轮失败日志保留。
++
++按审查备注，bounded_only profile缺validated_time_bound_s在validate_tracking_profile中报G4_PROFILE_BOUNDED_TIME_BOUND_MISSING；初始化/重建调用不再裸取.value()。空界/缺key/负数/NaN均拒绝，显式零界合法，验证及构造回归通过。
++
++|域|holdout帧|坏量测拒绝|速度样本|速度RMSE(m/s)|最大速度误差(m/s)|共同样本|反转恢复|
++|---|---:|---:|---:|---:|---:|---:|---:|
++|camera_relative-nominal_research|12849|128/128|12611|0.057740984|0.157927057|11757|97/98|
++|camera_relative-bounded_only|12849|128/128|12481|0.069801801|0.181244581|11634|98/98|
++|local_world-nominal_research|12849|128/128|12451|0.064506477|0.162762460|11601|96/98|
++|local_world-bounded_only|12849|128/128|12381|0.077786546|0.192558883|11535|97/98|
++
++33ms独立输入5458帧，沿用14ms profile，零速度/零共同样本、退出1；51个注入中47个未确认位置seed被当新测量、已确认错误接受0，失败保留。旧G2回放1676帧/raw MARK=1088/Unique=0，G4零实测/零速度/零资格、退出2；曝光和时间误差保持空。/tmp检查退出0；11个CLI负例命名退出1，显式零界退出0。
++
++速度经验包含率仍不足，全部失败/未恢复反转均保留。G-01/G-02/G-03保持OPEN；软件结果不授予实车或投放资格。完整数据、逐命令退出码、冻结检查及ZIP见[证据索引](evidence/g4/INDEX.md)和[本地验收记录](g4_acceptance.md)，原后续关闭流程保留。
+diff --git a/src/tushenghao/docs/g4_acceptance.md b/src/tushenghao/docs/g4_acceptance.md
+new file mode 100644
+--- /dev/null
++++ b/src/tushenghao/docs/g4_acceptance.md
+@@ -0,0 +1,90 @@
++# G4 实施验收记录
++
++本表记录实际分支施工结果；编写者隔离预验证不能直接复制成用户已验收。四栏分开：工程完成、离线证据、尚未证明、硬件关闭条件。
++
++## 完成内容
++
++| 项目 | 实施状态 | 证据 |
++|---|---|---|
++| 原Detector/G2源码及公共布局保持 | 完成；5095个初始文件仅指定三处追加，G2零差异；见[evidence/g4/freeze-check.json](evidence/g4/freeze-check.json) | evidence/g4/原文件保护清单 |
++| 独立tracking库、实际dt、Joseph与MSE传播 | 完成；20文件落盘、双构建、R2数值断言通过；见[evidence/g4/r2-and-review.md](evidence/g4/r2-and-review.md) | 构建/契约测试 |
++| 关联、生命周期、独立重建与只读forecast | M01–M12/T01–T51在Release/Debug/ASan均通过 | M01–M12/T01–T51 |
++| profile标定/三倍标准差/独立holdout | 四域独立完成，每域6项总体/12项分层统计、12849帧holdout、128坏量测全部拒绝 | calibration.md/verification.md/CSV |
++| 兼容reader/CLI/中文文档与导航 | I01–I09通过；11个CLI负例命名拒绝，显式零界合法；三处导航已追加 | I01–I09/README/INDEX |
++
++## 验证方法
++
++| 必须项 | 通过标准 | 实际结果 |
++|---|---|---|
++| Release/Debug | 原27项+G4两项，均29/29；不得删测试或改旧阈值换绿 | Release=29/29（9.82s），Debug=29/29（50.62s）；配置/构建/CTest退出0，原测试未修改 |
++| 数学/契约 | M01–M12、T01–T51全过，首帧不报零速、七态不偷测量、时间/坐标拒绝正确 | 全通过；R2 Ppp_xx直接断言期望0.0206987654320988m²、容差1e-12；缺界验证/构造命名拒绝、零界合法回归通过 |
++| IO | I01–I09全过；大整数/空帧/旧格式/未测状态无伪造 | Release/Debug/ASan均通过；大整数、空帧、旧格式保持；旧1676帧曝光/时间误差全部空 |
++| 标定 | QR仅train；门槛仅selection；每项n/均值/样本std/3σ/来源；holdout不调参 | 3 train/2 selection/3 holdout完整会话，四域各自profile；每项n/μ/std/3σ/来源及12项分层均已核对，holdout不调参 |
++| 对照 | raw/一阶/KF共同样本与全部覆盖、反转、误接受、包含率、失败均保留 | raw/一阶/KF全部及共同样本、覆盖、反转、经验包含率、全量CSV和tracks均保留；速度包含率不足如实记于下表 |
++| 四模式 | camera/world×nominal/bounded各自产profile与验证，不能跨域借用 | 四域calibrate/verify/replay均退出0且有速度，跨域借用profile负例退出1并命名报错 |
++| 异CWD/错误输入 | 配置可加载，空输入/错schema/坏参数非零退出，无资格升级 | /tmp检查退出0；11个CLI负例退出1且原因匹配；显式零时间界退出0；所有合成回放G5资格0 |
++| 原G2回放 | 所有帧含空mark均推进；缺Unique时退出2，不能冒充速度验收 | 原1676帧/raw MARK=1088/Unique=0；G4推进1676 tick、实测/速度/资格0，退出2；输入及相邻summary hash归档 |
++| G2真实测量链 | G2预算关卡关闭后另跑真实Unique/误差/连续性；当前为阻塞 | G-01保持OPEN；BudgetMissing及两个空预算保持，不取候选补测量 |
++
++建议目标与必须项分开：在同等数据/算力/门控口径下，KF降低速度尾部误差、反转恢复及时、可用覆盖不靠删失败；若证据不支持，保持研究配置而不发布硬件profile。不得为了追求100%统计表现放宽门槛。
++
++## 踩坑记录
++
++| 现象 | 原因 | 修改或保持 | 验证 |
++|---|---|---|---|
++| G2当前BudgetMissing | 面积预算为空但发布门控要求三项 | 本轮保持G2冻结，前置关卡独立审批 | 原回放诊断 |
++| bounded_only缺profile时间界 | 原validator允许空optional、调用裸.value() | 按用户审查补G4_PROFILE_BOUNDED_TIME_BOUND_MISSING并移除裸.value()；有限非负语义不变 | 验证/构造主动断言及空值/缺key/负数/NaN/零界CLI均验证 |
++
++## 已知限制
++
++| 尚未证明 | 关闭条件 |
++|---|---|
++| 当前G2真实Unique链 | 独立批准G2预算语义/数据，原回归不退化 |
++| 真实R/Q/关联门控/误差包含 | 受控独立真值、多会话、随机反转、不同距离/光照/噪声，按域重标定 |
++| 曝光/时钟/执行延迟 | SDK与硬件实测，明确绝对界/统计来源，不以接收时间代替曝光 |
++| 世界系速度 | 同曝光ego变换/协方差、安装/时钟一致、轮滑与姿态有效性 |
++| 物理实例身份 | 多目标需求另设关联策略；当前只能几何连续区间 |
++| 框口/角速度/控制/权限/RFID | G5/其他板块承担，G4不越界 |
++
++实测更新：2026-11-01T15:33:45+08:00。初始基线至记录自然历时17.69分钟（含中断），恢复后10.32分钟；验收命令累计195.305s。各阶段实际命令耗时/退出码见[commands.jsonl](evidence/g4/commands.jsonl)及[timing.json](evidence/g4/timing.json)。软件施工与离线流程完成；剩余三关保持OPEN，当前不需修改算法或冻结G2的决策。没有实车证据，不写“实车G4验收通过”。
++
++## 关卡当前状态
++
++G-01=OPEN；G-02=OPEN；G-03=OPEN。关闭步骤与标准见[g4.md后续关闭流程](g4.md#后续关闭流程)。软件验收与硬件资格分开记录，不能因29/29而改成CLOSED。
++
++## 本次内存检查与跨域探针
++
++ASan/UBSan构建退出0。首轮沙箱CTest退出8，原因是LeakSanitizer不支持ptrace；按环境要求经授权在沙箱外重跑同构建、同参数（detect_leaks=1、halt_on_error=1），2/2通过，退出0且无ASan/UBSan/泄漏报告。两轮日志均保留，未关闭泄漏检查。[执行说明](evidence/g4/memory-check-note.md)。
++
++33ms独立种子输入5458帧，沿用冻结14ms profile，速度/共同样本=0，退出1且原因匹配；profile前后SHA256相同。51个注入中47个被当未确认新测量seed、已确认错误接受=0；该跨域关联失败保留，不调整max_dt或增加门控。
++
++## 四域独立holdout实测
++
++|域|holdout帧|坏量测拒绝|速度样本|速度RMSE(m/s)|最大速度误差(m/s)|共同样本|反转恢复|
++|---|---:|---:|---:|---:|---:|---:|---:|
++|camera_relative-nominal_research|12849|128/128|12611|0.057740984|0.157927057|11757|97/98|
++|camera_relative-bounded_only|12849|128/128|12481|0.069801801|0.181244581|11634|98/98|
++|local_world-nominal_research|12849|128/128|12451|0.064506477|0.162762460|11601|96/98|
++|local_world-bounded_only|12849|128/128|12381|0.077786546|0.192558883|11535|97/98|
++
++|域|MEASURED速度3σ球包含/样本|COASTING速度3σ球包含/样本|
++|---|---:|---:|
++|camera_relative-nominal_research|10468/11445 (91.46%)|878/1166 (75.30%)|
++|camera_relative-bounded_only|9318/11326 (82.27%)|738/1155 (63.90%)|
++|local_world-nominal_research|10045/11306 (88.85%)|767/1145 (66.99%)|
++|local_world-bounded_only|8127/11271 (72.11%)|632/1110 (56.94%)|
++
++经验速度包含率仍不足，不按已见holdout改P/门槛，G-02保持OPEN。各域位置包含率、raw/一阶/KF全部及共同样本、反转恢复和逐帧失败完整见verification.md/holdout_errors.csv。
++
++## 首个holdout会话回放与耗时
++
++|域|帧|MEASURED|COASTING|LOST|速度帧|step均值(μs)|step p95(μs)|
++|---|---:|---:|---:|---:|---:|---:|---:|
++|camera_relative-nominal_research|4287|3903|361|23|4211|16.571|18.699|
++|camera_relative-bounded_only|4287|3904|358|25|4188|18.191|20.625|
++|local_world-nominal_research|4287|3906|355|26|4179|22.068|30.162|
++|local_world-bounded_only|4287|3912|354|21|4179|19.812|23.848|
++
++四域输入拒绝/G5资格均为0；step耗时仅含tracker.step，不含解析、写盘或上游，硬件/源完整性资格未授予。
++
++证据目录及最终ZIP见[evidence/g4/INDEX.md](evidence/g4/INDEX.md)，包含全session输入/truth、源码快照与完整命令日志，不含build或第三方库。

@@ -1,0 +1,19 @@
+ M src/tushenghao/CMakeLists.txt
+ M src/tushenghao/README.md
+ M src/tushenghao/docs/INDEX.md
+A  src/tushenghao/docs/ref/G4-Codex.md
+?? src/tushenghao/app/tracking_main.cpp
+?? src/tushenghao/cmake/g4.cmake
+?? src/tushenghao/config/tracking.yaml
+?? src/tushenghao/config/tracking_lab.yaml
+?? src/tushenghao/docs/evidence/g4/
+?? src/tushenghao/docs/g4.md
+?? src/tushenghao/docs/g4_acceptance.md
+?? src/tushenghao/include/mark/target_tracker.hpp
+?? src/tushenghao/include/mark/tracking_config.hpp
+?? src/tushenghao/include/mark/tracking_types.hpp
+?? src/tushenghao/lib/config/tracking_config.cpp
+?? src/tushenghao/lib/tracking/
+?? src/tushenghao/tests/tracking_contract_test.cpp
+?? src/tushenghao/tests/tracking_io_test.cpp
+?? src/tushenghao/tools/validation/tracking_lab.cpp

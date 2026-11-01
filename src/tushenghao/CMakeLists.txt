@@ -190,3 +190,5 @@ target_link_libraries(calibration_tool PRIVATE ${OpenCV_LIBS})
 
 # G2 独立感知层，默认关闭；不改变原检测器目标。
 include(cmake/g2.cmake)
+# G4独立感知估计层，原G2保持冻结。
+include(cmake/g4.cmake)

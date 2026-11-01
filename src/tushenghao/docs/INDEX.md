@@ -42,3 +42,10 @@ Path A 推荐顺序：[专项验收](path_a_acceptance.md) → [施工日志](pa
 - [G2 位姿与退出感知：构建、运行、参数与限制](g2.md)
 - [G2 实施验收与待验证事项](g2_acceptance.md)
 - G2 证据归档：`evidence/g2/`（测试日志、配置、敏感性与录像结果；不放编译产物）
+
+## G4 动态目标估计
+
+- [G4使用说明与后续关闭流程](g4.md)
+- [G4实施验收记录](g4_acceptance.md)
+- [G4 Codex执行依据](ref/G4-Codex.md)
+- 本期证据：`evidence/g4/`；编译产物留在build，不归档到docs。

@@ -1,0 +1,18 @@
+{
+  "initial_files": 5095,
+  "unchanged_original_files": 5092,
+  "modified_original_files": [
+    "src/tushenghao/CMakeLists.txt",
+    "src/tushenghao/README.md",
+    "src/tushenghao/docs/INDEX.md"
+  ],
+  "exact_specified_insertions": true,
+  "frozen_g2_diff_bytes": 0,
+  "initial_index_diff_preserved": true,
+  "head_and_branch_preserved": true,
+  "empty_pose_budgets_preserved": true,
+  "new_files": 20,
+  "modified_files": 23,
+  "preexisting_user_file": "src/tushenghao/docs/ref/G4-Codex.md preserved byte-for-byte",
+  "git_operations": "read-only branch/rev-parse/status/diff/ls-files only"
+}

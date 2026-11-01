@@ -1,0 +1,45 @@
+%YAML:1.0
+---
+# 本文件只定义离线假设实验，不是实车参数或跟踪阈值。阈值由calibrate写新profile。
+schema_version: 1
+source: "MARK"
+target_class: "mark-white-structure-v1"
+camera_id: "synthetic-camera-g4"
+# profile严格记录适用坐标/时间政策；改变模式必须重新calibrate，不借用旧门槛冒充覆盖。
+tracking_coordinate_mode: "camera_relative"
+tracking_time_policy: "nominal_research"
+duration_s: 60.0
+# 0.5m/s来自V1.0.2规则参考；实际轨道速度/加速度仍需硬件测量。
+rule_reference_speed_mps: 0.5
+# 以下采样/动力学/成像/时间值均为明确的合成假设，不声称来自现场。
+nominal_dt_s: 0.033
+dt_jitter_fraction: 0.15
+acceleration_mps2: 1.0
+segment_min_s: 0.4
+segment_max_s: 2.0
+stop_probability: 0.2
+position_noise_std_m: [0.002, 0.003, 0.004]
+position_bias_m: [0.0005, -0.0003, 0.0002]
+initial_world_position_m: [0.0, 0.0, 1.2]
+occlusion_start_s: 20.0
+occlusion_duration_s: 0.3
+random_missing_probability: 0.03
+ambiguous_probability: 0.02
+budget_missing_probability: 0.02
+injected_wrong_probability: 0.01
+injected_offset_m: [0.3, 0.15, 0.0]
+camera_translation_amplitude_m: 0.03
+camera_translation_frequency_hz: 0.2
+camera_yaw_amplitude_rad: 0.04
+camera_yaw_frequency_hz: 0.15
+synthetic_time_bound_s: 0.0001
+# 完整session先分集，随机种子不共享；不把相邻帧拆成训练/验证。
+train_sessions: 3
+selection_sessions: 2
+holdout_sessions: 3
+train_seed: 2026202901
+selection_seed: 2026203901
+holdout_seed: 2026204901
+# 对照沿用原一阶平滑的强度；这是3D位置对照，不是旧二维稳定器逐值复刻。
+baseline_reference_dt_s: 0.014
+baseline_reference_alpha: 0.7

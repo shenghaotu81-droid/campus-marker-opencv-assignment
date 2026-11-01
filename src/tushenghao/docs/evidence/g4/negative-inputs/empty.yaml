@@ -1,0 +1,7 @@
+%YAML:1.0
+---
+schema_version: 4
+stream_type: G4PoseReplay
+position_unit: m
+time_unit: us
+frames: []

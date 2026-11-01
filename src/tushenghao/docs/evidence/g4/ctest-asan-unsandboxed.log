@@ -1,0 +1,10 @@
+Internal ctest changing into directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan
+Test project /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan
+    Start 28: tracking_contract_test
+1/2 Test #28: tracking_contract_test ...........   Passed    0.31 sec
+    Start 29: tracking_io_test
+2/2 Test #29: tracking_io_test .................   Passed    0.17 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.49 sec

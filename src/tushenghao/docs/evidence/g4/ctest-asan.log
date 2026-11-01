@@ -1,0 +1,23 @@
+Internal ctest changing into directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan
+Test project /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-asan
+    Start 28: tracking_contract_test
+1/2 Test #28: tracking_contract_test ...........***Failed    0.22 sec
+==2155==LeakSanitizer has encountered a fatal error.
+==2155==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==2155==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+    Start 29: tracking_io_test
+2/2 Test #29: tracking_io_test .................***Failed    0.13 sec
+==2157==LeakSanitizer has encountered a fatal error.
+==2157==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==2157==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+
+0% tests passed, 2 tests failed out of 2
+
+Total Test time (real) =   0.35 sec
+
+The following tests FAILED:
+	 28 - tracking_contract_test (Failed)
+	 29 - tracking_io_test (Failed)
+Errors while running CTest

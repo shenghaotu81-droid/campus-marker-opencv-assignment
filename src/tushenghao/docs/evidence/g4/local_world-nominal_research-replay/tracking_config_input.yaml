@@ -1,0 +1,12 @@
+%YAML:1.0
+---
+# 仅匹配本次合成条件；未经过实车确认，禁止冒充硬件预算
+schema_version: 1
+source: MARK
+target_class: mark-white-structure-v1
+coordinate_mode: local_world
+world_frame_id: synthetic-world
+time_policy: nominal_research
+stamp_uncertainty_semantics: absolute_bound
+max_time_uncertainty_s: 1.3757533782409587e-04
+profile: "profile.yaml"

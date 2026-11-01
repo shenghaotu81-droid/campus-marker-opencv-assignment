@@ -1,0 +1,26 @@
+%YAML:1.0
+---
+schema_version: 1
+camera_mse_m2: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 4.1946703529906489e-06, -1.1511820420359955e-07,
+       1.5370168222045993e-07, -1.1511820420359955e-07,
+       9.1989718696840281e-06, -9.2792068461254872e-08,
+       1.5370168222045993e-07, -9.2792068461254872e-08,
+       1.5734994576525445e-05 ]
+acceleration_psd_m2ps3: 8.2645932456853442e-03
+initial_velocity_variance_m2ps2: 1.3094478030685891e-01
+association_nis_limit: 7.7306152472188812e+00
+bootstrap_nis_limit: 4.5106786831550982e+00
+position_std_limit_m: 5.4717010279814737e-03
+velocity_std_limit_mps: 1.2445169028345146e-01
+max_dt_s: 1.7626317899960005e-02
+validated_time_bound_s: 0.
+evidence_id: g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only
+camera_id: synthetic-camera-g4
+basis: synthetic_3sigma
+coordinate_mode: camera_relative
+time_policy: bounded_only
+hardware_verified: 0

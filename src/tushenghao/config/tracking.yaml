@@ -1,0 +1,13 @@
+%YAML:1.0
+---
+schema_version: 1
+source: "MARK"
+target_class: "mark-white-structure-v1"
+coordinate_mode: "camera_relative"
+world_frame_id: "local-world"
+time_policy: "nominal_research"
+stamp_uncertainty_semantics: "unknown"
+# 空值保持未知；不能把G2空时间预算或接收时刻冒充真曝光精度。
+max_time_uncertainty_s: ""
+# --profile 可覆盖本字段；先由tracking_lab标定生成，禁止手填经验数值。
+profile: ""

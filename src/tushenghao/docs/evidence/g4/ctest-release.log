@@ -1,0 +1,64 @@
+Internal ctest changing into directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-release
+Test project /home/tushenghao/projects/campus-marker-opencv-assignment/build/g4-release
+      Start  1: diagnostics_record_test
+ 1/29 Test  #1: diagnostics_record_test ...........   Passed    0.07 sec
+      Start  2: debug_renderer_test
+ 2/29 Test  #2: debug_renderer_test ...............   Passed    0.03 sec
+      Start  3: timing_test
+ 3/29 Test  #3: timing_test .......................   Passed    0.00 sec
+      Start  4: observability_integration_test
+ 4/29 Test  #4: observability_integration_test ....   Passed    0.54 sec
+      Start  5: temporal_stabilizer_test
+ 5/29 Test  #5: temporal_stabilizer_test ..........   Passed    0.00 sec
+      Start  6: display_history_test
+ 6/29 Test  #6: display_history_test ..............   Passed    0.00 sec
+      Start  7: temporal_integration_test
+ 7/29 Test  #7: temporal_integration_test .........   Passed    0.23 sec
+      Start  8: block3_contract_regression_test
+ 8/29 Test  #8: block3_contract_regression_test ...   Passed    0.09 sec
+      Start  9: assignment_completion_test
+ 9/29 Test  #9: assignment_completion_test ........   Passed    0.09 sec
+      Start 10: corner_edge_fit_test
+10/29 Test #10: corner_edge_fit_test ..............   Passed    8.09 sec
+      Start 11: config_contract_test
+11/29 Test #11: config_contract_test ..............   Passed    0.00 sec
+      Start 12: config_error_test
+12/29 Test #12: config_error_test .................   Passed    0.01 sec
+      Start 13: config_roundtrip_test
+13/29 Test #13: config_roundtrip_test .............   Passed    0.00 sec
+      Start 14: detector_contract_test
+14/29 Test #14: detector_contract_test ............   Passed    0.01 sec
+      Start 15: geometry_model_test
+15/29 Test #15: geometry_model_test ...............   Passed    0.00 sec
+      Start 16: geometry_utils_test
+16/29 Test #16: geometry_utils_test ...............   Passed    0.00 sec
+      Start 17: geometry_matcher_test
+17/29 Test #17: geometry_matcher_test .............   Passed    0.02 sec
+      Start 18: manual_validation_check
+18/29 Test #18: manual_validation_check ...........   Passed    0.00 sec
+      Start 19: corner_resolver_test
+19/29 Test #19: corner_resolver_test ..............   Passed    0.20 sec
+      Start 20: screen_order_test
+20/29 Test #20: screen_order_test .................   Passed    0.00 sec
+      Start 21: semantic_resolver_test
+21/29 Test #21: semantic_resolver_test ............   Passed    0.00 sec
+      Start 22: detection_validator_test
+22/29 Test #22: detection_validator_test ..........   Passed    0.17 sec
+      Start 23: geometry_l_topology_test
+23/29 Test #23: geometry_l_topology_test ..........   Passed    0.03 sec
+      Start 24: geometry_anchor_evidence_test
+24/29 Test #24: geometry_anchor_evidence_test .....   Passed    0.01 sec
+      Start 25: path_a_competition_test
+25/29 Test #25: path_a_competition_test ...........   Passed    0.15 sec
+      Start 26: pose_contract_test
+26/29 Test #26: pose_contract_test ................   Passed    0.01 sec
+      Start 27: tag_detector_test
+27/29 Test #27: tag_detector_test .................   Passed    0.02 sec
+      Start 28: tracking_contract_test
+28/29 Test #28: tracking_contract_test ............   Passed    0.01 sec
+      Start 29: tracking_io_test
+29/29 Test #29: tracking_io_test ..................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 29
+
+Total Test time (real) =   9.82 sec

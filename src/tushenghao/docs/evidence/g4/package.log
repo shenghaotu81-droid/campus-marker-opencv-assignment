@@ -1,0 +1,23 @@
+{
+  "exit_code": 0,
+  "archive": "src/tushenghao/docs/evidence/g4/g4-delivery.zip",
+  "sha256": "14c9064c4ea23445e883716a41c986e32fd14716484c0371824ad40fb135daa3",
+  "compressed_bytes": 45430030,
+  "files": 240,
+  "payload_bytes": 408898897,
+  "crc_and_all_entry_sha256_verified": true,
+  "includes_full_raw_data": true,
+  "includes_source_snapshot": true,
+  "excludes_build_third_party_credentials": true,
+  "excluded_package_sidecars": [
+    "archive-audit.json",
+    "archive-inventory.sha256",
+    "g4-delivery.partial.zip",
+    "g4-delivery.zip",
+    "g4-delivery.zip.sha256",
+    "package-report.json",
+    "package.log"
+  ],
+  "snapshot_time_utc": "2026-11-01T07:39:33.595439+00:00",
+  "note": "ZIP是打包时快照；打包/包外最终校验命令在外部commands.jsonl继续追加，archive-inventory按ZIP条目解释"
+}

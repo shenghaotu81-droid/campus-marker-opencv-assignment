@@ -1,0 +1,1036 @@
+{
+  "domains": {
+    "camera_relative-nominal_research": {
+      "counts": {
+        "frames": 12849,
+        "measured": 11616,
+        "coasting": 1168,
+        "lost": 65,
+        "injected": 128,
+        "wrong_accepted_all": 0,
+        "wrong_accepted_confirmed": 0,
+        "reversals": 98,
+        "recovered": 97
+      },
+      "metrics": {
+        "raw有限差分": {
+          "samples": 11926,
+          "position_rmse_m": 0.03409174426505885,
+          "velocity_rmse_mps": 3.3970159019916735,
+          "velocity_max_error_mps": 28.554929990614877
+        },
+        "时间感知一阶平滑": {
+          "samples": 11926,
+          "position_rmse_m": 0.025672439104281096,
+          "velocity_rmse_mps": 2.0837406325943015,
+          "velocity_max_error_mps": 18.165905813432172
+        },
+        "TargetTracker全部可用输出": {
+          "samples": 12611,
+          "position_rmse_m": 0.003241243152604077,
+          "velocity_rmse_mps": 0.05774098407741138,
+          "velocity_max_error_mps": 0.1579270566860774
+        },
+        "共同样本raw": {
+          "samples": 11757,
+          "position_rmse_m": 0.03418664476938727,
+          "velocity_rmse_mps": 3.4049743876210856,
+          "velocity_max_error_mps": 28.554929990614877
+        },
+        "共同样本平滑": {
+          "samples": 11757,
+          "position_rmse_m": 0.02575446582070473,
+          "velocity_rmse_mps": 2.0886564800312506,
+          "velocity_max_error_mps": 18.165905813432172
+        },
+        "共同样本tracker": {
+          "samples": 11757,
+          "position_rmse_m": 0.0031922976837964953,
+          "velocity_rmse_mps": 0.05721659898105709,
+          "velocity_max_error_mps": 0.1579270566860774
+        }
+      },
+      "coverage": {
+        "COASTING": {
+          "position_contained_over_n": "1129/1168",
+          "position_ratio": 0.9666095890410958,
+          "velocity_contained_over_n": "878/1166",
+          "velocity_ratio": 0.7530017152658662
+        },
+        "MEASURED": {
+          "position_contained_over_n": "11531/11616",
+          "position_ratio": 0.9926825068870524,
+          "velocity_contained_over_n": "10468/11445",
+          "velocity_ratio": 0.9146352118829183
+        }
+      },
+      "statistics": [
+        {
+          "statistic": "association_nis",
+          "n": 7830,
+          "mean": 3.613920919337262,
+          "sample_std": 2.9836924319578317,
+          "threshold": 12.564998215210759,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research"
+        },
+        {
+          "statistic": "bootstrap_nis",
+          "n": 7832,
+          "mean": 1.838761079214043,
+          "sample_std": 1.4372922457235926,
+          "threshold": 6.150637816384821,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research"
+        },
+        {
+          "statistic": "position_std_m",
+          "n": 8574,
+          "mean": 0.0023496291301121396,
+          "sample_std": 0.0005102578574648816,
+          "threshold": 0.0038804027025067843,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research"
+        },
+        {
+          "statistic": "velocity_std_mps",
+          "n": 8574,
+          "mean": 0.03074170789088223,
+          "sample_std": 0.008761517014578314,
+          "threshold": 0.05702625893461717,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research"
+        },
+        {
+          "statistic": "max_dt_s",
+          "n": 8575,
+          "mean": 0.013989127230320643,
+          "sample_std": 0.0012123968898797878,
+          "threshold": 0.017626317899960005,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research"
+        },
+        {
+          "statistic": "time_bound_reference_s",
+          "n": 8577,
+          "mean": 4.971083917333501e-05,
+          "sample_std": 2.928816621692029e-05,
+          "threshold": 0.00013757533782409587,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research"
+        }
+      ],
+      "session_layers": [
+        [
+          "selection-seed-2026103901",
+          "association_nis",
+          "3911",
+          "3.6574245781062431",
+          "2.9471351755444104",
+          "12.498830104739474"
+        ],
+        [
+          "selection-seed-2026103901",
+          "bootstrap_nis",
+          "3912",
+          "1.9547781834520046",
+          "1.4742840176294152",
+          "6.3776302363402504"
+        ],
+        [
+          "selection-seed-2026103901",
+          "position_std_m",
+          "4288",
+          "0.002352351833332331",
+          "0.0005335234814971445",
+          "0.0039529222778237651"
+        ],
+        [
+          "selection-seed-2026103901",
+          "velocity_std_mps",
+          "4288",
+          "0.030781247549126672",
+          "0.0095919264696084205",
+          "0.059557026957951932"
+        ],
+        [
+          "selection-seed-2026103901",
+          "dt_s",
+          "4289",
+          "0.013985180228491489",
+          "0.0012101768220764942",
+          "0.017615710694720971"
+        ],
+        [
+          "selection-seed-2026103901",
+          "time_bound_s",
+          "4290",
+          "4.9399455678498501e-05",
+          "2.930041825671631e-05",
+          "0.00013730071044864743"
+        ],
+        [
+          "selection-seed-2026103902",
+          "association_nis",
+          "3919",
+          "3.5705060661998811",
+          "3.0194851012135215",
+          "12.628961369840445"
+        ],
+        [
+          "selection-seed-2026103902",
+          "bootstrap_nis",
+          "3920",
+          "1.722980744576571",
+          "1.3899666143337304",
+          "5.8928805875777623"
+        ],
+        [
+          "selection-seed-2026103902",
+          "position_std_m",
+          "4286",
+          "0.0023469051563818153",
+          "0.00048591505823399636",
+          "0.0038046503310838042"
+        ],
+        [
+          "selection-seed-2026103902",
+          "velocity_std_mps",
+          "4286",
+          "0.030702149782027267",
+          "0.0078441684544436306",
+          "0.054234655145358163"
+        ],
+        [
+          "selection-seed-2026103902",
+          "dt_s",
+          "4286",
+          "0.013993076994867008",
+          "0.0012147428121024994",
+          "0.017637305431174505"
+        ],
+        [
+          "selection-seed-2026103902",
+          "time_bound_s",
+          "4287",
+          "5.0022440571247029e-05",
+          "2.9276002445594565e-05",
+          "0.00013785044790803072"
+        ]
+      ],
+      "profile": {
+        "schema_version": "1",
+        "camera_mse_m2": "!!opencv-matrix",
+        "acceleration_psd_m2ps3": "8.2645932456853442e-03",
+        "initial_velocity_variance_m2ps2": "1.3094478030685891e-01",
+        "association_nis_limit": "1.2564998215210759e+01",
+        "bootstrap_nis_limit": "6.1506378163848208e+00",
+        "position_std_limit_m": "3.8804027025067843e-03",
+        "velocity_std_limit_mps": "5.7026258934617172e-02",
+        "max_dt_s": "1.7626317899960005e-02",
+        "validated_time_bound_s": "1.3757533782409587e-04",
+        "evidence_id": "g4lab-train-2026102901-selection-2026103901-camera_relative-nominal_research",
+        "camera_id": "synthetic-camera-g4",
+        "basis": "synthetic_3sigma",
+        "coordinate_mode": "camera_relative",
+        "time_policy": "nominal_research",
+        "hardware_verified": "0"
+      },
+      "replay": {
+        "frames": "4287",
+        "measured": "3903",
+        "coasting": "361",
+        "lost": "23",
+        "rejected_inputs": "0",
+        "qualified_for_g5": "0",
+        "velocity_output_frames": "4211",
+        "source_completeness_verified": "0",
+        "hardware_confirmed": "0",
+        "input_path": "src/tushenghao/docs/evidence/g4/data-14ms/holdout/holdout-seed-2026104901/frames.yaml",
+        "tracking_step_mean_us": "1.6571144856543050e+01",
+        "tracking_step_p95_us": "1.8699000000000002e+01",
+        "note": "未经过实车确认；零测量不算端到端速度通过"
+      }
+    },
+    "camera_relative-bounded_only": {
+      "counts": {
+        "frames": 12849,
+        "measured": 11620,
+        "coasting": 1155,
+        "lost": 74,
+        "injected": 128,
+        "wrong_accepted_all": 0,
+        "wrong_accepted_confirmed": 0,
+        "reversals": 98,
+        "recovered": 98
+      },
+      "metrics": {
+        "raw有限差分": {
+          "samples": 11926,
+          "position_rmse_m": 0.03409174426505885,
+          "velocity_rmse_mps": 3.3970159019916735,
+          "velocity_max_error_mps": 28.554929990614877
+        },
+        "时间感知一阶平滑": {
+          "samples": 11926,
+          "position_rmse_m": 0.025672439104281096,
+          "velocity_rmse_mps": 2.0837406325943015,
+          "velocity_max_error_mps": 18.165905813432172
+        },
+        "TargetTracker全部可用输出": {
+          "samples": 12481,
+          "position_rmse_m": 0.003510382434534597,
+          "velocity_rmse_mps": 0.06980180108651302,
+          "velocity_max_error_mps": 0.181244581478152
+        },
+        "共同样本raw": {
+          "samples": 11634,
+          "position_rmse_m": 0.034361090067892494,
+          "velocity_rmse_mps": 3.4223568844565384,
+          "velocity_max_error_mps": 28.237635647498983
+        },
+        "共同样本平滑": {
+          "samples": 11634,
+          "position_rmse_m": 0.02589245202153632,
+          "velocity_rmse_mps": 2.0994948059713816,
+          "velocity_max_error_mps": 18.165905813432172
+        },
+        "共同样本tracker": {
+          "samples": 11634,
+          "position_rmse_m": 0.003451578283003252,
+          "velocity_rmse_mps": 0.06938292766802899,
+          "velocity_max_error_mps": 0.181244581478152
+        }
+      },
+      "coverage": {
+        "COASTING": {
+          "position_contained_over_n": "1152/1155",
+          "position_ratio": 0.9974025974025974,
+          "velocity_contained_over_n": "738/1155",
+          "velocity_ratio": 0.638961038961039
+        },
+        "MEASURED": {
+          "position_contained_over_n": "11620/11620",
+          "position_ratio": 1.0,
+          "velocity_contained_over_n": "9318/11326",
+          "velocity_ratio": 0.8227088115839661
+        }
+      },
+      "statistics": [
+        {
+          "statistic": "association_nis",
+          "n": 7830,
+          "mean": 2.18701456962118,
+          "sample_std": 1.847866892532567,
+          "threshold": 7.730615247218881,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only"
+        },
+        {
+          "statistic": "bootstrap_nis",
+          "n": 7832,
+          "mean": 1.3485097440169458,
+          "sample_std": 1.0540563130460507,
+          "threshold": 4.510678683155098,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only"
+        },
+        {
+          "statistic": "position_std_m",
+          "n": 8574,
+          "mean": 0.003080317301705279,
+          "sample_std": 0.0007971279087587314,
+          "threshold": 0.005471701027981474,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only"
+        },
+        {
+          "statistic": "velocity_std_mps",
+          "n": 8574,
+          "mean": 0.0347105975199941,
+          "sample_std": 0.02991369758781912,
+          "threshold": 0.12445169028345146,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only"
+        },
+        {
+          "statistic": "max_dt_s",
+          "n": 8575,
+          "mean": 0.013989127230320643,
+          "sample_std": 0.0012123968898797878,
+          "threshold": 0.017626317899960005,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only"
+        },
+        {
+          "statistic": "time_bound_reference_s",
+          "n": 8577,
+          "mean": 4.971083917333501e-05,
+          "sample_std": 2.928816621692029e-05,
+          "threshold": 0.00013757533782409587,
+          "source": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only"
+        }
+      ],
+      "session_layers": [
+        [
+          "selection-seed-2026103901",
+          "association_nis",
+          "3911",
+          "2.2150377335688836",
+          "1.826486122144197",
+          "7.6944961000014747"
+        ],
+        [
+          "selection-seed-2026103901",
+          "bootstrap_nis",
+          "3912",
+          "1.4399640063451886",
+          "1.084942921612192",
+          "4.6947927711817652"
+        ],
+        [
+          "selection-seed-2026103901",
+          "position_std_m",
+          "4288",
+          "0.0030851116476945245",
+          "0.00092559056778211538",
+          "0.0058618833510408709"
+        ],
+        [
+          "selection-seed-2026103901",
+          "velocity_std_mps",
+          "4288",
+          "0.034873056960338156",
+          "0.034417544126760423",
+          "0.13812568934061942"
+        ],
+        [
+          "selection-seed-2026103901",
+          "dt_s",
+          "4289",
+          "0.013985180228491489",
+          "0.0012101768220764942",
+          "0.017615710694720971"
+        ],
+        [
+          "selection-seed-2026103901",
+          "time_bound_s",
+          "4290",
+          "4.9399455678498501e-05",
+          "2.930041825671631e-05",
+          "0.00013730071044864743"
+        ],
+        [
+          "selection-seed-2026103902",
+          "association_nis",
+          "3919",
+          "2.1590486103970168",
+          "1.8687743232509537",
+          "7.7653715801498784"
+        ],
+        [
+          "selection-seed-2026103902",
+          "bootstrap_nis",
+          "3920",
+          "1.2572421230404043",
+          "1.0142513472908008",
+          "4.2999961649128071"
+        ],
+        [
+          "selection-seed-2026103902",
+          "position_std_m",
+          "4286",
+          "0.0030755207185037014",
+          "0.00064351137293446731",
+          "0.0050060548373071032"
+        ],
+        [
+          "selection-seed-2026103902",
+          "velocity_std_mps",
+          "4286",
+          "0.0345480622702986",
+          "0.024599024824113459",
+          "0.10834513674263899"
+        ],
+        [
+          "selection-seed-2026103902",
+          "dt_s",
+          "4286",
+          "0.013993076994867008",
+          "0.0012147428121024994",
+          "0.017637305431174505"
+        ],
+        [
+          "selection-seed-2026103902",
+          "time_bound_s",
+          "4287",
+          "5.0022440571247029e-05",
+          "2.9276002445594565e-05",
+          "0.00013785044790803072"
+        ]
+      ],
+      "profile": {
+        "schema_version": "1",
+        "camera_mse_m2": "!!opencv-matrix",
+        "acceleration_psd_m2ps3": "8.2645932456853442e-03",
+        "initial_velocity_variance_m2ps2": "1.3094478030685891e-01",
+        "association_nis_limit": "7.7306152472188812e+00",
+        "bootstrap_nis_limit": "4.5106786831550982e+00",
+        "position_std_limit_m": "5.4717010279814737e-03",
+        "velocity_std_limit_mps": "1.2445169028345146e-01",
+        "max_dt_s": "1.7626317899960005e-02",
+        "validated_time_bound_s": "1.3757533782409587e-04",
+        "evidence_id": "g4lab-train-2026102901-selection-2026103901-camera_relative-bounded_only",
+        "camera_id": "synthetic-camera-g4",
+        "basis": "synthetic_3sigma",
+        "coordinate_mode": "camera_relative",
+        "time_policy": "bounded_only",
+        "hardware_verified": "0"
+      },
+      "replay": {
+        "frames": "4287",
+        "measured": "3904",
+        "coasting": "358",
+        "lost": "25",
+        "rejected_inputs": "0",
+        "qualified_for_g5": "0",
+        "velocity_output_frames": "4188",
+        "source_completeness_verified": "0",
+        "hardware_confirmed": "0",
+        "input_path": "src/tushenghao/docs/evidence/g4/data-14ms/holdout/holdout-seed-2026104901/frames.yaml",
+        "tracking_step_mean_us": "1.8190866573361379e+01",
+        "tracking_step_p95_us": "2.0625000000000000e+01",
+        "note": "未经过实车确认；零测量不算端到端速度通过"
+      }
+    },
+    "local_world-nominal_research": {
+      "counts": {
+        "frames": 12849,
+        "measured": 11632,
+        "coasting": 1145,
+        "lost": 72,
+        "injected": 128,
+        "wrong_accepted_all": 0,
+        "wrong_accepted_confirmed": 0,
+        "reversals": 98,
+        "recovered": 96
+      },
+      "metrics": {
+        "raw有限差分": {
+          "samples": 11926,
+          "position_rmse_m": 0.03409174426505886,
+          "velocity_rmse_mps": 3.397015695758359,
+          "velocity_max_error_mps": 28.55496865876332
+        },
+        "时间感知一阶平滑": {
+          "samples": 11926,
+          "position_rmse_m": 0.025664331187953037,
+          "velocity_rmse_mps": 2.0836989866231215,
+          "velocity_max_error_mps": 18.165408500963636
+        },
+        "TargetTracker全部可用输出": {
+          "samples": 12451,
+          "position_rmse_m": 0.0035444444747114823,
+          "velocity_rmse_mps": 0.06450647729113577,
+          "velocity_max_error_mps": 0.1627624597174735
+        },
+        "共同样本raw": {
+          "samples": 11601,
+          "position_rmse_m": 0.03426442129950217,
+          "velocity_rmse_mps": 3.4111103818435087,
+          "velocity_max_error_mps": 28.237246371581477
+        },
+        "共同样本平滑": {
+          "samples": 11601,
+          "position_rmse_m": 0.0258238728657052,
+          "velocity_rmse_mps": 2.0923425997503093,
+          "velocity_max_error_mps": 18.165408500963636
+        },
+        "共同样本tracker": {
+          "samples": 11601,
+          "position_rmse_m": 0.00348967849141882,
+          "velocity_rmse_mps": 0.0640480994530371,
+          "velocity_max_error_mps": 0.1627624597174735
+        }
+      },
+      "coverage": {
+        "COASTING": {
+          "position_contained_over_n": "1143/1145",
+          "position_ratio": 0.9982532751091703,
+          "velocity_contained_over_n": "767/1145",
+          "velocity_ratio": 0.6698689956331878
+        },
+        "MEASURED": {
+          "position_contained_over_n": "11632/11632",
+          "position_ratio": 1.0,
+          "velocity_contained_over_n": "10045/11306",
+          "velocity_ratio": 0.8884663010790731
+        }
+      },
+      "statistics": [
+        {
+          "statistic": "association_nis",
+          "n": 7830,
+          "mean": 2.303073469170501,
+          "sample_std": 1.9512498918737575,
+          "threshold": 8.156823144791773,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research"
+        },
+        {
+          "statistic": "bootstrap_nis",
+          "n": 7832,
+          "mean": 1.397194807492006,
+          "sample_std": 1.0908160563073763,
+          "threshold": 4.669642976414135,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research"
+        },
+        {
+          "statistic": "position_std_m",
+          "n": 8574,
+          "mean": 0.002997525368811651,
+          "sample_std": 0.0005626248558315198,
+          "threshold": 0.00468539993630621,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research"
+        },
+        {
+          "statistic": "velocity_std_mps",
+          "n": 8574,
+          "mean": 0.03315369970285586,
+          "sample_std": 0.011357781825227509,
+          "threshold": 0.06722704517853839,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research"
+        },
+        {
+          "statistic": "max_dt_s",
+          "n": 8575,
+          "mean": 0.013989127230320643,
+          "sample_std": 0.0012123968898797878,
+          "threshold": 0.017626317899960005,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research"
+        },
+        {
+          "statistic": "time_bound_reference_s",
+          "n": 8577,
+          "mean": 4.971083917333501e-05,
+          "sample_std": 2.928816621692029e-05,
+          "threshold": 0.00013757533782409587,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research"
+        }
+      ],
+      "session_layers": [
+        [
+          "selection-seed-2026103901",
+          "association_nis",
+          "3911",
+          "2.3296003315669944",
+          "1.9248500747672648",
+          "8.1041505558687881"
+        ],
+        [
+          "selection-seed-2026103901",
+          "bootstrap_nis",
+          "3912",
+          "1.4807358097156198",
+          "1.1143827249564455",
+          "4.8238839845849562"
+        ],
+        [
+          "selection-seed-2026103901",
+          "position_std_m",
+          "4288",
+          "0.0030011846401722603",
+          "0.00060046690686360365",
+          "0.0048025853607630712"
+        ],
+        [
+          "selection-seed-2026103901",
+          "velocity_std_mps",
+          "4288",
+          "0.033209081685894537",
+          "0.012666415763817241",
+          "0.071208328977346261"
+        ],
+        [
+          "selection-seed-2026103901",
+          "dt_s",
+          "4289",
+          "0.013985180228491489",
+          "0.0012101768220764942",
+          "0.017615710694720971"
+        ],
+        [
+          "selection-seed-2026103901",
+          "time_bound_s",
+          "4290",
+          "4.9399455678498501e-05",
+          "2.930041825671631e-05",
+          "0.00013730071044864743"
+        ],
+        [
+          "selection-seed-2026103902",
+          "association_nis",
+          "3919",
+          "2.2766007570417122",
+          "1.977135274950945",
+          "8.2080065818945478"
+        ],
+        [
+          "selection-seed-2026103902",
+          "bootstrap_nis",
+          "3920",
+          "1.313824297109663",
+          "1.0603778268899788",
+          "4.4949577777796001"
+        ],
+        [
+          "selection-seed-2026103902",
+          "position_std_m",
+          "4286",
+          "0.0029938643899049548",
+          "0.00052207228910673437",
+          "0.0045600812572251584"
+        ],
+        [
+          "selection-seed-2026103902",
+          "velocity_std_mps",
+          "4286",
+          "0.033098291876614665",
+          "0.0098777334713742865",
+          "0.062731492290737517"
+        ],
+        [
+          "selection-seed-2026103902",
+          "dt_s",
+          "4286",
+          "0.013993076994867008",
+          "0.0012147428121024994",
+          "0.017637305431174505"
+        ],
+        [
+          "selection-seed-2026103902",
+          "time_bound_s",
+          "4287",
+          "5.0022440571247029e-05",
+          "2.9276002445594565e-05",
+          "0.00013785044790803072"
+        ]
+      ],
+      "profile": {
+        "schema_version": "1",
+        "camera_mse_m2": "!!opencv-matrix",
+        "acceleration_psd_m2ps3": "8.1034402139669968e-03",
+        "initial_velocity_variance_m2ps2": "1.2091828635959258e-01",
+        "association_nis_limit": "8.1568231447917725e+00",
+        "bootstrap_nis_limit": "4.6696429764141349e+00",
+        "position_std_limit_m": "4.6853999363062103e-03",
+        "velocity_std_limit_mps": "6.7227045178538392e-02",
+        "max_dt_s": "1.7626317899960005e-02",
+        "validated_time_bound_s": "1.3757533782409587e-04",
+        "evidence_id": "g4lab-train-2026102901-selection-2026103901-local_world-nominal_research",
+        "camera_id": "synthetic-camera-g4",
+        "basis": "synthetic_3sigma",
+        "coordinate_mode": "local_world",
+        "time_policy": "nominal_research",
+        "hardware_verified": "0"
+      },
+      "replay": {
+        "frames": "4287",
+        "measured": "3906",
+        "coasting": "355",
+        "lost": "26",
+        "rejected_inputs": "0",
+        "qualified_for_g5": "0",
+        "velocity_output_frames": "4179",
+        "source_completeness_verified": "0",
+        "hardware_confirmed": "0",
+        "input_path": "src/tushenghao/docs/evidence/g4/data-14ms/holdout/holdout-seed-2026104901/frames.yaml",
+        "tracking_step_mean_us": "2.2067958245859533e+01",
+        "tracking_step_p95_us": "3.0161999999999999e+01",
+        "note": "未经过实车确认；零测量不算端到端速度通过"
+      }
+    },
+    "local_world-bounded_only": {
+      "counts": {
+        "frames": 12849,
+        "measured": 11662,
+        "coasting": 1110,
+        "lost": 77,
+        "injected": 128,
+        "wrong_accepted_all": 0,
+        "wrong_accepted_confirmed": 0,
+        "reversals": 98,
+        "recovered": 97
+      },
+      "metrics": {
+        "raw有限差分": {
+          "samples": 11926,
+          "position_rmse_m": 0.03409174426505886,
+          "velocity_rmse_mps": 3.397015695758359,
+          "velocity_max_error_mps": 28.55496865876332
+        },
+        "时间感知一阶平滑": {
+          "samples": 11926,
+          "position_rmse_m": 0.025664331187953037,
+          "velocity_rmse_mps": 2.0836989866231215,
+          "velocity_max_error_mps": 18.165408500963636
+        },
+        "TargetTracker全部可用输出": {
+          "samples": 12381,
+          "position_rmse_m": 0.004064602752544908,
+          "velocity_rmse_mps": 0.07778654593331022,
+          "velocity_max_error_mps": 0.19255888264310245
+        },
+        "共同样本raw": {
+          "samples": 11535,
+          "position_rmse_m": 0.03436223013284749,
+          "velocity_rmse_mps": 3.4224869426583897,
+          "velocity_max_error_mps": 28.237246371581477
+        },
+        "共同样本平滑": {
+          "samples": 11535,
+          "position_rmse_m": 0.02589177600525563,
+          "velocity_rmse_mps": 2.097895343298394,
+          "velocity_max_error_mps": 18.165408500963636
+        },
+        "共同样本tracker": {
+          "samples": 11535,
+          "position_rmse_m": 0.003993464446005132,
+          "velocity_rmse_mps": 0.07739990954745013,
+          "velocity_max_error_mps": 0.17937220489908393
+        }
+      },
+      "coverage": {
+        "COASTING": {
+          "position_contained_over_n": "1110/1110",
+          "position_ratio": 1.0,
+          "velocity_contained_over_n": "632/1110",
+          "velocity_ratio": 0.5693693693693693
+        },
+        "MEASURED": {
+          "position_contained_over_n": "11662/11662",
+          "position_ratio": 1.0,
+          "velocity_contained_over_n": "8127/11271",
+          "velocity_ratio": 0.7210540324727176
+        }
+      },
+      "statistics": [
+        {
+          "statistic": "association_nis",
+          "n": 7830,
+          "mean": 1.52422315404458,
+          "sample_std": 1.344420016520447,
+          "threshold": 5.557483203605921,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only"
+        },
+        {
+          "statistic": "bootstrap_nis",
+          "n": 7832,
+          "mean": 0.926899767984857,
+          "sample_std": 0.7367542797159594,
+          "threshold": 3.137162607132735,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only"
+        },
+        {
+          "statistic": "position_std_m",
+          "n": 8574,
+          "mean": 0.0039425272046540874,
+          "sample_std": 0.0010159115615708144,
+          "threshold": 0.00699026188936653,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only"
+        },
+        {
+          "statistic": "velocity_std_mps",
+          "n": 8574,
+          "mean": 0.03762402201495683,
+          "sample_std": 0.04223882107958431,
+          "threshold": 0.16434048525370973,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only"
+        },
+        {
+          "statistic": "max_dt_s",
+          "n": 8575,
+          "mean": 0.013989127230320643,
+          "sample_std": 0.0012123968898797878,
+          "threshold": 0.017626317899960005,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only"
+        },
+        {
+          "statistic": "time_bound_reference_s",
+          "n": 8577,
+          "mean": 4.971083917333501e-05,
+          "sample_std": 2.928816621692029e-05,
+          "threshold": 0.00013757533782409587,
+          "source": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only"
+        }
+      ],
+      "session_layers": [
+        [
+          "selection-seed-2026103901",
+          "association_nis",
+          "3911",
+          "1.5436859086936543",
+          "1.3291942465119029",
+          "5.5312686482293634"
+        ],
+        [
+          "selection-seed-2026103901",
+          "bootstrap_nis",
+          "3912",
+          "0.98528564752690284",
+          "0.75341618198930216",
+          "3.2455341934948092"
+        ],
+        [
+          "selection-seed-2026103901",
+          "position_std_m",
+          "4288",
+          "0.0039515049660684143",
+          "0.0012139873661629885",
+          "0.0075934670645573799"
+        ],
+        [
+          "selection-seed-2026103901",
+          "velocity_std_mps",
+          "4288",
+          "0.037863632767614799",
+          "0.048660392686138455",
+          "0.18384481082603016"
+        ],
+        [
+          "selection-seed-2026103901",
+          "dt_s",
+          "4289",
+          "0.013985180228491489",
+          "0.0012101768220764942",
+          "0.017615710694720971"
+        ],
+        [
+          "selection-seed-2026103901",
+          "time_bound_s",
+          "4290",
+          "4.9399455678498501e-05",
+          "2.930041825671631e-05",
+          "0.00013730071044864743"
+        ],
+        [
+          "selection-seed-2026103902",
+          "association_nis",
+          "3919",
+          "1.5048001294381701",
+          "1.3593365103107296",
+          "5.5828096603703585"
+        ],
+        [
+          "selection-seed-2026103902",
+          "bootstrap_nis",
+          "3920",
+          "0.8686330432990188",
+          "0.71510019264678415",
+          "3.0139336212393708"
+        ],
+        [
+          "selection-seed-2026103902",
+          "position_std_m",
+          "4286",
+          "0.0039335452538970545",
+          "0.0007682842103084879",
+          "0.0062383978848225188"
+        ],
+        [
+          "selection-seed-2026103902",
+          "velocity_std_mps",
+          "4286",
+          "0.037384299451401967",
+          "0.034647239134827035",
+          "0.14132601685588309"
+        ],
+        [
+          "selection-seed-2026103902",
+          "dt_s",
+          "4286",
+          "0.013993076994867008",
+          "0.0012147428121024994",
+          "0.017637305431174505"
+        ],
+        [
+          "selection-seed-2026103902",
+          "time_bound_s",
+          "4287",
+          "5.0022440571247029e-05",
+          "2.9276002445594565e-05",
+          "0.00013785044790803072"
+        ]
+      ],
+      "profile": {
+        "schema_version": "1",
+        "camera_mse_m2": "!!opencv-matrix",
+        "acceleration_psd_m2ps3": "8.1034402139669968e-03",
+        "initial_velocity_variance_m2ps2": "1.2091828635959258e-01",
+        "association_nis_limit": "5.5574832036059210e+00",
+        "bootstrap_nis_limit": "3.1371626071327352e+00",
+        "position_std_limit_m": "6.9902618893665303e-03",
+        "velocity_std_limit_mps": "1.6434048525370973e-01",
+        "max_dt_s": "1.7626317899960005e-02",
+        "validated_time_bound_s": "1.3757533782409587e-04",
+        "evidence_id": "g4lab-train-2026102901-selection-2026103901-local_world-bounded_only",
+        "camera_id": "synthetic-camera-g4",
+        "basis": "synthetic_3sigma",
+        "coordinate_mode": "local_world",
+        "time_policy": "bounded_only",
+        "hardware_verified": "0"
+      },
+      "replay": {
+        "frames": "4287",
+        "measured": "3912",
+        "coasting": "354",
+        "lost": "21",
+        "rejected_inputs": "0",
+        "qualified_for_g5": "0",
+        "velocity_output_frames": "4179",
+        "source_completeness_verified": "0",
+        "hardware_confirmed": "0",
+        "input_path": "src/tushenghao/docs/evidence/g4/data-14ms/holdout/holdout-seed-2026104901/frames.yaml",
+        "tracking_step_mean_us": "1.9812279682761833e+01",
+        "tracking_step_p95_us": "2.3847999999999999e+01",
+        "note": "未经过实车确认；零测量不算端到端速度通过"
+      }
+    }
+  },
+  "checks": {
+    "release": "29/29",
+    "debug": "29/29",
+    "memory_initial_exit": 8,
+    "memory_unsandboxed": "2/2; exit=0; no sanitizer report",
+    "negative_cli_cases": 11,
+    "explicit_zero_bound": "accepted; exit=0"
+  },
+  "gates": {
+    "G-01": "OPEN",
+    "G-02": "OPEN",
+    "G-03": "OPEN"
+  },
+  "probe33": {
+    "frames": 5458,
+    "injected": 51,
+    "wrong_accepted_all": 47,
+    "wrong_accepted_confirmed": 0,
+    "velocity_samples": 0,
+    "paired_samples": 0,
+    "exit_code": 1
+  },
+  "legacy": {
+    "frames": "1676",
+    "measured": "0",
+    "coasting": "0",
+    "lost": "0",
+    "rejected_inputs": "0",
+    "qualified_for_g5": "0",
+    "velocity_output_frames": "0",
+    "source_completeness_verified": "0",
+    "hardware_confirmed": "0",
+    "input_path": "src/tushenghao/docs/evidence/g2/runs/g2-video-001/observations.yaml",
+    "tracking_step_mean_us": "3.7131264916467666e-01",
+    "tracking_step_p95_us": "4.2799999999999999e-01",
+    "note": "未经过实车确认；零测量不算端到端速度通过"
+  },
+  "r2_fixture": {
+    "r0_and_r1_diagonal_m2": 0.01,
+    "dt_s": 0.2,
+    "Bdt_s": 0.02,
+    "Bpos_s": 0.01,
+    "velocity_mse_x_m2ps2": 2.4938271604938276,
+    "old_Ppp_xx_m2": 0.02,
+    "expected_Ppp_xx_m2": 0.020698765432098767,
+    "assertion_tolerance": 1e-12,
+    "direct_assertion": "Release/Debug/ASan contract passed"
+  }
+}

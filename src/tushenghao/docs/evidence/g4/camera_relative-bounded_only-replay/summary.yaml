@@ -1,0 +1,15 @@
+%YAML:1.0
+---
+frames: "4287"
+measured: "3904"
+coasting: "358"
+lost: "25"
+rejected_inputs: "0"
+qualified_for_g5: "0"
+velocity_output_frames: "4188"
+source_completeness_verified: 0
+hardware_confirmed: 0
+input_path: "src/tushenghao/docs/evidence/g4/data-14ms/holdout/holdout-seed-2026104901/frames.yaml"
+tracking_step_mean_us: 1.8190866573361379e+01
+tracking_step_p95_us: 2.0625000000000000e+01
+note: "未经过实车确认；零测量不算端到端速度通过"

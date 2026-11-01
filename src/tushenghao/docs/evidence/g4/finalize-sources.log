@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/g4/reproduction/finalize_sources.py", line 28, in <module>
+    assert hashlib.sha256(restored).hexdigest() == initial[p], ("STOP: non-append integration change", p)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('STOP: non-append integration change', 'src/tushenghao/README.md')

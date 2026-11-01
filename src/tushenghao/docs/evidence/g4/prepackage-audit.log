@@ -1,0 +1,37 @@
+{
+  "exit_code": 0,
+  "modified_files": 23,
+  "new_files": 20,
+  "source_snapshot_verified": true,
+  "raw_sha256_verified": true,
+  "datasets": {
+    "data-14ms": {
+      "train/train-seed-2026102901/frames.yaml": 4291,
+      "train/train-seed-2026102902/frames.yaml": 4283,
+      "train/train-seed-2026102903/frames.yaml": 4289,
+      "selection/selection-seed-2026103901/frames.yaml": 4290,
+      "selection/selection-seed-2026103902/frames.yaml": 4287,
+      "holdout/holdout-seed-2026104901/frames.yaml": 4287,
+      "holdout/holdout-seed-2026104902/frames.yaml": 4275,
+      "holdout/holdout-seed-2026104903/frames.yaml": 4287
+    },
+    "data-33ms": {
+      "train/train-seed-2026202901/frames.yaml": 1812,
+      "train/train-seed-2026202902/frames.yaml": 1817,
+      "train/train-seed-2026202903/frames.yaml": 1818,
+      "selection/selection-seed-2026203901/frames.yaml": 1823,
+      "selection/selection-seed-2026203902/frames.yaml": 1818,
+      "holdout/holdout-seed-2026204901/frames.yaml": 1817,
+      "holdout/holdout-seed-2026204902/frames.yaml": 1820,
+      "holdout/holdout-seed-2026204903/frames.yaml": 1821
+    }
+  },
+  "doc_links_checked": 213,
+  "missing_doc_targets": [],
+  "statistics_equal_profile": true,
+  "gates": {
+    "G-01": "OPEN",
+    "G-02": "OPEN",
+    "G-03": "OPEN"
+  }
+}
