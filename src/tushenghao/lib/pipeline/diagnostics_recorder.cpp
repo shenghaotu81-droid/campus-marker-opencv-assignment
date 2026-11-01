@@ -759,10 +759,8 @@ namespace mark
             !previous_export_pending_ || selected_record != previous_selected_ ||
             completed.stage != Stage::Export || (!measured && !disabled) ||
             measured != completed.elapsed.has_value() ||
-            (completed.elapsed && completed.elapsed->count() < 0) ||
-            std::find(export_ids_.begin(), export_ids_.end(), id) != export_ids_.end())
+            (completed.elapsed && completed.elapsed->count() < 0))
             throw std::logic_error("EXPORT_TIMING_SEQUENCE");
-        export_ids_.push_back(id);
         previous_export_pending_ = false;
         const auto i = size_t(Stage::Export);
         --summary_.timing_states[i][size_t(TimingStatus::NOT_EXECUTED)];

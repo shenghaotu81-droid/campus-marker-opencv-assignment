@@ -473,9 +473,6 @@ namespace sg  {
         const auto& ids=s.fixture.at("joined_piece_ids");
         int joined=-1;
         for(const auto& p:s.pieces)if(p.id==ids[0]||p.id==ids[1])  {
-          Point center;
-          for(auto v:p.perturbed)center+=v;
-          center*=1.0/p.perturbed.size();
           int label=0;
           for(int y=0;y<r.mask.rows && !label;++y)for(int x=0;x<r.mask.cols;++x)if(r.instances.at<uint16_t>(y,x)==p.instance)  {
             label=labels.at<int>(y,x);

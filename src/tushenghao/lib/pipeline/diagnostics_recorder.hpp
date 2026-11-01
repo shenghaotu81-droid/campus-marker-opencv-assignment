@@ -49,7 +49,6 @@ namespace mark
         std::optional<uint64_t> first_id_;
         bool previous_selected_{false}, previous_export_pending_{false};
         std::optional<uint64_t> previous_id_;
-        std::vector<uint64_t> export_ids_;
         void fail(const std::string &);
     };
 } // namespace mark

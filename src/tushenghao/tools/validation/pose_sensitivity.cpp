@@ -3,7 +3,6 @@
 // 批量生成合成数据（3 距离×3 倾角×12 旋转×4 噪声×8 重复=3456 组），跑位姿估计，把误差写进 sensitivity.csv 和 candidate_errors.csv
 // 它只产数据，阈值后面用 Python 算 3σ 再手填进 pose.yaml
 #include "mark/pose_estimator.hpp"
-#include "mark/pose_estimator.hpp"
 #include "../../lib/pose/pose_geometry.hpp"  // 加这一行，为了 detail::quad_area
 
 #include <algorithm>

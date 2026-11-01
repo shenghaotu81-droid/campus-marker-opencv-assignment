@@ -127,7 +127,6 @@ file(GLOB_RECURSE MARK_SOURCES CONFIGURE_DEPENDS
 list(APPEND MARK_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/audit/decode_audit.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/common/file_digest.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tools/common/temporal_record.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/audit/temporal_audit.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
 )

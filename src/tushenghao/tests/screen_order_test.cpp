@@ -31,7 +31,6 @@ namespace
 }
 
 #include <array>
-#include <cmath>
 #include <string>
 
 #include <opencv2/core.hpp>
@@ -39,7 +38,6 @@ namespace
 #include "corners/corner_types.hpp"
 #include "mark/detector_config.hpp"
 #include "corners/screen_order.hpp"
-#include "corners/corner_types.hpp"
 
 namespace mark
 {

@@ -636,14 +636,6 @@ namespace mark
                      candidate)});
         }
 
-        if (candidates.empty())
-        {
-            result.rejection_reason_ =
-                "没有有效屏幕顺序候选";
-
-            return result;
-        }
-
         /*
          * Step 6:
          * 找最小 E。

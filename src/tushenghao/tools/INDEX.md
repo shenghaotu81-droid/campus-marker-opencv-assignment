@@ -15,7 +15,6 @@ cmake --build build/block3-fixture -j 4
 |---|---|---|---|
 | 阶段审计 | [audit/decode_audit.cpp](audit/decode_audit.cpp) | build/tushenghao/decode_audit | 单帧/全视频真实pipeline、证据与状态；不是公共稳定track |
 | 时序审计 | [audit/temporal_audit.cpp](audit/temporal_audit.cpp) | temporal_audit | 一次decode的raw/稳定共享装配，独立EXPERIMENTAL语义网格 |
-| 时序记录 | [common/temporal_record.hpp](common/temporal_record.hpp) | 无独立入口 | 旧入口薄包装，调用pipeline唯一FrameRecord serializer |
 | 共用摘要 | [common/file_digest.hpp](common/file_digest.hpp) | 无独立入口 | 审计/诊断输入和配置SHA |
 | 样例生成 | [generation/main.cpp](block3_fixture/generation/main.cpp) | block3_fixture | C/H的plan/sample/generate |
 | C校准 | [calibration/measure.cpp](block3_fixture/calibration/measure.cpp) | block3_measure | C固定条件隔离/关联测量，不表示正式H |
