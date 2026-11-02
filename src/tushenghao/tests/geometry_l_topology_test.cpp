@@ -2,7 +2,7 @@
 #include "geometry/geometry_observation.hpp"
 #include "geometry/geometry_matcher.hpp"
 #include "geometry/geometry_validation.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include "block3_fixture.hpp"
 #include <fstream>
 #include <functional>

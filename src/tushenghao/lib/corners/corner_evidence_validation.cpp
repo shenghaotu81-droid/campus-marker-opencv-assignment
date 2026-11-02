@@ -2,7 +2,7 @@
 #include "corners/corner_evidence_validation.hpp"
 #include "corners/periodic_line_fit.hpp"
 #include "vision/types/marker_geometry.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
 #include <set>
 

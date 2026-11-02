@@ -1,4 +1,4 @@
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include "pipeline/temporal_geometry.hpp"
 #include <algorithm>
 #include <cmath>

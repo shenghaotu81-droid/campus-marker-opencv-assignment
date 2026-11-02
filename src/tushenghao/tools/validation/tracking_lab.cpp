@@ -1,3 +1,4 @@
+#include "vision/math/covariance_validation.hpp"
 #include "mark/target_tracker.hpp"
 #include "tracking/kalman_cv.hpp"
 #include "tracking/measurement_adapter.hpp"

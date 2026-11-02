@@ -70,17 +70,4 @@ namespace mark::observed
         return std::acos(std::clamp(std::abs(a.dot(b)) / n, 0.0, 1.0)) * 180 / CV_PI;
     }
 
-    // Q05/K06：配置与滤波共用纯矩阵合法性契约，算法与舍入表达式保持原样。
-    // 输入协方差必须明确为正定且对称；未知/零/负数绝不解释成“非常准确”。
-    inline bool positive_definite(const cv::Mat &m)
-    {
-        if (m.empty() || m.type() != CV_64F || m.rows != m.cols || !cv::checkRange(m))
-            return false;
-        const double scale = std::max(1.0, cv::norm(m, cv::NORM_INF));
-        const double roundoff = std::numeric_limits<double>::epsilon() * m.rows * scale;
-        if (cv::norm(m - m.t(), cv::NORM_INF) > roundoff)
-            return false;
-        cv::Mat eigenvalues;
-        return cv::eigen(m, eigenvalues) && eigenvalues.at<double>(m.rows - 1) > 0;
-    }
 }

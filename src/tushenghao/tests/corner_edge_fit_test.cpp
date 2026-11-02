@@ -5,7 +5,7 @@
 #include "corners/periodic_line_fit.hpp"
 #include "corners/corner_resolver.hpp"
 #include "recovery112_reference.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include "support_pixel_count.hpp"
 #include <limits>
 #include <iostream>

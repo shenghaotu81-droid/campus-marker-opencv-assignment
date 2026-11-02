@@ -202,7 +202,7 @@ flowchart TD
 
 **用到的办法：**正定性保证误差方向有有效正权重并可做后续求解；它不是硬件误差预算。 **读时注意：**config 不再包含私有 Kalman 头；共享数学函数不意味着模块必须依赖滤波器实现。
 
-定位：[lib/core/observed_geometry_utils.hpp:75](../lib/core/observed_geometry_utils.hpp#L75)；[原步骤 Q05](lean-report.md?plain=1#L131)。
+定位：[include/vision/math/observed_geometry.hpp:75](../include/vision/math/observed_geometry.hpp#L75)；[原步骤 Q05](lean-report.md?plain=1#L131)。
 
 ### Q06 保存可往返的有效配置
 

@@ -1,7 +1,7 @@
 // 输入assignment已确定的工作图组件，仅从当前原图量测；多来源不能排除时拒绝。
 // 原实现裁ROI再closed=true会造边；这里从原图完整轮廓取证，无ROI人工闭合边。
 #include "corners/corner_observation.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
 #include <stdexcept>
 

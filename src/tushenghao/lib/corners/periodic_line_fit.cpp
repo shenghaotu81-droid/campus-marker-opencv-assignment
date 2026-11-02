@@ -1,6 +1,6 @@
 // 周期模型和三个估计器分别具名；所有状态都是局部 scratch，不读取图像、帧号或环境。
 #include "corners/periodic_line_fit.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <map>
 #include <set>
 #include <climits>

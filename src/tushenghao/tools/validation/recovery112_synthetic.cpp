@@ -3,7 +3,7 @@
 #include "config/config.hpp"
 #include "corners/corner_resolver.hpp"
 #include "corners/detection_validator.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <iomanip>
 #include <iostream>
 #include <random>

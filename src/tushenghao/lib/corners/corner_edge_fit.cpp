@@ -2,7 +2,7 @@
 #include "corners/corner_edge_fit.hpp"
 #include "corners/periodic_line_fit.hpp"
 #include "core/corner_budget.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
 #include <numeric>
 #include <set>

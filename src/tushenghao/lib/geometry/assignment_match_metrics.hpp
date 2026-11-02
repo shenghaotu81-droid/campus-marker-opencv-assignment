@@ -3,7 +3,7 @@
 #pragma once
 #include "core/geometry_types.hpp"
 #include "vision/types/marker_geometry.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
 
 namespace mark

@@ -3,7 +3,7 @@
 // 不允许独立挑两条方向最近的无限线，也不使用预测交点补观测。
 #include "recovery112_reference.hpp"
 #include "corners/periodic_line_fit.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include "core/corner_budget.hpp"
 #include <opencv2/imgproc.hpp>
 #include <set>

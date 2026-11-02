@@ -4,7 +4,7 @@
 #include "corners/corner_observation.hpp"
 #include "corners/corner_edge_fit.hpp"
 #include "core/corner_budget.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <map>
 #include <set>
 

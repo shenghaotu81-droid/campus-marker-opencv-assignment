@@ -2,7 +2,7 @@
 #include "geometry/geometry_anchor_evidence.hpp"
 #include <iomanip>
 #include <locale>
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <functional>
 #include <map>
 #include <sstream>

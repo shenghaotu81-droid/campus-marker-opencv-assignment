@@ -8,7 +8,7 @@
 #include "geometry/geometry_observation.hpp"
 #include "corners/corner_resolver.hpp"
 #include "corners/corner_observation.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include "geometry/assignment_match_metrics.hpp"
 #include "geometry/geometry_matcher.hpp"
 #include "geometry/geometry_validation.hpp"

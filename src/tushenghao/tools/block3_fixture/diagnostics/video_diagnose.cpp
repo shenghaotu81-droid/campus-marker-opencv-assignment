@@ -10,7 +10,7 @@
 #include "corners/corner_edge_fit.hpp"
 #include "corners/corner_resolver.hpp"
 #include "pipeline/decode_stage.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <nlohmann/json.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/imgcodecs.hpp>

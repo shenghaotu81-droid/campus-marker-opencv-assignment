@@ -9,7 +9,7 @@
 #include "geometry/geometry_assignment_completion.hpp"
 #include "corners/corner_observation.hpp"
 #include "corners/corner_edge_fit.hpp"
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <nlohmann/json.hpp>
 #include <opencv2/videoio.hpp>
 #include <filesystem>

@@ -49,3 +49,15 @@ ctest --test-dir /tmp/campus-lean-synth --output-on-failure
 ### 类型模块修复后验收通过
 
 机械补齐直接调用点的加载声明包含后，`build/restructure-types-retry1/result.json` 全通过：完整构建、全量 27/27、默认 23/23、合成 7/7；G4 四组合 calibrate/verify/replay 及 profile、holdout、公开轨迹均与瘦后基线逐字节相同；1676 帧完整公开结果逐字节相同。原失败记录保留供追溯，本批已修复完成，按最新 §5 继续后续模块。
+
+## 纯数学模块（执行中）
+
+| 原路径／片段 | 新路径 |
+|---|---|
+| lib/core/observed_geometry_utils.hpp | include/vision/math/observed_geometry.hpp |
+| 同头内 positive_definite 定义 | src/math/covariance/covariance_validation.cpp |
+| 原 kalman_cv.hpp 的正定声明依赖 | include/vision/math/covariance_validation.hpp |
+
+底稿对应的 kalman_cv.cpp/.hpp 拆分按瘦后代码执行：函数已在旧 observed_geometry_utils 内 inline，本批从其实际唯一实现搬出，不从 Kalman 复制第二份。函数体、舍入、异常和命名空间不变。covariance 子目录是独立的协方差数学检查步骤；配套公开声明放固定 include/vision/math，不建同内容转发头。输入矩阵／输出 bool 是替换契约，其他几何数学仍为既有纯函数。
+
+验证：`build/restructure-math/result.json` 全通过，完整构建、27/27、23/23、7/7、G4 四组合及 1676 帧完整公开输出均与瘦后基线字节相同。正定实现仅搬迁，数学检查与空预算保持。

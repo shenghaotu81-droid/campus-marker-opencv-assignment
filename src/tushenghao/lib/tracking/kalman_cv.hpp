@@ -1,5 +1,6 @@
+#include "vision/math/covariance_validation.hpp"
 #pragma once
-#include "core/observed_geometry_utils.hpp"
+#include "vision/math/observed_geometry.hpp"
 
 #include "mark/tracking_config.hpp"
 
