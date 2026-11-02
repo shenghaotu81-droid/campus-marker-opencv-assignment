@@ -1,3 +1,4 @@
+#include "pipeline/decode_stage.hpp"
 #include "mark/detector.hpp"
 #include "application/app_config.hpp"
 #include "detector/config.hpp"

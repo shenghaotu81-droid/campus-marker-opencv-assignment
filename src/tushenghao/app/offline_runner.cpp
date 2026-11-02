@@ -1,5 +1,6 @@
+#include "pipeline/decode_stage.hpp"
 #include "model/marker_geometry_loader.hpp"
-#include "core/file_fingerprint.hpp"
+#include "vision/observability/file_fingerprint.hpp"
 #include "offline_runner.hpp"
 #include "debug_renderer.hpp"
 #include "display_session.hpp"

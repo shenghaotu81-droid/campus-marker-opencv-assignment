@@ -1,5 +1,5 @@
 #pragma once
-#include "core/diagnostics_types.hpp"
+#include "vision/observability/frame_record.hpp"
 
 namespace mark
 {

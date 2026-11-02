@@ -10,7 +10,7 @@ Step 3 可能对同一个目标给出多个 CornerMeasurement（不同解释）�
 
 #include <vector>
 
-#include "corners/corner_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
 
 namespace mark
 {

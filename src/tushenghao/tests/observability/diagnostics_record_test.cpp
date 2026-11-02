@@ -1,7 +1,7 @@
 #include "case_runner.hpp"
 #include "observability_fixture.hpp"
 #include "temporal_fixture.hpp"
-#include "pipeline/diagnostics_recorder.hpp"
+#include "recording/diagnostics_recorder.hpp"
 #include "pipeline/stabilize_stage.hpp"
 #include "common/frame_record_reader.hpp"
 #include "corners/corner_evidence_validation.hpp"

@@ -1,5 +1,5 @@
 #include "debug_renderer.hpp"
-#include "pipeline/diagnostics_context.hpp"
+#include "context/diagnostics_context.hpp"
 #include <opencv2/imgproc.hpp>
 #include <sstream>
 

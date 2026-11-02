@@ -1,7 +1,7 @@
 #include "case_runner.hpp"
 #include "observability_fixture.hpp"
 #include <thread>
-#include "pipeline/diagnostics_recorder.hpp"
+#include "recording/diagnostics_recorder.hpp"
 using namespace mark;
 using namespace observability_fixture;
 using namespace std::chrono;

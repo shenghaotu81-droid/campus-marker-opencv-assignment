@@ -1,4 +1,4 @@
-#include "pipeline/run_report.hpp"
+#include "reporting/run_report.hpp"
 #include <fstream>
 #include <iomanip>
 #include <locale>

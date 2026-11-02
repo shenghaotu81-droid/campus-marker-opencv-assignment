@@ -1,10 +1,10 @@
-#include "core/file_fingerprint.hpp"
+#include "vision/observability/file_fingerprint.hpp"
 // 只读核验新schema和历史temporal金样；不回写、不补造旧耗时，不参与检测准入。
 #include "common/file_digest.hpp"
 #include "common/frame_record_reader.hpp"
 #include "detector/config.hpp"
-#include "pipeline/diagnostics_recorder.hpp"
-#include "pipeline/run_report.hpp"
+#include "recording/diagnostics_recorder.hpp"
+#include "reporting/run_report.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>

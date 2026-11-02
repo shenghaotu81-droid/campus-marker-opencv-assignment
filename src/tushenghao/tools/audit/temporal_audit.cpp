@@ -2,7 +2,7 @@
 // 原video与480x32实验网格保留，统一FrameRecord/recorder；阶段装配不假称公共process。
 #include "offline_runner.hpp"
 #include "pipeline/stabilize_stage.hpp"
-#include "pipeline/diagnostics_context.hpp"
+#include "context/diagnostics_context.hpp"
 #include "corners/screen_order.hpp"
 #include "common/file_digest.hpp"
 #include <iostream>

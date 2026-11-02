@@ -1,12 +1,13 @@
+#include "recording/record_codec.hpp"
 #pragma once
 #include "application/observability_config.hpp"
-#include "pipeline/run_report.hpp"
+#include "reporting/run_report.hpp"
 #include <filesystem>
 #include <fstream>
 
 namespace mark
 {
-    std::string serializeFrameRecord(const FrameRecord &);
+
 
     // begin/submit/finish严格生命周期，已有目录与IO失败拒绝；失败只留标记，不造成功summary。
     class DiagnosticsRecorder

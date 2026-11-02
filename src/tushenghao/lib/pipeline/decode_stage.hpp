@@ -1,21 +1,15 @@
+#include "vision/types/detection/decode_result.hpp"
 // 内部阶段入口：接收完成M/S验证的批次，输出当前Detection及逐假设证据/原因。
 // 不实现稳定层，不构造track，不改变公共Detector接口或FrameResult布局。
 #pragma once
-#include "corners/corner_types.hpp"
-#include "core/diagnostics_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
+#include "vision/observability/frame_record.hpp"
 #include "vision/types/detector_types.hpp"
-#include "core/prepared_frame.hpp"
+#include "vision/types/detection/prepared_image.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "vision/config/detector_config.hpp"
 namespace mark {
 class FrameDiagnosticsContext;
-struct DecodeStageResult {
-    Status status{Status::NOT_READY};
-    std::vector<Detection> detections;
-    std::vector<CornerMeasurement> measurements;
-    std::vector<std::string> diagnostics;
-    bool search_truncated{false};
-};
 // D02→D09：每步只读上一步产物；诊断工具可显式停在父验证，不补做无关步骤。
 enum class GeometryStop { Validated, Completed };
 struct GeometryStepsOutput {

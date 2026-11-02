@@ -90,3 +90,34 @@ ctest --test-dir /tmp/campus-lean-synth --output-on-failure
 验证：`build/restructure-config-retry1/result.json` 全通过：完整构建、27/27、23/23、7/7、G4 四组合及全部数值／语义产物字节相同、1676 帧公开结果字节相同。
 
 配置批次机械修复：首次全量构建暴露 pose_sensitivity 经旧相对路径使用 pose_geometry 私有声明；将该现有工具显式链接 vision_config_internal_headers。只增加所需配置契约 include 可见性，不公开整树、未改函数逻辑。默认 23/23 与合成 7/7 首轮已过；仍重跑本批全套验证。
+
+## 观测模块（执行中）
+
+recording 的纯 JSON codec 与运行状态／IO 分开；events 的枚举编码与 timing 测时分开；context 只汇集值快照，reporting 输出运行报告，identity 计算字节身份。每类有独立输入输出，未新增框架。
+
+| 原路径 | 新路径 |
+|---|---|
+| `lib/core/diagnostics_types.hpp` | `include/vision/observability/frame_record.hpp` |
+| `lib/core/timing.hpp` | `src/observability/timing/timing.hpp` |
+| `lib/core/timing.cpp` | `src/observability/timing/timing.cpp` |
+| `lib/core/file_fingerprint.hpp` | `include/vision/observability/file_fingerprint.hpp` |
+| `lib/pipeline/diagnostics_context.hpp` | `src/observability/context/diagnostics_context.hpp` |
+| `lib/pipeline/diagnostics_context.cpp` | `src/observability/context/diagnostics_context.cpp` |
+| `lib/pipeline/diagnostics_recorder.hpp` | `src/observability/recording/diagnostics_recorder.hpp` |
+| `lib/pipeline/diagnostics_recorder.cpp` | `src/observability/recording/diagnostics_recorder.cpp` |
+| `lib/pipeline/run_report.hpp` | `src/observability/reporting/run_report.hpp` |
+| `lib/pipeline/run_report.cpp` | `src/observability/reporting/run_report.cpp` |
+| `lib/core/geometry_types.hpp` | `include/vision/types/detection/geometry_types.hpp` |
+| `lib/core/prepared_frame.hpp` | `include/vision/types/detection/prepared_image.hpp` |
+| `lib/corners/corner_types.hpp` | `include/vision/types/detection/corner_types.hpp` |
+| `lib/pipeline/temporal_types.hpp` | `include/vision/types/detection/temporal_types.hpp` |
+| `tests/diagnostics_record_test.cpp` | `tests/observability/diagnostics_record_test.cpp` |
+| `tests/timing_test.cpp` | `tests/observability/timing_test.cpp` |
+
+必要差异：瘦后 StageDetails 仍 include decode_stage.hpp，虽然渲染已不读 fitter，目录搬迁仍会反向包含检测编排。将现有 PreparedFrame、GeometryBatch、CornerEvidence、TemporalDiagnostics、DecodeStageResult 的值声明搬到 include/vision/types/detection，StageDetails 独立为 include/vision/observability/stage_details.hpp；实例和算法函数仍留原模块，字段／函数体不变。T 的原因到记录枚举转换移到 events/temporal_reason_codec.hpp，步骤不依赖记录器实现。
+
+原 12 拆分对应的事件编码实际来自瘦后的 frame_record 值头，正定实现已在数学批搬出；按实际来源拆，不复制旧 timing／Kalman 已不存在的片段。record_codec.* 拥有原 serializer 的完整匿名 helper 和唯一 serializeFrameRecord；recorder 仅消费声明。file_fingerprint 函数体原样搬入 identity 实现。
+
+验证：`build/restructure-observability-retry1/result.json` 全通过：完整构建、27/27、23/23、7/7、G4 四组合完整产物及 1676 帧公开结果与瘦后基线逐字节相同。
+
+观测批次机械修复：去掉 Context→检测编排的间接包含后，observability_integration_test 的直接 runDecodePipeline 调用缺声明；为各直接调用点补显式 decode_stage.hpp，不让观测契约重新包含算法头。原失败日志保留，重跑本批完整验证。

@@ -1,7 +1,7 @@
 // 输入组件/指定模型片/可信三L中位面积，输出未应用误差上限的原始工作图指标。
 // 检测与C测量共用同一尺度、边界采样、循环方向/凹凸定义，避免两套统计口径。
 #pragma once
-#include "core/geometry_types.hpp"
+#include "vision/types/detection/geometry_types.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>

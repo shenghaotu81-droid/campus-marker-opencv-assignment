@@ -1,5 +1,5 @@
 #include "common/frame_record_reader.hpp"
-#include "pipeline/diagnostics_recorder.hpp"
+#include "recording/diagnostics_recorder.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>

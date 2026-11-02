@@ -1,6 +1,6 @@
 // 输入只读原图和明确assignment组件；输出完整原图连续轮廓，失败有原因。
 #pragma once
-#include "core/prepared_frame.hpp"
+#include "vision/types/detection/prepared_image.hpp"
 #include "vision/config/detector_config.hpp"
 #include <map>
 #include <functional>

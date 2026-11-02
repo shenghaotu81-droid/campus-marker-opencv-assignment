@@ -1,7 +1,7 @@
 // 选择参考与平滑历史分开；empty只留短期选择，恢复从原始点重建。
 #pragma once
 #include "pipeline/temporal_geometry.hpp"
-#include "core/diagnostics_types.hpp"
+#include "vision/observability/frame_record.hpp"
 
 namespace mark
 {

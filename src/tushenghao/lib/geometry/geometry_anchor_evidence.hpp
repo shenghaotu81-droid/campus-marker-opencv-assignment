@@ -1,5 +1,5 @@
 #pragma once
-#include "core/geometry_types.hpp"
+#include "vision/types/detection/geometry_types.hpp"
 namespace mark {
 struct LAnchorTopologySupport {
     std::size_t topology_candidate_index_;

@@ -1,7 +1,7 @@
 // step7:独立验证（输入输出接口:验证+输出）
 #pragma once
 
-#include "core/geometry_types.hpp"
+#include "vision/types/detection/geometry_types.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "vision/config/detector_config.hpp"
 

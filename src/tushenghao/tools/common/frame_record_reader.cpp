@@ -1,5 +1,5 @@
 #include "common/frame_record_reader.hpp"
-#include "corners/corner_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
 #include <charconv>
 #include <cmath>
 #include <limits>

@@ -16,7 +16,7 @@ ShapeObservation
 */
 #pragma once
 
-#include "core/geometry_types.hpp"
+#include "vision/types/detection/geometry_types.hpp"
 
 #include <vector>
 

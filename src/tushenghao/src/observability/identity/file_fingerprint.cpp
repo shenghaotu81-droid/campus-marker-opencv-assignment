@@ -1,12 +1,10 @@
-#pragma once
-#include <filesystem>
+#include "vision/observability/file_fingerprint.hpp"
 #include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
 namespace mark {
-// A02/V03：流式字节身份，FNV 与文件长度组成旧协议；错误上下文由调用步骤提供。
-inline std::string file_fingerprint(const std::filesystem::path &path,
+std::string file_fingerprint(const std::filesystem::path &path,
                                     const std::string &open_error,const std::string &read_error) {
     std::ifstream input(path,std::ios::binary);
     if(!input) throw std::runtime_error(open_error);

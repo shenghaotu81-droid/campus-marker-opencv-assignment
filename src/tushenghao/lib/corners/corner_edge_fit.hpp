@@ -1,6 +1,6 @@
 // 输入完整原图轮廓、指定两条模型边及fixture/获批预算；输出一个当前观测角证据。
 #pragma once
-#include "corners/corner_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
 #include "vision/config/detector_config.hpp"
 
 namespace mark

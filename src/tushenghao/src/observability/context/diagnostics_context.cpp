@@ -1,4 +1,4 @@
-#include "pipeline/diagnostics_context.hpp"
+#include "context/diagnostics_context.hpp"
 
 namespace mark
 {

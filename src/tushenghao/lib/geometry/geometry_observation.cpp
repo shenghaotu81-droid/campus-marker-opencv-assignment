@@ -4,7 +4,7 @@
 */
 #include "geometry/geometry_observation.hpp"
 #include "geometry/geometry_l_topology.hpp"
-#include "core/prepared_frame.hpp"
+#include "vision/types/detection/prepared_image.hpp"
 #include "vision/config/detector_config.hpp"
 
 #include <algorithm>

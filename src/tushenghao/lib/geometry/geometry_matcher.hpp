@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <opencv2/core.hpp>
-#include "core/geometry_types.hpp"
+#include "vision/types/detection/geometry_types.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "vision/config/detector_config.hpp"
 namespace mark {

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "core/geometry_types.hpp"
+#include "vision/types/detection/geometry_types.hpp"
 
 #include <opencv2/core.hpp>
 

@@ -1,5 +1,5 @@
 #include "core/cli_options.hpp"
-#include "core/file_fingerprint.hpp"
+#include "vision/observability/file_fingerprint.hpp"
 // Path A 专项只读验收：比较全部公共字段、回溯锚点资格、精确复算原拟合。
 // 不参与生产准入，不替用户批准真值/方向；损坏/缺失证据一律非零退出。
 #include "common/frame_record_reader.hpp"
@@ -11,7 +11,7 @@
 #include "corners/detection_validator.hpp"
 #include "corners/detection_publication.hpp"
 #include "corners/semantic_resolver.hpp"
-#include "pipeline/diagnostics_recorder.hpp"
+#include "recording/diagnostics_recorder.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>

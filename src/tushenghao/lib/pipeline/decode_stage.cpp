@@ -11,7 +11,7 @@
 #include "corners/semantic_resolver.hpp"
 #include "corners/detection_validator.hpp"
 #include "corners/detection_publication.hpp"
-#include "pipeline/diagnostics_context.hpp"
+#include "context/diagnostics_context.hpp"
 #include "detector/corner_budget_validation.hpp"
 #include <algorithm>
 #include <set>

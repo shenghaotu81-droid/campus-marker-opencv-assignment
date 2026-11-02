@@ -10,7 +10,7 @@
 */
 #pragma once
 
-#include "corners/corner_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
 
 namespace mark
 {

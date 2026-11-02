@@ -1,5 +1,6 @@
+#include "events/temporal_reason_codec.hpp"
 #include "pipeline/stabilize_stage.hpp"
-#include "pipeline/diagnostics_context.hpp"
+#include "context/diagnostics_context.hpp"
 #include <stdexcept>
 
 namespace mark

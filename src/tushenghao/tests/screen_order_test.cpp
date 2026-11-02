@@ -33,7 +33,7 @@ namespace
 
 #include <opencv2/core.hpp>
 
-#include "corners/corner_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
 #include "vision/config/detector_config.hpp"
 #include "corners/screen_order.hpp"
 

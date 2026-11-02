@@ -1,5 +1,5 @@
 #pragma once
-#include "pipeline/run_report.hpp"
+#include "reporting/run_report.hpp"
 #include <iosfwd>
 namespace mark {
 // 原终端只给技术行；中文展示仅消费现有统计，不进入检测和公开结果。

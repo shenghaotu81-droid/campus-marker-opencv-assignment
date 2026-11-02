@@ -1,7 +1,7 @@
 #pragma once
 #include "application/app_config.hpp"
 #include "detector/config.hpp"
-#include "pipeline/diagnostics_recorder.hpp"
+#include "recording/diagnostics_recorder.hpp"
 #include <set>
 namespace mark {
 // App与audit共用离线消费/记录生命周期；执行scope决定真实算法边界，不冒称publicprocess。

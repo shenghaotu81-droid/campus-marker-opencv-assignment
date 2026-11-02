@@ -1,6 +1,6 @@
 // 文字桥接只接受独立语义，不接收或保存角点/方向/Detection。
 #pragma once
-#include "pipeline/temporal_types.hpp"
+#include "vision/types/detection/temporal_types.hpp"
 
 namespace mark
 {

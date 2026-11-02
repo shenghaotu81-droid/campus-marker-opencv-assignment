@@ -1,0 +1,8 @@
+if(BUILD_TESTING OR NOT DEFINED BUILD_TESTING)
+    foreach(test_name diagnostics_record_test timing_test)
+        add_executable(${test_name} ${test_name}.cpp)
+        target_link_libraries(${test_name} PRIVATE mark_detector_internal_headers mark_test_support)
+        set_target_properties(${test_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+        add_test(NAME ${test_name} COMMAND ${test_name})
+    endforeach()
+endif()

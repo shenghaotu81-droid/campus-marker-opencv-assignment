@@ -1,21 +1,14 @@
 // 三历史各自所有，不给Detection增加时序身份或伪置信度。
 #pragma once
+#include <string>
+#include <vector>
+#include <optional>
+#include <array>
 #include "vision/types/frame_stamp.hpp"
-#include "core/diagnostics_types.hpp"
+
 namespace mark {
 enum class TemporalCause { Other, InputChanged, HistoryExpired, AssociationFailed, AssociationAmbiguous,
                            CorrespondenceAmbiguous, ZeroDt, SmoothingDeviation };
-inline ReasonCode temporalRecordCode(TemporalCause cause) {
-    switch(cause) {
-    case TemporalCause::HistoryExpired:return ReasonCode::HistoryExpired;
-    case TemporalCause::AssociationFailed:return ReasonCode::AssociationFailed;
-    case TemporalCause::AssociationAmbiguous:return ReasonCode::AssociationAmbiguous;
-    case TemporalCause::CorrespondenceAmbiguous:return ReasonCode::CorrespondenceAmbiguous;
-    case TemporalCause::ZeroDt:return ReasonCode::ZeroDt;
-    case TemporalCause::SmoothingDeviation:return ReasonCode::SmoothingRejected;
-    default:return ReasonCode::OtherRecordedReason;
-    }
-}
 struct AssociationResult {
     std::optional<size_t> current_index;
     bool matched_history{false}, ambiguous{false};

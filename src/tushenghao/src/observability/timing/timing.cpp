@@ -1,4 +1,4 @@
-#include "core/timing.hpp"
+#include "timing/timing.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>

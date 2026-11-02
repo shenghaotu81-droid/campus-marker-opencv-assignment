@@ -1,5 +1,5 @@
 #pragma once
-#include "pipeline/run_report.hpp"
+#include "reporting/run_report.hpp"
 #include <cstdint>
 #include <optional>
 #include <set>

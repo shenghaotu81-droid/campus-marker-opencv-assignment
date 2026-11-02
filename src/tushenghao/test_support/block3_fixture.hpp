@@ -2,7 +2,7 @@
 // assignment和affine由fixture显式给定，用于隔离原图定位；不传给正式检测。
 #pragma once
 #include "preprocess/preprocess.hpp"
-#include "corners/corner_types.hpp"
+#include "vision/types/detection/corner_types.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "model/marker_geometry_loader.hpp"
 #include <opencv2/imgproc.hpp>
