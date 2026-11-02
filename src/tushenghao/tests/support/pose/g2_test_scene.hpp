@@ -3,7 +3,7 @@
 // 给测试喂数据的，别跟生产配置搞混（两个测试（pose_contract_test、tag_detector_test））
 #pragma once
 
-#include "mark/pose_estimator.hpp"
+#include "vision/pose/pose_estimator.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>

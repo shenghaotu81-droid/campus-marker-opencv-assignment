@@ -1,6 +1,6 @@
 // Tag 检测器的集成测试（A01-A11）
-#include "support/g2_test_scene.hpp"
-#include "mark/tag_detector.hpp"
+#include "g2_test_scene.hpp"
+#include "vision/pose/tag_detector.hpp"
 
 #include <iostream>
 #include <opencv2/imgproc.hpp>

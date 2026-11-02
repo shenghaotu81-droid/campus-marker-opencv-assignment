@@ -1,7 +1,7 @@
 #include "vision/config/cli_options.hpp"
 // 单独pose_app; 不改旧main
 #include "vision/detection/detector.hpp"
-#include "mark/tag_detector.hpp"
+#include "vision/pose/tag_detector.hpp"
 #include "detector/config.hpp"
 
 #include <cmath>

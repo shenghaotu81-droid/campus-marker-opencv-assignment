@@ -1,7 +1,7 @@
 // AprilTag 检测器的 C++ 封装,对外给 C++ 接口(C 和 C++ 混编，RAII 管资源)
 // C库生命周期/解码/Tag位姿适配
-#include "mark/tag_detector.hpp"
-#include "pose/pose_geometry.hpp"
+#include "vision/pose/tag_detector.hpp"
+#include "validation/pose_geometry.hpp"
 
 #include <cmath>
 #include <limits>

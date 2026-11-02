@@ -211,3 +211,25 @@ GeometryStepsOutput 和所有步骤普通函数的参数／返回值不变，13 
 检测批次机械修复：移除整树 lib include 后，CLI 共享 parser 的旧 core 路径不再可见；将已有唯一 cli_options.hpp 搬到 include/vision/config/cli_options.hpp 并一次改全部入口包含，不重新暴露 lib。该瘦身新增头不在过期 draft 文件表中，函数体不变。
 
 检测批次第二次机械修复：corner_edge_fit_test 两个固定轮廓使用复合字符串 data/文件名，随 data 目录搬迁后缺文件；只更正两个资源路径，原轮廓字节／断言／预算不变，保留失败日志并重跑全套。
+
+## pose 模块（执行中）
+
+P01…P11 按 MARK／平面求解、独立复核、Tag 后端分目录。namespace 与全部公开签名保持；库只链接 types/config 与既有 AprilTag，pose_app 自己显式链接检测模块，不再让 pose 库反向依赖 detection。原生库版本检查／对象归属／全部候选和精修逻辑不变；测试按 estimation/tag 镜像，真实噪声与预算保持。
+
+| 原路径 | 新路径 |
+|---|---|
+| `include/mark/pose_estimator.hpp` | `include/vision/pose/pose_estimator.hpp` |
+| `include/mark/tag_detector.hpp` | `include/vision/pose/tag_detector.hpp` |
+| `lib/pose/pose_geometry.cpp` | `src/pose/validation/pose_geometry.cpp` |
+| `lib/pose/pose_geometry.hpp` | `src/pose/validation/pose_geometry.hpp` |
+| `lib/pose/pose_estimator.cpp` | `src/pose/estimation/pose_estimator.cpp` |
+| `lib/pose/tag_detector.cpp` | `src/pose/tag/tag_detector.cpp` |
+| `tests/pose_contract_test.cpp` | `tests/pose/estimation/pose_contract_test.cpp` |
+| `tests/tag_detector_test.cpp` | `tests/pose/tag/tag_detector_test.cpp` |
+| `tests/support/g2_test_scene.hpp` | `tests/support/pose/g2_test_scene.hpp` |
+
+验证待本批全套完成登记。
+
+pose 批次机械修复：Tag 测试也使用迁移后的 g2_test_scene.hpp；将同一已有 fixture 目录显式提供给该测试目标，未复制 fixture 或修改任何期望。
+
+pose 批次验收：`build/restructure-pose-retry1/result.json` 全通过：完整构建、27/27、23/23、7/7、G4 四组合及 1676 帧完整公开结果逐字节相同。

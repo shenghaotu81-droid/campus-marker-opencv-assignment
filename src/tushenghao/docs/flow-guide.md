@@ -468,7 +468,7 @@ flowchart TD
 
 **用到的办法：**PnP 是由已知三维点及其二维投影求姿态；点对的物理身份正确才有数学意义。 **读时注意：**pose_app 先执行完整 Detector.process，但 estimate_mark 只读取 raw；方向缺失即 CorrespondenceMissing，不把屏幕序当物理序。
 
-定位：[lib/pose/pose_estimator.cpp:82](../lib/pose/pose_estimator.cpp#L82)；[原步骤 P01](lean-report.md?plain=1#L76)。
+定位：[src/pose/estimation/pose_estimator.cpp:82](../src/pose/estimation/pose_estimator.cpp#L82)；[原步骤 P01](lean-report.md?plain=1#L76)。
 
 ### P02 适配 Tag 灰度输入
 
@@ -478,7 +478,7 @@ flowchart TD
 
 **用到的办法：**图像视图避免额外复制，真实 stride 让非紧密排列图像也按正确行距读取。 **读时注意：**不使用 D02 工作图，也不隐式缩放相机 K；视图在当前检测调用内有效。
 
-定位：[lib/pose/tag_detector.cpp:55](../lib/pose/tag_detector.cpp#L55)；[原步骤 P02](lean-report.md?plain=1#L77)。
+定位：[src/pose/tag/tag_detector.cpp:55](../src/pose/tag/tag_detector.cpp#L55)；[原步骤 P02](lean-report.md?plain=1#L77)。
 
 ### P03 检测并解码 Tag
 
@@ -488,7 +488,7 @@ flowchart TD
 
 **用到的办法：**AprilTag 是带编码 ID 的平面标记；资源的自动释放保证异常时也能销毁 C 句柄。 **读时注意：**不能只保留成功 ID：重复／缺质量预算必须留下诊断，原生 detector/family 不跨实例共享可变状态。
 
-定位：[lib/pose/tag_detector.cpp:66](../lib/pose/tag_detector.cpp#L66)；[原步骤 P03](lean-report.md?plain=1#L78)。
+定位：[src/pose/tag/tag_detector.cpp:66](../src/pose/tag/tag_detector.cpp#L66)；[原步骤 P03](lean-report.md?plain=1#L78)。
 
 ### P04 用 Tag 尺寸构造米制点对
 
@@ -498,7 +498,7 @@ flowchart TD
 
 **用到的办法：**真实边长提供像素到米的尺度；图案识别成功本身并不提供距离尺度。 **读时注意：**后端角顺序直接对应物点，不重排成屏幕 LT/RT/RB/LB；未知尺寸不猜。config() 已按值隔离 K/dist。
 
-定位：[lib/pose/tag_detector.cpp:106](../lib/pose/tag_detector.cpp#L106)；[原步骤 P04](lean-report.md?plain=1#L79)。
+定位：[src/pose/tag/tag_detector.cpp:106](../src/pose/tag/tag_detector.cpp#L106)；[原步骤 P04](lean-report.md?plain=1#L79)。
 
 ### P05 检查平面求解前提与预算
 
@@ -508,7 +508,7 @@ flowchart TD
 
 **用到的办法：**先核数学前提可避免让求解器接收退化点；预算是否已测与点是否可计算分别判断。 **读时注意：**缺重投影预算仍可能计算候选供审计，然后返回 BudgetMissing；不能把空预算补成经验值。
 
-定位：[lib/pose/pose_estimator.cpp:158](../lib/pose/pose_estimator.cpp#L158)；[原步骤 P05](lean-report.md?plain=1#L80)。
+定位：[src/pose/estimation/pose_estimator.cpp:158](../src/pose/estimation/pose_estimator.cpp#L158)；[原步骤 P05](lean-report.md?plain=1#L80)。
 
 ### P06 枚举平面姿态候选
 
@@ -518,7 +518,7 @@ flowchart TD
 
 **用到的办法：**IPPE 是用于平面目标的姿态求解法；保留多解让后续约束真正完成消歧。 **读时注意：**不是拿返回的首解或最小误差解直接宣布 Unique；G4 预测也没有在当前应用中自动作为 prior 接回这里。
 
-定位：[lib/pose/pose_estimator.cpp:217](../lib/pose/pose_estimator.cpp#L217)；[原步骤 P06](lean-report.md?plain=1#L81)。
+定位：[src/pose/estimation/pose_estimator.cpp:217](../src/pose/estimation/pose_estimator.cpp#L217)；[原步骤 P06](lean-report.md?plain=1#L81)。
 
 ### P07 独立评价每个姿态
 
@@ -528,7 +528,7 @@ flowchart TD
 
 **用到的办法：**重投影误差直接比较“这个姿态画回原图后差多少”；正深度排除相机背面的数学解。 **读时注意：**rvec 是轴角旋转向量，t_m 单位米；未测指标不能当零误差通过。
 
-定位：[lib/pose/pose_geometry.cpp:95](../lib/pose/pose_geometry.cpp#L95)；[原步骤 P07](lean-report.md?plain=1#L82)。
+定位：[src/pose/validation/pose_geometry.cpp:95](../src/pose/validation/pose_geometry.cpp#L95)；[原步骤 P07](lean-report.md?plain=1#L82)。
 
 ### P08 按现有约束筛候选
 
@@ -538,7 +538,7 @@ flowchart TD
 
 **用到的办法：**可信 prior 只有身份、时钟、严格先后和年龄都合格才能辅助消歧；Rodrigues 只在法向约束需要时转矩阵。 **读时注意：**硬件确认位不充当数值求解总开关；无可用 prior 时明确忽略，不造一个默认追踪器。
 
-定位：[lib/pose/pose_estimator.cpp:232](../lib/pose/pose_estimator.cpp#L232)；[原步骤 P08](lean-report.md?plain=1#L83)。
+定位：[src/pose/estimation/pose_estimator.cpp:232](../src/pose/estimation/pose_estimator.cpp#L232)；[原步骤 P08](lean-report.md?plain=1#L83)。
 
 ### P09 分类零解／唯一／歧义
 
@@ -548,7 +548,7 @@ flowchart TD
 
 **用到的办法：**计数与唯一索引足够表达选择，不再建立只为取一个元素的临时容器。 **读时注意：**BudgetMissing 先于这一步返回；Unique 仅指当前数值约束下唯一，不等于硬件或控制资格通过。
 
-定位：[lib/pose/pose_estimator.cpp:258](../lib/pose/pose_estimator.cpp#L258)；[原步骤 P09](lean-report.md?plain=1#L84)。
+定位：[src/pose/estimation/pose_estimator.cpp:258](../src/pose/estimation/pose_estimator.cpp#L258)；[原步骤 P09](lean-report.md?plain=1#L84)。
 
 ### P10 尝试精修并保留原合法解
 
@@ -558,7 +558,7 @@ flowchart TD
 
 **用到的办法：**LM 是迭代调整姿态以减小重投影误差的方法；它用于打磨已选解，不能代替多解分类。 **读时注意：**不能因优化器抛异常就丢掉前面已验证的原解，也不能凭误差下降跳过安装／prior 条件。
 
-定位：[lib/pose/pose_estimator.cpp:273](../lib/pose/pose_estimator.cpp#L273)；[原步骤 P10](lean-report.md?plain=1#L85)。
+定位：[src/pose/estimation/pose_estimator.cpp:273](../src/pose/estimation/pose_estimator.cpp#L273)；[原步骤 P10](lean-report.md?plain=1#L85)。
 
 ### P11 组装姿态与现行资格
 
@@ -568,7 +568,7 @@ flowchart TD
 
 **用到的办法：**将数值姿态和资格分别记录，让离线计算结果不会自动升级成实车可用测量。 **读时注意：**原表写 G2PoseObservation 是概念称呼，实际公开类型是 mark::pose::PoseObservation；本次没有新增 G2→G4 隐式连接。
 
-定位：[lib/pose/pose_estimator.cpp:133](../lib/pose/pose_estimator.cpp#L133)；[原步骤 P11](lean-report.md?plain=1#L86)。
+定位：[src/pose/estimation/pose_estimator.cpp:133](../src/pose/estimation/pose_estimator.cpp#L133)；[原步骤 P11](lean-report.md?plain=1#L86)。
 
 ### P12 输出 G2 记录与分析入口
 
@@ -809,7 +809,7 @@ print frame.image.rows
 | `src/detection/corners/validation/detection_validator.cpp:270` | D16：measurement/frame_id、原图 size、ScreenOrder、支撑模型版本与具体拒绝原因；区分“拟合失败”和“验证拒绝”。 |
 | `src/detection/corners/semantics/semantic_resolver.cpp:333` | D17：全部 measurement、unresolved、search_truncated 与 orientation_unique；不能拿单个好候选解释整体竞争。 |
 | `src/detection/temporal/stabilization/temporal_stabilizer.cpp:106` | T01–T04：reference_、smoothing_、stamp/dt、current_index、对应映射及 TemporalCause；确认回退的是当前 raw。 |
-| `lib/pose/pose_estimator.cpp:158` | G2：物点米／像点像素、stamp、budgets_ready、全部 candidate、eligible_count 和精修前后；Unique 与 control_usable 分开看。 |
+| `src/pose/estimation/pose_estimator.cpp:158` | G2：物点米／像点像素、stamp、budgets_ready、全部 candidate、eligible_count 和精修前后；Unique 与 control_usable 分开看。 |
 | `lib/tracking/target_tracker.cpp:356` | G4：original state/candidate、input_accepted、events、返回快照，再看是否提交；必须在 tracking_app 或类型化调用中调试此断点。 |
 | `lib/tracking/kalman_cv.cpp:154` | G4 数学：同版本 x/P、z/R、残差/S/score；correct 消费的 owner/revision 必须对应此状态。 |
 | `app/offline_runner.cpp:424` | A11/A12：实际计数、pending、expected、RunOutcome，再看视频收尾、finishRun 和控制台；不要从一行“成功”反推覆盖。 |

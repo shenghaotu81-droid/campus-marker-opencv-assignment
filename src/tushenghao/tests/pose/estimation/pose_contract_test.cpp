@@ -1,7 +1,7 @@
 // 验位姿契约（T01-T25），理想数据下 estimate_planar 该 Unique 的 Unique、该 Ambiguous 的 Ambiguous
 // g2_test::require 是断言，挂了会报哪个 T 没过
-#include "support/g2_test_scene.hpp"
-#include "pose/pose_geometry.hpp"
+#include "g2_test_scene.hpp"
+#include "validation/pose_geometry.hpp"
 
 #include <algorithm>
 #include <iostream>

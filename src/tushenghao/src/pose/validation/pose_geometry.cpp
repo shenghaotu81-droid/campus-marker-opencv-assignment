@@ -1,5 +1,5 @@
 // 凸性/误差/正深度/旋转距离(自验证几何工具箱)
-#include "pose/pose_geometry.hpp"
+#include "validation/pose_geometry.hpp"
 #include "vision/config/pose_config.hpp"
 
 #include <algorithm>
