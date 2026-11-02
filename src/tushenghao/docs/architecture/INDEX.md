@@ -1,3 +1,5 @@
+当前模块与逐文件位置见 [布局重构记录](../restructure-changes.md)；以下历史 Markdown 保留原时点描述，JSON/CSV/DOT 已按当前代码树重新生成。
+
 # 架构与整理记录
 
 下表保留原迁移／整理记录；现行流程边界见 [流程导读](../flow-guide.md)，瘦身裁决与未做项见 [修改报告](../lean-changes.md)。本次没有移动文件或拆分模块 CMake。

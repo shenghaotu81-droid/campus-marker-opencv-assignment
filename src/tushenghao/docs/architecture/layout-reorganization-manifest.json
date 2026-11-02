@@ -1,152 +1,3785 @@
 {
-  "moved_file_count": 48,
-  "mapping": {
-    "detector.hpp": "include/mark/detector.hpp",
-    "detector_config.hpp": "include/mark/detector_config.hpp",
-    "detector_types.hpp": "include/mark/detector_types.hpp",
-    "config_error.hpp": "lib/core/config_error.hpp",
-    "corner_budget.hpp": "lib/core/corner_budget.hpp",
-    "geometry_types.hpp": "lib/core/geometry_types.hpp",
-    "geometry_utils.cpp": "lib/core/geometry_utils.cpp",
-    "geometry_utils.hpp": "lib/core/geometry_utils.hpp",
-    "marker_geometry.cpp": "lib/core/marker_geometry.cpp",
-    "marker_geometry.hpp": "lib/core/marker_geometry.hpp",
-    "observed_geometry_utils.hpp": "lib/core/observed_geometry_utils.hpp",
-    "prepared_frame.hpp": "lib/core/prepared_frame.hpp",
-    "app_config.hpp": "lib/config/app_config.hpp",
-    "config.cpp": "lib/config/config.cpp",
-    "config.hpp": "lib/config/config.hpp",
-    "preprocess.cpp": "lib/preprocess/preprocess.cpp",
-    "preprocess.hpp": "lib/preprocess/preprocess.hpp",
-    "assignment_match_metrics.hpp": "lib/geometry/assignment_match_metrics.hpp",
-    "geometry_assignment_completion.cpp": "lib/geometry/geometry_assignment_completion.cpp",
-    "geometry_assignment_completion.hpp": "lib/geometry/geometry_assignment_completion.hpp",
-    "geometry_l_topology.cpp": "lib/geometry/geometry_l_topology.cpp",
-    "geometry_l_topology.hpp": "lib/geometry/geometry_l_topology.hpp",
-    "geometry_matcher.cpp": "lib/geometry/geometry_matcher.cpp",
-    "geometry_matcher.hpp": "lib/geometry/geometry_matcher.hpp",
-    "geometry_observation.cpp": "lib/geometry/geometry_observation.cpp",
-    "geometry_observation.hpp": "lib/geometry/geometry_observation.hpp",
-    "geometry_validation.cpp": "lib/geometry/geometry_validation.cpp",
-    "geometry_validation.hpp": "lib/geometry/geometry_validation.hpp",
-    "corner_edge_fit.cpp": "lib/corners/corner_edge_fit.cpp",
-    "corner_edge_fit.hpp": "lib/corners/corner_edge_fit.hpp",
-    "corner_evidence_validation.cpp": "lib/corners/corner_evidence_validation.cpp",
-    "corner_evidence_validation.hpp": "lib/corners/corner_evidence_validation.hpp",
-    "corner_observation.cpp": "lib/corners/corner_observation.cpp",
-    "corner_observation.hpp": "lib/corners/corner_observation.hpp",
-    "corner_resolver.cpp": "lib/corners/corner_resolver.cpp",
-    "corner_resolver.hpp": "lib/corners/corner_resolver.hpp",
-    "corner_types.hpp": "lib/corners/corner_types.hpp",
-    "detection_validator.cpp": "lib/corners/detection_validator.cpp",
-    "detection_validator.hpp": "lib/corners/detection_validator.hpp",
-    "screen_order.cpp": "lib/corners/screen_order.cpp",
-    "semantic_resolver.cpp": "lib/corners/semantic_resolver.cpp",
-    "semantic_resolver.hpp": "lib/corners/semantic_resolver.hpp",
-    "decode_stage.cpp": "lib/pipeline/decode_stage.cpp",
-    "decode_stage.hpp": "lib/pipeline/decode_stage.hpp",
-    "detector.cpp": "lib/pipeline/detector.cpp",
-    "main.cpp": "app/main.cpp",
-    "tests/block3_fixture.hpp": "test_support/block3_fixture.hpp",
-    "tools/file_digest.hpp": "tools/common/file_digest.hpp"
-  },
-  "active_unique_include_edges": 201,
-  "active_include_graph_preserved": true,
-  "historical_reference_sources_unchanged": true,
-  "source_changes": "include paths only; main.cpp project-root traversal adds one parent",
-  "new_source_sha256": {
-    "app/main.cpp": "b0845c3633361a7b7c9c4065897ffc70810e8616cfd979ed337785bf3290e0a1",
-    "docs/evidence/block3/05-video-arc-benchmark.cpp": "e5d38c0cbd4c75db23cec83de5c3a67f0817e2edabb34180cea1e06c8bbad425",
-    "docs/evidence/block3/ms_stage_diagnose.cpp": "55c0939e2f3137e07b9e1e97324b3cb13cdb201308a7e360aef217ebd9fa17a8",
-    "include/mark/detector.hpp": "59cfdfa8eb7dcd6771a089dc21224809ee3c300ea543b1633df20513ac4e705e",
-    "include/mark/detector_config.hpp": "b703ff64ece5f9c0c378e37f5e98561bf56f43c851a5ad92870a9533f569ad72",
-    "include/mark/detector_types.hpp": "34825934786abdf91f77f7c2cb9547e28ebd149d61de7fbe99fb3d45935e85a9",
-    "lib/config/app_config.hpp": "d6915f51b10a84c2c6da1e7ff349742a7e2a1917ecfc3127dcc584edb5747daa",
-    "lib/config/config.cpp": "8718ce7058d5c72202103154bb1444e5c414fc2d3009482d34b222c8f84cb577",
-    "lib/config/config.hpp": "a0aaee2e40e01550ebf86734f551d41908d5e38036f0f574279530cee3a3c5d6",
-    "lib/core/config_error.hpp": "68c84353eb96cad74ee4fbdb904ee011ca07d4cf22670d246bd5017b6abb10aa",
-    "lib/core/corner_budget.hpp": "089a0febdcb0d0b304fc2b5ac034cd0a14bff29cf9e249001a7bf84f73d01e92",
-    "lib/core/geometry_types.hpp": "b2b6b2e551fd30abf3d64c961f94ca53d7da8b49a0ad7a4dec08b4ec01c6c55f",
-    "lib/core/geometry_utils.cpp": "ab52eca1aa8bec774a80270e4de01af685b47ed60f0904cb2dc77c753e99951a",
-    "lib/core/geometry_utils.hpp": "b802e479389a44c4f5d34e841ad25ef80dec6e5c4bb99947cb600279031ebdf4",
-    "lib/core/marker_geometry.cpp": "0c73d98a5756bcd8e1008b03bfb9665645dd275d0d1c162fad357667509b160b",
-    "lib/core/marker_geometry.hpp": "1c642ed472d883b332cccdb9b39f0da708dd9bfb447207358709b763eecafbc9",
-    "lib/core/observed_geometry_utils.hpp": "be56e4d69c6d790bbc83a2c2dc6965d67b210e29a45c7bffd3f1f9188ca8fbd3",
-    "lib/core/prepared_frame.hpp": "75d40f92be6782da7032e742c0c7b1b5d0dca1cb404242551a5ddaa8d20ce64d",
-    "lib/corners/corner_edge_fit.cpp": "ce1beffbc4543021eee68fab524ee4177f2da4c61f577b42a5a7dc34591f2225",
-    "lib/corners/corner_edge_fit.hpp": "4f905e4262dbfa5341c6eb9c1b8a1b03b9f395d1a535981116c0929a867003aa",
-    "lib/corners/corner_evidence_validation.cpp": "2c7cb34b6a9719f5daa7a7ae68c72f8ccd50d5384897bb1d910c1a82a9f9d0dd",
-    "lib/corners/corner_evidence_validation.hpp": "cfb4c0ec37c9cbf0a413432087f03888b7f0ff40059d1a3bae4def1be5b622a8",
-    "lib/corners/corner_observation.cpp": "3e4c2ed9037042fe98e211f1477dbb5e71afb238178eecd954c2301dca7788f7",
-    "lib/corners/corner_observation.hpp": "98918019da30291fd3b55f2b2ebb13f83a8d77e2c1d3d301ca7301f545c44b55",
-    "lib/corners/corner_resolver.cpp": "8d181444d9fc4d2a1f61077973625f3bdcd5d21229c2c5ff58486b2313298c37",
-    "lib/corners/corner_resolver.hpp": "ff47dfb80e1a7e3a243c6853e690a2c3ea09255c60760a6bf57fe71f6d9468ee",
-    "lib/corners/corner_types.hpp": "a13df14de7abbe5178cdcc72e431f6f19db70df67c81bdaabf09b749b2106f22",
-    "lib/corners/detection_validator.cpp": "f1df80fd02b80c86f2dfa2aaf9628ab5d717538c9fcca15d7f3855fe1b3e9a38",
-    "lib/corners/detection_validator.hpp": "809fb28f731000684e008f1a6efdbbd0707b41f154f3de8fa1670ab6a9c11767",
-    "lib/corners/screen_order.cpp": "5f1c34ab70effaafd0aef9ae3d3ea626834091c05c42b00ee50a25e4a5728036",
-    "lib/corners/semantic_resolver.cpp": "f2e230187a9240859fe9168bb88456b6b400e244ee4a1ce046318623975c9d4b",
-    "lib/corners/semantic_resolver.hpp": "b4bac2d1f8b938695c248969ff1a1db91e908fc489c698f6a8a62a9459b99627",
-    "lib/geometry/assignment_match_metrics.hpp": "c4c579a72a10464ca249032b99b6930539acd6845e67123ffacfd3726028918f",
-    "lib/geometry/geometry_assignment_completion.cpp": "ee7941b35ac8a559946a8079a43d290bdb5033d7a940ecffd9fc1310a86b4f4e",
-    "lib/geometry/geometry_assignment_completion.hpp": "8f939e280bdd4759c2679b73aa4434c12f5155e9c280395bb54ba1dc5885ef33",
-    "lib/geometry/geometry_l_topology.cpp": "6f6ac22cc1ae5ccb9f984376422cad511240b3a156ae47f607c4bb6da9ad32ba",
-    "lib/geometry/geometry_l_topology.hpp": "828769dfbc0e6c58bbb97679ba17da953a14ef65cb667c5bf785d36c459a10f8",
-    "lib/geometry/geometry_matcher.cpp": "3e829903ea583afcba7a2d96649af94daf5683701f249a1948ab14a4195dcf56",
-    "lib/geometry/geometry_matcher.hpp": "f2c8883ee210e3a11b39832b713aa868dbce8c5daa7ad0ce860ca6c240e510fa",
-    "lib/geometry/geometry_observation.cpp": "2327b20a5a4a020909faf7c8bd3d0986244471bd8188420150f6c320af6c173c",
-    "lib/geometry/geometry_observation.hpp": "b11b72e20354610406761191c3f3872a51a970577ac81641d058ff75ed29ce03",
-    "lib/geometry/geometry_validation.cpp": "e57dbfbda29c785ce1020b96a188c66a08804a5e0d87c98defe860815f9240b2",
-    "lib/geometry/geometry_validation.hpp": "615e75b2460dba02137b845bdd49078af9fca767b336b69d2f558d1d88a666c9",
-    "lib/pipeline/decode_stage.cpp": "46795ddc7fafd9b99238206c47768c9ed0677a96f0e5dc1bd69bff80988568d0",
-    "lib/pipeline/decode_stage.hpp": "f16a029c191701f6a5a1681f6c887fca3c77b72d5a104bf3d990966b2175889e",
-    "lib/pipeline/detector.cpp": "16a426a417a944a9a7836bc9250a03ebcbc2c807a8ec38277c431599cbebbdcd",
-    "lib/preprocess/preprocess.cpp": "ff5b99adad4ea37babea5ba256b44722657a10b797276dafe203000804b18271",
-    "lib/preprocess/preprocess.hpp": "f37b4d1bda1043a447503319b24fc30ceb03b2ee3f959ff8f5065063d4a2e130",
-    "test_support/block3_fixture.hpp": "92f8558d6996fc8f4e5255390c7b804c864b0902d4c0062e3ea2fdb16bec372d",
-    "tests/assignment_completion_test.cpp": "3f447aeed6e94b1294e8e5ebfef406f81f30fa02af487ae583f7e136e224f56d",
-    "tests/block3_contract_regression_test.cpp": "a6bc9f837cffcf8eed6194bfadae20991883a39373ebd50bbf0952d26850f331",
-    "tests/config_contract_test.cpp": "5ddb4d3b8d755f44bc97f8d88be3669d7c9208cf9ea8818b2be94da89df538c0",
-    "tests/config_error_test.cpp": "7a308448df2bf9d674ac4faddf202e9d8fccc7fe5d160c525fb9977d7cc5fc70",
-    "tests/config_roundtrip_test.cpp": "748d930920c8b27856f55a78450301d1dc17d58859f00235ec45887380a50a9f",
-    "tests/corner_edge_fit_test.cpp": "da0d03253eb48333e95f367200582adba1f190c2de6423dfd5404181d203edf9",
-    "tests/corner_resolver_test.cpp": "b92752e8571aaada61d3b3c62d66f30d7d42fa26c81b5b2d7cb6f6ec6a3c7432",
-    "tests/detection_validator_test.cpp": "4cc8faf92f8b16caef481a0b37b62c56380e1016df475317fc9bf9ade8023f48",
-    "tests/detector_contract_test.cpp": "b32166d48a9135d2556d533ecb2eccef3315943ca09748468b8daf38f18948ac",
-    "tests/geometry_l_topology_test.cpp": "a97a3482f7e02991420a1b8651db39933c09861e5c7b7d2ad9d082ba6e4d87b3",
-    "tests/geometry_matcher_test.cpp": "6ecf98111bf74a73a23c7d02682eecf9061b0f19fe815113468033f4d582abee",
-    "tests/geometry_model_test.cpp": "65292b8e09ca25f7ed18399dd1a0ff63438695f8c2e0588121635346f3ed60cc",
-    "tests/geometry_utils_test.cpp": "2b08efb1fe35e5f24d2f6d46ccaba3d8ba3ad49bcfa436afdf469b2291934a6b",
-    "tests/manual_validation_check.cpp": "7c9a1fc531971aa1f0c59a7e126725a9385417864887e3b75c074f12433eb720",
-    "tests/screen_order_test.cpp": "e09627796fd3e35b8d1560bf847603c4c6a78dc1b720538ad16b3532fb7156a3",
-    "tests/semantic_resolver_test.cpp": "36e25ecc78ab0d46f225c20867d8a0c4ce87fe549411399ccdfd09ff85cc2d9b",
-    "tools/block3_fixture/main.cpp": "708f186e24bb8552ea64d38ae38061af92181f8d4785e0066b9217dcddf53118",
-    "tools/block3_fixture/measure.cpp": "58af67b0410abcec7e15a66b476f5d3aed9e3efac96d499d38667ea9606f665b",
-    "tools/block3_fixture/parent_diagnose.cpp": "c9c27dbd6774a1d3ea765cc655c1b38a0e92611af2f408451c03bd2ad40d523c",
-    "tools/block3_fixture/resources.cpp": "2c95b81a979e106cbe8ebb8ebc5a8b3a8b9e75160bbab37b8ec4ba4ab304d6c1",
-    "tools/block3_fixture/verify.cpp": "1c03ca03f88862f68215ae9d2d31e04f4823aa7a7cb1ca1a063367cbb0cfb2a4",
-    "tools/block3_fixture/video_corner_measure.cpp": "c1934bc0a75a69ff88dffd5a64807f7ae9abb2e6fc1ed17ed03304441ab453f0",
-    "tools/block3_fixture/video_diagnose.cpp": "16ed1b1ef4ea33a03f76eb073f9af6661f880add6c1c07754a727cb71446a7e2",
-    "tools/common/file_digest.hpp": "f780ed36a294d294d6c8dd88ce370d802aff07e7492afe01d71088ca6e9354f2",
-    "tools/decode_audit.cpp": "83b0c77680b4abaabbf46c9c57a0890c8a94cfd2a0dfbe83aac3c0b24696dd3a",
-    "tools/synth_ref/include/synthetic_gen/cases.hpp": "8669c55663bee2f8cc3b77b796c3a55ed761439719afd9abf47a83cbd3b09339",
-    "tools/synth_ref/include/synthetic_gen/core.hpp": "e4457e3af4d11a5b90466fda5e25aa43381b5209a143096baa9e56ea418b5b09",
-    "tools/synth_ref/include/synthetic_gen/grid.hpp": "1a4ce7f815e60b480e8edaeeec3f8b60cd9197b6fc72896fda50d403ef082692",
-    "tools/synth_ref/include/synthetic_gen/model.hpp": "88cba6b010fd2a82d6542b779ece977d814fd90cebe1655d9d98f83644fe4d26",
-    "tools/synth_ref/include/synthetic_gen/perturb.hpp": "02479e07f6f7c9e23e842a71abe96a819db426fc866849f5f70a8ed91b826c61",
-    "tools/synth_ref/include/synthetic_gen/raster.hpp": "a7fa9109249144b2db32e2654555c8dba85848b8890822dde69c0e68a2adc88f",
-    "tools/synth_ref/include/synthetic_gen/records.hpp": "c382bf39dc8c71a7056d1985c88ae15a98e591f41c50e08819ad210dab5567dd",
-    "tools/synth_ref/include/synthetic_gen/transforms.hpp": "c3268554c635ce76db9153bc5c7a8b32974e1859deba8454521881ac8f70060f",
-    "tools/synth_ref/include/synthetic_gen/verify.hpp": "cffb150cc7da466354ac78c4766d9ac607cb37c37ae2efbed492edb55c2a7cf2",
-    "tools/synth_ref/src/cases.cpp": "8ba410670da4ccf4749bcdcfee7be126b05ad900cc79e557e15666a027770fc5",
-    "tools/synth_ref/src/grid.cpp": "c47d4d10a7e9993d7f24ded156efc06d578f69ecc15c3e5897790a011f425e82",
-    "tools/synth_ref/src/main.cpp": "9530f85620bc3bcb896facb32be3fe18694cdc562b99981b5cf3215c5cc1ab29",
-    "tools/synth_ref/src/model.cpp": "054e8ef5612291ce4343b11566aaddaa3b6b5b34938c09dcb9ad184e706cfda6",
-    "tools/synth_ref/src/perturb.cpp": "1c3e5600998e2f72dc3172547b15bb53d3d148f33c3fd177cd7f8d9b8e94d8d5",
-    "tools/synth_ref/src/raster.cpp": "2aa0dfa91482a9ddc5845539a200455c24e9364641c7614a24ff26850516f559",
-    "tools/synth_ref/src/records.cpp": "10bb1bd096c92843c7fc2aecfca1a8bd327f398557ad6ee8e0c278356560aaa4",
-    "tools/synth_ref/src/transforms.cpp": "0af28eec673137211f122becef555727164321b0ecb6e80c9e488f415191b0b4",
-    "tools/synth_ref/src/verify.cpp": "86d6cd261f06c56a10126a98f8d2e8485f219546aec4c0c78141185f4dda9e51",
-    "tools/synth_ref/tests/tests.cpp": "207899af30c775069228fb392442f0b2d235bc6f8c99213265fe2c85e399c51a"
-  }
+  "schema_version": 1,
+  "baseline": "d70c1af",
+  "kind": "current-restructured-source-tree",
+  "files": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "0d66505aa6c5aa609394510743ec3dfb19bc6f0c6c48a90a9cee85bbee8b6c50"
+    },
+    {
+      "path": "cmake/CMakeLists.txt",
+      "sha256": "a20c87f2137bf31a7e0095f15ca5d50182a0406db9d3b2a2bbf7177cfa9d3062"
+    },
+    {
+      "path": "cmake/provenance.cmake",
+      "sha256": "176c108fae11e1c5496f5ecda812170d7883bb18158d106057ab81bbcc87461e"
+    },
+    {
+      "path": "include/vision/config/cli_options.hpp",
+      "sha256": "347c77c8dc82ba5058e991ef09641445a1f2130bfea2741532ab89828b95139c"
+    },
+    {
+      "path": "include/vision/config/detector_config.hpp",
+      "sha256": "0cadacebacf3ca68d618eec662351d6f85927cc3aa91d1a31fc81155cbcf0bce"
+    },
+    {
+      "path": "include/vision/config/pose_config.hpp",
+      "sha256": "6b43a5962b7192f0466f6385a397158c8658078599359446404df07617450fa3"
+    },
+    {
+      "path": "include/vision/config/tracking_config.hpp",
+      "sha256": "5820a925b0168d6a7c22dc2ac96625e89bd9f59ddd157f5d49680c486a1b1d37"
+    },
+    {
+      "path": "include/vision/detection/detector.hpp",
+      "sha256": "ebf0a7dd6518535afda4b1bdfa4dbb65aaa503029f9ca66c8adc3a7080a3181d"
+    },
+    {
+      "path": "include/vision/math/covariance_validation.hpp",
+      "sha256": "039b409bd0591b42de26b8cbae37cbfe0627da11e0de3b1a9989cd7108891462"
+    },
+    {
+      "path": "include/vision/math/observed_geometry.hpp",
+      "sha256": "c080caf60ab8bd8537f8c495b3756c309bfeab33157d9781aa2b81f106f71176"
+    },
+    {
+      "path": "include/vision/observability/file_fingerprint.hpp",
+      "sha256": "23b004377b7a85cb8cfb64713ff99155560726c21c55d4ddce27558867ddaaaa"
+    },
+    {
+      "path": "include/vision/observability/frame_record.hpp",
+      "sha256": "d67aedf134db4573db5f9a0ad15dfbe489977c2aa99e4a48f849511a8910964b"
+    },
+    {
+      "path": "include/vision/observability/stage_details.hpp",
+      "sha256": "86888b89d7c6635c56d6adc7b7a41a14a290dd21ff583b949afed65069393fe2"
+    },
+    {
+      "path": "include/vision/pose/pose_estimator.hpp",
+      "sha256": "0c9c2d7ccfc3da3883d97e46f1989b886ff72c575bb455249cd4ce3813ab9648"
+    },
+    {
+      "path": "include/vision/pose/tag_detector.hpp",
+      "sha256": "dbf36c888a59360361c1ebff4c72112562448ec440966edc9ad9c4aefd742405"
+    },
+    {
+      "path": "include/vision/synth_ref/cases.hpp",
+      "sha256": "e7c101ca6062c898ecf6f291697343e19e2fd833b9a61e877d594872ba860034"
+    },
+    {
+      "path": "include/vision/synth_ref/core.hpp",
+      "sha256": "7e709de124635d031fbcc34429607eea2ad65ed30fbf24f72eb98f98758bc98f"
+    },
+    {
+      "path": "include/vision/synth_ref/grid.hpp",
+      "sha256": "21673bced3ff05a156a1da721281e4673627aa68cd7825d45166c581672b0be4"
+    },
+    {
+      "path": "include/vision/synth_ref/model.hpp",
+      "sha256": "b507b30b989bacb9321141be869f32b585234a87df57a4c69d8cabdf8fa97f41"
+    },
+    {
+      "path": "include/vision/synth_ref/perturb.hpp",
+      "sha256": "ca9073927b7ebeda85ebbc4eefee3ee8b9d233c843dfedc52fc4f887f47c1863"
+    },
+    {
+      "path": "include/vision/synth_ref/raster.hpp",
+      "sha256": "4cbb9e6b2e5f48c5ced58df4a9e635290e6f5a905914eab9b36bd2b9c7e4c32c"
+    },
+    {
+      "path": "include/vision/synth_ref/records.hpp",
+      "sha256": "6bb9ad0e74f6cfa725c65d5aa49936ce3e2643ee835802153a2d698a19de6531"
+    },
+    {
+      "path": "include/vision/synth_ref/transforms.hpp",
+      "sha256": "ca9ec1895df912ec4dbd5ee930314026a29533eef2a9e9c507ca0fd9a46ae400"
+    },
+    {
+      "path": "include/vision/synth_ref/verify.hpp",
+      "sha256": "31e1827714e3587f73fc3edb71b1d65342918ee62e86b98771d598a7b2db2ceb"
+    },
+    {
+      "path": "include/vision/tracking/target_tracker.hpp",
+      "sha256": "1260746e64d87f2c9f1d049c95a2b473d3a4290f452bc573a8fc4658dc55abb8"
+    },
+    {
+      "path": "include/vision/types/detection/corner_types.hpp",
+      "sha256": "a8cc00a3ef5371e8bceacd8f41d786b522cf13d5881ef199ea85d8e706e5c772"
+    },
+    {
+      "path": "include/vision/types/detection/decode_result.hpp",
+      "sha256": "83bcdd052229ed3fc65a62c82cd709cc02032b9ca05a32219683843ffe864f26"
+    },
+    {
+      "path": "include/vision/types/detection/geometry_types.hpp",
+      "sha256": "c7fe647aec633b126ce708b4db05ef8ab63a03c2c0d891b89e43f781fce0f476"
+    },
+    {
+      "path": "include/vision/types/detection/prepared_image.hpp",
+      "sha256": "a855684e799e6a109821e04d3664abb2f96fb50c8b1d33dc975f40607336c089"
+    },
+    {
+      "path": "include/vision/types/detection/temporal_types.hpp",
+      "sha256": "cb342f3dcaa21b9912d4e3134264dba71f6d08298a0225c7ca9b5104d05e973b"
+    },
+    {
+      "path": "include/vision/types/detector_types.hpp",
+      "sha256": "d954500665cdb4cfb284103e15910f10eca1ce5643963b71a46a88d4b7d2d73f"
+    },
+    {
+      "path": "include/vision/types/frame_stamp.hpp",
+      "sha256": "05a412770839f6a57940770b48bb99cf9b36b7a64bac7d4c323dec711d85ffb7"
+    },
+    {
+      "path": "include/vision/types/marker_geometry.hpp",
+      "sha256": "d0f7711b2b3338c08ad9a1c3eda3fc072c9b79dfc15f9bd2921aadb6cacdc3e1"
+    },
+    {
+      "path": "include/vision/types/pose_types.hpp",
+      "sha256": "235ca58702323f3fbd210b8f65dfd4b664ea15df501b998cb6a9746a960e1c16"
+    },
+    {
+      "path": "include/vision/types/tracking_types.hpp",
+      "sha256": "ef43f7367e89b7c76768eeb8dbb4d0f0ca7213879ded40a99e618eb0ba7d0d68"
+    },
+    {
+      "path": "src/app/CMakeLists.txt",
+      "sha256": "5c8bf72fb93ab89a6d20c5cff75fb78eb426411d453b8a74f12ac928e2d0ce99"
+    },
+    {
+      "path": "src/app/completion/input_completion.cpp",
+      "sha256": "be61bae3cf64b1694cef7eace8be8bfff6bc25646dc43ca6504bdb78faf15900"
+    },
+    {
+      "path": "src/app/completion/input_completion.hpp",
+      "sha256": "7652476ef325b028292ae261f6a004ac80331ccce601afaff18f916cbe2ae634"
+    },
+    {
+      "path": "src/app/display/display_session.cpp",
+      "sha256": "0b575220ae9a7a7e9bb79f19381edf686384b2625e511a4a83d86f25ec404e09"
+    },
+    {
+      "path": "src/app/display/display_session.hpp",
+      "sha256": "568e436beb352b361a2fe275fbe6bdf42978d91e83b4d9c8b3573bd0c6f376e2"
+    },
+    {
+      "path": "src/app/export/video_exporter.cpp",
+      "sha256": "d80f4b34b50632278666b89d44d980e2238742f89a300f5e63980c060f828637"
+    },
+    {
+      "path": "src/app/export/video_exporter.hpp",
+      "sha256": "a5aeea654d2c1ed17e93d946480e793ed895e7b5a476c945a98acad220771a2d"
+    },
+    {
+      "path": "src/app/offline/offline_runner.cpp",
+      "sha256": "de656d4694ced38db04d7c5888fc2e2c4c90e9d4bdf6be5e1ae38ddbd3d197ad"
+    },
+    {
+      "path": "src/app/offline/offline_runner.hpp",
+      "sha256": "cd322f58e7588fa88266e5f6757f0a68a482428136222a7528ba045439aa2f83"
+    },
+    {
+      "path": "src/app/rendering/debug_renderer.cpp",
+      "sha256": "01f76bd98c2c958f2302d721794f1d9cc6e3e4a4e38b8c56b7215ab9411d2f06"
+    },
+    {
+      "path": "src/app/rendering/debug_renderer.hpp",
+      "sha256": "8ec049e967b40cce131ce5d891291df2edf7d0c77b83f4d338a545af20e38c38"
+    },
+    {
+      "path": "src/app/reporting/run_console.cpp",
+      "sha256": "cf73ab8d559c43888251f6ece0b180539a40febf5c13547ace10f09f811c1786"
+    },
+    {
+      "path": "src/app/reporting/run_console.hpp",
+      "sha256": "6346be499e03e2399bdc5e02b61db3f6487c167db1f3d8da338d31549077978e"
+    },
+    {
+      "path": "src/config/CMakeLists.txt",
+      "sha256": "3a665316ff52c42a935b2337278f631c2256a4587fab89a7a6ef252084363855"
+    },
+    {
+      "path": "src/config/application/app_config.hpp",
+      "sha256": "4b6f95ed904dbbd5a5ce481b87a1eda36350b7e037cac7e9ec7f22556cc3d74d"
+    },
+    {
+      "path": "src/config/application/observability_config.hpp",
+      "sha256": "f9cb5a17683cc5e821fa1c26d7d29a5e673d2394ce56e2e902802ab297369c5d"
+    },
+    {
+      "path": "src/config/detector/config.cpp",
+      "sha256": "7fcbb7de64e24436fa62e0eae5c544191b684757ae665ac24ca463588e5553d3"
+    },
+    {
+      "path": "src/config/detector/config.hpp",
+      "sha256": "2773cfe0d890274684a5560557ba0eaabe945a02ff31df728855926e923311db"
+    },
+    {
+      "path": "src/config/detector/corner_budget_validation.hpp",
+      "sha256": "55ffcf793a49a2ba14119f012e59f02d9028808d0572241e6122cb13c02d37ee"
+    },
+    {
+      "path": "src/config/model/marker_geometry.cpp",
+      "sha256": "1ce9aedcb6cded03287f883c5fa549c99c47bb32f982d0cc0701151089b02f31"
+    },
+    {
+      "path": "src/config/model/marker_geometry_loader.hpp",
+      "sha256": "76aafb58cfe654e7fc3c7dfd7bdd33c5b6f62be929a12c5117ffa6e5ecb3c14e"
+    },
+    {
+      "path": "src/config/pose/pose_config.cpp",
+      "sha256": "55a82bd0fb88a25288b91307caf1f341b36932eeb22b404131410d97625cd8e9"
+    },
+    {
+      "path": "src/config/pose/tag_config_validation.cpp",
+      "sha256": "522b2b78e8c05f1e040b7b7bd4ba759b4d560d18b53c6c594f464676edd54205"
+    },
+    {
+      "path": "src/config/pose/tag_config_validation.hpp",
+      "sha256": "7c978f987bd1cad75bc383f2e4a6d6241c342d7d77c73db3db142d0b13773ce1"
+    },
+    {
+      "path": "src/config/reader/config_error.hpp",
+      "sha256": "588a7814a6147fd0c6ee9aaa95be9fcf255ed012efe8f951b6b37c60cb102cdd"
+    },
+    {
+      "path": "src/config/reader/value_reader.hpp",
+      "sha256": "d789d4717b26b4a6d3a1490678b0fa9f60a9a085ec9f85c988d7b942e5217947"
+    },
+    {
+      "path": "src/config/tracking/tracking_config.cpp",
+      "sha256": "c01657defbff320e648178f1cabf214acda074c1445cfa434ba9a7fc5001320a"
+    },
+    {
+      "path": "src/detection/CMakeLists.txt",
+      "sha256": "8cff5d922bf489a97f6a2bab0746c9c30b3fc8ab05a4486fa5cff180f425468d"
+    },
+    {
+      "path": "src/detection/corners/fitting/corner_edge_fit.cpp",
+      "sha256": "77b3cfa7062e779e9d66d9d188c86957567a76f19128db80a603232c5a906948"
+    },
+    {
+      "path": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "sha256": "7bb30c605c829bfa555fa30250530941286f5a69bf412ccb29e84bc192f26444"
+    },
+    {
+      "path": "src/detection/corners/fitting/periodic_line_fit.cpp",
+      "sha256": "272fbb8735825e4aecf21cf96a6c6ae231576d2f991a0cd7143ebefd4d7f2734"
+    },
+    {
+      "path": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "sha256": "9a04ee7357c19187f2c605770238b0df88b449bb155f726d1b884a1534748d59"
+    },
+    {
+      "path": "src/detection/corners/measurement/corner_resolver.cpp",
+      "sha256": "9b128e6a9dc02116f4bbffe849a72aa62e78d72dd20e8fbfbc7ac30c235090ba"
+    },
+    {
+      "path": "src/detection/corners/measurement/corner_resolver.hpp",
+      "sha256": "3940d77bf6f357fcc3633eced75c45803c702ca3963d678e5334a0fe07efed96"
+    },
+    {
+      "path": "src/detection/corners/observation/corner_observation.cpp",
+      "sha256": "627de2ed78e537de8ed672190636b378e20f0e30f37a1db6c81a3dd41ff07e99"
+    },
+    {
+      "path": "src/detection/corners/observation/corner_observation.hpp",
+      "sha256": "30b748ed9a6e68dd1921131b37ec2f5aa44519370e26de313205cd93bdd18be7"
+    },
+    {
+      "path": "src/detection/corners/ordering/screen_order.cpp",
+      "sha256": "30e9cdd9f15569c579b989351f5acff57c40ac71dc77a130280c7430e5d0d051"
+    },
+    {
+      "path": "src/detection/corners/ordering/screen_order.hpp",
+      "sha256": "f54f91a3be8793e9b31bbc451ce30f3a74b661e1b061c2e1837bd83526036184"
+    },
+    {
+      "path": "src/detection/corners/publication/detection_publication.cpp",
+      "sha256": "0e8270880f9d07d891350149b6417d26735f9f4ca74908bb2c835488dd9c7e97"
+    },
+    {
+      "path": "src/detection/corners/publication/detection_publication.hpp",
+      "sha256": "d288bca043b57c9863a55ec12619da494e2264d80628f4315ededf939eace4c6"
+    },
+    {
+      "path": "src/detection/corners/semantics/semantic_resolver.cpp",
+      "sha256": "fd4c600262f659a39113a8afc6a14d7d492f97c659defc5c4c4b4558047375bd"
+    },
+    {
+      "path": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "sha256": "159719bf3315ece16b7d44bddabcba806505213b7f82899aae638815c2b3c022"
+    },
+    {
+      "path": "src/detection/corners/validation/corner_evidence_validation.cpp",
+      "sha256": "dae313964f0e0fc5cb21385e49d6333107d8b0c0371b48177ac85da6a99842c4"
+    },
+    {
+      "path": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "sha256": "d485ed884e87c0db133d3a25b935f1f2eb2a42b6a3f29522b06c1c5b387dce82"
+    },
+    {
+      "path": "src/detection/corners/validation/detection_validator.cpp",
+      "sha256": "45dd20b161ce6d26bc5187a9f5cac51cc55561306eaeae098b38f404de378529"
+    },
+    {
+      "path": "src/detection/corners/validation/detection_validator.hpp",
+      "sha256": "269a3c46137a1cc386858aaf5cdb1ea1c8960d381fefe3c1b004815198d34945"
+    },
+    {
+      "path": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "sha256": "eacd370cf5a1493e30e49c1eecbd58635a6fb9cb4533cd305478e93dcd5d40ca"
+    },
+    {
+      "path": "src/detection/geometry/completion/geometry_assignment_completion.cpp",
+      "sha256": "f14e522f8c879b4b0c436ad07725c823f6dc2544c222cf54169825e30757158e"
+    },
+    {
+      "path": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "sha256": "19fa9809bfc796ddd35b3a2b1372603be1261745d7753b42f833909b942b13f7"
+    },
+    {
+      "path": "src/detection/geometry/observation/geometry_l_topology.cpp",
+      "sha256": "1adfaaa69a470fc8d7009a345145585938e34e7dcd4cf55d2b1faf7e0d994056"
+    },
+    {
+      "path": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "sha256": "acc2180ff6c549af680221295e2c290beacc37ee7bc1fa0d1554ac2dc376f723"
+    },
+    {
+      "path": "src/detection/geometry/observation/geometry_observation.cpp",
+      "sha256": "9e347bb9927134909b181be9ac0483b6fcf2cdd5aea452c4a809f498fea81701"
+    },
+    {
+      "path": "src/detection/geometry/observation/geometry_observation.hpp",
+      "sha256": "c3ee4325c0703eefe638602c91c979e81d3232ffa6b28aa88342596bddca495c"
+    },
+    {
+      "path": "src/detection/geometry/parent/geometry_anchor_evidence.cpp",
+      "sha256": "c90ebe247fc3bb2befe761b141e925c09b3dffe6a8826fdaa7baac6dde7b5f0a"
+    },
+    {
+      "path": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "sha256": "5b2b5173255a86fccc0e2bafe277c921714e705ab178f875a0b6617368930fee"
+    },
+    {
+      "path": "src/detection/geometry/parent/geometry_matcher.cpp",
+      "sha256": "389d8ea5a20c66a074b783006aee980373b0974b34b79958a17237d9b6b3544e"
+    },
+    {
+      "path": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "sha256": "6ff8e0e104aece1759ab4e3d5b1ddfe1b7eabe5a86c47ed516dd379901bfe09c"
+    },
+    {
+      "path": "src/detection/geometry/validation/geometry_validation.cpp",
+      "sha256": "494718b87cd7c29ccb50dc3fa9d8dde30bca8bac266ab05ee3aeabec972051dc"
+    },
+    {
+      "path": "src/detection/geometry/validation/geometry_validation.hpp",
+      "sha256": "204107b1ae0d01d586a97b93a1e32058d2c7967a97494e6422eab2452a11a754"
+    },
+    {
+      "path": "src/detection/pipeline/decode/decode_stage.cpp",
+      "sha256": "01ade1975468a88d2756f54c205bd1e9acebc698b639f8067afe82eee7a7413c"
+    },
+    {
+      "path": "src/detection/pipeline/decode/decode_stage.hpp",
+      "sha256": "5900de27d1ccf4c6a72749ae8b5d3fd1fb54ee2a17898da809ca589c935f3158"
+    },
+    {
+      "path": "src/detection/pipeline/execution/detector.cpp",
+      "sha256": "57f1497923bfe3319f35937955f7b23caff65717af0f28c1f4082aa7b369055e"
+    },
+    {
+      "path": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "sha256": "32f3664728a1fb7ade33e80c649ddb1bfa8bee4a372ff830d062e432ef6cc278"
+    },
+    {
+      "path": "src/detection/pipeline/input/frame_sequence.cpp",
+      "sha256": "55aca9e0343812adf07cb23369952b5cc238e268401b602540811642484feca2"
+    },
+    {
+      "path": "src/detection/pipeline/input/frame_sequence.hpp",
+      "sha256": "14997da128a18a8e2a49da4138a982dc7903ee202e6c40d77ba313b360fd1a6c"
+    },
+    {
+      "path": "src/detection/preprocess/preprocess.cpp",
+      "sha256": "ff5b99adad4ea37babea5ba256b44722657a10b797276dafe203000804b18271"
+    },
+    {
+      "path": "src/detection/preprocess/preprocess.hpp",
+      "sha256": "dca79c8c12384b4bff69debd9a20712ac1c922df89d273105aa89bc31ffe87ff"
+    },
+    {
+      "path": "src/detection/temporal/assembly/stabilize_stage.cpp",
+      "sha256": "73322f8d0b9c930f777f79f65d2de95a35f3b1db3764573372d0ee0b70018768"
+    },
+    {
+      "path": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "sha256": "979a00737caa8686ff82f6ebbe945f8336ffb12e52d40b2cafc1a77ad99fbf6f"
+    },
+    {
+      "path": "src/detection/temporal/correspondence/temporal_geometry.cpp",
+      "sha256": "54131250d00846a6a7925c1150046302d1e7269f61a1fbc752fb51d6d8daa67c"
+    },
+    {
+      "path": "src/detection/temporal/correspondence/temporal_geometry.hpp",
+      "sha256": "f6b9daacc605f3c50dff25476ed155db17617fc318ec41a19b2af9fb24234ac1"
+    },
+    {
+      "path": "src/detection/temporal/display/display_history.cpp",
+      "sha256": "a43f9a709b06ce152a9b30c75cb95460d63e31a999147c684c85fa612d7793db"
+    },
+    {
+      "path": "src/detection/temporal/display/display_history.hpp",
+      "sha256": "dea6e602ce0716b00bd51435b8acb85568c4a7baae860fe84bc5f5cb118c190e"
+    },
+    {
+      "path": "src/detection/temporal/stabilization/temporal_stabilizer.cpp",
+      "sha256": "3e728743d7abfe7cfe9145edab1a7178472a63ba1ff954af3ffd0574512f0c43"
+    },
+    {
+      "path": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "sha256": "2df22f0e449d6205df8dd644584564977d3ed8f4fed8de779fc702d045dc52da"
+    },
+    {
+      "path": "src/math/CMakeLists.txt",
+      "sha256": "2dabe8f2d8fe317b7b22dc6e7b8dfaeb70732a979af2516c63f8d2da6f3061bf"
+    },
+    {
+      "path": "src/math/covariance/covariance_validation.cpp",
+      "sha256": "d9d3e2a8d1351270d0c3f610769c89644d52cbe6ae260b58813d0d49d6fdc7d1"
+    },
+    {
+      "path": "src/observability/CMakeLists.txt",
+      "sha256": "743e99129b9bf3ffe753a333849f5ef571beb7b67e2a4e2bfaef99ab9e355632"
+    },
+    {
+      "path": "src/observability/context/diagnostics_context.cpp",
+      "sha256": "99cc62eeb9c452cd628afe9b6fd072a863e67c4e238fdaf8051b655780e0801c"
+    },
+    {
+      "path": "src/observability/context/diagnostics_context.hpp",
+      "sha256": "47b3d09b4774dc641bba56d1eccda3fc7a68f02553be144f423dae44685dda81"
+    },
+    {
+      "path": "src/observability/events/frame_events.cpp",
+      "sha256": "a11e6cc45019895325440c30e59b8c6b2f8d28a7812a81ccc84a4f5d5854247c"
+    },
+    {
+      "path": "src/observability/events/temporal_reason_codec.hpp",
+      "sha256": "f5a254ac87433fa0363a3fb4b0f874e33f88219101cf7b896c63aad461d00fd5"
+    },
+    {
+      "path": "src/observability/identity/file_fingerprint.cpp",
+      "sha256": "fb503ff4bbebca7fcd284c04fca844c012220c8c6f23f11ff175a61bad165eab"
+    },
+    {
+      "path": "src/observability/recording/diagnostics_recorder.cpp",
+      "sha256": "892bf517b9d570d4fbfdabd9cae0fa40ae2e8c0982ccb59d95850f2d4fe9beaf"
+    },
+    {
+      "path": "src/observability/recording/diagnostics_recorder.hpp",
+      "sha256": "f71df91c62d7dd632b0641bbc1eefb906f1d25e8a278f2a5c9f398cd8f637fb0"
+    },
+    {
+      "path": "src/observability/recording/record_codec.cpp",
+      "sha256": "99715ac1b35214e9f265d06d79deeb077dff2453bf5149b88ad80052793380b1"
+    },
+    {
+      "path": "src/observability/recording/record_codec.hpp",
+      "sha256": "c6689d254595dc193096cb8543fa4c74a5c5337ef10450cb4eef92684e2c364a"
+    },
+    {
+      "path": "src/observability/reporting/run_report.cpp",
+      "sha256": "538c5ef1cce3495d89446767199ec8d3d108a36f270a4ea69965dc389444379d"
+    },
+    {
+      "path": "src/observability/reporting/run_report.hpp",
+      "sha256": "ed893fae6aef13239f50536e645795877440678d450d4c5d45766db5fe10ffa6"
+    },
+    {
+      "path": "src/observability/timing/timing.cpp",
+      "sha256": "03aefc8a6b2ce5033ebc39f426d2e4c3a222830061afe94441024bd11c212ce0"
+    },
+    {
+      "path": "src/observability/timing/timing.hpp",
+      "sha256": "b37557dadc68986f4d742df7f4390a5b63bf43bdf8278a86a1106c5d2a28d976"
+    },
+    {
+      "path": "src/pose/CMakeLists.txt",
+      "sha256": "2f94f356963d552abd41d1bb51ccb2849409087214022b9c1977f9e8ae65fe0b"
+    },
+    {
+      "path": "src/pose/estimation/pose_estimator.cpp",
+      "sha256": "be22bfdb3528e896d71f4a68e4bc5329b033a5ddd655d16d00ccdb295bc7790f"
+    },
+    {
+      "path": "src/pose/tag/tag_detector.cpp",
+      "sha256": "7cfccde25901a92944395599e58d1f8648f423a1e4a3b467350afde86238b06b"
+    },
+    {
+      "path": "src/pose/validation/pose_geometry.cpp",
+      "sha256": "0331f06f0b4bf3537bf2b5716e8eb9dad857437d846c4cd985893ffd28ab5c9d"
+    },
+    {
+      "path": "src/pose/validation/pose_geometry.hpp",
+      "sha256": "6e12e9a5fce223bce75f4adacf916d845c8f262b50191923a2030c8ba39c5739"
+    },
+    {
+      "path": "src/synth_ref/CMakeLists.txt",
+      "sha256": "69312e865bfe2e2ee689419a76448f0efdba179409cb8c8d001120aee5c0c4d5"
+    },
+    {
+      "path": "src/synth_ref/enumeration/grid.cpp",
+      "sha256": "c9a977b33c18acc736fc235a9412d274346f5c6daa3d44dc52e08122fa857d70"
+    },
+    {
+      "path": "src/synth_ref/generation/generation.cpp",
+      "sha256": "a62d3f899dcedda871a37224102cc429ee3a689a71ecc5340180d77f400c4b91"
+    },
+    {
+      "path": "src/synth_ref/geometry/transforms.cpp",
+      "sha256": "eeabcce89a31520c9ea3ff4243603ef6e07a14adb126205d6cc0907c6e19f7b0"
+    },
+    {
+      "path": "src/synth_ref/inputs/source_inputs.cpp",
+      "sha256": "ebdcfd8460f339d612dacbf7a5ea79292baf611d3d6cc934b8edfaea8a8e09b5"
+    },
+    {
+      "path": "src/synth_ref/model/model.cpp",
+      "sha256": "996fed9c8a16c94bb8f3cdf4187a09b1a1c19c4daa38c4138fd3f7ca3c2285ea"
+    },
+    {
+      "path": "src/synth_ref/perturbation/perturb.cpp",
+      "sha256": "f6bc9113c66401b049b4838d0536d41586208b03aaacd50c7529e53ac867e500"
+    },
+    {
+      "path": "src/synth_ref/raster/raster.cpp",
+      "sha256": "5ab786d604e072a20cfd81b9b4e2975852f44fc6dd2d5a731c113a36ae876b54"
+    },
+    {
+      "path": "src/synth_ref/records/record_codec.cpp",
+      "sha256": "83a8ad4dfb119e2cb3d74be0b679c1ddf3266f2f72b7e608999999a46c5da00f"
+    },
+    {
+      "path": "src/synth_ref/scene/cases.cpp",
+      "sha256": "d8d0a780411f2acb1c4b12732d48e8ef5b7cec1a6224b90e92d20d325a96b513"
+    },
+    {
+      "path": "src/synth_ref/truth/truth_record.cpp",
+      "sha256": "0d616a9ca1399b1757d9174a57a573e8d983290a31895bf085880398d8b73597"
+    },
+    {
+      "path": "src/synth_ref/verification/verify.cpp",
+      "sha256": "e919ec0ed5c6479201b610cb7bb45e26348b86ed82e476d65d184344fdd83bdf"
+    },
+    {
+      "path": "src/tracking/CMakeLists.txt",
+      "sha256": "4c0ce60fcc483e3e6dc731ae9b18ab7263c1e7e053c68dcfed4bfbddb1d907b2"
+    },
+    {
+      "path": "src/tracking/filter/kalman_cv.cpp",
+      "sha256": "9b2cded5d5b1b48e32784250e41b60f79693d12d84af7b22b9b0832d6141c5e6"
+    },
+    {
+      "path": "src/tracking/filter/kalman_cv.hpp",
+      "sha256": "c592e521a0eeb0626b87441a3a58071ff3dc74d97fdfd56b5789aff8a21833fb"
+    },
+    {
+      "path": "src/tracking/io/tracking_io.cpp",
+      "sha256": "b3e5607bce434b834db46bb2d78f9b46f8831fdf0cba26ca1f1157be14e4cd5d"
+    },
+    {
+      "path": "src/tracking/io/tracking_io.hpp",
+      "sha256": "95cc0ff8c93d7621c3afc630c18dfc99e1b9e68e94a5407e2f20d51e6df93164"
+    },
+    {
+      "path": "src/tracking/lifecycle/target_tracker.cpp",
+      "sha256": "931e8c68cb4de376f20d6d6fc4873f76f33644a4f867e43b10afc8503350fed7"
+    },
+    {
+      "path": "src/tracking/measurement/measurement_adapter.cpp",
+      "sha256": "949f0b8d6208bd60bd34b6d94d7c537b8f730cf9e8951a340fa44367de23f7b9"
+    },
+    {
+      "path": "src/tracking/measurement/measurement_adapter.hpp",
+      "sha256": "b1f82961cb72700cb17ecde439673a840f6c77a016a0486ff11805c6f1d107a2"
+    },
+    {
+      "path": "src/types/CMakeLists.txt",
+      "sha256": "7db86f90563444c0899b5d649f249dff1122ca6eda7943ba220f6007383c1b07"
+    },
+    {
+      "path": "tests/CMakeLists.txt",
+      "sha256": "e043174185327323153fee5d1edf134b29531e74747e91b8f53e821893d2b09d"
+    },
+    {
+      "path": "tests/app/CMakeLists.txt",
+      "sha256": "521062d5236d5e9438e8dd3ee99f491ea9e4eb42ea4ea3b8165155d71111fde2"
+    },
+    {
+      "path": "tests/app/manual/manual_validation_check.cpp",
+      "sha256": "53195d591a50d3a0a74a46c32791b07b4308be4a7cf47fd0713fc1619d474ae0"
+    },
+    {
+      "path": "tests/app/offline/observability_integration_test.cpp",
+      "sha256": "f528dbdc277d75a871096d129aabe840a306e3fe6bb27700624d68028c74d9d4"
+    },
+    {
+      "path": "tests/app/rendering/debug_renderer_test.cpp",
+      "sha256": "ee7e754cd9d2d99bb3616d18160ea4c306ee66fcb0562a613c101bf0515635fc"
+    },
+    {
+      "path": "tests/config/CMakeLists.txt",
+      "sha256": "288f6cbdac01f95a14edad77d63142391efbafbb5e91b7d50608aff87e7df9b1"
+    },
+    {
+      "path": "tests/config/config_error_test.cpp",
+      "sha256": "d1845244876e4222b697b6c2b6fd732f1901289856e9c9f8b24912250dc2777a"
+    },
+    {
+      "path": "tests/config/config_roundtrip_test.cpp",
+      "sha256": "54550ef414cd37d5e40a2c2b3eadae04043ea2181ebd93d058342c4149ec797c"
+    },
+    {
+      "path": "tests/detection/CMakeLists.txt",
+      "sha256": "9b2b9baec5d7d612329e4a2577c1b11d1e9d16cb82d06dd5dc6449fb09aa1fbb"
+    },
+    {
+      "path": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "sha256": "5780899fc0f91d60c3d515eaff13b4b3b78da4dc287cd3e4b9264c6b72db3ad4"
+    },
+    {
+      "path": "tests/detection/corners/corner_resolver_test.cpp",
+      "sha256": "360bf9b5429c8bc76618a6f9a9cca36f4fbff3ad3bad5e9fa556de526b7ef8ff"
+    },
+    {
+      "path": "tests/detection/corners/detection_validator_test.cpp",
+      "sha256": "478b590fc62c12670e9ba8a6bec55119e1dddcb3b3e74c20586205754fe69110"
+    },
+    {
+      "path": "tests/detection/corners/screen_order_test.cpp",
+      "sha256": "5bf8dba305e3c4d4cd188874055189124eae7225d93e9c382deab1c5750cb96b"
+    },
+    {
+      "path": "tests/detection/corners/semantic_resolver_test.cpp",
+      "sha256": "c18deab11fe9ddb0581fd25410be23d39f45b4a7e554376d86ce20e5cd3567c9"
+    },
+    {
+      "path": "tests/detection/geometry/assignment_completion_test.cpp",
+      "sha256": "3b6ebb9f0997c9115229508f248e0475938dd12e9e1a99a8cf8ddd850b8fbc9b"
+    },
+    {
+      "path": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "sha256": "a3c1f349d1ff2d0d7d3cc83abb7edf8ae31acdee634bf2df95115b16d517935b"
+    },
+    {
+      "path": "tests/detection/geometry/geometry_l_topology_test.cpp",
+      "sha256": "9734d65f29ce6ab51eb3118ed898e9cd1aa99b6e85a601b12fcb83c3864f79e3"
+    },
+    {
+      "path": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "sha256": "2aeaedcc89206787b97b0a83c299fc10b1d9cf3eb74a9ed32b3435b78aff04e3"
+    },
+    {
+      "path": "tests/detection/geometry/geometry_model_test.cpp",
+      "sha256": "62758a3365eceb8b614b28554fa81db321da35f0e8cb2e9533f452bdacb299a2"
+    },
+    {
+      "path": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "sha256": "ea1186821ccd431112480e234ca4ea0816418ef4e4a1de7383693492542b6412"
+    },
+    {
+      "path": "tests/detection/pipeline/detector_contract_test.cpp",
+      "sha256": "c4f64ed54711f92013e515a2d08b1462d48a7f517e8be31d618e9b5e99282b7e"
+    },
+    {
+      "path": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "sha256": "b8b57825ab36d0ccbb2afc2b5fbb6d1bee05d306eba2709159f4e05a0ff966f8"
+    },
+    {
+      "path": "tests/detection/temporal/display_history_test.cpp",
+      "sha256": "c966c4c9db9dab8c3b10046c00ffeec584cb2406d476bbc6d96a84284594b142"
+    },
+    {
+      "path": "tests/detection/temporal/temporal_integration_test.cpp",
+      "sha256": "b7d7b34ac3ee123379f8fb63e943eb5d14dc154f2574bb8f8db7b74fa2650cc6"
+    },
+    {
+      "path": "tests/detection/temporal/temporal_stabilizer_test.cpp",
+      "sha256": "87cc834d5f772beb9655f3c5bcd01aead31c2f144a7f64f56b4034c5027b16b9"
+    },
+    {
+      "path": "tests/observability/CMakeLists.txt",
+      "sha256": "dbcc27fb8a29fd53d5c2e1c4b2c4244c41e4c83f3a23ce2363c718cb2ffa4172"
+    },
+    {
+      "path": "tests/observability/diagnostics_record_test.cpp",
+      "sha256": "edb5ee26c2690e69c3aba1ebb1b3c22982fe9f4fc1ab8a2a5a69371638257a9d"
+    },
+    {
+      "path": "tests/observability/timing_test.cpp",
+      "sha256": "5e53254c62dc41322b711860eeef982012da1708f110b3f2cd9418f27c5ef42b"
+    },
+    {
+      "path": "tests/pose/CMakeLists.txt",
+      "sha256": "8cb38e5fa16a5ce982911e1c7a1ea6588cf103f247c7f6cb8b1a973b9a9e341f"
+    },
+    {
+      "path": "tests/pose/estimation/pose_contract_test.cpp",
+      "sha256": "7cfd4f12cbb6932d416205af07fc67111932631f92deba6669b4fb696927669b"
+    },
+    {
+      "path": "tests/pose/tag/tag_detector_test.cpp",
+      "sha256": "989cfc1c9f64dcfb7c2261c8822f4755569aff3200afc74779c3d3c67ac2f570"
+    },
+    {
+      "path": "tests/support/CMakeLists.txt",
+      "sha256": "2074330f5e1a0737e9f5f94a1d028080b875129554cc67c63ccc050858c9e099"
+    },
+    {
+      "path": "tests/support/common/assertions.hpp",
+      "sha256": "9632214a7808f600811424558dea8d0e9ce23ef093622cd7293ec539b45f10c9"
+    },
+    {
+      "path": "tests/support/common/case_runner.hpp",
+      "sha256": "d7452a70e45185f647be4c9e645f3898e7f2792e692d9267b17532947b1e16c2"
+    },
+    {
+      "path": "tests/support/detection/block3_fixture.hpp",
+      "sha256": "25a711162253865eee140f463876dbd3038986b7853e5459a9763d0d13edc78f"
+    },
+    {
+      "path": "tests/support/detection/corners/recovery112_reference.cpp",
+      "sha256": "9c76696dd1c5eb6a6152de3c39744965acce172794c6a9b6f453edb197c8e4cc"
+    },
+    {
+      "path": "tests/support/detection/corners/recovery112_reference.hpp",
+      "sha256": "4195685bb9dff92941282e738b91b7f4036751b7bd71ed503393c8df606ce6cd"
+    },
+    {
+      "path": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "sha256": "c4cbd01e13a1909c2ffaa9f895ce44eae82f3773e59f8e633167923b65477371"
+    },
+    {
+      "path": "tests/support/observability/observability_fixture.hpp",
+      "sha256": "822f3a14ce030ec4d95b5c9daeb996fd979b309bb21caa6d79a3d4c4108e9040"
+    },
+    {
+      "path": "tests/support/pose/g2_test_scene.hpp",
+      "sha256": "8e403d43a4c93e8e413fa83f3870c91706adfb9b3b7cb1d593d39660a229d9d8"
+    },
+    {
+      "path": "tests/synth_ref/CMakeLists.txt",
+      "sha256": "1f14a0b5fd3e6f7feaa007e392ed3788160b08e4e9b68797c028291493e53ae0"
+    },
+    {
+      "path": "tests/synth_ref/tests.cpp",
+      "sha256": "e3c87aa8d96e55af011d7418b6944f41cd80bbad21191f0a36d297217bd4a031"
+    },
+    {
+      "path": "tests/tracking/CMakeLists.txt",
+      "sha256": "30703e83a5c08de7d7273f9cead916f1926c59958f909533f4e88e27ff4ef9ba"
+    },
+    {
+      "path": "tests/tracking/io/tracking_io_test.cpp",
+      "sha256": "94b6fe00385283da56fab1a22053ea70ae984e7924cb73903f3500d4afac7ca4"
+    },
+    {
+      "path": "tests/tracking/lifecycle/tracking_contract_test.cpp",
+      "sha256": "cb57f743b61dcf2d1ea37ee4585381fa02393383f0372c5d7001ef2a2ad91334"
+    },
+    {
+      "path": "tools/CMakeLists.txt",
+      "sha256": "063c4f5bd47799a7bc97eef3984dd31fea0028bf5a002c47e241cfddc98a06ac"
+    },
+    {
+      "path": "tools/apps/CMakeLists.txt",
+      "sha256": "96996462c2c415d127af9199716a517914d13f0cc2867e653b85546b24eb36c1"
+    },
+    {
+      "path": "tools/apps/display/display_probe.cpp",
+      "sha256": "2a720f1a5de9a3a81d9438856ae09f59bd1de7ce8c8c2d6de76ca6e93729456b"
+    },
+    {
+      "path": "tools/apps/marker/main.cpp",
+      "sha256": "f595d845cd724d387a26a439e6312fe092106eb29f46494c60dcbcbe5617725d"
+    },
+    {
+      "path": "tools/apps/pose/pose_main.cpp",
+      "sha256": "dbcd78a30bea6da54147224b6653530f32b79ff380b08087023fe4494ffe94f4"
+    },
+    {
+      "path": "tools/apps/tracking/tracking_main.cpp",
+      "sha256": "f198ec43f14c97e184c26dff93edb37e800e89a102e1a826e5ff628d9659321e"
+    },
+    {
+      "path": "tools/audit/CMakeLists.txt",
+      "sha256": "e417659e947c2d209b651f89b5b1eb1bc9b995eada0e2e9296137e88c79fa3b7"
+    },
+    {
+      "path": "tools/audit/decode/decode_audit.cpp",
+      "sha256": "9266ee2dc17358f213e9b2fb2501e3aa7a28f3a80ea0983d3f1727fc16d864ea"
+    },
+    {
+      "path": "tools/audit/geometry/geometry_audit.cpp",
+      "sha256": "8531725fdd47f7905cb079244cc195af28b55f35cb2e83036b523189bd9df4ac"
+    },
+    {
+      "path": "tools/audit/temporal/temporal_audit.cpp",
+      "sha256": "9f1e9768b7bf186423726288eeaf311a34587415db0ec818504e49d2911a5918"
+    },
+    {
+      "path": "tools/block3_fixture/CMakeLists.txt",
+      "sha256": "b5beb2a305b46038b8ae8597adf2343316ff4e8f109210cda8b512e103fccbb3"
+    },
+    {
+      "path": "tools/block3_fixture/calibration/measure.cpp",
+      "sha256": "8659dcaad1536c85533f7cea643d0c7a704a13d4777fbcf1429cbb99af2ec793"
+    },
+    {
+      "path": "tools/block3_fixture/common/support_pixel_count.hpp",
+      "sha256": "184b1967214c4a0807b6f18fa02eca93008bbe9126678bcd11073fbbf097d1b5"
+    },
+    {
+      "path": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "sha256": "56db5793fed9ac9c43550de518b99243da5bc04b5d73d4090e86ceb3e2cc3f6d"
+    },
+    {
+      "path": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "sha256": "db6f1cf3f27fec96fae5513686e77506e015e6bbbec2f0ad27d46d7758d007ff"
+    },
+    {
+      "path": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "sha256": "46cc73224d210e66dd113b181bcd0222d16dd9edad3835e7c923be011e626389"
+    },
+    {
+      "path": "tools/block3_fixture/generation/main.cpp",
+      "sha256": "1e6383993783876b6dbeb96926c9027b0eac062e82aeedb741e9ba060756a4b7"
+    },
+    {
+      "path": "tools/block3_fixture/validation/resources.cpp",
+      "sha256": "f258292d14e4b879344e6de340539afc1c8cc0a53dee87a8ab02ca0d8318705e"
+    },
+    {
+      "path": "tools/block3_fixture/validation/verify.cpp",
+      "sha256": "7f96a6fedead7c46eb723fc43301a3caef150eea29a04bdf598e54b4e5a3ece9"
+    },
+    {
+      "path": "tools/calibration/CMakeLists.txt",
+      "sha256": "937df383a146e3dd32381e00b856ce94252d94596c5c455c0725c5ef76997762"
+    },
+    {
+      "path": "tools/calibration/apps/calibration_main.cpp",
+      "sha256": "e45bf91af9b84f2bb19e116bc3aa55d2ee6af0926e844e5cbbbf55280d06b59a"
+    },
+    {
+      "path": "tools/calibration/frames/calibration_video.cpp",
+      "sha256": "40209079631d3cebf8d19c4da0fffb803ff975f292d00c904a21001a6fd65611"
+    },
+    {
+      "path": "tools/calibration/frames/calibration_video.hpp",
+      "sha256": "0ffe4cc912095bebe21c2b002cdd73ecf3e2a5d51b96dfb5946a5caaf9aee97d"
+    },
+    {
+      "path": "tools/calibration/input/calibration_config.cpp",
+      "sha256": "eb7bdaba1fd0e9c74ff155b725cbb3feb51e8d9427cc8bcac498bc1c201994a2"
+    },
+    {
+      "path": "tools/calibration/input/calibration_config.hpp",
+      "sha256": "4ec6e9ae5de40a6a9c22087bc5ed80f002d07258051e0f5fa6e74cb93385e872"
+    },
+    {
+      "path": "tools/calibration/observation/calibration_detection.cpp",
+      "sha256": "c821eb6dca52e24049f25a3983872eff26ecc84e7dbb70ab342e61338089b71a"
+    },
+    {
+      "path": "tools/calibration/observation/calibration_detection.hpp",
+      "sha256": "0aad2f4c373cb03fd2a685d651faef09c763b6adb989b9e43c5565a9dca2cc9f"
+    },
+    {
+      "path": "tools/calibration/results/calibration_result.cpp",
+      "sha256": "f60b6c9257a3ed562c7da86ad54a6431deb97915d5b163bd1c74754b9c27ed64"
+    },
+    {
+      "path": "tools/calibration/results/calibration_result.hpp",
+      "sha256": "131e12074fc8abf24782a5a14ed1ae9de91ec6db1d3b339d6cbf7e8c6a26539e"
+    },
+    {
+      "path": "tools/common/CMakeLists.txt",
+      "sha256": "f674e0b77eeeebf4a0d7b345dd58277bead57d0dcf2e1f95c64b4346cd374de5"
+    },
+    {
+      "path": "tools/common/file_digest.hpp",
+      "sha256": "9c366ebb86c0ff73ef293552f29fc3471f07279bd675b366efb1f20e512e2bdc"
+    },
+    {
+      "path": "tools/common/frame_record_reader.cpp",
+      "sha256": "070ea0773f5ad3cc3c2b9bb3301ecb5cc6cd9e8b2bc65b5e90f854b0747ca200"
+    },
+    {
+      "path": "tools/common/frame_record_reader.hpp",
+      "sha256": "b40ccc6ae5e55112f91041f2bacaadf2040f81166a963ecd24307fc7be89b724"
+    },
+    {
+      "path": "tools/synth_ref/CMakeLists.txt",
+      "sha256": "575e8c4bc69ce75abfa9ce04a6b4c2490d3d35dc5f13544a1110b7f123dda18a"
+    },
+    {
+      "path": "tools/synth_ref/main.cpp",
+      "sha256": "360d917a707aa3693f769aff3c90450ebd22c1406c9d50b3515a2a65f0c0cefd"
+    },
+    {
+      "path": "tools/validation/CMakeLists.txt",
+      "sha256": "b45ee058b09d62ceb69c3f79f39eb6b987159fbdb9937d71c887c17a15598908"
+    },
+    {
+      "path": "tools/validation/pose/pose_sensitivity.cpp",
+      "sha256": "31c34fedfc774d4e085b07d74d1bb158ad62a07b989993fbd19ecf65d2750033"
+    },
+    {
+      "path": "tools/validation/records/final_fixes_verify.cpp",
+      "sha256": "f67c766d911dd4af72b929c9543a7d158648a0716a63de21b7aa2ba2ff399fe9"
+    },
+    {
+      "path": "tools/validation/records/observability_verify.cpp",
+      "sha256": "4a7cfc289dad2fb94bbe1e1f3cb1c9d18200c684688fc6ceca5359fc3827bba3"
+    },
+    {
+      "path": "tools/validation/records/path_a_verify.cpp",
+      "sha256": "0289b1d4e702abe524d7d45d488c376791ada8e4ce78b798d5db95161a907d59"
+    },
+    {
+      "path": "tools/validation/recovery/recovery112_benchmark.cpp",
+      "sha256": "337ea9e71c09b8e061614094826fadc0b09ba26c6b4a207f01f514cfd8cebc08"
+    },
+    {
+      "path": "tools/validation/recovery/recovery112_synthetic.cpp",
+      "sha256": "5f93f2791e5920713a3200b91a61f085423974f4487e75960619f3c0a94d7e73"
+    },
+    {
+      "path": "tools/validation/tracking/tracking_lab.cpp",
+      "sha256": "94bfb0c6d1b1b1bf37304608391f9ca682759bf39d3f883b9862cab709e2c2b2"
+    },
+    {
+      "path": "src/synth_ref/build_info.hpp.in",
+      "sha256": "7d7b1fab2441833b617d326f32c6514e1c35b0fe67f893142219fb064179430d"
+    }
+  ],
+  "edges": [
+    {
+      "from": "tools/common/frame_record_reader.cpp",
+      "to": "tools/common/frame_record_reader.hpp",
+      "include": "common/frame_record_reader.hpp"
+    },
+    {
+      "from": "tools/common/frame_record_reader.cpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "tools/common/frame_record_reader.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "tools/synth_ref/main.cpp",
+      "to": "include/vision/synth_ref/core.hpp",
+      "include": "vision/synth_ref/core.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/generation/main.cpp",
+      "to": "include/vision/synth_ref/core.hpp",
+      "include": "vision/synth_ref/core.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "include/vision/synth_ref/core.hpp",
+      "include": "vision/synth_ref/core.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "include": "geometry/completion/assignment_match_metrics.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "include/vision/synth_ref/core.hpp",
+      "include": "vision/synth_ref/core.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "include": "geometry/completion/assignment_match_metrics.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/verify.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/resources.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/resources.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/validation/resources.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "include": "corners/fitting/corner_edge_fit.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp",
+      "to": "tools/common/file_digest.hpp",
+      "include": "common/file_digest.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "include": "corners/fitting/corner_edge_fit.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/diagnostics/video/video_diagnose.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tools/calibration/observation/calibration_detection.cpp",
+      "to": "tools/calibration/observation/calibration_detection.hpp",
+      "include": "observation/calibration_detection.hpp"
+    },
+    {
+      "from": "tools/calibration/observation/calibration_detection.hpp",
+      "to": "tools/calibration/frames/calibration_video.hpp",
+      "include": "frames/calibration_video.hpp"
+    },
+    {
+      "from": "tools/calibration/frames/calibration_video.hpp",
+      "to": "tools/calibration/input/calibration_config.hpp",
+      "include": "input/calibration_config.hpp"
+    },
+    {
+      "from": "tools/calibration/frames/calibration_video.cpp",
+      "to": "tools/calibration/frames/calibration_video.hpp",
+      "include": "frames/calibration_video.hpp"
+    },
+    {
+      "from": "tools/calibration/input/calibration_config.cpp",
+      "to": "tools/calibration/input/calibration_config.hpp",
+      "include": "input/calibration_config.hpp"
+    },
+    {
+      "from": "tools/calibration/apps/calibration_main.cpp",
+      "to": "tools/calibration/input/calibration_config.hpp",
+      "include": "input/calibration_config.hpp"
+    },
+    {
+      "from": "tools/calibration/apps/calibration_main.cpp",
+      "to": "tools/calibration/frames/calibration_video.hpp",
+      "include": "frames/calibration_video.hpp"
+    },
+    {
+      "from": "tools/calibration/apps/calibration_main.cpp",
+      "to": "tools/calibration/observation/calibration_detection.hpp",
+      "include": "observation/calibration_detection.hpp"
+    },
+    {
+      "from": "tools/calibration/apps/calibration_main.cpp",
+      "to": "tools/calibration/results/calibration_result.hpp",
+      "include": "results/calibration_result.hpp"
+    },
+    {
+      "from": "tools/calibration/results/calibration_result.cpp",
+      "to": "tools/calibration/results/calibration_result.hpp",
+      "include": "results/calibration_result.hpp"
+    },
+    {
+      "from": "tools/calibration/results/calibration_result.hpp",
+      "to": "tools/calibration/observation/calibration_detection.hpp",
+      "include": "observation/calibration_detection.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_synthetic.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_synthetic.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_synthetic.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_synthetic.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_synthetic.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_benchmark.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_benchmark.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/validation/recovery/recovery112_benchmark.cpp",
+      "to": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "include": "pipeline/execution/detector_diagnostics_access.hpp"
+    },
+    {
+      "from": "tools/validation/tracking/tracking_lab.cpp",
+      "to": "include/vision/math/covariance_validation.hpp",
+      "include": "vision/math/covariance_validation.hpp"
+    },
+    {
+      "from": "tools/validation/tracking/tracking_lab.cpp",
+      "to": "include/vision/tracking/target_tracker.hpp",
+      "include": "vision/tracking/target_tracker.hpp"
+    },
+    {
+      "from": "tools/validation/tracking/tracking_lab.cpp",
+      "to": "src/tracking/filter/kalman_cv.hpp",
+      "include": "filter/kalman_cv.hpp"
+    },
+    {
+      "from": "tools/validation/tracking/tracking_lab.cpp",
+      "to": "src/tracking/measurement/measurement_adapter.hpp",
+      "include": "measurement/measurement_adapter.hpp"
+    },
+    {
+      "from": "tools/validation/tracking/tracking_lab.cpp",
+      "to": "src/tracking/io/tracking_io.hpp",
+      "include": "io/tracking_io.hpp"
+    },
+    {
+      "from": "tools/validation/records/final_fixes_verify.cpp",
+      "to": "tools/common/frame_record_reader.hpp",
+      "include": "common/frame_record_reader.hpp"
+    },
+    {
+      "from": "tools/validation/records/final_fixes_verify.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "tools/validation/records/observability_verify.cpp",
+      "to": "include/vision/observability/file_fingerprint.hpp",
+      "include": "vision/observability/file_fingerprint.hpp"
+    },
+    {
+      "from": "tools/validation/records/observability_verify.cpp",
+      "to": "tools/common/file_digest.hpp",
+      "include": "common/file_digest.hpp"
+    },
+    {
+      "from": "tools/validation/records/observability_verify.cpp",
+      "to": "tools/common/frame_record_reader.hpp",
+      "include": "common/frame_record_reader.hpp"
+    },
+    {
+      "from": "tools/validation/records/observability_verify.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/validation/records/observability_verify.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "tools/validation/records/observability_verify.cpp",
+      "to": "src/observability/reporting/run_report.hpp",
+      "include": "reporting/run_report.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "include/vision/config/cli_options.hpp",
+      "include": "vision/config/cli_options.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "include/vision/observability/file_fingerprint.hpp",
+      "include": "vision/observability/file_fingerprint.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "tools/common/frame_record_reader.hpp",
+      "include": "common/frame_record_reader.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "include": "geometry/parent/geometry_anchor_evidence.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/detection/corners/publication/detection_publication.hpp",
+      "include": "corners/publication/detection_publication.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "include": "corners/semantics/semantic_resolver.hpp"
+    },
+    {
+      "from": "tools/validation/records/path_a_verify.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "tools/validation/pose/pose_sensitivity.cpp",
+      "to": "include/vision/pose/pose_estimator.hpp",
+      "include": "vision/pose/pose_estimator.hpp"
+    },
+    {
+      "from": "tools/validation/pose/pose_sensitivity.cpp",
+      "to": "src/pose/validation/pose_geometry.hpp",
+      "include": "validation/pose_geometry.hpp"
+    },
+    {
+      "from": "tools/apps/marker/main.cpp",
+      "to": "include/vision/config/cli_options.hpp",
+      "include": "vision/config/cli_options.hpp"
+    },
+    {
+      "from": "tools/apps/marker/main.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tools/apps/marker/main.cpp",
+      "to": "src/app/offline/offline_runner.hpp",
+      "include": "offline/offline_runner.hpp"
+    },
+    {
+      "from": "tools/apps/marker/main.cpp",
+      "to": "src/app/reporting/run_console.hpp",
+      "include": "reporting/run_console.hpp"
+    },
+    {
+      "from": "tools/apps/tracking/tracking_main.cpp",
+      "to": "include/vision/config/cli_options.hpp",
+      "include": "vision/config/cli_options.hpp"
+    },
+    {
+      "from": "tools/apps/tracking/tracking_main.cpp",
+      "to": "include/vision/tracking/target_tracker.hpp",
+      "include": "vision/tracking/target_tracker.hpp"
+    },
+    {
+      "from": "tools/apps/tracking/tracking_main.cpp",
+      "to": "src/tracking/io/tracking_io.hpp",
+      "include": "io/tracking_io.hpp"
+    },
+    {
+      "from": "tools/apps/pose/pose_main.cpp",
+      "to": "include/vision/config/cli_options.hpp",
+      "include": "vision/config/cli_options.hpp"
+    },
+    {
+      "from": "tools/apps/pose/pose_main.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tools/apps/pose/pose_main.cpp",
+      "to": "include/vision/pose/tag_detector.hpp",
+      "include": "vision/pose/tag_detector.hpp"
+    },
+    {
+      "from": "tools/apps/pose/pose_main.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tools/audit/geometry/geometry_audit.cpp",
+      "to": "include/vision/config/cli_options.hpp",
+      "include": "vision/config/cli_options.hpp"
+    },
+    {
+      "from": "tools/audit/geometry/geometry_audit.cpp",
+      "to": "src/app/offline/offline_runner.hpp",
+      "include": "offline/offline_runner.hpp"
+    },
+    {
+      "from": "tools/audit/decode/decode_audit.cpp",
+      "to": "src/app/offline/offline_runner.hpp",
+      "include": "offline/offline_runner.hpp"
+    },
+    {
+      "from": "tools/audit/temporal/temporal_audit.cpp",
+      "to": "include/vision/config/cli_options.hpp",
+      "include": "vision/config/cli_options.hpp"
+    },
+    {
+      "from": "tools/audit/temporal/temporal_audit.cpp",
+      "to": "src/app/offline/offline_runner.hpp",
+      "include": "offline/offline_runner.hpp"
+    },
+    {
+      "from": "tools/audit/temporal/temporal_audit.cpp",
+      "to": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "include": "temporal/assembly/stabilize_stage.hpp"
+    },
+    {
+      "from": "tools/audit/temporal/temporal_audit.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "tools/audit/temporal/temporal_audit.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "tools/audit/temporal/temporal_audit.cpp",
+      "to": "tools/common/file_digest.hpp",
+      "include": "common/file_digest.hpp"
+    },
+    {
+      "from": "include/vision/detection/detector.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "include/vision/detection/detector.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "include/vision/tracking/target_tracker.hpp",
+      "to": "include/vision/config/tracking_config.hpp",
+      "include": "vision/config/tracking_config.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/verify.hpp",
+      "to": "include/vision/synth_ref/records.hpp",
+      "include": "vision/synth_ref/records.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/transforms.hpp",
+      "to": "include/vision/synth_ref/model.hpp",
+      "include": "vision/synth_ref/model.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/perturb.hpp",
+      "to": "include/vision/synth_ref/model.hpp",
+      "include": "vision/synth_ref/model.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/raster.hpp",
+      "to": "include/vision/synth_ref/cases.hpp",
+      "include": "vision/synth_ref/cases.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/records.hpp",
+      "to": "include/vision/synth_ref/raster.hpp",
+      "include": "vision/synth_ref/raster.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/cases.hpp",
+      "to": "include/vision/synth_ref/grid.hpp",
+      "include": "vision/synth_ref/grid.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/model.hpp",
+      "include": "vision/synth_ref/model.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/grid.hpp",
+      "include": "vision/synth_ref/grid.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/perturb.hpp",
+      "include": "vision/synth_ref/perturb.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/cases.hpp",
+      "include": "vision/synth_ref/cases.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/raster.hpp",
+      "include": "vision/synth_ref/raster.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/records.hpp",
+      "include": "vision/synth_ref/records.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/core.hpp",
+      "to": "include/vision/synth_ref/verify.hpp",
+      "include": "vision/synth_ref/verify.hpp"
+    },
+    {
+      "from": "include/vision/synth_ref/grid.hpp",
+      "to": "include/vision/synth_ref/model.hpp",
+      "include": "vision/synth_ref/model.hpp"
+    },
+    {
+      "from": "include/vision/observability/frame_record.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "include/vision/observability/stage_details.hpp",
+      "to": "include/vision/types/detection/prepared_image.hpp",
+      "include": "vision/types/detection/prepared_image.hpp"
+    },
+    {
+      "from": "include/vision/observability/stage_details.hpp",
+      "to": "include/vision/types/detection/decode_result.hpp",
+      "include": "vision/types/detection/decode_result.hpp"
+    },
+    {
+      "from": "include/vision/observability/stage_details.hpp",
+      "to": "include/vision/types/detection/temporal_types.hpp",
+      "include": "vision/types/detection/temporal_types.hpp"
+    },
+    {
+      "from": "include/vision/types/frame_stamp.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "include/vision/types/tracking_types.hpp",
+      "to": "include/vision/types/pose_types.hpp",
+      "include": "vision/types/pose_types.hpp"
+    },
+    {
+      "from": "include/vision/config/tracking_config.hpp",
+      "to": "include/vision/types/tracking_types.hpp",
+      "include": "vision/types/tracking_types.hpp"
+    },
+    {
+      "from": "include/vision/pose/tag_detector.hpp",
+      "to": "include/vision/pose/pose_estimator.hpp",
+      "include": "vision/pose/pose_estimator.hpp"
+    },
+    {
+      "from": "include/vision/pose/pose_estimator.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "include/vision/pose/pose_estimator.hpp",
+      "to": "include/vision/config/pose_config.hpp",
+      "include": "vision/config/pose_config.hpp"
+    },
+    {
+      "from": "include/vision/pose/pose_estimator.hpp",
+      "to": "include/vision/types/pose_types.hpp",
+      "include": "vision/types/pose_types.hpp"
+    },
+    {
+      "from": "include/vision/types/detection/prepared_image.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "include/vision/types/detection/decode_result.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "include/vision/types/detection/decode_result.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "include/vision/types/detection/temporal_types.hpp",
+      "to": "include/vision/types/frame_stamp.hpp",
+      "include": "vision/types/frame_stamp.hpp"
+    },
+    {
+      "from": "tests/synth_ref/tests.cpp",
+      "to": "include/vision/synth_ref/core.hpp",
+      "include": "vision/synth_ref/core.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "tests/support/observability/observability_fixture.hpp",
+      "include": "observability_fixture.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "include": "temporal/assembly/stabilize_stage.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "tools/common/frame_record_reader.hpp",
+      "include": "common/frame_record_reader.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "include": "corners/validation/corner_evidence_validation.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "include": "corners/fitting/periodic_line_fit.hpp"
+    },
+    {
+      "from": "tests/observability/diagnostics_record_test.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "tests/observability/timing_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/observability/timing_test.cpp",
+      "to": "tests/support/observability/observability_fixture.hpp",
+      "include": "observability_fixture.hpp"
+    },
+    {
+      "from": "tests/observability/timing_test.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "tests/config/config_roundtrip_test.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tests/config/config_roundtrip_test.cpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "tests/config/config_error_test.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tests/config/config_error_test.cpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "tests/config/config_error_test.cpp",
+      "to": "tools/calibration/input/calibration_config.hpp",
+      "include": "input/calibration_config.hpp"
+    },
+    {
+      "from": "tests/config/config_error_test.cpp",
+      "to": "tools/calibration/results/calibration_result.hpp",
+      "include": "results/calibration_result.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "include": "corners/fitting/corner_edge_fit.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "include": "corners/validation/corner_evidence_validation.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "include": "corners/fitting/periodic_line_fit.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "tests/support/detection/corners/recovery112_reference.hpp",
+      "include": "recovery112_reference.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tests/detection/corners/screen_order_test.cpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/detection/corners/screen_order_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/detection/corners/screen_order_test.cpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "tests/detection/corners/screen_order_test.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "tests/detection/corners/screen_order_test.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "tests/detection/corners/detection_validator_test.cpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/detection/corners/detection_validator_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/detection/corners/detection_validator_test.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "tests/detection/corners/detection_validator_test.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "tests/detection/corners/detection_validator_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/corners/detection_validator_test.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/corners/semantic_resolver_test.cpp",
+      "to": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "include": "corners/semantics/semantic_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/corners/semantic_resolver_test.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_resolver_test.cpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_resolver_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_resolver_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_resolver_test.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_resolver_test.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_resolver_test.cpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_l_topology_test.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_l_topology_test.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_l_topology_test.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_l_topology_test.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_l_topology_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_model_test.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_model_test.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/assignment_completion_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/assignment_completion_test.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/assignment_completion_test.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/assignment_completion_test.cpp",
+      "to": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "include": "geometry/completion/assignment_match_metrics.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_matcher_test.cpp",
+      "to": "tests/support/observability/observability_fixture.hpp",
+      "include": "observability_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "to": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "include": "geometry/parent/geometry_anchor_evidence.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tests/detection/geometry/geometry_anchor_evidence_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/detector_contract_test.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "tests/support/observability/observability_fixture.hpp",
+      "include": "observability_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "include": "geometry/parent/geometry_anchor_evidence.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "include": "corners/semantics/semantic_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/path_a_competition_test.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "include": "corners/semantics/semantic_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/corners/publication/detection_publication.hpp",
+      "include": "corners/publication/detection_publication.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "include": "temporal/stabilization/temporal_stabilizer.hpp"
+    },
+    {
+      "from": "tests/detection/pipeline/block3_contract_regression_test.cpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_stabilizer_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/display_history_test.cpp",
+      "to": "src/detection/temporal/display/display_history.hpp",
+      "include": "temporal/display/display_history.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/display_history_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "include": "temporal/assembly/stabilize_stage.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "tests/detection/temporal/temporal_integration_test.cpp",
+      "to": "src/detection/corners/publication/detection_publication.hpp",
+      "include": "corners/publication/detection_publication.hpp"
+    },
+    {
+      "from": "tests/tracking/io/tracking_io_test.cpp",
+      "to": "include/vision/tracking/target_tracker.hpp",
+      "include": "vision/tracking/target_tracker.hpp"
+    },
+    {
+      "from": "tests/tracking/io/tracking_io_test.cpp",
+      "to": "src/tracking/io/tracking_io.hpp",
+      "include": "io/tracking_io.hpp"
+    },
+    {
+      "from": "tests/tracking/lifecycle/tracking_contract_test.cpp",
+      "to": "include/vision/tracking/target_tracker.hpp",
+      "include": "vision/tracking/target_tracker.hpp"
+    },
+    {
+      "from": "tests/tracking/lifecycle/tracking_contract_test.cpp",
+      "to": "src/tracking/filter/kalman_cv.hpp",
+      "include": "filter/kalman_cv.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "tests/support/observability/observability_fixture.hpp",
+      "include": "observability_fixture.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "src/app/offline/offline_runner.hpp",
+      "include": "offline/offline_runner.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "src/app/completion/input_completion.hpp",
+      "include": "completion/input_completion.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "src/app/export/video_exporter.hpp",
+      "include": "export/video_exporter.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "src/app/reporting/run_console.hpp",
+      "include": "reporting/run_console.hpp"
+    },
+    {
+      "from": "tests/app/offline/observability_integration_test.cpp",
+      "to": "tools/common/frame_record_reader.hpp",
+      "include": "common/frame_record_reader.hpp"
+    },
+    {
+      "from": "tests/app/manual/manual_validation_check.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "tests/app/manual/manual_validation_check.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "tests/app/manual/manual_validation_check.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "tests/app/manual/manual_validation_check.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "tests/app/manual/manual_validation_check.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "tests/app/rendering/debug_renderer_test.cpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/app/rendering/debug_renderer_test.cpp",
+      "to": "tests/support/observability/observability_fixture.hpp",
+      "include": "observability_fixture.hpp"
+    },
+    {
+      "from": "tests/app/rendering/debug_renderer_test.cpp",
+      "to": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "include": "temporal_fixture.hpp"
+    },
+    {
+      "from": "tests/app/rendering/debug_renderer_test.cpp",
+      "to": "src/app/rendering/debug_renderer.hpp",
+      "include": "rendering/debug_renderer.hpp"
+    },
+    {
+      "from": "tests/support/detection/block3_fixture.hpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "tests/support/detection/block3_fixture.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "tests/support/detection/block3_fixture.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "tests/support/detection/block3_fixture.hpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "tests/support/observability/observability_fixture.hpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "tests/support/observability/observability_fixture.hpp",
+      "to": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "include": "pipeline/execution/detector_diagnostics_access.hpp"
+    },
+    {
+      "from": "tests/support/observability/observability_fixture.hpp",
+      "to": "tests/support/detection/block3_fixture.hpp",
+      "include": "block3_fixture.hpp"
+    },
+    {
+      "from": "tests/support/observability/observability_fixture.hpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/support/pose/g2_test_scene.hpp",
+      "to": "include/vision/pose/pose_estimator.hpp",
+      "include": "vision/pose/pose_estimator.hpp"
+    },
+    {
+      "from": "tests/support/detection/corners/recovery112_reference.hpp",
+      "to": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "include": "corners/fitting/corner_edge_fit.hpp"
+    },
+    {
+      "from": "tests/support/detection/corners/recovery112_reference.cpp",
+      "to": "tests/support/detection/corners/recovery112_reference.hpp",
+      "include": "recovery112_reference.hpp"
+    },
+    {
+      "from": "tests/support/detection/corners/recovery112_reference.cpp",
+      "to": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "include": "corners/fitting/periodic_line_fit.hpp"
+    },
+    {
+      "from": "tests/support/detection/corners/recovery112_reference.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "tests/support/detection/corners/recovery112_reference.cpp",
+      "to": "src/config/detector/corner_budget_validation.hpp",
+      "include": "detector/corner_budget_validation.hpp"
+    },
+    {
+      "from": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "to": "tests/support/common/assertions.hpp",
+      "include": "assertions.hpp"
+    },
+    {
+      "from": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "to": "tests/support/common/case_runner.hpp",
+      "include": "case_runner.hpp"
+    },
+    {
+      "from": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "to": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "include": "temporal/stabilization/temporal_stabilizer.hpp"
+    },
+    {
+      "from": "tests/support/detection/temporal/temporal_fixture.hpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "tests/pose/tag/tag_detector_test.cpp",
+      "to": "tests/support/pose/g2_test_scene.hpp",
+      "include": "g2_test_scene.hpp"
+    },
+    {
+      "from": "tests/pose/tag/tag_detector_test.cpp",
+      "to": "include/vision/pose/tag_detector.hpp",
+      "include": "vision/pose/tag_detector.hpp"
+    },
+    {
+      "from": "tests/pose/estimation/pose_contract_test.cpp",
+      "to": "tests/support/pose/g2_test_scene.hpp",
+      "include": "g2_test_scene.hpp"
+    },
+    {
+      "from": "tests/pose/estimation/pose_contract_test.cpp",
+      "to": "src/pose/validation/pose_geometry.hpp",
+      "include": "validation/pose_geometry.hpp"
+    },
+    {
+      "from": "src/detection/preprocess/preprocess.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "src/detection/preprocess/preprocess.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/preprocess/preprocess.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "src/detection/preprocess/preprocess.hpp",
+      "to": "include/vision/types/detection/prepared_image.hpp",
+      "include": "vision/types/detection/prepared_image.hpp"
+    },
+    {
+      "from": "src/detection/corners/publication/detection_publication.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/publication/detection_publication.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/publication/detection_publication.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/publication/detection_publication.cpp",
+      "to": "src/detection/corners/publication/detection_publication.hpp",
+      "include": "corners/publication/detection_publication.hpp"
+    },
+    {
+      "from": "src/detection/corners/publication/detection_publication.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "src/detection/corners/observation/corner_observation.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "src/detection/corners/observation/corner_observation.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/observation/corner_observation.hpp",
+      "to": "include/vision/types/detection/prepared_image.hpp",
+      "include": "vision/types/detection/prepared_image.hpp"
+    },
+    {
+      "from": "src/detection/corners/observation/corner_observation.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/semantics/semantic_resolver.cpp",
+      "to": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "include": "corners/semantics/semantic_resolver.hpp"
+    },
+    {
+      "from": "src/detection/corners/semantics/semantic_resolver.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/detection_validator.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/detection_validator.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/detection_validator.cpp",
+      "to": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "include": "corners/validation/corner_evidence_validation.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/detection_validator.cpp",
+      "to": "src/config/detector/corner_budget_validation.hpp",
+      "include": "detector/corner_budget_validation.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/corner_evidence_validation.cpp",
+      "to": "src/detection/corners/validation/corner_evidence_validation.hpp",
+      "include": "corners/validation/corner_evidence_validation.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/corner_evidence_validation.cpp",
+      "to": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "include": "corners/fitting/periodic_line_fit.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/corner_evidence_validation.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/validation/corner_evidence_validation.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.cpp",
+      "to": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "include": "corners/fitting/corner_edge_fit.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.cpp",
+      "to": "src/config/detector/corner_budget_validation.hpp",
+      "include": "detector/corner_budget_validation.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/measurement/corner_resolver.hpp",
+      "to": "include/vision/types/detection/prepared_image.hpp",
+      "include": "vision/types/detection/prepared_image.hpp"
+    },
+    {
+      "from": "src/detection/corners/ordering/screen_order.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/ordering/screen_order.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "src/detection/corners/ordering/screen_order.cpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/ordering/screen_order.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/corner_edge_fit.cpp",
+      "to": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "include": "corners/fitting/corner_edge_fit.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/corner_edge_fit.cpp",
+      "to": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "include": "corners/fitting/periodic_line_fit.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/corner_edge_fit.cpp",
+      "to": "src/config/detector/corner_budget_validation.hpp",
+      "include": "detector/corner_budget_validation.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/corner_edge_fit.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/corner_edge_fit.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/periodic_line_fit.cpp",
+      "to": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "include": "corners/fitting/periodic_line_fit.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/periodic_line_fit.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/corners/fitting/periodic_line_fit.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_anchor_evidence.cpp",
+      "to": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "include": "geometry/parent/geometry_anchor_evidence.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_anchor_evidence.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_matcher.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_matcher.cpp",
+      "to": "src/detection/geometry/parent/geometry_anchor_evidence.hpp",
+      "include": "geometry/parent/geometry_anchor_evidence.hpp"
+    },
+    {
+      "from": "src/detection/geometry/parent/geometry_matcher.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_observation.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_observation.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_observation.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_observation.cpp",
+      "to": "include/vision/types/detection/prepared_image.hpp",
+      "include": "vision/types/detection/prepared_image.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_observation.cpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_l_topology.cpp",
+      "to": "src/detection/geometry/observation/geometry_l_topology.hpp",
+      "include": "geometry/observation/geometry_l_topology.hpp"
+    },
+    {
+      "from": "src/detection/geometry/observation/geometry_l_topology.cpp",
+      "to": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "include": "geometry/completion/assignment_match_metrics.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/geometry_assignment_completion.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/geometry_assignment_completion.cpp",
+      "to": "src/detection/geometry/completion/assignment_match_metrics.hpp",
+      "include": "geometry/completion/assignment_match_metrics.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/geometry_assignment_completion.cpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/geometry/validation/geometry_validation.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "src/detection/geometry/validation/geometry_validation.hpp",
+      "to": "include/vision/types/detection/geometry_types.hpp",
+      "include": "vision/types/detection/geometry_types.hpp"
+    },
+    {
+      "from": "src/detection/geometry/validation/geometry_validation.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/geometry/validation/geometry_validation.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/input/frame_sequence.cpp",
+      "to": "src/detection/pipeline/input/frame_sequence.hpp",
+      "include": "pipeline/input/frame_sequence.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/input/frame_sequence.hpp",
+      "to": "include/vision/types/frame_stamp.hpp",
+      "include": "vision/types/frame_stamp.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/preprocess/preprocess.hpp",
+      "include": "preprocess/preprocess.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/geometry/observation/geometry_observation.hpp",
+      "include": "geometry/observation/geometry_observation.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/geometry/parent/geometry_matcher.hpp",
+      "include": "geometry/parent/geometry_matcher.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/geometry/validation/geometry_validation.hpp",
+      "include": "geometry/validation/geometry_validation.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/geometry/completion/geometry_assignment_completion.hpp",
+      "include": "geometry/completion/geometry_assignment_completion.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/corners/measurement/corner_resolver.hpp",
+      "include": "corners/measurement/corner_resolver.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/corners/observation/corner_observation.hpp",
+      "include": "corners/observation/corner_observation.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/corners/semantics/semantic_resolver.hpp",
+      "include": "corners/semantics/semantic_resolver.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/corners/validation/detection_validator.hpp",
+      "include": "corners/validation/detection_validator.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/detection/corners/publication/detection_publication.hpp",
+      "include": "corners/publication/detection_publication.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.cpp",
+      "to": "src/config/detector/corner_budget_validation.hpp",
+      "include": "detector/corner_budget_validation.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/types/detection/decode_result.hpp",
+      "include": "vision/types/detection/decode_result.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/types/detection/corner_types.hpp",
+      "include": "vision/types/detection/corner_types.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/types/detector_types.hpp",
+      "include": "vision/types/detector_types.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/types/detection/prepared_image.hpp",
+      "include": "vision/types/detection/prepared_image.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/decode/decode_stage.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/config/application/app_config.hpp",
+      "include": "application/app_config.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "include": "temporal/assembly/stabilize_stage.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/detection/pipeline/input/frame_sequence.hpp",
+      "include": "pipeline/input/frame_sequence.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector.cpp",
+      "to": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "include": "pipeline/execution/detector_diagnostics_access.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "to": "include/vision/detection/detector.hpp",
+      "include": "vision/detection/detector.hpp"
+    },
+    {
+      "from": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/detection/temporal/correspondence/temporal_geometry.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/detection/temporal/correspondence/temporal_geometry.cpp",
+      "to": "src/detection/temporal/correspondence/temporal_geometry.hpp",
+      "include": "temporal/correspondence/temporal_geometry.hpp"
+    },
+    {
+      "from": "src/detection/temporal/correspondence/temporal_geometry.hpp",
+      "to": "include/vision/types/detection/temporal_types.hpp",
+      "include": "vision/types/detection/temporal_types.hpp"
+    },
+    {
+      "from": "src/detection/temporal/correspondence/temporal_geometry.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/detection/temporal/display/display_history.hpp",
+      "to": "include/vision/types/detection/temporal_types.hpp",
+      "include": "vision/types/detection/temporal_types.hpp"
+    },
+    {
+      "from": "src/detection/temporal/display/display_history.cpp",
+      "to": "src/detection/temporal/display/display_history.hpp",
+      "include": "temporal/display/display_history.hpp"
+    },
+    {
+      "from": "src/detection/temporal/display/display_history.cpp",
+      "to": "src/detection/pipeline/input/frame_sequence.hpp",
+      "include": "pipeline/input/frame_sequence.hpp"
+    },
+    {
+      "from": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "to": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "include": "temporal/stabilization/temporal_stabilizer.hpp"
+    },
+    {
+      "from": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "to": "src/detection/temporal/display/display_history.hpp",
+      "include": "temporal/display/display_history.hpp"
+    },
+    {
+      "from": "src/detection/temporal/assembly/stabilize_stage.cpp",
+      "to": "src/observability/events/temporal_reason_codec.hpp",
+      "include": "events/temporal_reason_codec.hpp"
+    },
+    {
+      "from": "src/detection/temporal/assembly/stabilize_stage.cpp",
+      "to": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "include": "temporal/assembly/stabilize_stage.hpp"
+    },
+    {
+      "from": "src/detection/temporal/assembly/stabilize_stage.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/detection/temporal/stabilization/temporal_stabilizer.cpp",
+      "to": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "include": "temporal/stabilization/temporal_stabilizer.hpp"
+    },
+    {
+      "from": "src/detection/temporal/stabilization/temporal_stabilizer.cpp",
+      "to": "src/detection/pipeline/input/frame_sequence.hpp",
+      "include": "pipeline/input/frame_sequence.hpp"
+    },
+    {
+      "from": "src/detection/temporal/stabilization/temporal_stabilizer.cpp",
+      "to": "src/detection/corners/ordering/screen_order.hpp",
+      "include": "corners/ordering/screen_order.hpp"
+    },
+    {
+      "from": "src/detection/temporal/stabilization/temporal_stabilizer.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "to": "src/detection/temporal/correspondence/temporal_geometry.hpp",
+      "include": "temporal/correspondence/temporal_geometry.hpp"
+    },
+    {
+      "from": "src/detection/temporal/stabilization/temporal_stabilizer.hpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/tracking/filter/kalman_cv.hpp",
+      "to": "include/vision/math/covariance_validation.hpp",
+      "include": "vision/math/covariance_validation.hpp"
+    },
+    {
+      "from": "src/tracking/filter/kalman_cv.hpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/tracking/filter/kalman_cv.hpp",
+      "to": "include/vision/config/tracking_config.hpp",
+      "include": "vision/config/tracking_config.hpp"
+    },
+    {
+      "from": "src/tracking/filter/kalman_cv.cpp",
+      "to": "include/vision/math/covariance_validation.hpp",
+      "include": "vision/math/covariance_validation.hpp"
+    },
+    {
+      "from": "src/tracking/filter/kalman_cv.cpp",
+      "to": "src/tracking/filter/kalman_cv.hpp",
+      "include": "filter/kalman_cv.hpp"
+    },
+    {
+      "from": "src/tracking/measurement/measurement_adapter.cpp",
+      "to": "include/vision/math/covariance_validation.hpp",
+      "include": "vision/math/covariance_validation.hpp"
+    },
+    {
+      "from": "src/tracking/measurement/measurement_adapter.cpp",
+      "to": "src/tracking/measurement/measurement_adapter.hpp",
+      "include": "measurement/measurement_adapter.hpp"
+    },
+    {
+      "from": "src/tracking/measurement/measurement_adapter.cpp",
+      "to": "src/tracking/filter/kalman_cv.hpp",
+      "include": "filter/kalman_cv.hpp"
+    },
+    {
+      "from": "src/tracking/measurement/measurement_adapter.hpp",
+      "to": "include/vision/config/tracking_config.hpp",
+      "include": "vision/config/tracking_config.hpp"
+    },
+    {
+      "from": "src/tracking/io/tracking_io.cpp",
+      "to": "src/tracking/io/tracking_io.hpp",
+      "include": "io/tracking_io.hpp"
+    },
+    {
+      "from": "src/tracking/io/tracking_io.hpp",
+      "to": "include/vision/types/tracking_types.hpp",
+      "include": "vision/types/tracking_types.hpp"
+    },
+    {
+      "from": "src/tracking/lifecycle/target_tracker.cpp",
+      "to": "include/vision/tracking/target_tracker.hpp",
+      "include": "vision/tracking/target_tracker.hpp"
+    },
+    {
+      "from": "src/tracking/lifecycle/target_tracker.cpp",
+      "to": "src/tracking/filter/kalman_cv.hpp",
+      "include": "filter/kalman_cv.hpp"
+    },
+    {
+      "from": "src/tracking/lifecycle/target_tracker.cpp",
+      "to": "src/tracking/measurement/measurement_adapter.hpp",
+      "include": "measurement/measurement_adapter.hpp"
+    },
+    {
+      "from": "src/app/export/video_exporter.cpp",
+      "to": "src/app/export/video_exporter.hpp",
+      "include": "export/video_exporter.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.hpp",
+      "to": "src/config/application/app_config.hpp",
+      "include": "application/app_config.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.hpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.hpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/detection/pipeline/decode/decode_stage.hpp",
+      "include": "pipeline/decode/decode_stage.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "include/vision/observability/file_fingerprint.hpp",
+      "include": "vision/observability/file_fingerprint.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/app/offline/offline_runner.hpp",
+      "include": "offline/offline_runner.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/app/rendering/debug_renderer.hpp",
+      "include": "rendering/debug_renderer.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/app/display/display_session.hpp",
+      "include": "display/display_session.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/app/completion/input_completion.hpp",
+      "include": "completion/input_completion.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/detection/pipeline/execution/detector_diagnostics_access.hpp",
+      "include": "pipeline/execution/detector_diagnostics_access.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/detection/temporal/assembly/stabilize_stage.hpp",
+      "include": "temporal/assembly/stabilize_stage.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/app/reporting/run_console.hpp",
+      "include": "reporting/run_console.hpp"
+    },
+    {
+      "from": "src/app/offline/offline_runner.cpp",
+      "to": "src/app/export/video_exporter.hpp",
+      "include": "export/video_exporter.hpp"
+    },
+    {
+      "from": "src/app/display/display_session.cpp",
+      "to": "src/app/display/display_session.hpp",
+      "include": "display/display_session.hpp"
+    },
+    {
+      "from": "src/app/completion/input_completion.hpp",
+      "to": "src/observability/reporting/run_report.hpp",
+      "include": "reporting/run_report.hpp"
+    },
+    {
+      "from": "src/app/completion/input_completion.cpp",
+      "to": "src/app/completion/input_completion.hpp",
+      "include": "completion/input_completion.hpp"
+    },
+    {
+      "from": "src/app/rendering/debug_renderer.hpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/app/rendering/debug_renderer.hpp",
+      "to": "src/config/application/observability_config.hpp",
+      "include": "application/observability_config.hpp"
+    },
+    {
+      "from": "src/app/rendering/debug_renderer.cpp",
+      "to": "src/app/rendering/debug_renderer.hpp",
+      "include": "rendering/debug_renderer.hpp"
+    },
+    {
+      "from": "src/app/rendering/debug_renderer.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/app/reporting/run_console.cpp",
+      "to": "src/app/reporting/run_console.hpp",
+      "include": "reporting/run_console.hpp"
+    },
+    {
+      "from": "src/app/reporting/run_console.hpp",
+      "to": "src/observability/reporting/run_report.hpp",
+      "include": "reporting/run_report.hpp"
+    },
+    {
+      "from": "src/synth_ref/geometry/transforms.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/generation/generation.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/generation/generation.cpp",
+      "to": "include/vision/synth_ref/verify.hpp",
+      "include": "vision/synth_ref/verify.hpp"
+    },
+    {
+      "from": "src/synth_ref/generation/generation.cpp",
+      "to": "include/vision/synth_ref/records.hpp",
+      "include": "vision/synth_ref/records.hpp"
+    },
+    {
+      "from": "src/synth_ref/generation/generation.cpp",
+      "to": "src/synth_ref/build_info.hpp.in",
+      "include": "vision/synth_ref/build_info.hpp"
+    },
+    {
+      "from": "src/synth_ref/truth/truth_record.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/truth/truth_record.cpp",
+      "to": "include/vision/synth_ref/verify.hpp",
+      "include": "vision/synth_ref/verify.hpp"
+    },
+    {
+      "from": "src/synth_ref/truth/truth_record.cpp",
+      "to": "include/vision/synth_ref/records.hpp",
+      "include": "vision/synth_ref/records.hpp"
+    },
+    {
+      "from": "src/synth_ref/truth/truth_record.cpp",
+      "to": "src/synth_ref/build_info.hpp.in",
+      "include": "vision/synth_ref/build_info.hpp"
+    },
+    {
+      "from": "src/synth_ref/records/record_codec.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/records/record_codec.cpp",
+      "to": "include/vision/synth_ref/verify.hpp",
+      "include": "vision/synth_ref/verify.hpp"
+    },
+    {
+      "from": "src/synth_ref/records/record_codec.cpp",
+      "to": "include/vision/synth_ref/records.hpp",
+      "include": "vision/synth_ref/records.hpp"
+    },
+    {
+      "from": "src/synth_ref/records/record_codec.cpp",
+      "to": "src/synth_ref/build_info.hpp.in",
+      "include": "vision/synth_ref/build_info.hpp"
+    },
+    {
+      "from": "src/synth_ref/raster/raster.cpp",
+      "to": "include/vision/synth_ref/raster.hpp",
+      "include": "vision/synth_ref/raster.hpp"
+    },
+    {
+      "from": "src/synth_ref/enumeration/grid.cpp",
+      "to": "include/vision/synth_ref/cases.hpp",
+      "include": "vision/synth_ref/cases.hpp"
+    },
+    {
+      "from": "src/synth_ref/enumeration/grid.cpp",
+      "to": "include/vision/synth_ref/grid.hpp",
+      "include": "vision/synth_ref/grid.hpp"
+    },
+    {
+      "from": "src/synth_ref/inputs/source_inputs.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/inputs/source_inputs.cpp",
+      "to": "include/vision/synth_ref/model.hpp",
+      "include": "vision/synth_ref/model.hpp"
+    },
+    {
+      "from": "src/synth_ref/scene/cases.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/scene/cases.cpp",
+      "to": "include/vision/synth_ref/perturb.hpp",
+      "include": "vision/synth_ref/perturb.hpp"
+    },
+    {
+      "from": "src/synth_ref/scene/cases.cpp",
+      "to": "include/vision/synth_ref/raster.hpp",
+      "include": "vision/synth_ref/raster.hpp"
+    },
+    {
+      "from": "src/synth_ref/scene/cases.cpp",
+      "to": "include/vision/synth_ref/cases.hpp",
+      "include": "vision/synth_ref/cases.hpp"
+    },
+    {
+      "from": "src/synth_ref/model/model.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/model/model.cpp",
+      "to": "include/vision/synth_ref/model.hpp",
+      "include": "vision/synth_ref/model.hpp"
+    },
+    {
+      "from": "src/synth_ref/perturbation/perturb.cpp",
+      "to": "include/vision/synth_ref/perturb.hpp",
+      "include": "vision/synth_ref/perturb.hpp"
+    },
+    {
+      "from": "src/synth_ref/verification/verify.cpp",
+      "to": "include/vision/synth_ref/transforms.hpp",
+      "include": "vision/synth_ref/transforms.hpp"
+    },
+    {
+      "from": "src/synth_ref/verification/verify.cpp",
+      "to": "include/vision/synth_ref/verify.hpp",
+      "include": "vision/synth_ref/verify.hpp"
+    },
+    {
+      "from": "src/observability/timing/timing.hpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/observability/timing/timing.cpp",
+      "to": "src/observability/timing/timing.hpp",
+      "include": "timing/timing.hpp"
+    },
+    {
+      "from": "src/observability/context/diagnostics_context.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/observability/context/diagnostics_context.hpp",
+      "to": "src/observability/timing/timing.hpp",
+      "include": "timing/timing.hpp"
+    },
+    {
+      "from": "src/observability/context/diagnostics_context.hpp",
+      "to": "include/vision/observability/stage_details.hpp",
+      "include": "vision/observability/stage_details.hpp"
+    },
+    {
+      "from": "src/observability/identity/file_fingerprint.cpp",
+      "to": "include/vision/observability/file_fingerprint.hpp",
+      "include": "vision/observability/file_fingerprint.hpp"
+    },
+    {
+      "from": "src/observability/reporting/run_report.cpp",
+      "to": "src/observability/reporting/run_report.hpp",
+      "include": "reporting/run_report.hpp"
+    },
+    {
+      "from": "src/observability/reporting/run_report.hpp",
+      "to": "src/observability/timing/timing.hpp",
+      "include": "timing/timing.hpp"
+    },
+    {
+      "from": "src/observability/recording/record_codec.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "src/observability/recording/record_codec.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/observability/recording/diagnostics_recorder.cpp",
+      "to": "src/observability/recording/diagnostics_recorder.hpp",
+      "include": "recording/diagnostics_recorder.hpp"
+    },
+    {
+      "from": "src/observability/recording/diagnostics_recorder.cpp",
+      "to": "src/observability/context/diagnostics_context.hpp",
+      "include": "context/diagnostics_context.hpp"
+    },
+    {
+      "from": "src/observability/recording/record_codec.hpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/observability/recording/diagnostics_recorder.hpp",
+      "to": "src/observability/recording/record_codec.hpp",
+      "include": "recording/record_codec.hpp"
+    },
+    {
+      "from": "src/observability/recording/diagnostics_recorder.hpp",
+      "to": "src/config/application/observability_config.hpp",
+      "include": "application/observability_config.hpp"
+    },
+    {
+      "from": "src/observability/recording/diagnostics_recorder.hpp",
+      "to": "src/observability/reporting/run_report.hpp",
+      "include": "reporting/run_report.hpp"
+    },
+    {
+      "from": "src/observability/events/frame_events.cpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/observability/events/temporal_reason_codec.hpp",
+      "to": "include/vision/observability/frame_record.hpp",
+      "include": "vision/observability/frame_record.hpp"
+    },
+    {
+      "from": "src/observability/events/temporal_reason_codec.hpp",
+      "to": "include/vision/types/detection/temporal_types.hpp",
+      "include": "vision/types/detection/temporal_types.hpp"
+    },
+    {
+      "from": "src/config/detector/config.cpp",
+      "to": "src/config/detector/config.hpp",
+      "include": "detector/config.hpp"
+    },
+    {
+      "from": "src/config/detector/config.cpp",
+      "to": "src/config/reader/value_reader.hpp",
+      "include": "reader/value_reader.hpp"
+    },
+    {
+      "from": "src/config/detector/config.cpp",
+      "to": "src/config/detector/corner_budget_validation.hpp",
+      "include": "detector/corner_budget_validation.hpp"
+    },
+    {
+      "from": "src/config/detector/config.cpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "src/config/detector/config.hpp",
+      "to": "src/config/application/app_config.hpp",
+      "include": "application/app_config.hpp"
+    },
+    {
+      "from": "src/config/detector/corner_budget_validation.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/config/detector/corner_budget_validation.hpp",
+      "to": "src/config/reader/config_error.hpp",
+      "include": "reader/config_error.hpp"
+    },
+    {
+      "from": "src/config/application/app_config.hpp",
+      "to": "include/vision/config/detector_config.hpp",
+      "include": "vision/config/detector_config.hpp"
+    },
+    {
+      "from": "src/config/application/app_config.hpp",
+      "to": "src/config/application/observability_config.hpp",
+      "include": "application/observability_config.hpp"
+    },
+    {
+      "from": "src/config/tracking/tracking_config.cpp",
+      "to": "include/vision/math/covariance_validation.hpp",
+      "include": "vision/math/covariance_validation.hpp"
+    },
+    {
+      "from": "src/config/tracking/tracking_config.cpp",
+      "to": "include/vision/config/tracking_config.hpp",
+      "include": "vision/config/tracking_config.hpp"
+    },
+    {
+      "from": "src/config/tracking/tracking_config.cpp",
+      "to": "src/config/reader/value_reader.hpp",
+      "include": "reader/value_reader.hpp"
+    },
+    {
+      "from": "src/config/tracking/tracking_config.cpp",
+      "to": "include/vision/math/observed_geometry.hpp",
+      "include": "vision/math/observed_geometry.hpp"
+    },
+    {
+      "from": "src/config/pose/pose_config.cpp",
+      "to": "include/vision/config/pose_config.hpp",
+      "include": "vision/config/pose_config.hpp"
+    },
+    {
+      "from": "src/config/pose/pose_config.cpp",
+      "to": "src/config/reader/value_reader.hpp",
+      "include": "reader/value_reader.hpp"
+    },
+    {
+      "from": "src/config/pose/pose_config.cpp",
+      "to": "src/config/pose/tag_config_validation.hpp",
+      "include": "pose/tag_config_validation.hpp"
+    },
+    {
+      "from": "src/config/pose/pose_config.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/config/pose/tag_config_validation.cpp",
+      "to": "src/config/pose/tag_config_validation.hpp",
+      "include": "pose/tag_config_validation.hpp"
+    },
+    {
+      "from": "src/config/pose/tag_config_validation.cpp",
+      "to": "include/vision/config/pose_config.hpp",
+      "include": "vision/config/pose_config.hpp"
+    },
+    {
+      "from": "src/config/model/marker_geometry.cpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/config/model/marker_geometry.cpp",
+      "to": "src/config/model/marker_geometry_loader.hpp",
+      "include": "model/marker_geometry_loader.hpp"
+    },
+    {
+      "from": "src/config/model/marker_geometry_loader.hpp",
+      "to": "include/vision/types/marker_geometry.hpp",
+      "include": "vision/types/marker_geometry.hpp"
+    },
+    {
+      "from": "src/pose/tag/tag_detector.cpp",
+      "to": "include/vision/pose/tag_detector.hpp",
+      "include": "vision/pose/tag_detector.hpp"
+    },
+    {
+      "from": "src/pose/tag/tag_detector.cpp",
+      "to": "src/pose/validation/pose_geometry.hpp",
+      "include": "validation/pose_geometry.hpp"
+    },
+    {
+      "from": "src/pose/estimation/pose_estimator.cpp",
+      "to": "include/vision/pose/pose_estimator.hpp",
+      "include": "vision/pose/pose_estimator.hpp"
+    },
+    {
+      "from": "src/pose/estimation/pose_estimator.cpp",
+      "to": "src/pose/validation/pose_geometry.hpp",
+      "include": "validation/pose_geometry.hpp"
+    },
+    {
+      "from": "src/pose/validation/pose_geometry.hpp",
+      "to": "src/config/pose/tag_config_validation.hpp",
+      "include": "pose/tag_config_validation.hpp"
+    },
+    {
+      "from": "src/pose/validation/pose_geometry.hpp",
+      "to": "include/vision/types/pose_types.hpp",
+      "include": "vision/types/pose_types.hpp"
+    },
+    {
+      "from": "src/pose/validation/pose_geometry.cpp",
+      "to": "src/pose/validation/pose_geometry.hpp",
+      "include": "validation/pose_geometry.hpp"
+    },
+    {
+      "from": "src/pose/validation/pose_geometry.cpp",
+      "to": "include/vision/config/pose_config.hpp",
+      "include": "vision/config/pose_config.hpp"
+    },
+    {
+      "from": "src/math/covariance/covariance_validation.cpp",
+      "to": "include/vision/math/covariance_validation.hpp",
+      "include": "vision/math/covariance_validation.hpp"
+    },
+    {
+      "from": "tools/block3_fixture/calibration/measure.cpp",
+      "to": "tools/block3_fixture/common/support_pixel_count.hpp",
+      "include": "common/support_pixel_count.hpp"
+    },
+    {
+      "from": "tests/detection/corners/corner_edge_fit_test.cpp",
+      "to": "tools/block3_fixture/common/support_pixel_count.hpp",
+      "include": "support_pixel_count.hpp"
+    }
+  ],
+  "unresolved_quoted_includes": [],
+  "historical_evidence_included": false
 }

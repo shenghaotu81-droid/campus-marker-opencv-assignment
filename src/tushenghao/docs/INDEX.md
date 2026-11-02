@@ -1,6 +1,6 @@
 # 文档索引
 
-现行代码首先读 [流程导读](flow-guide.md) 与 [瘦身修改报告](lean-changes.md)，再查 [数据流与接口](dataflow-interfaces.md)。以下各阶段验收数字与旧目录描述保留原时点含义；本轮没有关闭 G-01/G-02/G-03，也没有升级硬件资格。
+布局执行记录见 [restructure-changes.md](restructure-changes.md)。现行代码首先读 [流程导读](flow-guide.md) 与 [瘦身修改报告](lean-changes.md)，再查 [数据流与接口](dataflow-interfaces.md)。以下各阶段验收数字与旧目录描述保留原时点含义；本轮没有关闭 G-01/G-02/G-03，也没有升级硬件资格。
 
 当前实现先读[README](../README.md)与[Block3当前状态](block3.md)，再查[预算及审批](block3_budget.md)、[适用边界](evidence/block3/05-L-observation-v5-v7/适用边界与已知局限.md)。Block3/4/5 已合入；算法基准为冻结v7，H已PASS，人工 V/Q 等验收仍待完成；Block4代码及G-B已批准落地，批准范围内Block4验收已完成，公共流程按预算就绪，未标注视频不报正确率。
 
@@ -14,7 +14,7 @@
 | [冻结参考](ref/) | 原始冻结依据，路径/内容未修改 |
 | [证据总索引](evidence/INDEX.md) | 分批结果、原始数据与验证日志 |
 | [架构索引](architecture/INDEX.md) | include分析、源码迁移、文档/工具整理 |
-| [工具索引](../tools/INDEX.md) | 用途、构建入口、命令及退出语义 |
+| [工具索引](../docs/tools/INDEX.md) | 用途、构建入口、命令及退出语义 |
 | [Block3历史](history/block3-before-final-organization.md) | 完整过程及已撤回计划，仅作历史对照 |
 
 [block1.md](block1.md)、[block2.md](block2.md)、[corner_semantics.md](corner_semantics.md)保留原记录；其中旧路径/阶段计划按记录时点理解，现行实现以Block3当前状态和README为准。

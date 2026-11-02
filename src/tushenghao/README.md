@@ -2,7 +2,7 @@
 
 本目录实现基于白色几何结构的 MARK 检测、当前帧角点取证、时序稳定及离线诊断。以下操作适用于 Ubuntu/Linux，均从**仓库根目录**执行；输入视频由你提供。
 
-代码按步骤阅读见 [流程导读](docs/flow-guide.md)，本次瘦身范围、裁决和验证见 [修改报告](docs/lean-changes.md)。现行模式名为 `SegmentedMark`，显示开关归 `display`；旧键会明确报错。历史验收结论保留各自原适用范围。
+布局迁移明细见 [布局重构记录](docs/restructure-changes.md)。代码按实际执行顺序阅读见 [流程导读](docs/flow-guide.md)，本次瘦身范围、裁决和验证见 [修改报告](docs/lean-changes.md)。现行模式名为 `SegmentedMark`，显示开关归 `display`；旧键会明确报错。历史验收结论保留各自原适用范围。
 
 ## 第一步：安装依赖并构建
 
@@ -13,7 +13,7 @@ sudo apt-get update && sudo apt-get install --no-install-recommends build-essent
 cmake -S src/tushenghao -B build/release -DCMAKE_BUILD_TYPE=Release && cmake --build build/release -j4
 ```
 
-几何夹具／测量工具额外需要 `nlohmann-json3-dev`，见[工具索引](tools/INDEX.md)；普通 App 无须构建这些工具。`clang-format` 仅用于开发排版，不是运行依赖。
+几何夹具／测量工具额外需要 `nlohmann-json3-dev`，见[工具索引](docs/tools/INDEX.md)；普通 App 无须构建这些工具。`clang-format` 仅用于开发排版，不是运行依赖。
 
 ## 第二步：检查配置并选择一种运行方式
 
@@ -65,7 +65,7 @@ ffplay new-runs/quickstart-verification-01/overlay.mp4
 
 ## 路径与已知限制
 
-配置模型路径相对 YAML 所在目录解析；命令中的视频和输出路径按当前工作目录解析。库使用者包含 `<mark/detector.hpp>`，内部模块见 `lib/`。
+配置模型路径相对 YAML 所在目录解析；命令中的视频和输出路径按当前工作目录解析。库使用者包含 `<vision/detection/detector.hpp>`，内部步骤见 `src/detection/`，其余模块各有自己的 `src/<模块>/CMakeLists.txt`。
 
 当前框来自当前帧测量，失检时不绘历史框；证据不足、结构截断或无法消除的几何竞争会拒绝，方向不唯一可保持 unknown。112恢复已落地：固定1676帧视频达到1088检测、112/112恢复，原976帧raw四角逐值不变，集合外新增0；单线程Release两次实测均值7.67/7.48ms、最大27.80/26.06ms，均0帧超33ms。历史沙盒参考为均值7.5ms、最大29.5ms、0超33ms，详见[112恢复验收](docs/fix112_recovery_acceptance.md)。
 

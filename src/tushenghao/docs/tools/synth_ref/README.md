@@ -1,6 +1,6 @@
 # Block 2 合成生成器
 
-独立 C++17 工具，按 `inputs/synthetic_gen_spec_Oyster_reviewed.md` 开发。输出测试输入、连续几何真值与审计清单；不运行 Detector，不测算法误差，不生成检测容差或资源配置。工具开发与正式数据交付分别记录在 [验收记录](docs/acceptance.md)。
+独立 C++17 工具，按 `inputs/synthetic_gen_spec_Oyster_reviewed.md` 开发。输出测试输入、连续几何真值与审计清单；不运行 Detector，不测算法误差，不生成检测容差或资源配置。工具开发与正式数据交付分别记录在 [验收记录](../../../tools/synth_ref/docs/acceptance.md)。
 
 目前模型和实验没有有效批准记录，`formal` 返回退出码 3。`selftest` 只生成独立矩形与 L 凹形，不生成 MARK 正式数据。原始输入不改写，M 的面积仅在模型单元测试中由顶点计算，不作为算法门限。
 
@@ -81,7 +81,7 @@ sha256sum runs/formal-one-a/images/*.png runs/formal-one-b/images/*.png
 
 ## 输出和失败定位
 
-`runs/<run-id>/` 包含 manifest、effective_config、index、truth、灰度 images、二值 masks、uint16 instance_masks、只有列头的 observation_template、verification。`plan` 目录包含完整 planned_cases 清单和规划 manifest，没有图片。运行结束打印绝对产物路径。详情见 [数据协议](docs/fixture_protocol.md) 与 [来源映射](docs/source_mapping.md)。
+`runs/<run-id>/` 包含 manifest、effective_config、index、truth、灰度 images、二值 masks、uint16 instance_masks、只有列头的 observation_template、verification。`plan` 目录包含完整 planned_cases 清单和规划 manifest，没有图片。运行结束打印绝对产物路径。详情见 [数据协议](fixture_protocol.md) 与 [来源映射](source_mapping.md)。
 
 生成事务一直保留 `INCOMPLETE`，直到文件写完且内部独立校验通过才写 `COMPLETE`。异常保存 failure 和已成功写入的样例数；强制中断留不完整状态，不自动恢复、不覆盖。公开 verify 只读已有数据文件，仅新增/更新 `verification.json` 报告；缺文件、错 hash、漏项、未知额外图像都会失败，`algorithm_validation` 始终为 `NOT_RUN`。失败后用新目录重新生成。
 
@@ -101,6 +101,6 @@ sha256sum runs/formal-one-a/images/*.png runs/formal-one-b/images/*.png
 
 退出码：0 成功；2 输入/配置无效；3 正式资格缺批准；4 I/O 或产物校验失败。报错走 stderr；启动前错误明确没有创建运行目录，已有运行的失败保存在清单或验证报告。工具不接触视频、baseline、作业仓库构建配置及全局 Git/依赖设置。
 
-本轮验收实际使用 GNU 13.3.0、CMake 3.28.3、Release/C++17、OpenCV 4.6.0、nlohmann_json 3.11.3、OpenSSL 3.0.13。最终从全新 `build-acceptance/` 复核，记录与39分30秒墙钟耗时见 [acceptance](docs/acceptance.md)；原始 build 的二进制仍在 `build/synthetic_gen`。正式数据因缺批准尚未交付，外部算法验收未运行。
+历史合成工具验收实际使用 GNU 13.3.0、CMake 3.28.3、Release/C++17、OpenCV 4.6.0、nlohmann_json 3.11.3、OpenSSL 3.0.13。该次从全新 `build-acceptance/` 复核，记录与39分30秒墙钟耗时见 [acceptance](../../../tools/synth_ref/docs/acceptance.md)；原始 build 的二进制仍在 `build/synthetic_gen`。正式数据因缺批准尚未交付，外部算法验收未运行。
 
 现行步骤声明分别由 model/grid/transforms/perturb/cases/raster/records/verify 头拥有，core.hpp 只作兼容聚合。连续场景与真值编码内部只接收所需配置切片、坐标、场景及栅格；公开 Context 和入口保持。测试显式提供来源／证据根，load_context(source_root) 可直接指定输入根；旧 CLI 的零参入口仍使用工具根工作目录。workflow 的临时目录切换有局部恢复，异常不串用下一测试。
