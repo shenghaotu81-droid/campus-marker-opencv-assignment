@@ -1,0 +1,13 @@
+{
+  "branch": "refactor/lean",
+  "baseline": "d70c1af",
+  "code": "477ca86",
+  "delivery": "004a671e8da7799bb5f9566bb34252bd4d9aee55",
+  "clean": true,
+  "origin_synced": true,
+  "merged_main": false,
+  "documents": [
+    "docs/restructure-changes.md",
+    "docs/flow-guide.md"
+  ]
+}
