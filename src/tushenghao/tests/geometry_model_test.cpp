@@ -14,7 +14,7 @@ validateMarkerGeometry()
 不测算法，只测"图纸加载"这个环节。
 */
 #include "vision/types/marker_geometry.hpp"
-#include "config/marker_geometry_loader.hpp"
+#include "model/marker_geometry_loader.hpp"
 
 #include <cassert>
 #include <iostream>

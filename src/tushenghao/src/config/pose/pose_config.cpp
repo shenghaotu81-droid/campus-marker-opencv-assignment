@@ -1,7 +1,7 @@
 // 配置解析/标定加载/模型转换
-#include "mark/pose_config.hpp"
-#include "config/value_reader.hpp"
-#include "pose/pose_geometry.hpp"
+#include "vision/config/pose_config.hpp"
+#include "reader/value_reader.hpp"
+#include "pose/tag_config_validation.hpp"
 #include "vision/types/marker_geometry.hpp"
 
 #include <cmath>

@@ -1,7 +1,7 @@
 #include "pipeline/temporal_stabilizer.hpp"
 #include "pipeline/frame_sequence.hpp"
 #include "corners/screen_order.hpp"
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>

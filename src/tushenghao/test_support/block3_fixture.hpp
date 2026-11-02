@@ -4,7 +4,7 @@
 #include "preprocess/preprocess.hpp"
 #include "corners/corner_types.hpp"
 #include "vision/types/marker_geometry.hpp"
-#include "config/marker_geometry_loader.hpp"
+#include "model/marker_geometry_loader.hpp"
 #include <opencv2/imgproc.hpp>
 #include <filesystem>
 

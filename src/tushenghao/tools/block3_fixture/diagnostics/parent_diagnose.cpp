@@ -1,7 +1,7 @@
-#include "config/marker_geometry_loader.hpp"
+#include "model/marker_geometry_loader.hpp"
 #include "pipeline/decode_stage.hpp"
 // 三L前半链路只读归因：所有阈值隔离/锚点枚举仅在工具内，不修改正式生成器。
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include "preprocess/preprocess.hpp"
 #include "geometry/geometry_observation.hpp"
 #include "geometry/geometry_matcher.hpp"

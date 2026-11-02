@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(src/types)
 add_subdirectory(src/math)
+add_subdirectory(src/config)
 
 # 六个内部源码模块仍组成一个库；公开头与内部头的搜索路径分开。
 add_library(mark_detector
@@ -12,8 +13,6 @@ add_library(mark_detector
     lib/pipeline/diagnostics_context.cpp
     lib/pipeline/diagnostics_recorder.cpp
     lib/pipeline/run_report.cpp
-    lib/core/marker_geometry.cpp
-    lib/config/config.cpp
     lib/preprocess/preprocess.cpp
     lib/geometry/geometry_matcher.cpp
     lib/geometry/geometry_observation.cpp
@@ -43,12 +42,13 @@ target_include_directories(mark_detector
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib"
 )
-target_link_libraries(mark_detector PUBLIC vision::types vision::math ${OpenCV_LIBS})
+target_link_libraries(mark_detector PUBLIC vision::types vision::math vision::config ${OpenCV_LIBS})
 
 # 仅工程内app/测试/审计显式选择内部头，不将lib路径发布给普通Detector消费者。
 add_library(mark_detector_internal_headers INTERFACE)
 target_include_directories(mark_detector_internal_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
-target_link_libraries(mark_detector_internal_headers INTERFACE mark_detector)
+target_link_libraries(mark_detector_internal_headers INTERFACE mark_detector vision_config_internal_headers)
+target_link_libraries(mark_detector PRIVATE vision_config_internal_headers)
 add_library(mark_test_support INTERFACE)
 target_include_directories(mark_test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test_support")
 target_compile_definitions(mark_test_support INTERFACE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -72,8 +72,6 @@ set(MARK_TEST_NAMES
     block3_contract_regression_test
     assignment_completion_test
     corner_edge_fit_test
-    config_error_test
-    config_roundtrip_test
     detector_contract_test
     geometry_model_test
     geometry_matcher_test
@@ -92,10 +90,12 @@ foreach(MARK_TEST_NAME IN LISTS MARK_TEST_NAMES)
     add_test(NAME ${MARK_TEST_NAME} COMMAND ${MARK_TEST_NAME})
 endforeach()
 
+add_subdirectory(tests/config)
+
 # F61：配置负例直接调用标定解析器；只为已有测试追加实现，不新增目标。
-target_sources(config_error_test PRIVATE tools/calibration/calibration_config.cpp
-    tools/calibration/calibration_video.cpp tools/calibration/calibration_detection.cpp
-    tools/calibration/calibration_result.cpp)
+target_sources(config_error_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/calibration/calibration_config.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/calibration/calibration_video.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/tools/calibration/calibration_detection.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/calibration/calibration_result.cpp")
 
 # 计数 helper 仅给此工具口径测试使用，不向 Detector 或公共使用者传播。
 target_include_directories(corner_edge_fit_test PRIVATE

@@ -1,7 +1,7 @@
 // 只补缺失M/S并独立校验已有绑定；真实边界/拓扑/面积共同供身份，不凭最近中心。
 #include "geometry/geometry_assignment_completion.hpp"
 #include "geometry/assignment_match_metrics.hpp"
-#include "core/config_error.hpp"
+#include "reader/config_error.hpp"
 #include <opencv2/imgproc.hpp>
 #include <map>
 #include <set>

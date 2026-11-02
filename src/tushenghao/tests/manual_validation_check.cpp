@@ -15,7 +15,7 @@
 #include "geometry/geometry_l_topology.hpp"
 #include "geometry/geometry_validation.hpp"
 #include "vision/types/marker_geometry.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 
 #include <iostream>
 

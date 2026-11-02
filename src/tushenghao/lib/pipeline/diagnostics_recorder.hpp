@@ -1,5 +1,5 @@
 #pragma once
-#include "config/observability_config.hpp"
+#include "application/observability_config.hpp"
 #include "pipeline/run_report.hpp"
 #include <filesystem>
 #include <fstream>

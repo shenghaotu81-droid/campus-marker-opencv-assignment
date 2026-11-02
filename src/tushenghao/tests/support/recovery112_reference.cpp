@@ -4,7 +4,7 @@
 #include "recovery112_reference.hpp"
 #include "corners/periodic_line_fit.hpp"
 #include "vision/math/observed_geometry.hpp"
-#include "core/corner_budget.hpp"
+#include "detector/corner_budget_validation.hpp"
 #include <opencv2/imgproc.hpp>
 #include <set>
 #include <map>

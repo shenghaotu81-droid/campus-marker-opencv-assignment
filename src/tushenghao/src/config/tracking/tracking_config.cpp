@@ -1,6 +1,6 @@
 #include "vision/math/covariance_validation.hpp"
-#include "mark/tracking_config.hpp"
-#include "config/value_reader.hpp"
+#include "vision/config/tracking_config.hpp"
+#include "reader/value_reader.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <cmath>
 #include <stdexcept>

@@ -162,7 +162,7 @@ flowchart TD
 
 **用到的办法：**严格键集合使拼写错误及时暴露，避免静默落到默认值。 **读时注意：**模块 reader 的字段集合各自拥有；display 是现行段，删掉的三个旋钮、旧显示键与旧模式都明确拒绝。
 
-定位：[lib/config/config.cpp:135](../lib/config/config.cpp#L135)；[原步骤 Q01](lean-report.md?plain=1#L127)。
+定位：[src/config/detector/config.cpp:135](../src/config/detector/config.cpp#L135)；[原步骤 Q01](lean-report.md?plain=1#L127)。
 
 ### Q02 转换类型并保留完整整数／空值
 
@@ -172,7 +172,7 @@ flowchart TD
 
 **用到的办法：**精确整数旁路避免 OpenCV 32 位节点或 double 丢失 uint64；可选值表达尚未测得而非零预算。 **读时注意：**Detector 数字节点严格，G2 普通／optional 不同，G4 允许完整数字串；共用函数不等于统一成宽松解析。
 
-定位：[lib/config/value_reader.hpp:9](../lib/config/value_reader.hpp#L9)；[原步骤 Q02](lean-report.md?plain=1#L128)。
+定位：[src/config/reader/value_reader.hpp:9](../src/config/reader/value_reader.hpp#L9)；[原步骤 Q02](lean-report.md?plain=1#L128)。
 
 ### Q03 校验各模块自己的契约
 
@@ -182,7 +182,7 @@ flowchart TD
 
 **用到的办法：**局部校验避免构造无关 AppConfig 的默认值来间接证明一个模块合法。 **读时注意：**合法配置可以仍有空预算；格式检查通过不是实车／控制能力已就绪。
 
-定位：[lib/config/config.cpp:529](../lib/config/config.cpp#L529)；[原步骤 Q03](lean-report.md?plain=1#L129)。
+定位：[src/config/detector/config.cpp:529](../src/config/detector/config.cpp#L529)；[原步骤 Q03](lean-report.md?plain=1#L129)。
 
 ### Q04 解析模型、标定、profile 与单位
 
@@ -192,7 +192,7 @@ flowchart TD
 
 **用到的办法：**配置目录定位使调用方切换 cwd 后仍能找到同一份资源；米制转换统一位姿与跟踪单位。 **读时注意：**默认入口路径仍有各自适配，不能说整个仓库已完全不读 cwd；F57 已将合成测试根显式传入，旧 CLI 兼容边界仍存在。
 
-定位：[lib/config/pose_config.cpp:95](../lib/config/pose_config.cpp#L95)；[原步骤 Q04](lean-report.md?plain=1#L130)。
+定位：[src/config/pose/pose_config.cpp:95](../src/config/pose/pose_config.cpp#L95)；[原步骤 Q04](lean-report.md?plain=1#L130)。
 
 ### Q05 核验协方差数学有效性
 
@@ -212,7 +212,7 @@ flowchart TD
 
 **用到的办法：**配置快照使回放能复现本次实际开关和数值，而非只知道某个文件名。 **读时注意：**运行元信息是另外的 manifest；标定／G2／G4 也有各自 writer，不能拿 AppConfig writer 包办所有协议。
 
-定位：[lib/config/config.cpp:743](../lib/config/config.cpp#L743)；[原步骤 Q06](lean-report.md?plain=1#L132)。
+定位：[src/config/detector/config.cpp:743](../src/config/detector/config.cpp#L743)；[原步骤 Q06](lean-report.md?plain=1#L132)。
 
 ## 当前检测步骤 D01–D18
 
@@ -829,7 +829,7 @@ G4 跟帧应另开 `gdb --args /tmp/campus-lean-debug/tracking_app --config /abs
 
 ## 建议阅读顺序
 
-1. 先看公开输入／输出与配置边界：[include/vision/types/detector_types.hpp:70](../include/vision/types/detector_types.hpp#L70)、[lib/core/geometry_types.hpp:178](../lib/core/geometry_types.hpp#L178)、[lib/config/app_config.hpp:10](../lib/config/app_config.hpp#L10)。把 raw/stable、工作／原图、ID／下标先分清。
+1. 先看公开输入／输出与配置边界：[include/vision/types/detector_types.hpp:70](../include/vision/types/detector_types.hpp#L70)、[lib/core/geometry_types.hpp:178](../lib/core/geometry_types.hpp#L178)、[src/config/application/app_config.hpp:10](../src/config/application/app_config.hpp#L10)。把 raw/stable、工作／原图、ID／下标先分清。
 2. 接着读 A01 入口、OfflineRunSession::run/process_frame 和 Detector::process，把完整调用顺序串起来；首次先沿成功路径，再补 NOT_READY／INVALID_INPUT／异常记录分支。
 3. 读 runGeometrySteps 与 decodeStage，拿一个 fixture 跟 D02–D18 的显式产物；一次只深入当前失败步骤的 helper，再读它的独立 validator／reference。
 4. 单独读 T 链的输入、关联、对应、平滑和回退；注意显示文字与几何状态各有实例历史，不能串成一份共享可变对象。

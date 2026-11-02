@@ -5,7 +5,7 @@
 #include "geometry/geometry_observation.hpp"
 #include "geometry/geometry_l_topology.hpp"
 #include "core/prepared_frame.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 
 #include <algorithm>
 #include <cmath>

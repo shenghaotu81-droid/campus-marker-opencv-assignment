@@ -5,7 +5,7 @@
 #include "block3_fixture.hpp"
 #include "corners/corner_resolver.hpp"
 #include "corners/corner_observation.hpp"
-#include "core/config_error.hpp"
+#include "reader/config_error.hpp"
 #include <iostream>
 #include <stdexcept>
 

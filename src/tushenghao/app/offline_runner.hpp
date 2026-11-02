@@ -1,6 +1,6 @@
 #pragma once
-#include "config/app_config.hpp"
-#include "config/config.hpp"
+#include "application/app_config.hpp"
+#include "detector/config.hpp"
 #include "pipeline/diagnostics_recorder.hpp"
 #include <set>
 namespace mark {

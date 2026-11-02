@@ -1,0 +1,15 @@
+# Q01–Q06：配置自己拥有源表；仅依赖值与纯数学，不能链接 pose/tracking 实现。
+add_library(vision_config detector/config.cpp model/marker_geometry.cpp)
+add_library(vision::config ALIAS vision_config)
+target_link_libraries(vision_config PUBLIC vision::types vision::math)
+target_include_directories(vision_config PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+if(MARK_BUILD_G2)
+    target_sources(vision_config PRIVATE pose/pose_config.cpp pose/tag_config_validation.cpp)
+endif()
+if(MARK_BUILD_G4)
+    target_sources(vision_config PRIVATE tracking/tracking_config.cpp)
+endif()
+# 仅工程内步骤消费者显式选择配置声明，不把整树 src 暴露给普通使用者。
+add_library(vision_config_internal_headers INTERFACE)
+target_include_directories(vision_config_internal_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(vision_config_internal_headers INTERFACE vision::config)

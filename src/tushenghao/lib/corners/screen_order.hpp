@@ -1,6 +1,6 @@
 // 几何环slot没有物理P编号；复用原排序核心，不将未知方向补成物理身份。
 #pragma once
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 #include <opencv2/core.hpp>
 #include <array>
 #include <optional>

@@ -1,7 +1,7 @@
 // Q01→Q03→Q06：严格读取、分模块校验、导出生效配置；预算值仅来自输入。
-#include "config/config.hpp"
-#include "config/value_reader.hpp"
-#include "core/corner_budget.hpp"
+#include "detector/config.hpp"
+#include "reader/value_reader.hpp"
+#include "detector/corner_budget_validation.hpp"
 #include <set>
 #include <fstream>
 #include <regex>
@@ -9,7 +9,7 @@
 
 #include <opencv2/core.hpp>
 
-#include "core/config_error.hpp"
+#include "reader/config_error.hpp"
 
 #include <filesystem>
 

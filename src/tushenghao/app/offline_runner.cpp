@@ -1,4 +1,4 @@
-#include "config/marker_geometry_loader.hpp"
+#include "model/marker_geometry_loader.hpp"
 #include "core/file_fingerprint.hpp"
 #include "offline_runner.hpp"
 #include "debug_renderer.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include "pipeline/detector_diagnostics_access.hpp"
 #include "block3_fixture.hpp"
 #include "assertions.hpp"

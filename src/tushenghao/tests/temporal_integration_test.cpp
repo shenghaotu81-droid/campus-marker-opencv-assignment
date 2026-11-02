@@ -1,7 +1,7 @@
-#include "config/marker_geometry_loader.hpp"
+#include "model/marker_geometry_loader.hpp"
 // 真实decode与公共process逐字段对照；fixture预算显式独立，不写生产配置。
 #include "pipeline/stabilize_stage.hpp"
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include "mark/detector.hpp"
 #include "block3_fixture.hpp"
 #include "temporal_fixture.hpp"

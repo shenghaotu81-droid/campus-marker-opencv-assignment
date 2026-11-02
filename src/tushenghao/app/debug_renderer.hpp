@@ -1,6 +1,6 @@
 #pragma once
 #include "core/diagnostics_types.hpp"
-#include "config/observability_config.hpp"
+#include "application/observability_config.hpp"
 namespace mark {
 // A08：仅交付原图坐标的点线快照，渲染步骤无需了解算法阶段或缓存实现。
 struct RenderInput {

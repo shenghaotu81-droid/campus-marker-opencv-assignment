@@ -1,7 +1,7 @@
 // 完整轮廓上的连续支持搜索；索引只复用计算，别名顺序、所有质量门控和歧义检查保留。
 #include "corners/corner_edge_fit.hpp"
 #include "corners/periodic_line_fit.hpp"
-#include "core/corner_budget.hpp"
+#include "detector/corner_budget_validation.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
 #include <numeric>

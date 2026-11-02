@@ -12,7 +12,7 @@
 #include "corners/detection_validator.hpp"
 #include "corners/detection_publication.hpp"
 #include "pipeline/diagnostics_context.hpp"
-#include "core/corner_budget.hpp"
+#include "detector/corner_budget_validation.hpp"
 #include <algorithm>
 #include <set>
 #include <sstream>

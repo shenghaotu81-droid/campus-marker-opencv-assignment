@@ -1,6 +1,6 @@
 // 原视频没有亚像素真值；按已封存的种子/采样顺序重建独立图像，验证定位与缺角拒绝。
 #include "block3_fixture.hpp"
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include "corners/corner_resolver.hpp"
 #include "corners/detection_validator.hpp"
 #include "vision/math/observed_geometry.hpp"

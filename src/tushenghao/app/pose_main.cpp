@@ -2,7 +2,7 @@
 // 单独pose_app; 不改旧main
 #include "mark/detector.hpp"
 #include "mark/tag_detector.hpp"
-#include "config/config.hpp"
+#include "detector/config.hpp"
 
 #include <cmath>
 #include <filesystem>

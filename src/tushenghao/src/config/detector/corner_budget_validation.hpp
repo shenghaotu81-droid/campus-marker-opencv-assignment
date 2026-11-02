@@ -1,7 +1,7 @@
 // 只校验显式预算；缺配置/非法配置是程序配置错误，不能包装成视觉empty。
 #pragma once
-#include "mark/detector_config.hpp"
-#include "core/config_error.hpp"
+#include "vision/config/detector_config.hpp"
+#include "reader/config_error.hpp"
 #include <cmath>
 namespace mark {
 inline void validateCornerObservationBudget(const CornerConfig& config) {

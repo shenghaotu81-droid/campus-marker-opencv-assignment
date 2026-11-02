@@ -41,7 +41,7 @@ SUCCESS
 */
 #include "corners/detection_validator.hpp"
 #include "corners/corner_evidence_validation.hpp"
-#include "core/corner_budget.hpp"
+#include "detector/corner_budget_validation.hpp"
 #include <set>
 
 #include <algorithm>

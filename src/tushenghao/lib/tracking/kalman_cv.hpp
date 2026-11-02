@@ -2,7 +2,7 @@
 #pragma once
 #include "vision/math/observed_geometry.hpp"
 
-#include "mark/tracking_config.hpp"
+#include "vision/config/tracking_config.hpp"
 
 namespace mark::tracking::detail
 {

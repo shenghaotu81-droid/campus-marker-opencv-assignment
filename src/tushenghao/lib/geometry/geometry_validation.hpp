@@ -3,7 +3,7 @@
 
 #include "core/geometry_types.hpp"
 #include "vision/types/marker_geometry.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 
 #include <vector>
 

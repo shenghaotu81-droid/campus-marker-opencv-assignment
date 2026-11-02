@@ -61,3 +61,32 @@ ctest --test-dir /tmp/campus-lean-synth --output-on-failure
 底稿对应的 kalman_cv.cpp/.hpp 拆分按瘦后代码执行：函数已在旧 observed_geometry_utils 内 inline，本批从其实际唯一实现搬出，不从 Kalman 复制第二份。函数体、舍入、异常和命名空间不变。covariance 子目录是独立的协方差数学检查步骤；配套公开声明放固定 include/vision/math，不建同内容转发头。输入矩阵／输出 bool 是替换契约，其他几何数学仍为既有纯函数。
 
 验证：`build/restructure-math/result.json` 全通过，完整构建、27/27、23/23、7/7、G4 四组合及 1676 帧完整公开输出均与瘦后基线字节相同。正定实现仅搬迁，数学检查与空预算保持。
+
+## 配置模块（执行中）
+
+配置按严格字段读取、检测参数、应用观测参数、模型加载、G2 配置、G4 配置拆成职责子目录；公开配置路径一次迁移到 include/vision/config。默认开关和预算不变。
+
+| 原路径 | 新路径 |
+|---|---|
+| `include/mark/detector_config.hpp` | `include/vision/config/detector_config.hpp` |
+| `include/mark/pose_config.hpp` | `include/vision/config/pose_config.hpp` |
+| `include/mark/tracking_config.hpp` | `include/vision/config/tracking_config.hpp` |
+| `lib/config/config.cpp` | `src/config/detector/config.cpp` |
+| `lib/config/config.hpp` | `src/config/detector/config.hpp` |
+| `lib/config/app_config.hpp` | `src/config/application/app_config.hpp` |
+| `lib/config/observability_config.hpp` | `src/config/application/observability_config.hpp` |
+| `lib/config/value_reader.hpp` | `src/config/reader/value_reader.hpp` |
+| `lib/core/config_error.hpp` | `src/config/reader/config_error.hpp` |
+| `lib/core/corner_budget.hpp` | `src/config/detector/corner_budget_validation.hpp` |
+| `lib/core/marker_geometry.cpp` | `src/config/model/marker_geometry.cpp` |
+| `lib/config/marker_geometry_loader.hpp` | `src/config/model/marker_geometry_loader.hpp` |
+| `lib/config/pose_config.cpp` | `src/config/pose/pose_config.cpp` |
+| `lib/config/tracking_config.cpp` | `src/config/tracking/tracking_config.cpp` |
+| `tests/config_error_test.cpp` | `tests/config/config_error_test.cpp` |
+| `tests/config_roundtrip_test.cpp` | `tests/config/config_roundtrip_test.cpp` |
+
+附加接缝：原 pose_geometry.cpp 中相同 Tag 参数谓词逐字搬到 src/config/pose/tag_config_validation.cpp；声明单独归对应配置步骤，原名与函数体不变。这样配置模块只链接 types/math，原生 Tag 对象与位姿计算仍归 pose，消除原底稿没有识别的 config→pose 符号反向依赖。配置测试随模块移动并各自登记；独立角点／位姿 oracle 未合并。输入 YAML／类型化配置，输出原配置或原异常；模型 loader 显式路径是单独替换点。
+
+验证：`build/restructure-config-retry1/result.json` 全通过：完整构建、27/27、23/23、7/7、G4 四组合及全部数值／语义产物字节相同、1676 帧公开结果字节相同。
+
+配置批次机械修复：首次全量构建暴露 pose_sensitivity 经旧相对路径使用 pose_geometry 私有声明；将该现有工具显式链接 vision_config_internal_headers。只增加所需配置契约 include 可见性，不公开整树、未改函数逻辑。默认 23/23 与合成 7/7 首轮已过；仍重跑本批全套验证。

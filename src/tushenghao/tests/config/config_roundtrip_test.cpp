@@ -13,8 +13,8 @@
 
 为啥重要：以后你调好一组参数，write 存下来，下次 load 就能复现完全相同的实验。如果 write 漏写了字段、或 load 读错了值，这个测试当场抓出来。
 */
-#include "config/config.hpp"
-#include "core/config_error.hpp"
+#include "detector/config.hpp"
+#include "reader/config_error.hpp"
 
 
 #include <filesystem>

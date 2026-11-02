@@ -1,6 +1,6 @@
 // 输入：固定非法输入/排序样例；输出：逐用例检查结果，任何断言失败返回非零。
 // 不使用测试框架，也不依赖生产定位预算；这些测试只验证冻结的安全契约。
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include "mark/detector.hpp"
 #include "preprocess/preprocess.hpp"
 #include "corners/semantic_resolver.hpp"
@@ -10,7 +10,7 @@
 #include "corners/detection_publication.hpp"
 #include "corners/screen_order.hpp"
 #include "pipeline/temporal_stabilizer.hpp"
-#include "core/config_error.hpp"
+#include "reader/config_error.hpp"
 #include <fstream>
 #include <chrono>
 #include <cmath>

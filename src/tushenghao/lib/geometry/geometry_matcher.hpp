@@ -3,7 +3,7 @@
 #include <opencv2/core.hpp>
 #include "core/geometry_types.hpp"
 #include "vision/types/marker_geometry.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 namespace mark {
 // D05：三个实测 L 观察枚举模型对应，输出候选绑定；资源耗尽仍显式标截断。
 std::vector<std::vector<ComponentAssignment>> generateThreeLAssignments(

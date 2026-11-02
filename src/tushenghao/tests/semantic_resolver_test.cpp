@@ -23,7 +23,7 @@ namespace
 }
 
 #include "corners/semantic_resolver.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 
 namespace mark
 {

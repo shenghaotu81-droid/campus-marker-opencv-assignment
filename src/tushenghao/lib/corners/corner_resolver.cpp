@@ -3,7 +3,7 @@
 #include "corners/corner_resolver.hpp"
 #include "corners/corner_observation.hpp"
 #include "corners/corner_edge_fit.hpp"
-#include "core/corner_budget.hpp"
+#include "detector/corner_budget_validation.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <map>
 #include <set>

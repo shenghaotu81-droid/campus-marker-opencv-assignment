@@ -1,8 +1,8 @@
 // 整个应用程序的配置（包含所有应用的配置）配置长什么样
 #pragma once
 
-#include "mark/detector_config.hpp"
-#include "config/observability_config.hpp"
+#include "vision/config/detector_config.hpp"
+#include "application/observability_config.hpp"
 
 namespace mark
 {

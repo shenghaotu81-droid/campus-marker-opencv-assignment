@@ -1,6 +1,6 @@
 // 原沙盒计时依赖环境开关和全局插桩；这里只运行公共 process，独立记录全帧 raw 输出。
 #include "mark/detector.hpp"
-#include "config/config.hpp"
+#include "detector/config.hpp"
 #include "pipeline/detector_diagnostics_access.hpp"
 #include <opencv2/videoio.hpp>
 #include <chrono>

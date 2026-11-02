@@ -1,6 +1,6 @@
 #include "corners/screen_order.hpp"
 #include "corners/corner_types.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 
 #include <algorithm>
 #include <array>

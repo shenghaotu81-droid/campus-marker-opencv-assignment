@@ -5,7 +5,7 @@ if(MARK_BUILD_G4)
         message(FATAL_ERROR "G4使用已冻结G2类型，请同时指定-DMARK_BUILD_G2=ON")
     endif()
     add_library(mark_tracking
-        lib/config/tracking_config.cpp
+
         lib/tracking/kalman_cv.cpp
         lib/tracking/measurement_adapter.cpp
         lib/tracking/target_tracker.cpp

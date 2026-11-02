@@ -31,7 +31,7 @@ namespace
 }
 
 #include "corners/detection_validator.hpp"
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 #include "block3_fixture.hpp"
 #include "corners/corner_resolver.hpp"
 

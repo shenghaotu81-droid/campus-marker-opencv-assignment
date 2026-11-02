@@ -23,7 +23,7 @@ if(MARK_BUILD_G2)
     target_include_directories(mark_apriltag SYSTEM INTERFACE "${APRILTAG_INCLUDE_ROOT}")
     target_link_libraries(mark_apriltag INTERFACE "${APRILTAG_LIBRARY}" Threads::Threads)
     add_library(mark_pose
-        lib/config/pose_config.cpp
+
         lib/pose/pose_geometry.cpp
         lib/pose/pose_estimator.cpp
         lib/pose/tag_detector.cpp
@@ -32,7 +32,7 @@ if(MARK_BUILD_G2)
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib"
     )
-    target_link_libraries(mark_pose PUBLIC mark_detector PRIVATE mark_apriltag)
+    target_link_libraries(mark_pose PUBLIC mark_detector PRIVATE mark_apriltag vision_config_internal_headers)
     target_compile_options(mark_pose PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic>
     )
@@ -42,7 +42,7 @@ if(MARK_BUILD_G2)
 
     add_executable(pose_contract_test tests/pose_contract_test.cpp)
     target_include_directories(pose_contract_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
-    target_link_libraries(pose_contract_test PRIVATE mark_pose)
+    target_link_libraries(pose_contract_test PRIVATE mark_pose vision_config_internal_headers)
     target_compile_definitions(pose_contract_test PRIVATE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
     add_test(NAME pose_contract_test COMMAND pose_contract_test)
 
@@ -57,5 +57,5 @@ if(MARK_BUILD_G2)
     add_test(NAME tag_detector_test COMMAND tag_detector_test)
 
     add_executable(pose_sensitivity tools/validation/pose_sensitivity.cpp)
-    target_link_libraries(pose_sensitivity PRIVATE mark_pose)
+    target_link_libraries(pose_sensitivity PRIVATE mark_pose vision_config_internal_headers)
 endif()

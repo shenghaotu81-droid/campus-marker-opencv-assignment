@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 #include "vision/types/detector_types.hpp"
 
 /*

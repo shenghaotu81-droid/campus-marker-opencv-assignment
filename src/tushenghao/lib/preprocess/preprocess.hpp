@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mark/detector_config.hpp"
+#include "vision/config/detector_config.hpp"
 #include "vision/types/detector_types.hpp"
 #include "core/prepared_frame.hpp"
 

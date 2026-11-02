@@ -2,7 +2,7 @@
 #pragma once
 
 #include "vision/types/detector_types.hpp"
-#include "mark/pose_config.hpp"
+#include "vision/config/pose_config.hpp"
 #include "vision/types/pose_types.hpp"
 
 namespace mark::pose
