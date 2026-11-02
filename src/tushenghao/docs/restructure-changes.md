@@ -233,3 +233,24 @@ P01…P11 按 MARK／平面求解、独立复核、Tag 后端分目录。namespa
 pose 批次机械修复：Tag 测试也使用迁移后的 g2_test_scene.hpp；将同一已有 fixture 目录显式提供给该测试目标，未复制 fixture 或修改任何期望。
 
 pose 批次验收：`build/restructure-pose-retry1/result.json` 全通过：完整构建、27/27、23/23、7/7、G4 四组合及 1676 帧完整公开结果逐字节相同。
+
+## tracking 模块（执行中）
+
+K 链按 measurement/filter/lifecycle/io 区分测量适配、数值更新、实例事务与记录协议；成对声明／实现同处。公开 TargetTracker 只变 include 路径；全部输出类型、字段、资格、两点初始化／重建、创新版本与只读预测函数体不变。依赖 types/config/pose/math 单向，测试按同一步骤镜像。
+
+| 原路径 | 新路径 |
+|---|---|
+| `include/mark/target_tracker.hpp` | `include/vision/tracking/target_tracker.hpp` |
+| `lib/tracking/kalman_cv.cpp` | `src/tracking/filter/kalman_cv.cpp` |
+| `lib/tracking/kalman_cv.hpp` | `src/tracking/filter/kalman_cv.hpp` |
+| `lib/tracking/measurement_adapter.cpp` | `src/tracking/measurement/measurement_adapter.cpp` |
+| `lib/tracking/measurement_adapter.hpp` | `src/tracking/measurement/measurement_adapter.hpp` |
+| `lib/tracking/target_tracker.cpp` | `src/tracking/lifecycle/target_tracker.cpp` |
+| `lib/tracking/tracking_io.cpp` | `src/tracking/io/tracking_io.cpp` |
+| `lib/tracking/tracking_io.hpp` | `src/tracking/io/tracking_io.hpp` |
+| `tests/tracking_contract_test.cpp` | `tests/tracking/lifecycle/tracking_contract_test.cpp` |
+| `tests/tracking_io_test.cpp` | `tests/tracking/io/tracking_io_test.cpp` |
+
+验证待本批全套完成登记。
+
+tracking 批次验收：`build/restructure-tracking/result.json` 全通过：完整构建、27/27、23/23、7/7，G4 四组合全部数值／语义文件与 1676 帧完整公开结果逐字节相同。

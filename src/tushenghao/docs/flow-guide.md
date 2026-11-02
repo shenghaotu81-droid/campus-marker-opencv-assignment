@@ -590,7 +590,7 @@ flowchart TD
 
 **用到的办法：**codec 只重建类型化数据，资格由后续步骤根据显式来源核对。 **读时注意：**tracking_app 会把文件中的 TypedMemory 降为 Synthetic；文件回放不会继承内存实车资格，且不直接调用 Detector。
 
-定位：[lib/tracking/tracking_io.cpp:200](../lib/tracking/tracking_io.cpp#L200)；[原步骤 K01](lean-report.md?plain=1#L93)。
+定位：[src/tracking/io/tracking_io.cpp:200](../src/tracking/io/tracking_io.cpp#L200)；[原步骤 K01](lean-report.md?plain=1#L93)。
 
 ### K02 创建候选事务并核帧
 
@@ -600,7 +600,7 @@ flowchart TD
 
 **用到的办法：**按值事务让失败候选的时间和轨迹修改不会污染下一帧。 **读时注意：**advance 内会生成快照，返回且 input_accepted 后 step 才提交；原表 K09→K10 不是代码字面顺序。
 
-定位：[lib/tracking/target_tracker.cpp:356](../lib/tracking/target_tracker.cpp#L356)；[原步骤 K02](lean-report.md?plain=1#L94)。
+定位：[src/tracking/lifecycle/target_tracker.cpp:356](../src/tracking/lifecycle/target_tracker.cpp#L356)；[原步骤 K02](lean-report.md?plain=1#L94)。
 
 ### K03 提取当前唯一的三维测量
 
@@ -610,7 +610,7 @@ flowchart TD
 
 **用到的办法：**位置协方差 R 表示当前三维位置误差，给滤波器分配测量权重；来源必须明确。 **读时注意：**不猜 covariance_se3 数组排列来造 R；Unique 标签本身还不够，选中证据也要合法。
 
-定位：[lib/tracking/measurement_adapter.cpp:80](../lib/tracking/measurement_adapter.cpp#L80)；[原步骤 K03](lean-report.md?plain=1#L95)。
+定位：[src/tracking/measurement/measurement_adapter.cpp:80](../src/tracking/measurement/measurement_adapter.cpp#L80)；[原步骤 K03](lean-report.md?plain=1#L95)。
 
 ### K04 核对坐标、时间域及误差来源
 
@@ -620,7 +620,7 @@ flowchart TD
 
 **用到的办法：**刚体变换把相机坐标转到指定世界系；绝对时间界用于误差包络，不能直接当高斯标准差。 **读时注意：**实际先适配坐标，再对 live 轨迹预测，之后增广测量 R；camera_relative 的速度包含相机自运动，不能称世界速度。
 
-定位：[lib/tracking/measurement_adapter.cpp:130](../lib/tracking/measurement_adapter.cpp#L130)；[原步骤 K04](lean-report.md?plain=1#L96)。
+定位：[src/tracking/measurement/measurement_adapter.cpp:130](../src/tracking/measurement/measurement_adapter.cpp#L130)；[原步骤 K04](lean-report.md?plain=1#L96)。
 
 ### K05 按分支初始化、两点确认或重建
 
@@ -630,7 +630,7 @@ flowchart TD
 
 **用到的办法：**两个不同时间的位置才提供速度信息；首点内部零均值只是先验，不作为测得零速发布。 **读时注意：**不是每帧都先初始化再预测：create、bootstrap、reseed 位于不同分支，重建会产生新 ID。
 
-定位：[lib/tracking/target_tracker.cpp:75](../lib/tracking/target_tracker.cpp#L75)；[原步骤 K05](lean-report.md?plain=1#L97)。
+定位：[src/tracking/lifecycle/target_tracker.cpp:75](../src/tracking/lifecycle/target_tracker.cpp#L75)；[原步骤 K05](lean-report.md?plain=1#L97)。
 
 ### K06 对已有轨迹做常速度预测
 
@@ -640,7 +640,7 @@ flowchart TD
 
 **用到的办法：**x 是位置／速度状态，P 是其误差协方差；常速度模型用加速度过程噪声描述短时变化，同时传播不确定性。 **读时注意：**只在 live 分支对实时状态预测；预测输出不是新的图像测量，坏数学不能只降资格后继续算。
 
-定位：[lib/tracking/kalman_cv.cpp:121](../lib/tracking/kalman_cv.cpp#L121)；[原步骤 K06](lean-report.md?plain=1#L98)。
+定位：[src/tracking/filter/kalman_cv.cpp:121](../src/tracking/filter/kalman_cv.cpp#L121)；[原步骤 K06](lean-report.md?plain=1#L98)。
 
 ### K07 计算创新并选择唯一关联
 
@@ -650,7 +650,7 @@ flowchart TD
 
 **用到的办法：**NIS 是用误差协方差归一化的残差平方，用于比较测量与预测是否相容。 **读时注意：**评分使用 profile 的 bootstrap／association 门限；多候选通过会 coast，不偷偷挑最小值；缓存仅对同实例同版本有效。
 
-定位：[lib/tracking/kalman_cv.cpp:154](../lib/tracking/kalman_cv.cpp#L154)；[原步骤 K07](lean-report.md?plain=1#L99)。
+定位：[src/tracking/filter/kalman_cv.cpp:154](../src/tracking/filter/kalman_cv.cpp#L154)；[原步骤 K07](lean-report.md?plain=1#L99)。
 
 ### K08 校正已确认滤波状态
 
@@ -660,7 +660,7 @@ flowchart TD
 
 **用到的办法：**Joseph 协方差形式将状态修正与测量噪声都显式计入，减小数值运算破坏协方差性质的风险。 **读时注意：**不能在 predict／correct 之后再复用旧创新；本次复用的是原来在同状态重复计算的结果。
 
-定位：[lib/tracking/kalman_cv.cpp:180](../lib/tracking/kalman_cv.cpp#L180)；[原步骤 K08](lean-report.md?plain=1#L100)。
+定位：[src/tracking/filter/kalman_cv.cpp:180](../src/tracking/filter/kalman_cv.cpp#L180)；[原步骤 K08](lean-report.md?plain=1#L100)。
 
 ### K09 决定生命周期并提交已接受候选
 
@@ -670,7 +670,7 @@ flowchart TD
 
 **用到的办法：**状态机明确区分当前实测、短时预测和已失效轨迹。 **读时注意：**快照 K10 在 advance 返回前生成，提交在其后；不能写成“先提交再取快照”。数学异常会返回 NO_COMMIT 事件。
 
-定位：[lib/tracking/target_tracker.cpp:322](../lib/tracking/target_tracker.cpp#L322)；[原步骤 K09](lean-report.md?plain=1#L101)。
+定位：[src/tracking/lifecycle/target_tracker.cpp:322](../src/tracking/lifecycle/target_tracker.cpp#L322)；[原步骤 K09](lean-report.md?plain=1#L101)。
 
 ### K10 生成冻结输出快照与资格
 
@@ -680,7 +680,7 @@ flowchart TD
 
 **用到的办法：**快照将内部滤波状态与公开结果隔开，消费者不能改写实时历史。 **读时注意：**标准差保持原短路求值顺序；没有新增 UncertaintySummary。数值轨迹存在不代表 qualified，为合成回放也不升级资格。
 
-定位：[lib/tracking/target_tracker.cpp:95](../lib/tracking/target_tracker.cpp#L95)；[原步骤 K10](lean-report.md?plain=1#L102)。
+定位：[src/tracking/lifecycle/target_tracker.cpp:95](../src/tracking/lifecycle/target_tracker.cpp#L95)；[原步骤 K10](lean-report.md?plain=1#L102)。
 
 ### K11 查询指定时刻的只读预测
 
@@ -690,7 +690,7 @@ flowchart TD
 
 **用到的办法：**只读查询让下游选择观察时刻，不把预测当作已经发生的新测量。 **读时注意：**当前 tracking_app 的逐帧循环不调用 predict_to；实验或显式调用者使用此旁路，F25 的未来语义方向本次未实施。
 
-定位：[lib/tracking/target_tracker.cpp:377](../lib/tracking/target_tracker.cpp#L377)；[原步骤 K11](lean-report.md?plain=1#L103)。
+定位：[src/tracking/lifecycle/target_tracker.cpp:377](../src/tracking/lifecycle/target_tracker.cpp#L377)；[原步骤 K11](lean-report.md?plain=1#L103)。
 
 ### K12 记录跟踪结果和实验误差
 
@@ -700,7 +700,7 @@ flowchart TD
 
 **用到的办法：**留出验证用未参与拟合的数据复核 profile，而不是用同一批数据自证。 **读时注意：**现行程序此处主要写 YAML/CSV，原表 JSONL 是概括；四组合通过覆盖合成行为，G-01/G-02/G-03 仍 OPEN。
 
-定位：[lib/tracking/tracking_io.cpp:303](../lib/tracking/tracking_io.cpp#L303)；[原步骤 K12](lean-report.md?plain=1#L104)。
+定位：[src/tracking/io/tracking_io.cpp:303](../src/tracking/io/tracking_io.cpp#L303)；[原步骤 K12](lean-report.md?plain=1#L104)。
 
 ## 工具、标定、合成与构建：只看总览和入口
 
@@ -772,7 +772,7 @@ OpenSSL 查找已靠近实际审计目标；默认仍构建这些工具。根 CM
 
 ### 先选可复现输入，再进入整条链
 
-先用已有几何／角点 fixture 理解某一步，再用完整录像追实例历史。入口与契约可从 [tests/detection/corners/corner_resolver_test.cpp:225](../tests/detection/corners/corner_resolver_test.cpp#L225)、[tests/observability_integration_test.cpp:516](../tests/observability_integration_test.cpp#L516) 和 [tests/tracking_contract_test.cpp:769](../tests/tracking_contract_test.cpp#L769) 进入。这里的测试 reference 不是生产 helper 的另一层转发；改边界时要继续跑独立结果比较。
+先用已有几何／角点 fixture 理解某一步，再用完整录像追实例历史。入口与契约可从 [tests/detection/corners/corner_resolver_test.cpp:225](../tests/detection/corners/corner_resolver_test.cpp#L225)、[tests/observability_integration_test.cpp:516](../tests/observability_integration_test.cpp#L516) 和 [tests/tracking/lifecycle/tracking_contract_test.cpp:769](../tests/tracking/lifecycle/tracking_contract_test.cpp#L769) 进入。这里的测试 reference 不是生产 helper 的另一层转发；改边界时要继续跑独立结果比较。
 
 以下是后续交互调试的示例命令，**不是本次验收已经运行过的 Debug 构建**；本次实际 Release 构建、全量测试和 G4 四组合命令都在修改报告附录。命令从仓库根运行，输入路径替换成自己的现有录像，运行目录必须不存在。
 
@@ -810,8 +810,8 @@ print frame.image.rows
 | `src/detection/corners/semantics/semantic_resolver.cpp:333` | D17：全部 measurement、unresolved、search_truncated 与 orientation_unique；不能拿单个好候选解释整体竞争。 |
 | `src/detection/temporal/stabilization/temporal_stabilizer.cpp:106` | T01–T04：reference_、smoothing_、stamp/dt、current_index、对应映射及 TemporalCause；确认回退的是当前 raw。 |
 | `src/pose/estimation/pose_estimator.cpp:158` | G2：物点米／像点像素、stamp、budgets_ready、全部 candidate、eligible_count 和精修前后；Unique 与 control_usable 分开看。 |
-| `lib/tracking/target_tracker.cpp:356` | G4：original state/candidate、input_accepted、events、返回快照，再看是否提交；必须在 tracking_app 或类型化调用中调试此断点。 |
-| `lib/tracking/kalman_cv.cpp:154` | G4 数学：同版本 x/P、z/R、残差/S/score；correct 消费的 owner/revision 必须对应此状态。 |
+| `src/tracking/lifecycle/target_tracker.cpp:356` | G4：original state/candidate、input_accepted、events、返回快照，再看是否提交；必须在 tracking_app 或类型化调用中调试此断点。 |
+| `src/tracking/filter/kalman_cv.cpp:154` | G4 数学：同版本 x/P、z/R、残差/S/score；correct 消费的 owner/revision 必须对应此状态。 |
 | `app/offline_runner.cpp:424` | A11/A12：实际计数、pending、expected、RunOutcome，再看视频收尾、finishRun 和控制台；不要从一行“成功”反推覆盖。 |
 
 

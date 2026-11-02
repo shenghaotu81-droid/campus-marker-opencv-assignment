@@ -11,6 +11,7 @@ add_subdirectory(src/observability)
 # 六个内部源码模块仍组成一个库；公开头与内部头的搜索路径分开。
 add_subdirectory(src/detection)
 add_subdirectory(src/pose)
+add_subdirectory(src/tracking)
 
 add_library(mark_test_support INTERFACE)
 target_include_directories(mark_test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test_support"
@@ -42,6 +43,7 @@ add_subdirectory(tests/config)
 add_subdirectory(tests/observability)
 add_subdirectory(tests/detection)
 add_subdirectory(tests/pose)
+add_subdirectory(tests/tracking)
 
 # F61：配置负例直接调用标定解析器；只为已有测试追加实现，不新增目标。
 target_sources(config_error_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/calibration/calibration_config.cpp"
@@ -209,7 +211,7 @@ if(TARGET mark_pose)
     set_property(TARGET vision_pose APPEND PROPERTY MARK_CMAKE_INPUTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/g2.cmake")
 endif()
 if(TARGET mark_tracking)
-    set_property(TARGET mark_tracking APPEND PROPERTY MARK_CMAKE_INPUTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/g4.cmake")
+    set_property(TARGET vision_tracking APPEND PROPERTY MARK_CMAKE_INPUTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/g4.cmake")
 endif()
 set(mark_identity_consumers mark_offline marker_app decode_audit temporal_audit geometry_audit)
 get_property(mark_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)

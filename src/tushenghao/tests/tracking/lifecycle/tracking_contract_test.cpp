@@ -1,7 +1,7 @@
 // G4 主动契约测试：所有数值均为精确/理想 fixture 条件，绝不是生产阈值建议。
 // 原 Release 下 assert 会消失；本文件用抛异常的主动检查，失败必须返回非零。
-#include "mark/target_tracker.hpp"
-#include "tracking/kalman_cv.hpp"
+#include "vision/tracking/target_tracker.hpp"
+#include "filter/kalman_cv.hpp"
 
 #include <cmath>
 #include <iostream>
