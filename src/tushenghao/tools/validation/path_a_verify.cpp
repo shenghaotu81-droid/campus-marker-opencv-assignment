@@ -1,4 +1,4 @@
-#include "core/cli_options.hpp"
+#include "vision/config/cli_options.hpp"
 #include "vision/observability/file_fingerprint.hpp"
 // Path A 专项只读验收：比较全部公共字段、回溯锚点资格、精确复算原拟合。
 // 不参与生产准入，不替用户批准真值/方向；损坏/缺失证据一律非零退出。
@@ -6,11 +6,11 @@
 #include "detector/config.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "model/marker_geometry_loader.hpp"
-#include "geometry/geometry_anchor_evidence.hpp"
-#include "geometry/geometry_l_topology.hpp"
-#include "corners/detection_validator.hpp"
-#include "corners/detection_publication.hpp"
-#include "corners/semantic_resolver.hpp"
+#include "geometry/parent/geometry_anchor_evidence.hpp"
+#include "geometry/observation/geometry_l_topology.hpp"
+#include "corners/validation/detection_validator.hpp"
+#include "corners/publication/detection_publication.hpp"
+#include "corners/semantics/semantic_resolver.hpp"
 #include "recording/diagnostics_recorder.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgcodecs.hpp>

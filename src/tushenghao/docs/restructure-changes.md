@@ -121,3 +121,93 @@ recording 的纯 JSON codec 与运行状态／IO 分开；events 的枚举编码
 验证：`build/restructure-observability-retry1/result.json` 全通过：完整构建、27/27、23/23、7/7、G4 四组合完整产物及 1676 帧公开结果与瘦后基线逐字节相同。
 
 观测批次机械修复：去掉 Context→检测编排的间接包含后，observability_integration_test 的直接 runDecodePipeline 调用缺声明；为各直接调用点补显式 decode_stage.hpp，不让观测契约重新包含算法头。原失败日志保留，重跑本批完整验证。
+
+## 当前检测与二维时序模块（执行中）
+
+按执行子步骤拆出 observation/parent/validation/completion、原图 observation/fitting/measurement/ordering/validation/semantics/publication，以及 temporal 的 correspondence/stabilization/display/assembly。成对实现／声明同目录；没有按扩展名分组，没有为步骤新建类。
+
+| 原路径 | 新路径 |
+|---|---|
+| `include/mark/detector.hpp` | `include/vision/detection/detector.hpp` |
+| `lib/corners/corner_edge_fit.cpp` | `src/detection/corners/fitting/corner_edge_fit.cpp` |
+| `lib/corners/corner_resolver.cpp` | `src/detection/corners/measurement/corner_resolver.cpp` |
+| `lib/corners/corner_edge_fit.hpp` | `src/detection/corners/fitting/corner_edge_fit.hpp` |
+| `lib/corners/screen_order.hpp` | `src/detection/corners/ordering/screen_order.hpp` |
+| `lib/corners/corner_evidence_validation.hpp` | `src/detection/corners/validation/corner_evidence_validation.hpp` |
+| `lib/corners/corner_observation.cpp` | `src/detection/corners/observation/corner_observation.cpp` |
+| `lib/corners/detection_validator.hpp` | `src/detection/corners/validation/detection_validator.hpp` |
+| `lib/corners/detection_validator.cpp` | `src/detection/corners/validation/detection_validator.cpp` |
+| `lib/corners/periodic_line_fit.cpp` | `src/detection/corners/fitting/periodic_line_fit.cpp` |
+| `lib/corners/periodic_line_fit.hpp` | `src/detection/corners/fitting/periodic_line_fit.hpp` |
+| `lib/corners/semantic_resolver.hpp` | `src/detection/corners/semantics/semantic_resolver.hpp` |
+| `lib/corners/corner_observation.hpp` | `src/detection/corners/observation/corner_observation.hpp` |
+| `lib/corners/semantic_resolver.cpp` | `src/detection/corners/semantics/semantic_resolver.cpp` |
+| `lib/corners/screen_order.cpp` | `src/detection/corners/ordering/screen_order.cpp` |
+| `lib/corners/corner_resolver.hpp` | `src/detection/corners/measurement/corner_resolver.hpp` |
+| `lib/corners/detection_publication.hpp` | `src/detection/corners/publication/detection_publication.hpp` |
+| `lib/corners/corner_evidence_validation.cpp` | `src/detection/corners/validation/corner_evidence_validation.cpp` |
+| `lib/corners/detection_publication.cpp` | `src/detection/corners/publication/detection_publication.cpp` |
+| `lib/geometry/geometry_l_topology.hpp` | `src/detection/geometry/observation/geometry_l_topology.hpp` |
+| `lib/geometry/geometry_anchor_evidence.cpp` | `src/detection/geometry/parent/geometry_anchor_evidence.cpp` |
+| `lib/geometry/assignment_match_metrics.hpp` | `src/detection/geometry/completion/assignment_match_metrics.hpp` |
+| `lib/geometry/geometry_assignment_completion.cpp` | `src/detection/geometry/completion/geometry_assignment_completion.cpp` |
+| `lib/geometry/geometry_anchor_evidence.hpp` | `src/detection/geometry/parent/geometry_anchor_evidence.hpp` |
+| `lib/geometry/geometry_observation.hpp` | `src/detection/geometry/observation/geometry_observation.hpp` |
+| `lib/geometry/geometry_matcher.hpp` | `src/detection/geometry/parent/geometry_matcher.hpp` |
+| `lib/geometry/geometry_observation.cpp` | `src/detection/geometry/observation/geometry_observation.cpp` |
+| `lib/geometry/geometry_l_topology.cpp` | `src/detection/geometry/observation/geometry_l_topology.cpp` |
+| `lib/geometry/geometry_assignment_completion.hpp` | `src/detection/geometry/completion/geometry_assignment_completion.hpp` |
+| `lib/geometry/geometry_validation.cpp` | `src/detection/geometry/validation/geometry_validation.cpp` |
+| `lib/geometry/geometry_validation.hpp` | `src/detection/geometry/validation/geometry_validation.hpp` |
+| `lib/geometry/geometry_matcher.cpp` | `src/detection/geometry/parent/geometry_matcher.cpp` |
+| `lib/pipeline/display_history.hpp` | `src/detection/temporal/display/display_history.hpp` |
+| `lib/pipeline/display_history.cpp` | `src/detection/temporal/display/display_history.cpp` |
+| `lib/pipeline/temporal_stabilizer.cpp` | `src/detection/temporal/stabilization/temporal_stabilizer.cpp` |
+| `lib/pipeline/temporal_geometry.cpp` | `src/detection/temporal/correspondence/temporal_geometry.cpp` |
+| `lib/pipeline/decode_stage.cpp` | `src/detection/pipeline/decode/decode_stage.cpp` |
+| `lib/pipeline/temporal_geometry.hpp` | `src/detection/temporal/correspondence/temporal_geometry.hpp` |
+| `lib/pipeline/temporal_stabilizer.hpp` | `src/detection/temporal/stabilization/temporal_stabilizer.hpp` |
+| `lib/pipeline/detector.cpp` | `src/detection/pipeline/execution/detector.cpp` |
+| `lib/pipeline/frame_sequence.cpp` | `src/detection/pipeline/input/frame_sequence.cpp` |
+| `lib/pipeline/decode_stage.hpp` | `src/detection/pipeline/decode/decode_stage.hpp` |
+| `lib/pipeline/stabilize_stage.hpp` | `src/detection/temporal/assembly/stabilize_stage.hpp` |
+| `lib/pipeline/stabilize_stage.cpp` | `src/detection/temporal/assembly/stabilize_stage.cpp` |
+| `lib/pipeline/detector_diagnostics_access.hpp` | `src/detection/pipeline/execution/detector_diagnostics_access.hpp` |
+| `lib/pipeline/frame_sequence.hpp` | `src/detection/pipeline/input/frame_sequence.hpp` |
+| `lib/preprocess/preprocess.cpp` | `src/detection/preprocess/preprocess.cpp` |
+| `lib/preprocess/preprocess.hpp` | `src/detection/preprocess/preprocess.hpp` |
+| `tests/assignment_completion_test.cpp` | `tests/detection/geometry/assignment_completion_test.cpp` |
+| `tests/block3_contract_regression_test.cpp` | `tests/detection/pipeline/block3_contract_regression_test.cpp` |
+| `tests/corner_edge_fit_test.cpp` | `tests/detection/corners/corner_edge_fit_test.cpp` |
+| `tests/corner_resolver_test.cpp` | `tests/detection/corners/corner_resolver_test.cpp` |
+| `tests/data/l-topology-rounded-L3.txt` | `tests/detection/data/l-topology-rounded-L3.txt` |
+| `tests/data/l-topology-short-M1.txt` | `tests/detection/data/l-topology-short-M1.txt` |
+| `tests/data/l-topology-video2-L.txt` | `tests/detection/data/l-topology-video2-L.txt` |
+| `tests/data/ms-topology-skipped-six.txt` | `tests/detection/data/ms-topology-skipped-six.txt` |
+| `tests/data/ms-video638-topology.txt` | `tests/detection/data/ms-video638-topology.txt` |
+| `tests/data/rounded_split_boundary.txt` | `tests/detection/data/rounded_split_boundary.txt` |
+| `tests/data/video_fragmented_boundary.txt` | `tests/detection/data/video_fragmented_boundary.txt` |
+| `tests/detection_validator_test.cpp` | `tests/detection/corners/detection_validator_test.cpp` |
+| `tests/detector_contract_test.cpp` | `tests/detection/pipeline/detector_contract_test.cpp` |
+| `tests/display_history_test.cpp` | `tests/detection/temporal/display_history_test.cpp` |
+| `tests/geometry_anchor_evidence_test.cpp` | `tests/detection/geometry/geometry_anchor_evidence_test.cpp` |
+| `tests/geometry_l_topology_test.cpp` | `tests/detection/geometry/geometry_l_topology_test.cpp` |
+| `tests/geometry_matcher_test.cpp` | `tests/detection/geometry/geometry_matcher_test.cpp` |
+| `tests/geometry_model_test.cpp` | `tests/detection/geometry/geometry_model_test.cpp` |
+| `tests/path_a_competition_test.cpp` | `tests/detection/pipeline/path_a_competition_test.cpp` |
+| `tests/screen_order_test.cpp` | `tests/detection/corners/screen_order_test.cpp` |
+| `tests/semantic_resolver_test.cpp` | `tests/detection/corners/semantic_resolver_test.cpp` |
+| `tests/temporal_integration_test.cpp` | `tests/detection/temporal/temporal_integration_test.cpp` |
+| `tests/temporal_stabilizer_test.cpp` | `tests/detection/temporal/temporal_stabilizer_test.cpp` |
+| `test_support/block3_fixture.hpp` | `tests/support/detection/block3_fixture.hpp` |
+| `test_support/temporal_fixture.hpp` | `tests/support/detection/temporal/temporal_fixture.hpp` |
+| `test_support/recovery112_reference.hpp` | `tests/support/detection/corners/recovery112_reference.hpp` |
+| `tests/support/recovery112_reference.cpp` | `tests/support/detection/corners/recovery112_reference.cpp` |
+
+GeometryStepsOutput 和所有步骤普通函数的参数／返回值不变，13 路表、T 链体原样搬迁。公开 Detector 仅变 include 路径，namespace 与 API 不变。现有内部测试入口 target 保留同名 ALIAS，仅用于已知构建消费者，不创建源码转发层。tests 与步骤镜像，7 个真实轮廓文件原字节搬迁；参考实现保持独立，不并入生产库。
+
+验证：`build/restructure-detection-retry2/result.json` 全通过，完整构建、27/27、23/23、7/7、G4 四组合产物及 1676 帧公开输出与瘦后基线逐字节相同。
+
+检测批次机械修复：移除整树 lib include 后，CLI 共享 parser 的旧 core 路径不再可见；将已有唯一 cli_options.hpp 搬到 include/vision/config/cli_options.hpp 并一次改全部入口包含，不重新暴露 lib。该瘦身新增头不在过期 draft 文件表中，函数体不变。
+
+检测批次第二次机械修复：corner_edge_fit_test 两个固定轮廓使用复合字符串 data/文件名，随 data 目录搬迁后缺文件；只更正两个资源路径，原轮廓字节／断言／预算不变，保留失败日志并重跑全套。

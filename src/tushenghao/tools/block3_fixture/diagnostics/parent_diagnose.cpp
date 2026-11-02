@@ -1,11 +1,11 @@
 #include "model/marker_geometry_loader.hpp"
-#include "pipeline/decode_stage.hpp"
+#include "pipeline/decode/decode_stage.hpp"
 // 三L前半链路只读归因：所有阈值隔离/锚点枚举仅在工具内，不修改正式生成器。
 #include "detector/config.hpp"
 #include "preprocess/preprocess.hpp"
-#include "geometry/geometry_observation.hpp"
-#include "geometry/geometry_matcher.hpp"
-#include "geometry/geometry_validation.hpp"
+#include "geometry/observation/geometry_observation.hpp"
+#include "geometry/parent/geometry_matcher.hpp"
+#include "geometry/validation/geometry_validation.hpp"
 #include "common/file_digest.hpp"
 #include <nlohmann/json.hpp>
 #include <opencv2/videoio.hpp>

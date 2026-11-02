@@ -1,8 +1,8 @@
 // 输入固定真实轮廓fixture及显式资源策略；输出竞争数量、截断、耗时和峰值RSS。
 // 只测M/S补全资源，不以正例平均数或3sigma替代资源策略，不修改生产配置。
 #include "block3_fixture.hpp"
-#include "geometry/geometry_assignment_completion.hpp"
-#include "pipeline/decode_stage.hpp"
+#include "geometry/completion/geometry_assignment_completion.hpp"
+#include "pipeline/decode/decode_stage.hpp"
 #include <chrono>
 #include <sys/resource.h>
 #include <iostream>

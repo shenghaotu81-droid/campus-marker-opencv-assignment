@@ -2,13 +2,13 @@
 #include "observability_fixture.hpp"
 #include "temporal_fixture.hpp"
 #include "recording/diagnostics_recorder.hpp"
-#include "pipeline/stabilize_stage.hpp"
+#include "temporal/assembly/stabilize_stage.hpp"
 #include "common/frame_record_reader.hpp"
-#include "corners/corner_evidence_validation.hpp"
-#include "corners/corner_resolver.hpp"
-#include "corners/detection_validator.hpp"
-#include "corners/periodic_line_fit.hpp"
-#include "corners/screen_order.hpp"
+#include "corners/validation/corner_evidence_validation.hpp"
+#include "corners/measurement/corner_resolver.hpp"
+#include "corners/validation/detection_validator.hpp"
+#include "corners/fitting/periodic_line_fit.hpp"
+#include "corners/ordering/screen_order.hpp"
 #include <fstream>
 using namespace mark;
 using namespace observability_fixture;

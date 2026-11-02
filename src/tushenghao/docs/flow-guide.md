@@ -90,7 +90,7 @@ flowchart TD
 
 **用到的办法：**桥把单次调用协议集中在一处，让应用不再分别维护 prepare/take 生命周期。 **读时注意：**FrameRecord 的 StageDetails 是观察快照；未执行和关闭计时不记成零耗时，诊断失败也不能更改数值流程。
 
-定位：[lib/pipeline/detector.cpp:191](../lib/pipeline/detector.cpp#L191)；[原步骤 A06](lean-report.md?plain=1#L115)。
+定位：[src/detection/pipeline/execution/detector.cpp:191](../src/detection/pipeline/execution/detector.cpp#L191)；[原步骤 A06](lean-report.md?plain=1#L115)。
 
 ### A07 登记所有帧并抽样存储详情
 
@@ -224,7 +224,7 @@ flowchart TD
 
 **用到的办法：**序列检查把同一实例的先后关系落实到帧号／时间，避免旧图接上新状态。 **读时注意：**构造时校验 DetectorConfig 并加载模型；process 不负责补空预算，NOT_READY 与没检出不是同一状态。
 
-定位：[lib/pipeline/detector.cpp:49](../lib/pipeline/detector.cpp#L49)；[原步骤 D01](lean-report.md?plain=1#L42)。
+定位：[src/detection/pipeline/execution/detector.cpp:49](../src/detection/pipeline/execution/detector.cpp#L49)；[原步骤 D01](lean-report.md?plain=1#L42)。
 
 ### D02 生成工作图与双向坐标映射
 
@@ -234,7 +234,7 @@ flowchart TD
 
 **用到的办法：**像素中心映射补上 resize 的半像素偏移，使原图取证位置与工作图假设一致。 **读时注意：**image_ 此时仍是 BGR8；工作图的二值化在 D03，原图阈值另有明确来源，不能混用。
 
-定位：[lib/preprocess/preprocess.cpp:11](../lib/preprocess/preprocess.cpp#L11)；[原步骤 D02](lean-report.md?plain=1#L43)。
+定位：[src/detection/preprocess/preprocess.cpp:11](../src/detection/preprocess/preprocess.cpp#L11)；[原步骤 D02](lean-report.md?plain=1#L43)。
 
 ### D03 提取带身份的白片
 
@@ -244,7 +244,7 @@ flowchart TD
 
 **用到的办法：**连通轮廓把像素聚成可独立测量的片；CHAIN_APPROX_SIMPLE 压缩直线段上的重复方向点。 **读时注意：**component_id 是身份，不是 vector 下标；下游按 ID 查找，不能依赖排列巧合。
 
-定位：[lib/geometry/geometry_observation.cpp:43](../lib/geometry/geometry_observation.cpp#L43)；[原步骤 D03](lean-report.md?plain=1#L44)。
+定位：[src/detection/geometry/observation/geometry_observation.cpp:43](../src/detection/geometry/observation/geometry_observation.cpp#L43)；[原步骤 D03](lean-report.md?plain=1#L44)。
 
 ### D04 把轮廓变成形状与拓扑观察
 
@@ -254,7 +254,7 @@ flowchart TD
 
 **用到的办法：**多尺度近似降低某一 epsilon 恰好抹掉凹点的影响；拓扑条件把轮廓转折变成候选证据。 **读时注意：**候选标签还不是最终模型身份；观察位置、组件 ID、source_index 的含义各不相同。
 
-定位：[lib/geometry/geometry_observation.cpp:124](../lib/geometry/geometry_observation.cpp#L124)；[原步骤 D04](lean-report.md?plain=1#L45)。
+定位：[src/detection/geometry/observation/geometry_observation.cpp:124](../src/detection/geometry/observation/geometry_observation.cpp#L124)；[原步骤 D04](lean-report.md?plain=1#L45)。
 
 ### D05 枚举三片 L 与模型的对应
 
@@ -264,7 +264,7 @@ flowchart TD
 
 **用到的办法：**组合／排列搜索显式保留同一图像的多个解释，避免先凭数组顺序指定身份。 **读时注意：**当前名称已修正；只枚举三 L，不是六片全排列，也不能拿最大的三片暗中当唯一。
 
-定位：[lib/geometry/geometry_matcher.cpp:104](../lib/geometry/geometry_matcher.cpp#L104)；[原步骤 D05](lean-report.md?plain=1#L46)。
+定位：[src/detection/geometry/parent/geometry_matcher.cpp:104](../src/detection/geometry/parent/geometry_matcher.cpp#L104)；[原步骤 D05](lean-report.md?plain=1#L46)。
 
 ### D06 拟合父仿射假设
 
@@ -274,7 +274,7 @@ flowchart TD
 
 **用到的办法：**仿射是二维线性变换加平移，用来把图纸点映到工作图；它提供搜索参照，不是最终原图角测量。 **读时注意：**每个可计算元组都计入原搜索预算；截断表示尚有未排除解释，不能在下游抹掉。
 
-定位：[lib/geometry/geometry_matcher.cpp:257](../lib/geometry/geometry_matcher.cpp#L257)；[原步骤 D06](lean-report.md?plain=1#L47)。
+定位：[src/detection/geometry/parent/geometry_matcher.cpp:257](../src/detection/geometry/parent/geometry_matcher.cpp#L257)；[原步骤 D06](lean-report.md?plain=1#L47)。
 
 ### D07 独立复核父假设
 
@@ -284,7 +284,7 @@ flowchart TD
 
 **用到的办法：**投影残差衡量模型与实测轮廓的偏离；复用一次投影可避免同一步内部对面积再做一遍变换。 **读时注意：**这是父假设检查，不等于 D16 的最终原图角证据验证；两者不能互相代替。
 
-定位：[lib/geometry/geometry_validation.cpp:196](../lib/geometry/geometry_validation.cpp#L196)；[原步骤 D07](lean-report.md?plain=1#L48)。
+定位：[src/detection/geometry/validation/geometry_validation.cpp:196](../src/detection/geometry/validation/geometry_validation.cpp#L196)；[原步骤 D07](lean-report.md?plain=1#L48)。
 
 ### D08 测量缺片候选
 
@@ -294,7 +294,7 @@ flowchart TD
 
 **用到的办法：**把“测了多少”与“门限是否通过”分开，使同一测量能被搜索和探针一致使用。 **读时注意：**可选预计算值只用于同一输入；独立入口仍自己算面积并防御坏输入，不能把未知测量当零。
 
-定位：[lib/geometry/assignment_match_metrics.hpp:122](../lib/geometry/assignment_match_metrics.hpp#L122)；[原步骤 D08](lean-report.md?plain=1#L49)。
+定位：[src/detection/geometry/completion/assignment_match_metrics.hpp:122](../src/detection/geometry/completion/assignment_match_metrics.hpp#L122)；[原步骤 D08](lean-report.md?plain=1#L49)。
 
 ### D09 完成有界的一对一绑定
 
@@ -304,7 +304,7 @@ flowchart TD
 
 **用到的办法：**有界搜索限制资源消耗；一对一约束防止同一真实白片被解释为多个图纸片段。 **读时注意：**Geometry 范围在此返回；GeometryStop::Validated 则更早在 D07 返回。诊断 selected 只决定详情，不裁剪正式算法。
 
-定位：[lib/geometry/geometry_assignment_completion.cpp:33](../lib/geometry/geometry_assignment_completion.cpp#L33)；[原步骤 D09](lean-report.md?plain=1#L50)。
+定位：[src/detection/geometry/completion/geometry_assignment_completion.cpp:33](../src/detection/geometry/completion/geometry_assignment_completion.cpp#L33)；[原步骤 D09](lean-report.md?plain=1#L50)。
 
 ### D10 取得当前原图轮廓
 
@@ -314,7 +314,7 @@ flowchart TD
 
 **用到的办法：**帧内缓存避免不同父假设重复做同一原图关联；帧号检查防止把另一帧的缓存拿来用。 **读时注意：**缓存生命周期止于一次 decode；回调不能外逃，也不能用父变换画出的边冒充实拍轮廓。
 
-定位：[lib/corners/corner_observation.cpp:37](../lib/corners/corner_observation.cpp#L37)；[原步骤 D10](lean-report.md?plain=1#L51)。
+定位：[src/detection/corners/observation/corner_observation.cpp:37](../src/detection/corners/observation/corner_observation.cpp#L37)；[原步骤 D10](lean-report.md?plain=1#L51)。
 
 ### D11 解释物理角与邻边身份
 
@@ -324,7 +324,7 @@ flowchart TD
 
 **用到的办法：**统一身份表使 resolver、证据检查和 G2 米制取点遵守同一图纸约定。 **读时注意：**预测邻边只限定取证方向／位置；没有实测边就返回失败，不用预测交点补角。
 
-定位：[lib/corners/corner_resolver.cpp:74](../lib/corners/corner_resolver.cpp#L74)；[原步骤 D11](lean-report.md?plain=1#L52)。
+定位：[src/detection/corners/measurement/corner_resolver.cpp:74](../src/detection/corners/measurement/corner_resolver.cpp#L74)；[原步骤 D11](lean-report.md?plain=1#L52)。
 
 ### D12 枚举连续支持弧
 
@@ -334,7 +334,7 @@ flowchart TD
 
 **用到的办法：**支持弧就是用来拟合一条边的连续像素段；保留遍历顺序才能独立检查它是否真与另一条边相接。 **读时注意：**全端点枚举仍按原规则去重并恢复候选顺序；不能只按空间距离把两段孤立线拼成角。
 
-定位：[lib/corners/corner_edge_fit.cpp:262](../lib/corners/corner_edge_fit.cpp#L262)；[原步骤 D12](lean-report.md?plain=1#L53)。
+定位：[src/detection/corners/fitting/corner_edge_fit.cpp:262](../src/detection/corners/fitting/corner_edge_fit.cpp#L262)；[原步骤 D12](lean-report.md?plain=1#L53)。
 
 ### D13 按显式顺序尝试边拟合路线
 
@@ -344,7 +344,7 @@ flowchart TD
 
 **用到的办法：**周期线模型描述像素栅格带来的规律偏差；有序回退让不同模型的尝试过程可以重放。 **读时注意：**Fast 第 8/9 路复用同输入第 2/4 路结果，但照常重放逻辑 stage；完整清单、零命中保留裁决见 lean-changes。
 
-定位：[lib/corners/corner_edge_fit.cpp:744](../lib/corners/corner_edge_fit.cpp#L744)；[原步骤 D13](lean-report.md?plain=1#L54)。
+定位：[src/detection/corners/fitting/corner_edge_fit.cpp:744](../src/detection/corners/fitting/corner_edge_fit.cpp#L744)；[原步骤 D13](lean-report.md?plain=1#L54)。
 
 ### D14 组装实测交点与完整证据
 
@@ -354,7 +354,7 @@ flowchart TD
 
 **用到的办法：**交点把两条边转成角位置；同时记录支撑和误差，后续才能独立确认它不是无根据的延长线。 **读时注意：**stable_id 是证据来源标识，不是时序 Track ID；四角缺一即拒绝该假设。
 
-定位：[lib/corners/corner_edge_fit.cpp:559](../lib/corners/corner_edge_fit.cpp#L559)；[原步骤 D14](lean-report.md?plain=1#L55)。
+定位：[src/detection/corners/fitting/corner_edge_fit.cpp:559](../src/detection/corners/fitting/corner_edge_fit.cpp#L559)；[原步骤 D14](lean-report.md?plain=1#L55)。
 
 ### D15 求屏幕角序并交付排序结果
 
@@ -364,7 +364,7 @@ flowchart TD
 
 **用到的办法：**循环顺序与屏幕起点规范化让下游始终读同一四边形顺序，而物理身份由另一份映射表达。 **读时注意：**屏幕左上不等于物理 P0；double 排序缓存只适用于这份数值，不能直接复用于 float 发布后。
 
-定位：[lib/corners/screen_order.cpp:660](../lib/corners/screen_order.cpp#L660)；[原步骤 D15](lean-report.md?plain=1#L56)。
+定位：[src/detection/corners/ordering/screen_order.cpp:660](../src/detection/corners/ordering/screen_order.cpp#L660)；[原步骤 D15](lean-report.md?plain=1#L56)。
 
 ### D16 独立验证原图角证据
 
@@ -374,7 +374,7 @@ flowchart TD
 
 **用到的办法：**独立复算重新从支撑像素算参数或残差，避免生产者和检查者共享错误答案。 **读时注意：**只能共享身份和协议常量，不能把 fitter 缓存的数值结论当验证结果；frame_id 也须与本帧一致。
 
-定位：[lib/corners/detection_validator.cpp:270](../lib/corners/detection_validator.cpp#L270)；[原步骤 D16](lean-report.md?plain=1#L57)。
+定位：[src/detection/corners/validation/detection_validator.cpp:270](../src/detection/corners/validation/detection_validator.cpp#L270)；[原步骤 D16](lean-report.md?plain=1#L57)。
 
 ### D17 处理竞争与方向唯一性
 
@@ -384,7 +384,7 @@ flowchart TD
 
 **用到的办法：**把几何一致与物理方向唯一分开，允许有效四边形带 unknown 方向发布。 **读时注意：**decode 在进入这里前还检查 unresolved 竞争；不能丢掉无法排除的假设后将剩下一个强行叫唯一，也不平均多个角。
 
-定位：[lib/corners/semantic_resolver.cpp:333](../lib/corners/semantic_resolver.cpp#L333)；[原步骤 D17](lean-report.md?plain=1#L58)。
+定位：[src/detection/corners/semantics/semantic_resolver.cpp:333](../src/detection/corners/semantics/semantic_resolver.cpp#L333)；[原步骤 D17](lean-report.md?plain=1#L58)。
 
 ### D18 转 float 后再发布当前检测
 
@@ -394,7 +394,7 @@ flowchart TD
 
 **用到的办法：**浮点舍入会改变非常接近的点或排序条件；重新检查保证公开数据本身满足契约。 **读时注意：**所有待发布候选先成功才提交；失败不能偷偷删掉竞争者。输出是 raw 当前检测，随后才进入 T 链。
 
-定位：[lib/corners/detection_publication.cpp:10](../lib/corners/detection_publication.cpp#L10)；[原步骤 D18](lean-report.md?plain=1#L59)。
+定位：[src/detection/corners/publication/detection_publication.cpp:10](../src/detection/corners/publication/detection_publication.cpp#L10)；[原步骤 D18](lean-report.md?plain=1#L59)。
 
 ## 二维时序步骤 T01–T06
 
@@ -406,7 +406,7 @@ flowchart TD
 
 **用到的办法：**先检查全部候选，防止把坏候选过滤掉后制造“唯一目标”。 **读时注意：**这里再次防御是独立步骤入口的契约；空当前帧不制造历史几何，且会清平滑历史。
 
-定位：[lib/pipeline/temporal_stabilizer.cpp:106](../lib/pipeline/temporal_stabilizer.cpp#L106)；[原步骤 T01](lean-report.md?plain=1#L65)。
+定位：[src/detection/temporal/stabilization/temporal_stabilizer.cpp:106](../src/detection/temporal/stabilization/temporal_stabilizer.cpp#L106)；[原步骤 T01](lean-report.md?plain=1#L65)。
 
 ### T02 选择当前跟踪对象
 
@@ -416,7 +416,7 @@ flowchart TD
 
 **用到的办法：**关联将“这一帧哪一个对象”与“如何平滑它”分开，避免跨对象混角。 **读时注意：**多个历史匹配不会偷偷挑最近者来平滑；仍可显示当前最大真实检测，但不能说关联唯一。
 
-定位：[lib/pipeline/temporal_stabilizer.cpp:156](../lib/pipeline/temporal_stabilizer.cpp#L156)；[原步骤 T02](lean-report.md?plain=1#L66)。
+定位：[src/detection/temporal/stabilization/temporal_stabilizer.cpp:156](../src/detection/temporal/stabilization/temporal_stabilizer.cpp#L156)；[原步骤 T02](lean-report.md?plain=1#L66)。
 
 ### T03 确定角点对应关系
 
@@ -426,7 +426,7 @@ flowchart TD
 
 **用到的办法：**角对应保证指数平滑的是同一个角；不确定区间用来避免把几乎相等的循环方案硬选一个。 **读时注意：**仅在 T02 唯一关联且已有平滑历史时调用；未知方向不会因此变成已知物理方向。
 
-定位：[lib/pipeline/temporal_geometry.cpp:10](../lib/pipeline/temporal_geometry.cpp#L10)；[原步骤 T03](lean-report.md?plain=1#L67)。
+定位：[src/detection/temporal/correspondence/temporal_geometry.cpp:10](../src/detection/temporal/correspondence/temporal_geometry.cpp#L10)；[原步骤 T03](lean-report.md?plain=1#L67)。
 
 ### T04 按真实时间平滑并复核
 
@@ -436,7 +436,7 @@ flowchart TD
 
 **用到的办法：**时间常数使平滑强度随真实帧间隔变化，避免固定权重依赖帧率。 **读时注意：**零 dt、歧义、超偏离都不发布预测角；raw 不被覆盖。TemporalCause 是机器原因，旧 reason 文字只作兼容记录。
 
-定位：[lib/pipeline/temporal_stabilizer.cpp:195](../lib/pipeline/temporal_stabilizer.cpp#L195)；[原步骤 T04](lean-report.md?plain=1#L68)。
+定位：[src/detection/temporal/stabilization/temporal_stabilizer.cpp:195](../src/detection/temporal/stabilization/temporal_stabilizer.cpp#L195)；[原步骤 T04](lean-report.md?plain=1#L68)。
 
 ### T05 更新独立文字保持
 
@@ -446,7 +446,7 @@ flowchart TD
 
 **用到的办法：**独立文字历史允许界面短暂保留信息而不伪造新的检测。 **读时注意：**当前 finalizeDecodedFrame 实际传入 std::nullopt，没有接入文字识别样本；新实例通常持续无 display_state。原表的“当前文字”是接口能力，不是现有调用事实。
 
-定位：[lib/pipeline/display_history.cpp:22](../lib/pipeline/display_history.cpp#L22)；[原步骤 T05](lean-report.md?plain=1#L69)。
+定位：[src/detection/temporal/display/display_history.cpp:22](../src/detection/temporal/display/display_history.cpp#L22)；[原步骤 T05](lean-report.md?plain=1#L69)。
 
 ### T06 组装当前帧公开结果
 
@@ -456,7 +456,7 @@ flowchart TD
 
 **用到的办法：**组装适配把不同生命周期的数据放在不同字段，让消费者能分清测量与显示稳定结果。 **读时注意：**detections 仍是原始当前测量；tracks 是二维平滑结果，不等于 G4 的三维 TargetTrack。
 
-定位：[lib/pipeline/stabilize_stage.cpp:7](../lib/pipeline/stabilize_stage.cpp#L7)；[原步骤 T06](lean-report.md?plain=1#L70)。
+定位：[src/detection/temporal/assembly/stabilize_stage.cpp:7](../src/detection/temporal/assembly/stabilize_stage.cpp#L7)；[原步骤 T06](lean-report.md?plain=1#L70)。
 
 ## G2 位姿与 Tag步骤 P01–P12
 
@@ -772,7 +772,7 @@ OpenSSL 查找已靠近实际审计目标；默认仍构建这些工具。根 CM
 
 ### 先选可复现输入，再进入整条链
 
-先用已有几何／角点 fixture 理解某一步，再用完整录像追实例历史。入口与契约可从 [tests/corner_resolver_test.cpp:225](../tests/corner_resolver_test.cpp#L225)、[tests/observability_integration_test.cpp:516](../tests/observability_integration_test.cpp#L516) 和 [tests/tracking_contract_test.cpp:769](../tests/tracking_contract_test.cpp#L769) 进入。这里的测试 reference 不是生产 helper 的另一层转发；改边界时要继续跑独立结果比较。
+先用已有几何／角点 fixture 理解某一步，再用完整录像追实例历史。入口与契约可从 [tests/detection/corners/corner_resolver_test.cpp:225](../tests/detection/corners/corner_resolver_test.cpp#L225)、[tests/observability_integration_test.cpp:516](../tests/observability_integration_test.cpp#L516) 和 [tests/tracking_contract_test.cpp:769](../tests/tracking_contract_test.cpp#L769) 进入。这里的测试 reference 不是生产 helper 的另一层转发；改边界时要继续跑独立结果比较。
 
 以下是后续交互调试的示例命令，**不是本次验收已经运行过的 Debug 构建**；本次实际 Release 构建、全量测试和 G4 四组合命令都在修改报告附录。命令从仓库根运行，输入路径替换成自己的现有录像，运行目录必须不存在。
 
@@ -803,12 +803,12 @@ print frame.image.rows
 
 | 位置 | 看什么、用于排除什么问题 |
 |---|---|
-| `lib/pipeline/decode_stage.cpp:180` | D02–D09：逐次 next/finish 看 prepared 的两套尺寸／映射、components ID、observations 来源、generated/validated/completed 假设及截断；不要只盯最终 detections。 |
-| `lib/corners/corner_resolver.cpp:74` | D10–D15：核 source.frame_id、assignments、当前轮廓、物理角邻边与 fit 证据；换 fitter 不应迫使此处读具体缓存。 |
-| `lib/corners/corner_edge_fit.cpp:627` | D12–D14：route 参数、支持像素顺序、mask、pair rejection 与 evidence；两次相同逻辑路线也要核 trace stage。 |
-| `lib/corners/detection_validator.cpp:270` | D16：measurement/frame_id、原图 size、ScreenOrder、支撑模型版本与具体拒绝原因；区分“拟合失败”和“验证拒绝”。 |
-| `lib/corners/semantic_resolver.cpp:333` | D17：全部 measurement、unresolved、search_truncated 与 orientation_unique；不能拿单个好候选解释整体竞争。 |
-| `lib/pipeline/temporal_stabilizer.cpp:106` | T01–T04：reference_、smoothing_、stamp/dt、current_index、对应映射及 TemporalCause；确认回退的是当前 raw。 |
+| `src/detection/pipeline/decode/decode_stage.cpp:180` | D02–D09：逐次 next/finish 看 prepared 的两套尺寸／映射、components ID、observations 来源、generated/validated/completed 假设及截断；不要只盯最终 detections。 |
+| `src/detection/corners/measurement/corner_resolver.cpp:74` | D10–D15：核 source.frame_id、assignments、当前轮廓、物理角邻边与 fit 证据；换 fitter 不应迫使此处读具体缓存。 |
+| `src/detection/corners/fitting/corner_edge_fit.cpp:627` | D12–D14：route 参数、支持像素顺序、mask、pair rejection 与 evidence；两次相同逻辑路线也要核 trace stage。 |
+| `src/detection/corners/validation/detection_validator.cpp:270` | D16：measurement/frame_id、原图 size、ScreenOrder、支撑模型版本与具体拒绝原因；区分“拟合失败”和“验证拒绝”。 |
+| `src/detection/corners/semantics/semantic_resolver.cpp:333` | D17：全部 measurement、unresolved、search_truncated 与 orientation_unique；不能拿单个好候选解释整体竞争。 |
+| `src/detection/temporal/stabilization/temporal_stabilizer.cpp:106` | T01–T04：reference_、smoothing_、stamp/dt、current_index、对应映射及 TemporalCause；确认回退的是当前 raw。 |
 | `lib/pose/pose_estimator.cpp:158` | G2：物点米／像点像素、stamp、budgets_ready、全部 candidate、eligible_count 和精修前后；Unique 与 control_usable 分开看。 |
 | `lib/tracking/target_tracker.cpp:356` | G4：original state/candidate、input_accepted、events、返回快照，再看是否提交；必须在 tracking_app 或类型化调用中调试此断点。 |
 | `lib/tracking/kalman_cv.cpp:154` | G4 数学：同版本 x/P、z/R、残差/S/score；correct 消费的 owner/revision 必须对应此状态。 |

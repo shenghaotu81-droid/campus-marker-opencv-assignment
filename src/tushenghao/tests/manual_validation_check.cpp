@@ -11,9 +11,9 @@
 */
 // mock 测试:直接造假数据调 validateGeometryBatch，只验逻辑对不对，不用等合成器。
 // 赛前调参（Step 4 的完整测量）:合成器做精细调参,生成带真值的图像，跑完整管线（适合调参数）。
-#include "geometry/geometry_matcher.hpp"
-#include "geometry/geometry_l_topology.hpp"
-#include "geometry/geometry_validation.hpp"
+#include "geometry/parent/geometry_matcher.hpp"
+#include "geometry/observation/geometry_l_topology.hpp"
+#include "geometry/validation/geometry_validation.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "vision/config/detector_config.hpp"
 

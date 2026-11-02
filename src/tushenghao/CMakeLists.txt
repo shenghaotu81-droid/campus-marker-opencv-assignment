@@ -9,45 +9,13 @@ add_subdirectory(src/config)
 add_subdirectory(src/observability)
 
 # 六个内部源码模块仍组成一个库；公开头与内部头的搜索路径分开。
-add_library(mark_detector
-    lib/preprocess/preprocess.cpp
-    lib/geometry/geometry_matcher.cpp
-    lib/geometry/geometry_observation.cpp
-    lib/geometry/geometry_l_topology.cpp
-    lib/geometry/geometry_anchor_evidence.cpp
-    lib/geometry/geometry_validation.cpp
-    lib/geometry/geometry_assignment_completion.cpp
-    lib/corners/corner_resolver.cpp
-    lib/corners/corner_observation.cpp
-    lib/corners/corner_edge_fit.cpp
-    # 单线缺失奇偶项；纯估计器由拟合层与证据复算层共用，避免沙盒全局状态。
-    lib/corners/periodic_line_fit.cpp
-    lib/corners/corner_evidence_validation.cpp
-    lib/corners/screen_order.cpp
-    lib/corners/semantic_resolver.cpp
-    lib/corners/detection_validator.cpp
-    lib/corners/detection_publication.cpp
-    lib/pipeline/decode_stage.cpp
-    lib/pipeline/frame_sequence.cpp
-    lib/pipeline/temporal_geometry.cpp
-    lib/pipeline/temporal_stabilizer.cpp
-    lib/pipeline/display_history.cpp
-    lib/pipeline/stabilize_stage.cpp
-    lib/pipeline/detector.cpp
-)
-target_include_directories(mark_detector
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib"
-)
-target_link_libraries(mark_detector PUBLIC vision::types vision::math vision::config ${OpenCV_LIBS})
+add_subdirectory(src/detection)
 
-# 仅工程内app/测试/审计显式选择内部头，不将lib路径发布给普通Detector消费者。
-add_library(mark_detector_internal_headers INTERFACE)
-target_include_directories(mark_detector_internal_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/lib")
-target_link_libraries(mark_detector_internal_headers INTERFACE mark_detector vision_config_internal_headers vision_observability_internal_headers)
-target_link_libraries(mark_detector PRIVATE vision_config_internal_headers vision_observability_internal_headers)
 add_library(mark_test_support INTERFACE)
-target_include_directories(mark_test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test_support")
+target_include_directories(mark_test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test_support"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection/temporal"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection/corners")
 target_compile_definitions(mark_test_support INTERFACE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_library(mark_offline app/offline_runner.cpp app/debug_renderer.cpp app/input_completion.cpp app/display_session.cpp app/video_exporter.cpp app/run_console.cpp)
@@ -61,23 +29,7 @@ enable_testing()
 set(MARK_TEST_NAMES
     debug_renderer_test
     observability_integration_test
-    temporal_stabilizer_test
-    display_history_test
-    temporal_integration_test
-    block3_contract_regression_test
-    assignment_completion_test
-    corner_edge_fit_test
-    detector_contract_test
-    geometry_model_test
-    geometry_matcher_test
     manual_validation_check
-    corner_resolver_test
-    screen_order_test
-    semantic_resolver_test
-    detection_validator_test
-    geometry_l_topology_test
-    geometry_anchor_evidence_test
-    path_a_competition_test
 )
 foreach(MARK_TEST_NAME IN LISTS MARK_TEST_NAMES)
     add_executable(${MARK_TEST_NAME} "tests/${MARK_TEST_NAME}.cpp")
@@ -87,6 +39,7 @@ endforeach()
 
 add_subdirectory(tests/config)
 add_subdirectory(tests/observability)
+add_subdirectory(tests/detection)
 
 # F61：配置负例直接调用标定解析器；只为已有测试追加实现，不新增目标。
 target_sources(config_error_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/calibration/calibration_config.cpp"
@@ -97,7 +50,7 @@ target_sources(config_error_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/cali
 target_include_directories(corner_edge_fit_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/block3_fixture/common")
 # 索引不得改变任何候选/输出；本轮完整枚举 reference 只进入回归测试，不加入生产库。
-target_sources(corner_edge_fit_test PRIVATE tests/support/recovery112_reference.cpp)
+target_sources(corner_edge_fit_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection/corners/recovery112_reference.cpp")
 
 # 摘要/OpenSSL只属于审计可执行程序，Detector库不引入JSON/OpenSSL。
 add_executable(decode_audit tools/audit/decode_audit.cpp)

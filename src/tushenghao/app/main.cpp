@@ -1,6 +1,6 @@
-#include "core/cli_options.hpp"
+#include "vision/config/cli_options.hpp"
 // 原App无参静默退出0且只支持check-config；严格解析离线两模式，实际算法由公共process完成。
-#include "mark/detector.hpp"
+#include "vision/detection/detector.hpp"
 #include "offline_runner.hpp"
 #include "run_console.hpp"
 #include <iostream>
