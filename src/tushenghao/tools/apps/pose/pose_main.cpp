@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     {
         // 参数解析（main 开头）：--video、--check-config、--out 等 CLI
         const auto args = parse_cli(argc, argv);
-        const auto root = std::filesystem::path(__FILE__).parent_path().parent_path();
+        const auto root = std::filesystem::path(VISION_SOURCE_ROOT);
         const auto cfg_path = args.count("--config") ? std::filesystem::path(args.at("--config")) :
                                                       root / "config/pose.yaml";
         const auto detector_path = args.count("--detector-config") ?

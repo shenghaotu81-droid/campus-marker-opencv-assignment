@@ -4,10 +4,10 @@
 #include "observability_fixture.hpp"
 #include "temporal_fixture.hpp"
 #include <type_traits>
-#include "offline_runner.hpp"
-#include "input_completion.hpp"
-#include "video_exporter.hpp"
-#include "run_console.hpp"
+#include "offline/offline_runner.hpp"
+#include "completion/input_completion.hpp"
+#include "export/video_exporter.hpp"
+#include "reporting/run_console.hpp"
 #include <sstream>
 #include "common/frame_record_reader.hpp"
 #include <opencv2/videoio.hpp>

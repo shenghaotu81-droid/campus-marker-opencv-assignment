@@ -1,6 +1,6 @@
 #include "vision/config/cli_options.hpp"
 // 新阶段工具复用完整几何编排和统一记录；有假设不等于DETECTED，不添加准入判据。
-#include "offline_runner.hpp"
+#include "offline/offline_runner.hpp"
 #include <iostream>
 #include <map>
 

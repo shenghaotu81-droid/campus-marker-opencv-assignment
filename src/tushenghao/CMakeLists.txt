@@ -13,32 +13,16 @@ add_subdirectory(src/detection)
 add_subdirectory(src/pose)
 add_subdirectory(src/tracking)
 
-add_library(mark_test_support INTERFACE)
-target_include_directories(mark_test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test_support"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection/temporal"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/support/detection/corners")
-target_compile_definitions(mark_test_support INTERFACE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+add_subdirectory(tests/support)
+add_subdirectory(src/app)
 
-add_library(mark_offline app/offline_runner.cpp app/debug_renderer.cpp app/input_completion.cpp app/display_session.cpp app/video_exporter.cpp app/run_console.cpp)
-target_include_directories(mark_offline PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/app")
-target_link_libraries(mark_offline PUBLIC mark_detector_internal_headers)
-add_executable(marker_app app/main.cpp)
-target_link_libraries(marker_app PRIVATE mark_offline)
+add_executable(marker_app tools/apps/marker/main.cpp)
+target_link_libraries(marker_app PRIVATE vision_app_internal_headers)
+target_compile_definitions(marker_app PRIVATE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
 enable_testing()
 # 活跃测试逐项注册；删除的空测试与无业务消费者 helper 专属测试不计入覆盖。
-set(MARK_TEST_NAMES
-    debug_renderer_test
-    observability_integration_test
-    manual_validation_check
-)
-foreach(MARK_TEST_NAME IN LISTS MARK_TEST_NAMES)
-    add_executable(${MARK_TEST_NAME} "tests/${MARK_TEST_NAME}.cpp")
-    target_link_libraries(${MARK_TEST_NAME} PRIVATE mark_detector_internal_headers mark_test_support)
-    add_test(NAME ${MARK_TEST_NAME} COMMAND ${MARK_TEST_NAME})
-endforeach()
-
+add_subdirectory(tests/app)
 add_subdirectory(tests/config)
 add_subdirectory(tests/observability)
 add_subdirectory(tests/detection)
@@ -61,18 +45,18 @@ add_executable(decode_audit tools/audit/decode_audit.cpp)
 # B01：OpenSSL 只由实际使用 SHA 的审计工具请求；模块开关在搬家时划分。
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 target_include_directories(decode_audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
-target_link_libraries(decode_audit PRIVATE mark_offline OpenSSL::Crypto)
+target_link_libraries(decode_audit PRIVATE vision_app_internal_headers OpenSSL::Crypto)
 # 旧configure偷偷调用Git；改由调用方提供标签，真实工作树另以源hash标识。
 set(MARK_COMMIT_LABEL "UNSPECIFIED" CACHE STRING "外部提供基线标签，不表示工作树精确提交")
 set(MARK_COMMIT "${MARK_COMMIT_LABEL}")
 add_executable(temporal_audit tools/audit/temporal_audit.cpp)
 target_include_directories(temporal_audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
-target_link_libraries(temporal_audit PRIVATE mark_offline OpenSSL::Crypto)
+target_link_libraries(temporal_audit PRIVATE vision_app_internal_headers OpenSSL::Crypto)
 target_compile_definitions(decode_audit PRIVATE MARK_DEFAULT_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/config/detector.yaml" MARK_COMMIT="${MARK_COMMIT}")
 target_compile_definitions(temporal_audit PRIVATE MARK_COMMIT="${MARK_COMMIT}")
 add_executable(geometry_audit tools/audit/geometry_audit.cpp)
-target_link_libraries(geometry_audit PRIVATE mark_offline)
-target_compile_definitions(mark_offline PRIVATE MARK_COMMIT="${MARK_COMMIT}" MARK_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
+target_link_libraries(geometry_audit PRIVATE vision_app_internal_headers)
+target_compile_definitions(vision_app PRIVATE MARK_COMMIT="${MARK_COMMIT}" MARK_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 add_library(mark_frame_record_reader tools/common/frame_record_reader.cpp)
 target_include_directories(mark_frame_record_reader PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 target_link_libraries(mark_frame_record_reader PRIVATE mark_detector_internal_headers)
@@ -82,13 +66,13 @@ target_link_libraries(observability_verify PRIVATE mark_frame_record_reader mark
 
 target_include_directories(diagnostics_record_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 target_link_libraries(diagnostics_record_test PRIVATE mark_frame_record_reader)
-target_link_libraries(debug_renderer_test PRIVATE mark_offline)
+target_link_libraries(debug_renderer_test PRIVATE vision_app_internal_headers)
 
 target_include_directories(observability_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
-target_link_libraries(observability_integration_test PRIVATE mark_offline mark_frame_record_reader)
+target_link_libraries(observability_integration_test PRIVATE vision_app_internal_headers mark_frame_record_reader)
 
 # Qt 探测由独立 App 进程承担；所有使用离线 runner 的目标都同时构建 sibling probe。
-add_executable(marker_display_probe app/display_probe.cpp)
+add_executable(marker_display_probe tools/apps/display/display_probe.cpp)
 target_link_libraries(marker_display_probe PRIVATE ${OpenCV_LIBS})
 foreach(MARK_APP_TARGET marker_app geometry_audit decode_audit temporal_audit observability_integration_test)
     add_dependencies(${MARK_APP_TARGET} marker_display_probe)
@@ -213,8 +197,9 @@ endif()
 if(TARGET mark_tracking)
     set_property(TARGET vision_tracking APPEND PROPERTY MARK_CMAKE_INPUTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/g4.cmake")
 endif()
-set(mark_identity_consumers mark_offline marker_app decode_audit temporal_audit geometry_audit)
+set(mark_identity_consumers vision_app marker_app decode_audit temporal_audit geometry_audit)
 get_property(mark_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+list(APPEND mark_targets vision_app)
 foreach(target IN LISTS mark_targets)
     get_target_property(type "${target}" TYPE)
     if(NOT type STREQUAL "INTERFACE_LIBRARY")

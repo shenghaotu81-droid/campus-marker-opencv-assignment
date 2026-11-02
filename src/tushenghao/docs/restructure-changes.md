@@ -254,3 +254,36 @@ K 链按 measurement/filter/lifecycle/io 区分测量适配、数值更新、实
 验证待本批全套完成登记。
 
 tracking 批次验收：`build/restructure-tracking/result.json` 全通过：完整构建、27/27、23/23、7/7，G4 四组合全部数值／语义文件与 1676 帧完整公开结果逐字节相同。
+
+## app 模块（执行中）
+
+主程序入口归 tools/apps；应用内部按 offline/rendering/display/export/completion/reporting 拆一层，保持原 run/process_frame/finish 调用顺序、计时边界和输出协议。入口默认路径改为显式 VISION_SOURCE_ROOT，含义仍是同一份现行配置。新目录不再参与文件层数猜测。通用测试 harness 与观测 fixture 各归 tests/support 子目录，app 测试镜像执行职责。
+
+| 原路径 | 新路径 |
+|---|---|
+| `app/offline_runner.cpp` | `src/app/offline/offline_runner.cpp` |
+| `app/offline_runner.hpp` | `src/app/offline/offline_runner.hpp` |
+| `app/input_completion.cpp` | `src/app/completion/input_completion.cpp` |
+| `app/input_completion.hpp` | `src/app/completion/input_completion.hpp` |
+| `app/debug_renderer.cpp` | `src/app/rendering/debug_renderer.cpp` |
+| `app/debug_renderer.hpp` | `src/app/rendering/debug_renderer.hpp` |
+| `app/display_session.cpp` | `src/app/display/display_session.cpp` |
+| `app/display_session.hpp` | `src/app/display/display_session.hpp` |
+| `app/video_exporter.cpp` | `src/app/export/video_exporter.cpp` |
+| `app/video_exporter.hpp` | `src/app/export/video_exporter.hpp` |
+| `app/run_console.cpp` | `src/app/reporting/run_console.cpp` |
+| `app/run_console.hpp` | `src/app/reporting/run_console.hpp` |
+| `app/main.cpp` | `tools/apps/marker/main.cpp` |
+| `app/pose_main.cpp` | `tools/apps/pose/pose_main.cpp` |
+| `app/tracking_main.cpp` | `tools/apps/tracking/tracking_main.cpp` |
+| `app/display_probe.cpp` | `tools/apps/display/display_probe.cpp` |
+| `tests/debug_renderer_test.cpp` | `tests/app/rendering/debug_renderer_test.cpp` |
+| `tests/observability_integration_test.cpp` | `tests/app/offline/observability_integration_test.cpp` |
+| `tests/manual_validation_check.cpp` | `tests/app/manual/manual_validation_check.cpp` |
+| `test_support/assertions.hpp` | `tests/support/common/assertions.hpp` |
+| `test_support/case_runner.hpp` | `tests/support/common/case_runner.hpp` |
+| `test_support/observability_fixture.hpp` | `tests/support/observability/observability_fixture.hpp` |
+
+验证待本批全套完成登记。
+
+app 批次验收：`build/restructure-app/result.json` 全通过，完整构建、27/27、23/23、7/7、G4 四组合与 1676 帧完整公开输出逐字节相同。默认配置通过显式根指向同一资源，显示／视频／完成状态与公共计时边界均保留。

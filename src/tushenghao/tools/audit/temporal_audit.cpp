@@ -1,6 +1,6 @@
 #include "vision/config/cli_options.hpp"
 // 原video与480x32实验网格保留，统一FrameRecord/recorder；阶段装配不假称公共process。
-#include "offline_runner.hpp"
+#include "offline/offline_runner.hpp"
 #include "temporal/assembly/stabilize_stage.hpp"
 #include "context/diagnostics_context.hpp"
 #include "corners/ordering/screen_order.hpp"

@@ -1,4 +1,4 @@
-#include "video_exporter.hpp"
+#include "export/video_exporter.hpp"
 #include <cmath>
 #include <limits>
 #include <stdexcept>

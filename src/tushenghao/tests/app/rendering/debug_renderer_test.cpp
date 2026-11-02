@@ -1,7 +1,7 @@
 #include "case_runner.hpp"
 #include "observability_fixture.hpp"
 #include "temporal_fixture.hpp"
-#include "debug_renderer.hpp"
+#include "rendering/debug_renderer.hpp"
 #include <opencv2/imgproc.hpp>
 using namespace mark;
 using namespace observability_fixture;

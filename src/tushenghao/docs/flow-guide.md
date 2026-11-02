@@ -40,7 +40,7 @@ flowchart TD
 
 **用到的办法：**语法检查先于资源创建，可避免拼错参数后产生看似有效的输出。 **读时注意：**marker_app 仍有自己的 CLI；pose/tracking 和部分审计工具共用纯 parser，不能假设所有入口选项完全一致。
 
-定位：[app/main.cpp:55](../app/main.cpp#L55)；[原步骤 A01](lean-report.md?plain=1#L110)。
+定位：[tools/apps/marker/main.cpp:55](../tools/apps/marker/main.cpp#L55)；[原步骤 A01](lean-report.md?plain=1#L110)。
 
 ### A02 建立运行身份和输入资源
 
@@ -50,7 +50,7 @@ flowchart TD
 
 **用到的办法：**provenance 是运行来源记录：把实际输入、配置、模型、代码与环境身份一起保存，便于追溯。 **读时注意：**beginRun 早于打开 capture；读取指纹失败可能更早停止，开视频失败则会留下失败目录，不能声称所有失败都不建目录。
 
-定位：[app/offline_runner.cpp:72](../app/offline_runner.cpp#L72)；[原步骤 A02](lean-report.md?plain=1#L111)。
+定位：[src/app/offline/offline_runner.cpp:72](../src/app/offline/offline_runner.cpp#L72)；[原步骤 A02](lean-report.md?plain=1#L111)。
 
 ### A03 探测并启动显示会话
 
@@ -58,9 +58,9 @@ flowchart TD
 
 **输入／输出／替换点：**输入 show_window、probe 路径和既有超时；输出 active／明确降级原因。替换显示后端保持 start/show/close 生命周期归会话。
 
-**用到的办法：**子进程把显示库崩溃与主算法进程隔开，超时避免启动永久卡住。 **读时注意：**实际源是 app/display_probe.cpp；display_requested 与 display_active 分开记录，不能把未显示写成已显示。
+**用到的办法：**子进程把显示库崩溃与主算法进程隔开，超时避免启动永久卡住。 **读时注意：**实际源是 tools/apps/display/display_probe.cpp；display_requested 与 display_active 分开记录，不能把未显示写成已显示。
 
-定位：[app/display_session.cpp:72](../app/display_session.cpp#L72)；[原步骤 A03](lean-report.md?plain=1#L112)。
+定位：[src/app/display/display_session.cpp:72](../src/app/display/display_session.cpp#L72)；[原步骤 A03](lean-report.md?plain=1#L112)。
 
 ### A04 逐帧读取并建立回放时间轴
 
@@ -70,7 +70,7 @@ flowchart TD
 
 **用到的办法：**显式时间轴让序列检查与平滑使用可解释的 dt。 **读时注意：**录像时间来源仍 Unknown，不能写成真实曝光；diagnostics 抽样不裁剪检测，但显式 execution subset 会。
 
-定位：[app/offline_runner.cpp:237](../app/offline_runner.cpp#L237)；[原步骤 A04](lean-report.md?plain=1#L113)。
+定位：[src/app/offline/offline_runner.cpp:237](../src/app/offline/offline_runner.cpp#L237)；[原步骤 A04](lean-report.md?plain=1#L113)。
 
 ### A05 选择执行范围并交接诊断请求
 
@@ -80,7 +80,7 @@ flowchart TD
 
 **用到的办法：**分开执行意图与观测意图，可在关闭日志时仍跑同一条算法路径。 **读时注意：**DiagnosticsRequest.scope 是记录标签；真正范围是独立函数参数。Full 公共 Detector 继续保留原预算门控。
 
-定位：[app/offline_runner.cpp:273](../app/offline_runner.cpp#L273)；[原步骤 A05](lean-report.md?plain=1#L114)。
+定位：[src/app/offline/offline_runner.cpp:273](../src/app/offline/offline_runner.cpp#L273)；[原步骤 A05](lean-report.md?plain=1#L114)。
 
 ### A06 取得算法结果与独立记录
 
@@ -110,7 +110,7 @@ flowchart TD
 
 **用到的办法：**专用值输入隔开渲染与 fitter／缓存实现，换取证步骤不要求界面跟着读内部结构。 **读时注意：**baseline 跳过画布；记录字段和渲染适配仍有明确协议，渲染不得回写原图或算法结果。
 
-定位：[app/debug_renderer.cpp:26](../app/debug_renderer.cpp#L26)；[原步骤 A08](lean-report.md?plain=1#L117)。
+定位：[src/app/rendering/debug_renderer.cpp:26](../src/app/rendering/debug_renderer.cpp#L26)；[原步骤 A08](lean-report.md?plain=1#L117)。
 
 ### A09 显示、等待并读取用户停止
 
@@ -120,7 +120,7 @@ flowchart TD
 
 **用到的办法：**把等待时间单独记录，避免将人为播放速度算进检测性能。 **读时注意：**用户停止会影响输入完整性；窗口中途降级后不能重复记入上一次显示耗时。
 
-定位：[app/display_session.cpp:96](../app/display_session.cpp#L96)；[原步骤 A09](lean-report.md?plain=1#L118)。
+定位：[src/app/display/display_session.cpp:96](../src/app/display/display_session.cpp#L96)；[原步骤 A09](lean-report.md?plain=1#L118)。
 
 ### A10 输出视频／图像并补 export 耗时
 
@@ -130,7 +130,7 @@ flowchart TD
 
 **用到的办法：**导出在公共 process 计时外单列，使写盘成本不会混入算法耗时。 **读时注意：**视频不由 selected 决定；不完整运行最后标 partial。显式 subset 情况只导出实际执行帧。
 
-定位：[app/offline_runner.cpp:395](../app/offline_runner.cpp#L395)；[原步骤 A10](lean-report.md?plain=1#L119)。
+定位：[src/app/offline/offline_runner.cpp:395](../src/app/offline/offline_runner.cpp#L395)；[原步骤 A10](lean-report.md?plain=1#L119)。
 
 ### A11 判定覆盖并收尾资源
 
@@ -140,7 +140,7 @@ flowchart TD
 
 **用到的办法：**期待总量提供独立覆盖依据；读回校验确认编码器确实写出了声称的帧。 **读时注意：**编码器收尾在 recorder Running 期间进行；不能先写成功 summary 再发现视频失败。
 
-定位：[app/offline_runner.cpp:424](../app/offline_runner.cpp#L424)；[原步骤 A11](lean-report.md?plain=1#L120)。
+定位：[src/app/offline/offline_runner.cpp:424](../src/app/offline/offline_runner.cpp#L424)；[原步骤 A11](lean-report.md?plain=1#L120)。
 
 ### A12 输出只读摘要与运行结论
 
@@ -578,7 +578,7 @@ flowchart TD
 
 **用到的办法：**配置快照和完整候选保留复盘所需上下文；灵敏度工具通过已知扰动观察误差传播。 **读时注意：**原步骤表笼统写 JSONL，pose_app 当前实际写 YAML；没有把这份文件偷偷改成新的三维跟踪输入协议。
 
-定位：[app/pose_main.cpp:48](../app/pose_main.cpp#L48)；[原步骤 P12](lean-report.md?plain=1#L87)。
+定位：[tools/apps/pose/pose_main.cpp:48](../tools/apps/pose/pose_main.cpp#L48)；[原步骤 P12](lean-report.md?plain=1#L87)。
 
 ## G4 三维跟踪步骤 K01–K12
 
@@ -772,7 +772,7 @@ OpenSSL 查找已靠近实际审计目标；默认仍构建这些工具。根 CM
 
 ### 先选可复现输入，再进入整条链
 
-先用已有几何／角点 fixture 理解某一步，再用完整录像追实例历史。入口与契约可从 [tests/detection/corners/corner_resolver_test.cpp:225](../tests/detection/corners/corner_resolver_test.cpp#L225)、[tests/observability_integration_test.cpp:516](../tests/observability_integration_test.cpp#L516) 和 [tests/tracking/lifecycle/tracking_contract_test.cpp:769](../tests/tracking/lifecycle/tracking_contract_test.cpp#L769) 进入。这里的测试 reference 不是生产 helper 的另一层转发；改边界时要继续跑独立结果比较。
+先用已有几何／角点 fixture 理解某一步，再用完整录像追实例历史。入口与契约可从 [tests/detection/corners/corner_resolver_test.cpp:225](../tests/detection/corners/corner_resolver_test.cpp#L225)、[tests/app/offline/observability_integration_test.cpp:516](../tests/app/offline/observability_integration_test.cpp#L516) 和 [tests/tracking/lifecycle/tracking_contract_test.cpp:769](../tests/tracking/lifecycle/tracking_contract_test.cpp#L769) 进入。这里的测试 reference 不是生产 helper 的另一层转发；改边界时要继续跑独立结果比较。
 
 以下是后续交互调试的示例命令，**不是本次验收已经运行过的 Debug 构建**；本次实际 Release 构建、全量测试和 G4 四组合命令都在修改报告附录。命令从仓库根运行，输入路径替换成自己的现有录像，运行目录必须不存在。
 
@@ -812,7 +812,7 @@ print frame.image.rows
 | `src/pose/estimation/pose_estimator.cpp:158` | G2：物点米／像点像素、stamp、budgets_ready、全部 candidate、eligible_count 和精修前后；Unique 与 control_usable 分开看。 |
 | `src/tracking/lifecycle/target_tracker.cpp:356` | G4：original state/candidate、input_accepted、events、返回快照，再看是否提交；必须在 tracking_app 或类型化调用中调试此断点。 |
 | `src/tracking/filter/kalman_cv.cpp:154` | G4 数学：同版本 x/P、z/R、残差/S/score；correct 消费的 owner/revision 必须对应此状态。 |
-| `app/offline_runner.cpp:424` | A11/A12：实际计数、pending、expected、RunOutcome，再看视频收尾、finishRun 和控制台；不要从一行“成功”反推覆盖。 |
+| `src/app/offline/offline_runner.cpp:424` | A11/A12：实际计数、pending、expected、RunOutcome，再看视频收尾、finishRun 和控制台；不要从一行“成功”反推覆盖。 |
 
 
 G4 跟帧应另开 `gdb --args /tmp/campus-lean-debug/tracking_app --config /absolute/research-config.yaml --input /absolute/frames.yaml --out /tmp/campus-tracking-debug-new`，使用自己已有且经过现行工具生成的 profile；仓库 tracking.yaml 默认空 profile 不足以跑速度链。条件断点在 step 入口用 `frame.stamp_.frame_id_`，前帧仍正常执行。本次四组合输入与全部实际命令在修改报告中，不需要为调试重新创造一套数值。

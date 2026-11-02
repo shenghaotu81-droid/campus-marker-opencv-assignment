@@ -1,8 +1,8 @@
 #include "vision/config/cli_options.hpp"
 // 原App无参静默退出0且只支持check-config；严格解析离线两模式，实际算法由公共process完成。
 #include "vision/detection/detector.hpp"
-#include "offline_runner.hpp"
-#include "run_console.hpp"
+#include "offline/offline_runner.hpp"
+#include "reporting/run_console.hpp"
 #include <iostream>
 #include <limits>
 #include <map>
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
                    export_video = options.export_video;
         std::string config = args.count("--config")
                                  ? args["--config"]
-                                 : (std::filesystem::path(__FILE__).parent_path().parent_path() /
+                                 : (std::filesystem::path(VISION_SOURCE_ROOT) /
                                     "config/detector.yaml")
                                        .string();
         auto app = mark::loadConfig(config);

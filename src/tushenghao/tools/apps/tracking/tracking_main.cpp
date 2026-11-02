@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     try
     {
         const auto options = parse_cli(argc, argv);
-        const auto root = std::filesystem::path(__FILE__).parent_path().parent_path();
+        const auto root = std::filesystem::path(VISION_SOURCE_ROOT);
         const auto config_path = options.count("--config") ? std::filesystem::path(options.at("--config")) :
                                                            root / "config/tracking.yaml";
         auto config = mark::tracking::load_tracking_config(config_path);

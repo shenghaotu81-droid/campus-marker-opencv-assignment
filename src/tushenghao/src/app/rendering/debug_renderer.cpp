@@ -1,4 +1,4 @@
-#include "debug_renderer.hpp"
+#include "rendering/debug_renderer.hpp"
 #include "context/diagnostics_context.hpp"
 #include <opencv2/imgproc.hpp>
 #include <sstream>
