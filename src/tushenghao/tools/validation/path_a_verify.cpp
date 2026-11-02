@@ -4,7 +4,8 @@
 // 不参与生产准入，不替用户批准真值/方向；损坏/缺失证据一律非零退出。
 #include "common/frame_record_reader.hpp"
 #include "config/config.hpp"
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
+#include "config/marker_geometry_loader.hpp"
 #include "geometry/geometry_anchor_evidence.hpp"
 #include "geometry/geometry_l_topology.hpp"
 #include "corners/detection_validator.hpp"

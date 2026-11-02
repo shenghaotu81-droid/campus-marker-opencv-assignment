@@ -3,9 +3,9 @@
 #pragma once
 #include "corners/corner_types.hpp"
 #include "core/diagnostics_types.hpp"
-#include "mark/detector_types.hpp"
+#include "vision/types/detector_types.hpp"
 #include "core/prepared_frame.hpp"
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
 #include "mark/detector_config.hpp"
 namespace mark {
 class FrameDiagnosticsContext;

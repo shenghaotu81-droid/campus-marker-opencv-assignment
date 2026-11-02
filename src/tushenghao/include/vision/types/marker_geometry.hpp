@@ -48,14 +48,4 @@ namespace mark
         std::vector<GeometryPolygon> polygons;
     };
 
-    // 从 YAML 文件加载 MARK 几何模型。
-    MarkerGeometry loadMarkerGeometry(
-        const std::filesystem::path &path
-    );
-
-    // 校验 MARK 几何模型是否合法。
-    void validateMarkerGeometry(
-        const MarkerGeometry &geometry
-    );
-
 } // namespace mark

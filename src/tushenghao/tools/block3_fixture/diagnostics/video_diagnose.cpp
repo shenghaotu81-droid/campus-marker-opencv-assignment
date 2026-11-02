@@ -1,3 +1,4 @@
+#include "config/marker_geometry_loader.hpp"
 // 只读视频归因：复用正式前半链路与原图拟合，诊断门限隔离不用于调参/验收。
 #include "config/config.hpp"
 #include "preprocess/preprocess.hpp"

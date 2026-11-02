@@ -1,3 +1,4 @@
+#include "config/marker_geometry_loader.hpp"
 // 输入冻结配置和H图像；先运行正式pipeline，再读取工具真值核查，不向检测传真值。
 // 同时隔离定位以区分原三L/补全问题；输出逐样例、失败分母与证据，不用H定门限。
 #include "synthetic_gen/core.hpp"

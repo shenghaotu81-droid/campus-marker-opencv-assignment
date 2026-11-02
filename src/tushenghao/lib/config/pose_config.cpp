@@ -2,7 +2,7 @@
 #include "mark/pose_config.hpp"
 #include "config/value_reader.hpp"
 #include "pose/pose_geometry.hpp"
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
 
 #include <cmath>
 #include <stdexcept>

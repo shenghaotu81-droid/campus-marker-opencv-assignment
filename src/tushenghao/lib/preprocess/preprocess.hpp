@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mark/detector_config.hpp"
-#include "mark/detector_types.hpp"
+#include "vision/types/detector_types.hpp"
 #include "core/prepared_frame.hpp"
 
 namespace mark

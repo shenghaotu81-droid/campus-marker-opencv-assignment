@@ -1,7 +1,7 @@
 // 小范围数学内部声明
 #pragma once
 
-#include "mark/pose_types.hpp"
+#include "vision/types/pose_types.hpp"
 
 namespace mark::pose { struct TagConfig; }
 

@@ -829,7 +829,7 @@ G4 跟帧应另开 `gdb --args /tmp/campus-lean-debug/tracking_app --config /abs
 
 ## 建议阅读顺序
 
-1. 先看公开输入／输出与配置边界：[include/mark/detector_types.hpp:70](../include/mark/detector_types.hpp#L70)、[lib/core/geometry_types.hpp:178](../lib/core/geometry_types.hpp#L178)、[lib/config/app_config.hpp:10](../lib/config/app_config.hpp#L10)。把 raw/stable、工作／原图、ID／下标先分清。
+1. 先看公开输入／输出与配置边界：[include/vision/types/detector_types.hpp:70](../include/vision/types/detector_types.hpp#L70)、[lib/core/geometry_types.hpp:178](../lib/core/geometry_types.hpp#L178)、[lib/config/app_config.hpp:10](../lib/config/app_config.hpp#L10)。把 raw/stable、工作／原图、ID／下标先分清。
 2. 接着读 A01 入口、OfflineRunSession::run/process_frame 和 Detector::process，把完整调用顺序串起来；首次先沿成功路径，再补 NOT_READY／INVALID_INPUT／异常记录分支。
 3. 读 runGeometrySteps 与 decodeStage，拿一个 fixture 跟 D02–D18 的显式产物；一次只深入当前失败步骤的 helper，再读它的独立 validator／reference。
 4. 单独读 T 链的输入、关联、对应、平滑和回退；注意显示文字与几何状态各有实例历史，不能串成一份共享可变对象。

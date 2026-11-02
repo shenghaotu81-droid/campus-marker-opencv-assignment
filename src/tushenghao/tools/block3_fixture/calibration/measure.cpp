@@ -1,3 +1,4 @@
+#include "config/marker_geometry_loader.hpp"
 // 仅合成隔离测量：真值提供身份/变换，正式resolver不读真值；不应用待求误差上限。
 // 关联规则是显式实验recipe，任何结构失败都留在分母；不冒称生产预算获批。
 #include "synthetic_gen/core.hpp"

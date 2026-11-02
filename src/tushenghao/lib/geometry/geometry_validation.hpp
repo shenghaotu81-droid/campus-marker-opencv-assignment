@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/geometry_types.hpp"
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
 #include "mark/detector_config.hpp"
 
 #include <vector>

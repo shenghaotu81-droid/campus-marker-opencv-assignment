@@ -13,7 +13,8 @@ validateMarkerGeometry()
 3. L0 的数值跟批准的表对得上（6 个顶点、锚点 8,8、面积 416）
 不测算法，只测"图纸加载"这个环节。
 */
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
+#include "config/marker_geometry_loader.hpp"
 
 #include <cassert>
 #include <iostream>

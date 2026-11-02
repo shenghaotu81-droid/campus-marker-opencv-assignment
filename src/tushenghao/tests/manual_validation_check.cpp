@@ -14,7 +14,7 @@
 #include "geometry/geometry_matcher.hpp"
 #include "geometry/geometry_l_topology.hpp"
 #include "geometry/geometry_validation.hpp"
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
 #include "mark/detector_config.hpp"
 
 #include <iostream>

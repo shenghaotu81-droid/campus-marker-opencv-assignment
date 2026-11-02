@@ -1,5 +1,5 @@
 #pragma once
-#include "mark/detector_types.hpp"
+#include "vision/types/detector_types.hpp"
 #include <map>
 #include <set>
 #include <string>

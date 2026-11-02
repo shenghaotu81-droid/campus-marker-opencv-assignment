@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mark/tracking_types.hpp"
+#include "vision/types/tracking_types.hpp"
 #include <filesystem>
 
 namespace mark::tracking

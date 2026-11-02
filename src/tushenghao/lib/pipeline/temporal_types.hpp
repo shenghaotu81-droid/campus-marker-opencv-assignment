@@ -1,6 +1,6 @@
 // 三历史各自所有，不给Detection增加时序身份或伪置信度。
 #pragma once
-#include "core/frame_stamp.hpp"
+#include "vision/types/frame_stamp.hpp"
 #include "core/diagnostics_types.hpp"
 namespace mark {
 enum class TemporalCause { Other, InputChanged, HistoryExpired, AssociationFailed, AssociationAmbiguous,

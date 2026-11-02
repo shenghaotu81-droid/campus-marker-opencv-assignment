@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mark/pose_types.hpp"
+#include "vision/types/pose_types.hpp"
 #include <optional>
 #include <string>
 #include <vector>

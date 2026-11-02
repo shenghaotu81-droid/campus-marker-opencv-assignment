@@ -1,7 +1,7 @@
 // 旧Validator只看凸四点即可放行；这里要求四角真实来源并复算证据，失败给明确原因。
 #include "corners/corner_evidence_validation.hpp"
 #include "corners/periodic_line_fit.hpp"
-#include "core/marker_geometry.hpp"
+#include "vision/types/marker_geometry.hpp"
 #include "core/observed_geometry_utils.hpp"
 #include <opencv2/imgproc.hpp>
 #include <set>

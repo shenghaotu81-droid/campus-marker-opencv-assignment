@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "mark/detector_config.hpp"
-#include "mark/detector_types.hpp"
+#include "vision/types/detector_types.hpp"
 
 /*
 main.cpp                                                 

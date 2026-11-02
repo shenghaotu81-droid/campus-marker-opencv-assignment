@@ -1,3 +1,4 @@
+#include "config/marker_geometry_loader.hpp"
 // 用户授权实拍预算测量：固定原713完整补全帧，逐角测量，不因首角失败丢掉其余角。
 // 仅解除待求交点弧距上限；其余支持/关联/病态约束保持冻结。不读人工真值。
 #include "config/config.hpp"
