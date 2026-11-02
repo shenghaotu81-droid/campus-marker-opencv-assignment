@@ -1,9 +1,9 @@
 #include <opencv2/opencv.hpp>
 
-#include "calibration_config.hpp"
-#include "calibration_video.hpp"
-#include "calibration_detection.hpp"
-#include "calibration_result.hpp"
+#include "input/calibration_config.hpp"
+#include "frames/calibration_video.hpp"
+#include "observation/calibration_detection.hpp"
+#include "results/calibration_result.hpp"
 
 #include <iostream>
 #include <algorithm>

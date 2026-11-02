@@ -725,7 +725,7 @@ synthetic_gen 从冻结规范生成可追溯图像／真值，再独立验证。
 
 ### C01–C06 相机标定
 
-入口：[tools/calibration/calibration_main.cpp:12](../tools/calibration/calibration_main.cpp#L12)；人工选帧入口：[tools/calibration/scripts/frame_picker.py:26](../tools/calibration/scripts/frame_picker.py#L26)。这是“明确选帧 → 逐帧观测 → 只筛成功点对求解”的链。
+入口：[tools/calibration/apps/calibration_main.cpp:12](../tools/calibration/apps/calibration_main.cpp#L12)；人工选帧入口：[tools/calibration/scripts/frame_picker.py:26](../tools/calibration/scripts/frame_picker.py#L26)。这是“明确选帧 → 逐帧观测 → 只筛成功点对求解”的链。
 
 | 步骤 | 输入 → 输出；替换点 |
 |---|---|
@@ -740,7 +740,7 @@ K 是相机内参，dist 是畸变系数；重投影复核把求得的点画回�
 
 ### V01–V06 测试、探针与证据
 
-入口：[tools/audit/decode_audit.cpp:7](../tools/audit/decode_audit.cpp#L7)、[tools/block3_fixture/diagnostics/video_diagnose.cpp:110](../tools/block3_fixture/diagnostics/video_diagnose.cpp#L110)、[tools/validation/recovery112_check.py:22](../tools/validation/recovery112_check.py#L22)。各工具保留自己的目标，不复制一整条生产流程。
+入口：[tools/audit/decode/decode_audit.cpp:7](../tools/audit/decode/decode_audit.cpp#L7)、[tools/block3_fixture/diagnostics/video/video_diagnose.cpp:110](../tools/block3_fixture/diagnostics/video/video_diagnose.cpp#L110)、[tools/validation/recovery/recovery112_check.py:22](../tools/validation/recovery/recovery112_check.py#L22)。各工具保留自己的目标，不复制一整条生产流程。
 
 | 步骤 | 输入 → 输出；替换点 |
 |---|---|

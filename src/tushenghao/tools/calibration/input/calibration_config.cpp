@@ -1,4 +1,4 @@
-#include "calibration_config.hpp"
+#include "input/calibration_config.hpp"
 
 #include <opencv2/core.hpp>
 #include <cmath>
@@ -99,9 +99,9 @@ void initialize_default_config(CalibrationConfig &config)
     config.board_rows = 7;
     config.board_cols = 7;
     config.point_spacing = 0.03;
-    const std::filesystem::path source_path(__FILE__);
+    const std::filesystem::path source_path(VISION_SOURCE_ROOT);
     config.output_path =
-        (source_path.parent_path().parent_path().parent_path() / "config" / "calibration.yaml").string();
+        (source_path / "config" / "calibration.yaml").string();
 }
 
 // C01 YAML 步骤：严格读取字段；未知/重复键、错误类型或非有限值返回失败。

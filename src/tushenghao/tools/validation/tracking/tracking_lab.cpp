@@ -1023,7 +1023,7 @@ int main(int argc, char **argv)
     try
     {
         const auto args = parse_cli(argc, argv);
-        const auto root = fs::path(__FILE__).parent_path().parent_path().parent_path();
+        const auto root = fs::path(VISION_SOURCE_ROOT);
         const auto config_path = args.count("--config") ? fs::path(args.at("--config")) :
                                                         root / "config/tracking_lab.yaml";
         const LabConfig config(config_path);

@@ -1,8 +1,8 @@
 // Q02/C01：配置与标定坏输入主动检查；本次临时输入由显式 test_root 隔离。
 #include "detector/config.hpp"
 #include "reader/config_error.hpp"
-#include "../../tools/calibration/calibration_config.hpp"
-#include "../../tools/calibration/calibration_result.hpp"
+#include "input/calibration_config.hpp"
+#include "results/calibration_result.hpp"
 
 #include <filesystem>
 #include <fstream>

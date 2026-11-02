@@ -10,7 +10,7 @@
 #include "geometry/completion/assignment_match_metrics.hpp"
 #include "geometry/parent/geometry_matcher.hpp"
 #include "geometry/validation/geometry_validation.hpp"
-#include "../common/support_pixel_count.hpp"
+#include "common/support_pixel_count.hpp"
 #include <map>
 #include <opencv2/imgcodecs.hpp>
 #include <fstream>

@@ -1,3 +1,6 @@
+if(NOT VISION_BUILD_TOOLS AND NOT BUILD_TESTING)
+    return()
+endif()
 # A02–A12：读取/执行、渲染、显示、导出、覆盖判定和报告各步骤独立声明。
 add_library(vision_app offline/offline_runner.cpp completion/input_completion.cpp rendering/debug_renderer.cpp
     display/display_session.cpp export/video_exporter.cpp reporting/run_console.cpp)

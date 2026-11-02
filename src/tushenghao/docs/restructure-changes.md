@@ -318,3 +318,39 @@ app 批次验收：`build/restructure-app/result.json` 全通过，完整构建�
 拆分补充：`tools/synth_ref/src/model.cpp` → `src/synth_ref/model/model.cpp` + `src/synth_ref/inputs/source_inputs.cpp`；`tools/synth_ref/src/records.cpp` → `src/synth_ref/truth/truth_record.cpp` + `src/synth_ref/records/record_codec.cpp` + `src/synth_ref/generation/generation.cpp`。函数体保持；原文件不再编译、不留副本。
 
 synth_ref 批次验收：`build/restructure-synth/result.json` 全通过，完整构建、27/27、23/23、合成 7/7、G4 四组合以及 1676 帧完整公开结果逐字节一致。生成器独立 workflow／篡改／手算用例均保留。
+
+## tools-build 模块（执行中）
+
+工具按审计范围、协议复核、恢复回放、位姿分析、跟踪实验、标定输入／选帧／观测／求解拆子目录。顶层仅全局设置与 add_subdirectory；模块各自拥有源表、依赖与测试。F50 独立夹具显式装配所需模块，删除向上导入工程；F52 由 VISION_BUILD_TOOLS／BUILD_TESTING 管理边界，原默认工具集合保留，原独立夹具与合成可单独构建或用显式 VISION_BUILD_FIXTURE_TOOLS 装配。G2/G4 原开关仍默认关闭。
+
+| 原路径 | 新路径 |
+|---|---|
+| `tools/audit/geometry_audit.cpp` | `tools/audit/geometry/geometry_audit.cpp` |
+| `tools/audit/decode_audit.cpp` | `tools/audit/decode/decode_audit.cpp` |
+| `tools/audit/temporal_audit.cpp` | `tools/audit/temporal/temporal_audit.cpp` |
+| `tools/validation/final_fixes_verify.cpp` | `tools/validation/records/final_fixes_verify.cpp` |
+| `tools/validation/observability_verify.cpp` | `tools/validation/records/observability_verify.cpp` |
+| `tools/validation/path_a_verify.cpp` | `tools/validation/records/path_a_verify.cpp` |
+| `tools/validation/recovery112_benchmark.cpp` | `tools/validation/recovery/recovery112_benchmark.cpp` |
+| `tools/validation/recovery112_synthetic.cpp` | `tools/validation/recovery/recovery112_synthetic.cpp` |
+| `tools/validation/recovery112_check.py` | `tools/validation/recovery/recovery112_check.py` |
+| `tools/validation/pose_sensitivity.cpp` | `tools/validation/pose/pose_sensitivity.cpp` |
+| `tools/validation/tracking_lab.cpp` | `tools/validation/tracking/tracking_lab.cpp` |
+| `tools/calibration/calibration_config.cpp` | `tools/calibration/input/calibration_config.cpp` |
+| `tools/calibration/calibration_config.hpp` | `tools/calibration/input/calibration_config.hpp` |
+| `tools/calibration/calibration_video.cpp` | `tools/calibration/frames/calibration_video.cpp` |
+| `tools/calibration/calibration_video.hpp` | `tools/calibration/frames/calibration_video.hpp` |
+| `tools/calibration/calibration_detection.cpp` | `tools/calibration/observation/calibration_detection.cpp` |
+| `tools/calibration/calibration_detection.hpp` | `tools/calibration/observation/calibration_detection.hpp` |
+| `tools/calibration/calibration_result.cpp` | `tools/calibration/results/calibration_result.cpp` |
+| `tools/calibration/calibration_result.hpp` | `tools/calibration/results/calibration_result.hpp` |
+| `tools/calibration/calibration_main.cpp` | `tools/calibration/apps/calibration_main.cpp` |
+| `tools/block3_fixture/diagnostics/parent_diagnose.cpp` | `tools/block3_fixture/diagnostics/parent/parent_diagnose.cpp` |
+| `tools/block3_fixture/diagnostics/video_diagnose.cpp` | `tools/block3_fixture/diagnostics/video/video_diagnose.cpp` |
+| `tools/block3_fixture/diagnostics/video_corner_measure.cpp` | `tools/block3_fixture/diagnostics/corners/video_corner_measure.cpp` |
+
+验证待本批全套完成登记。
+
+构建拆分：旧顶层、g2.cmake/g4.cmake、夹具／合成 CMake 原型的库／入口／测试规则均分配到实际模块。provenance 函数归 cmake/provenance.cmake，cmake/CMakeLists.txt 最后沿真实目标闭包登记。不将未链接模块纳入当前目标算法身份。
+
+tools-build 批次验收：`build/restructure-tools-build-final/result.json` 全通过，27/27、23/23、7/7、G4 四组合和 1676 帧公开结果逐字节一致。额外边界：仅库（工具／测试均关闭）构建通过；关闭工具、开启 G2/G4 测试 27/27 通过；独立夹具五目标构建通过（`build/restructure-tools-boundaries/`）；开启工具与集成夹具、关闭测试的完整构建也通过（`/tmp/restructure-tools-only-*.log`）。F50/F52 余项已落地。

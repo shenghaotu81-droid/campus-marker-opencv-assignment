@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "calibration_config.hpp"
+#include "input/calibration_config.hpp"
 
 // 标定视频基本信息
 struct CalibrationVideoInfo

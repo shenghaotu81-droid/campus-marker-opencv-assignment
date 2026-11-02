@@ -24,7 +24,7 @@ int main(int argc, char **argv)
         const std::filesystem::path out(argv[1]);
         if (std::filesystem::exists(out))
             throw std::runtime_error("拒绝覆盖已有敏感性结果");
-        const auto root = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path();
+        const auto root = std::filesystem::path(VISION_SOURCE_ROOT);
         const auto c = mark::pose::load_pose_config(root / "config/pose.yaml");
         mark::pose::PoseEstimator solver(c);
         std::filesystem::create_directories(out);

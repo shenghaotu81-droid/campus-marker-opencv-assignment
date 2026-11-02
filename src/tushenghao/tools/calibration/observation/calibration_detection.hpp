@@ -1,5 +1,5 @@
 #pragma once
-#include "calibration_video.hpp"
+#include "frames/calibration_video.hpp"
 
 // C04：每个抽样帧对应一条观察；未检出只记信息，不伪造点对。
 struct BoardObservation {

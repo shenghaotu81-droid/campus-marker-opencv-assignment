@@ -93,11 +93,11 @@ def run(label, executable, expected, paths):
     # 缓存验收必须绑定真实源码；逐步快照让最终重写后仍能复核每一步。
     inputs = [Path(paths.manifest["video"]), paths.source_root / "CMakeLists.txt"]
     inputs.append(Path(paths.manifest["failed_ids_file"]))
-    for directory in ("lib", "include", "config"):
+    for directory in ("src", "include", "config"):
         inputs.extend(sorted((paths.source_root / directory).rglob("*.*")))
-    inputs.extend(sorted((paths.source_root / "tools/validation").glob("recovery112_*")))
+    inputs.extend(sorted((paths.source_root / "tools/validation/recovery").glob("recovery112_*")))
     hashes = {str(path.resolve()): digest(path) for path in inputs if path.is_file()}
-    for path in sorted((paths.source_root / "lib").rglob("*.*")):
+    for path in sorted((paths.source_root / "src").rglob("*.*")):
         if path.is_file():
             target = destination / "source" / path.relative_to(paths.source_root)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -165,7 +165,7 @@ def summarize(paths):
         for name, value in manifest["outputs"].items():
             require(digest(directory / name) == value, 'recovery112_check.py:133: digest(directory / name) == value')
         for name, value in manifest["inputs"].items():
-            if name.startswith(str(paths.source_root / "lib") + "/") or name.startswith(paths.manifest["legacy_source_prefix"] + "lib/"):
+            if name.startswith(str(paths.source_root / "src") + "/") or name.startswith(paths.manifest["legacy_source_prefix"] + "lib/"):
                 relative = (Path(name).relative_to(paths.source_root) if Path(name).is_absolute()
                             else Path(name.removeprefix(paths.manifest["legacy_source_prefix"])))
                 require(digest(directory / "source" / relative) == value, f"source snapshot hash mismatch: {name}")
