@@ -1,8 +1,8 @@
-#include "synthetic_gen/transforms.hpp"
-#include "synthetic_gen/perturb.hpp"
-#include "synthetic_gen/raster.hpp"
+#include "vision/synth_ref/transforms.hpp"
+#include "vision/synth_ref/perturb.hpp"
+#include "vision/synth_ref/raster.hpp"
 
-#include "synthetic_gen/cases.hpp"
+#include "vision/synth_ref/cases.hpp"
 #include <opencv2/imgproc.hpp>
 #include <algorithm>
 #include <cmath>

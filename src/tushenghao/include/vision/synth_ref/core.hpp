@@ -1,0 +1,10 @@
+#pragma once
+// 兼容聚合入口；步骤声明归各自头，单步消费者无需包含全部流程。
+#include "vision/synth_ref/model.hpp"
+#include "vision/synth_ref/grid.hpp"
+#include "vision/synth_ref/transforms.hpp"
+#include "vision/synth_ref/perturb.hpp"
+#include "vision/synth_ref/cases.hpp"
+#include "vision/synth_ref/raster.hpp"
+#include "vision/synth_ref/records.hpp"
+#include "vision/synth_ref/verify.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "synthetic_gen/raster.hpp"
+#include "vision/synth_ref/raster.hpp"
 namespace sg {
 // S06/S07：编码只消费明确场景与栅格，事务入口保持旧调用签名。
 Json truth_record(const Context&,const Scene&,const Raster*);

@@ -1,6 +1,6 @@
-#include "synthetic_gen/cases.hpp"
+#include "vision/synth_ref/cases.hpp"
 
-#include "synthetic_gen/grid.hpp"
+#include "vision/synth_ref/grid.hpp"
 namespace sg  {
   // 身份只含语义配置与确定性描述，运行目录/时间不影响 ID。
   std::string case_id(const Context& c,const Json& d)  {

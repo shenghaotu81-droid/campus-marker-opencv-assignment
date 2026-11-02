@@ -1,5 +1,5 @@
 
-#include "synthetic_gen/raster.hpp"
+#include "vision/synth_ref/raster.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>

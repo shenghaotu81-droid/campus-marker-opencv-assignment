@@ -708,7 +708,7 @@ flowchart TD
 
 ### S01–S08 合成夹具
 
-synthetic_gen 从冻结规范生成可追溯图像／真值，再独立验证。公开 Context 与兼容 core.hpp 入口保留；各步骤头已拥有自己的声明，私有计算只读所需切片。真值来自已知几何，不来自被测检测器。入口：[tools/synth_ref/src/main.cpp:43](../tools/synth_ref/src/main.cpp#L43)；步骤声明：[tools/synth_ref/include/synthetic_gen/core.hpp:2](../tools/synth_ref/include/synthetic_gen/core.hpp#L2)。
+synthetic_gen 从冻结规范生成可追溯图像／真值，再独立验证。公开 Context 与兼容 core.hpp 入口保留；各步骤头已拥有自己的声明，私有计算只读所需切片。真值来自已知几何，不来自被测检测器。入口：[tools/synth_ref/main.cpp:43](../tools/synth_ref/main.cpp#L43)；步骤声明：[include/vision/synth_ref/core.hpp:2](../include/vision/synth_ref/core.hpp#L2)。
 
 | 步骤 | 输入 → 输出；替换点 |
 |---|---|

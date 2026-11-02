@@ -287,3 +287,34 @@ tracking 批次验收：`build/restructure-tracking/result.json` 全通过：完
 验证待本批全套完成登记。
 
 app 批次验收：`build/restructure-app/result.json` 全通过，完整构建、27/27、23/23、7/7、G4 四组合与 1676 帧完整公开输出逐字节相同。默认配置通过显式根指向同一资源，显示／视频／完成状态与公共计时边界均保留。
+
+## synth_ref 模块（执行中）
+
+按来源读取、模型数学、枚举、变换、扰动、场景、栅格、真值、编码、生成事务、独立验证分子目录。model.cpp 拆 model/source_inputs；records.cpp 拆 truth_record/record_codec/generation，原静态编码 helper 留 codec，generation 直接调用已有 record_* 契约。没有新增转发或复制实现。tools/synth_ref 仅保留 CLI 与原冻结 inputs/configs 根；库／测试的 CMake 分离，默认独立 CLI 仍从相同工具根运行。SG 核心来源 manifest 按新树实际源／声明／模板登记，版本仍 1.0.0。
+
+| 原路径 | 新路径 |
+|---|---|
+| `tools/synth_ref/include/synthetic_gen/model.hpp` | `include/vision/synth_ref/model.hpp` |
+| `tools/synth_ref/include/synthetic_gen/verify.hpp` | `include/vision/synth_ref/verify.hpp` |
+| `tools/synth_ref/include/synthetic_gen/transforms.hpp` | `include/vision/synth_ref/transforms.hpp` |
+| `tools/synth_ref/include/synthetic_gen/perturb.hpp` | `include/vision/synth_ref/perturb.hpp` |
+| `tools/synth_ref/include/synthetic_gen/raster.hpp` | `include/vision/synth_ref/raster.hpp` |
+| `tools/synth_ref/include/synthetic_gen/records.hpp` | `include/vision/synth_ref/records.hpp` |
+| `tools/synth_ref/include/synthetic_gen/cases.hpp` | `include/vision/synth_ref/cases.hpp` |
+| `tools/synth_ref/include/synthetic_gen/core.hpp` | `include/vision/synth_ref/core.hpp` |
+| `tools/synth_ref/include/synthetic_gen/grid.hpp` | `include/vision/synth_ref/grid.hpp` |
+| `tools/synth_ref/include/synthetic_gen/build_info.hpp.in` | `src/synth_ref/build_info.hpp.in` |
+| `tools/synth_ref/src/grid.cpp` | `src/synth_ref/enumeration/grid.cpp` |
+| `tools/synth_ref/src/transforms.cpp` | `src/synth_ref/geometry/transforms.cpp` |
+| `tools/synth_ref/src/perturb.cpp` | `src/synth_ref/perturbation/perturb.cpp` |
+| `tools/synth_ref/src/raster.cpp` | `src/synth_ref/raster/raster.cpp` |
+| `tools/synth_ref/src/cases.cpp` | `src/synth_ref/scene/cases.cpp` |
+| `tools/synth_ref/src/verify.cpp` | `src/synth_ref/verification/verify.cpp` |
+| `tools/synth_ref/src/main.cpp` | `tools/synth_ref/main.cpp` |
+| `tools/synth_ref/tests/tests.cpp` | `tests/synth_ref/tests.cpp` |
+
+验证待本批全套完成登记。
+
+拆分补充：`tools/synth_ref/src/model.cpp` → `src/synth_ref/model/model.cpp` + `src/synth_ref/inputs/source_inputs.cpp`；`tools/synth_ref/src/records.cpp` → `src/synth_ref/truth/truth_record.cpp` + `src/synth_ref/records/record_codec.cpp` + `src/synth_ref/generation/generation.cpp`。函数体保持；原文件不再编译、不留副本。
+
+synth_ref 批次验收：`build/restructure-synth/result.json` 全通过，完整构建、27/27、23/23、合成 7/7、G4 四组合以及 1676 帧完整公开结果逐字节一致。生成器独立 workflow／篡改／手算用例均保留。

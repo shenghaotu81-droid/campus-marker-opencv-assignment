@@ -1,5 +1,5 @@
 #pragma once
-#include "synthetic_gen/model.hpp"
+#include "vision/synth_ref/model.hpp"
 namespace sg {
 // S04：已知变换作用于连续几何，不估计检测器参数。
 Point transform_point(const cv::Matx33d&,Point);

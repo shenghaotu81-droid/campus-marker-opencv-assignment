@@ -1,5 +1,5 @@
 
-#include "synthetic_gen/perturb.hpp"
+#include "vision/synth_ref/perturb.hpp"
 #include <cmath>
 namespace sg  {
   // 偏移支撑线而不是顶点位移；绕向决定外法向，L3 的反绕向也正确。

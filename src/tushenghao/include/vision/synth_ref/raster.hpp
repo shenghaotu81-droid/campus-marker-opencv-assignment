@@ -1,5 +1,5 @@
 #pragma once
-#include "synthetic_gen/cases.hpp"
+#include "vision/synth_ref/cases.hpp"
 namespace sg {
   struct Raster  {
     cv::Mat image,mask,instances;

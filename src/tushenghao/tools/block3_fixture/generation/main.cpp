@@ -1,6 +1,6 @@
 // 独立adapter：复用sg连续变换、8x8覆盖渲染和hash，不改旧960x720 CLI/verify。
 // 输入用户批准YAML模型和固定C/H profile；输出原图/名义真值/manifest，不运行Detector。
-#include "synthetic_gen/core.hpp"
+#include "vision/synth_ref/core.hpp"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <random>

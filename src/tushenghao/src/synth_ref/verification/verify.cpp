@@ -1,6 +1,6 @@
-#include "synthetic_gen/transforms.hpp"
+#include "vision/synth_ref/transforms.hpp"
 
-#include "synthetic_gen/verify.hpp"
+#include "vision/synth_ref/verify.hpp"
 #include <opencv2/imgcodecs.hpp>
 #include <fstream>
 #include <set>

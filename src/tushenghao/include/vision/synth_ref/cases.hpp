@@ -1,5 +1,5 @@
 #pragma once
-#include "synthetic_gen/grid.hpp"
+#include "vision/synth_ref/grid.hpp"
 namespace sg {
   struct Scene  {
     Json descriptor,fixture=Json::object();

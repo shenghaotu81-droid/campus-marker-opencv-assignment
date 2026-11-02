@@ -1,5 +1,5 @@
 
-#include "synthetic_gen/transforms.hpp"
+#include "vision/synth_ref/transforms.hpp"
 #include <cmath>
 namespace sg  {
   // 已知齐次变换检查有限分母，避免退化 fixture 被错误求逆。

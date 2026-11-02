@@ -1,5 +1,5 @@
 
-#include "synthetic_gen/core.hpp"
+#include "vision/synth_ref/core.hpp"
 #include <opencv2/imgcodecs.hpp>
 #include <algorithm>
 #include <chrono>
