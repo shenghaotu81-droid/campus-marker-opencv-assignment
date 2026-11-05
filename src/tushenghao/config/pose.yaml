@@ -11,11 +11,14 @@ geometry:
   target_id: "mark-white-structure-v1"
   # 图纸 P0=L0.v0/P1=M1.v1/P2=L2.v0/P3=L3.v0，不是外板 115x120。
 budgets:
-  # 空字符串表示尚未标定；不继承二维角点拟合预算，不填经验值。(后定阈值)
-  max_rmse_px: "31.2166"
-  max_corner_error_px: "33.4116"
+  # a582c48实拍1088组：好支最大RMSE=1.037059、最大单角=1.059036px；取0.1px粒度上界。
+  # 这是当前参考相机录像适用域，MaixCam需按实际像素域迁移并独立复验。
+  max_rmse_px: "1.10"
+  max_corner_error_px: "1.10"
 # 可选的精细过滤器(空字符串 = "不启用这个过滤")
 selection:
+  # 小差距保留Ambiguous；含另一支刚越绝对预算的情况。不以原始候选槽位选解。
+  min_rmse_gap_px: "0.25"
   # 只接受距离在 X~Y 米之间的位姿
   min_z_m: ""
   max_z_m: ""

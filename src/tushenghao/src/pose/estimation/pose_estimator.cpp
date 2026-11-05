@@ -1,4 +1,4 @@
-// MARK适配/IPPE/门控/LM（Pnp核心）
+// MARK适配、IPPE多解、原筛选及显式差距消歧。
 #include "vision/pose/pose_estimator.hpp"
 #include "validation/pose_geometry.hpp"
 
@@ -82,7 +82,7 @@ PoseObservation PoseEstimator::estimate_mark(
     out.target_id_ = config_.mark_target_id_;
     out.detection_index_ = index;
     const auto frame_time = stamp_.exposure_us_.value_or(stamp_.received_us_);
-    // 门控链：帧时间戳对不上 → 返回；orientation 缺失 → CorrespondenceMissing；预算没标定 → BudgetMissing（只给候选）；合格候选不是恰好 1 个 → NoSolution/Ambiguous；恰好 1 个 → Unique
+    // 当前帧/物理对应先检查，随后原预算筛选与差距消歧；Unknown时间仍是质量信息。
     if (raw.frame_id != stamp_.frame_id_ || raw.timestamp_us != frame_time)
     {
         out.reasons_.push_back("FRAME_STAMP_MISMATCH");
@@ -130,7 +130,7 @@ PoseObservation PoseEstimator::estimate_mark(
 
 // 通用求解：给 4 对 2D-3D 点算位姿（目标系到相机系（K/dist）的变换（R/t））
 
-// 保留 IPPE 的平面多解；仅一个候选满足独立约束才发布，不按最小残差强选。
+// 保留IPPE多解；先原筛选，再按显式差距消歧，接近的两解仍为Ambiguous。
 PoseObservation PoseEstimator::estimate_planar(
     const std::array<cv::Point3d, 4> &object,
     const std::array<cv::Point2d, 4> &image,
@@ -180,6 +180,7 @@ PoseObservation PoseEstimator::estimate_planar(
     const std::vector<cv::Point3d> objects(object.begin(), object.end());
     const std::vector<cv::Point2d> pixels(image.begin(), image.end());
     std::vector<cv::Mat> rotations, translations;
+    std::vector<std::size_t> comparable;
     try
     {
         // 理解：
@@ -202,12 +203,17 @@ PoseObservation PoseEstimator::estimate_planar(
                                                     config_.camera_.K_, config_.camera_.dist_);
             if (candidate.reasons_.empty() && budgets_ready)
             {
+                const bool constraints_ok = passes_constraints(p, config_.selection_);
+                const bool prior_ok = !use_prior || passes_prior(p, *prior, config_.selection_);
+                // 超绝对预算的支仍可用于差距保护；独立物理/安装/prior已排除的支不参与。
+                if (constraints_ok && prior_ok)
+                    comparable.push_back(out.candidates_.size());
                 if (candidate.rmse_px_ > *b.max_rmse_px_ ||
                     candidate.max_error_px_ > *b.max_corner_error_px_)
                     candidate.reasons_.push_back("REPROJECTION_BUDGET_EXCEEDED");
-                if (!passes_constraints(p, config_.selection_))
+                if (!constraints_ok)
                     candidate.reasons_.push_back("INSTALLATION_CONSTRAINT_REJECTED");
-                if (use_prior && !passes_prior(p, *prior, config_.selection_))
+                if (!prior_ok)
                     candidate.reasons_.push_back("TRUSTED_PRIOR_REJECTED");
                 candidate.eligible_ = candidate.reasons_.empty();
             }
@@ -225,11 +231,31 @@ PoseObservation PoseEstimator::estimate_planar(
             out.reasons_.push_back("UNMEASURED_POSE_BUDGETS");
             return out;
         }
-        // eligible_ 计数，0 个 → NoSolution，1 个 → Unique，2+ → Ambiguous
+        // 先计绝对预算与原约束的合格支；零合格仍沿用原NoSolution。
         std::size_t eligible_count=0, sole_index=0;
         for (std::size_t i = 0; i < out.candidates_.size(); ++i)
             if (out.candidates_[i].eligible_)
                 { ++eligible_count; sole_index=i; }
+        if (eligible_count && config_.selection_.min_rmse_gap_px_ && comparable.size() == 2)
+        {
+            auto best = comparable[0], other = comparable[1];
+            if (out.candidates_[other].rmse_px_ < out.candidates_[best].rmse_px_)
+                std::swap(best, other);
+            const double gap = out.candidates_[other].rmse_px_ - out.candidates_[best].rmse_px_;
+            if (gap < *config_.selection_.min_rmse_gap_px_)
+            {
+                out.status_ = PoseStatus::Ambiguous;
+                out.reasons_.push_back("REPROJECTION_GAP_INSUFFICIENT");
+                return out;
+            }
+            if (eligible_count == 2)
+            {
+                out.candidates_[other].eligible_ = false;
+                out.candidates_[other].reasons_.push_back("REPROJECTION_GAP_SEPARATED");
+                eligible_count = 1;
+                sole_index = best;
+            }
+        }
         if (eligible_count != 1)
         {
             out.status_ = eligible_count == 0 ? PoseStatus::NoSolution : PoseStatus::Ambiguous;

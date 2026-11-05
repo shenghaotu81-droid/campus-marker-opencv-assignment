@@ -125,6 +125,8 @@ G2Config load_pose_config(const std::filesystem::path &path)
     c.mark_target_id_ = text(geometry, "target_id");
     c.budgets_.max_rmse_px_ = optional_number(budgets_, "max_rmse_px");
     c.budgets_.max_corner_error_px_ = optional_number(budgets_, "max_corner_error_px");
+    if (!selection_["min_rmse_gap_px"].empty())
+        c.selection_.min_rmse_gap_px_ = optional_number(selection_, "min_rmse_gap_px");
     c.selection_.min_z_m_ = optional_number(selection_, "min_z_m");
     c.selection_.max_z_m_ = optional_number(selection_, "max_z_m");
     c.selection_.min_normal_z_ = optional_number(selection_, "min_normal_z");
@@ -183,6 +185,7 @@ void validate_pose_config(const G2Config &c)
         throw std::runtime_error("G2 模型不是非退化 P0-P1-P2-P3 平行四边形");
     positive(c.budgets_.max_rmse_px_, "max_rmse_px");
     positive(c.budgets_.max_corner_error_px_, "max_corner_error_px");
+    positive(c.selection_.min_rmse_gap_px_, "min_rmse_gap_px");
     positive(c.selection_.min_z_m_, "min_z_m");
     positive(c.selection_.max_z_m_, "max_z_m");
     positive(c.selection_.prior_max_age_s_, "prior_max_age_s");

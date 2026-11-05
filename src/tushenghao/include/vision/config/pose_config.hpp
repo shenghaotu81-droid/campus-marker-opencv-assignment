@@ -30,6 +30,9 @@ struct PoseBudgets
 
 struct SelectionConfig
 {
+    // 可空表示沿用原筛选；有值时，两支物理合法解须充分分离才发布Unique。
+    // 只做候选消歧，不将小差距整帧拒绝为NoSolution，单位原图px。
+    std::optional<double> min_rmse_gap_px_;
     // 未知安装约束保持空，不通过默认法向/距离偷偷排除第二解。
     std::optional<double> min_z_m_;
     std::optional<double> max_z_m_;

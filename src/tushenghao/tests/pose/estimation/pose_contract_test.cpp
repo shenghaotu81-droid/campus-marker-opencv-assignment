@@ -106,6 +106,56 @@ int main()
         g2_test::require(result.status_ == PoseStatus::Ambiguous && result.candidates_.size() == 2 &&
                           !result.selected_index_ && !result.T_camera_target_,
                           "T15 双合格解必须歧义，不能选择较小重投影误差");
+        // 差距是显式消歧证据；不足仍歧义，连绝对预算边界也不能绕过。
+        const auto best = base.candidates_[0].rmse_px_ < base.candidates_[1].rmse_px_ ? 0u : 1u;
+        const double separation = std::abs(base.candidates_[0].rmse_px_ - base.candidates_[1].rmse_px_);
+        g2_test::require(separation > 1e-6, "gap fixture must have distinguishable errors");
+        auto separated_cfg = permissive;
+        separated_cfg.selection_.min_rmse_gap_px_ = separation / 2;
+        auto separated = PoseEstimator(separated_cfg).estimate_planar(c.mark_points_m_, points,
+            c.camera_.image_size_, stamp_, c.mark_target_id_);
+        g2_test::require(separated.status_ == PoseStatus::Unique && separated.selected_index_ == best &&
+            separated.candidates_[best].eligible_ && !separated.candidates_[1-best].eligible_,
+            "sufficient gap must publish the measured best with one eligible candidate");
+        for (size_t i = 0; i < 2; ++i)
+            g2_test::require(separated.candidates_[i].rmse_px_ == base.candidates_[i].rmse_px_ &&
+                separated.candidates_[i].max_error_px_ == base.candidates_[i].max_error_px_ &&
+                cv::norm(separated.candidates_[i].pose_.t_m_ - base.candidates_[i].pose_.t_m_) == 0 &&
+                cv::norm(separated.candidates_[i].pose_.rvec_ - base.candidates_[i].pose_.rvec_) == 0,
+                "selection mutated raw IPPE evidence");
+        separated_cfg.selection_.min_rmse_gap_px_ = 2 * separation;
+        auto close = PoseEstimator(separated_cfg).estimate_planar(c.mark_points_m_, points,
+            c.camera_.image_size_, stamp_, c.mark_target_id_);
+        g2_test::require(close.status_ == PoseStatus::Ambiguous && !close.T_camera_target_ &&
+            !close.selected_index_ && !close.control_usable_, "small gap must not force a pose");
+        separated_cfg.budgets_.max_rmse_px_ = (base.candidates_[0].rmse_px_ + base.candidates_[1].rmse_px_) / 2;
+        close = PoseEstimator(separated_cfg).estimate_planar(c.mark_points_m_, points,
+            c.camera_.image_size_, stamp_, c.mark_target_id_);
+        g2_test::require(close.status_ == PoseStatus::Ambiguous &&
+            close.candidates_[best].eligible_ && !close.candidates_[1-best].eligible_,
+            "one branch barely outside absolute budget bypassed gap protection");
+        auto noisy_pixels = points;
+        noisy_pixels[0].x += .8;
+        noisy_pixels[1].y -= .3;
+        auto noisy = PoseEstimator(permissive).estimate_planar(c.mark_points_m_, noisy_pixels,
+            c.camera_.image_size_, stamp_, c.mark_target_id_);
+        const double noisy_min = std::min(noisy.candidates_[0].rmse_px_, noisy.candidates_[1].rmse_px_);
+        g2_test::require(noisy_min > 1e-6, "noisy fixture needs nonzero residual");
+        separated_cfg.budgets_.max_rmse_px_ = noisy_min / 2;
+        auto none = PoseEstimator(separated_cfg).estimate_planar(c.mark_points_m_, noisy_pixels,
+            c.camera_.image_size_, stamp_, c.mark_target_id_);
+        g2_test::require(none.status_ == PoseStatus::NoSolution && !none.T_camera_target_,
+            "gap must not rescue candidates failing the original absolute screening");
+        for (double value : {0., -1., std::numeric_limits<double>::infinity(),
+                             std::numeric_limits<double>::quiet_NaN()})
+        {
+            auto invalid_gap = c;
+            invalid_gap.selection_.min_rmse_gap_px_ = value;
+            bool invalid = false;
+            try { PoseEstimator rejected(invalid_gap); }
+            catch (const std::runtime_error &) { invalid = true; }
+            g2_test::require(invalid, "zero/nonfinite/negative gap accepted");
+        }
         auto large = c.mark_points_m_;
         for (auto &p : large)
             p *= 1000;
@@ -134,6 +184,11 @@ int main()
             c.camera_.image_size_, stamp_, c.mark_target_id_, prior);
         g2_test::require(result.status_ == PoseStatus::Unique,
                           "T20 有独立可信历史时可以排除不符候选");
+        prior_cfg.selection_.min_rmse_gap_px_ = 2 * separation;
+        result = PoseEstimator(prior_cfg).estimate_planar(c.mark_points_m_, points,
+            c.camera_.image_size_, stamp_, c.mark_target_id_, prior);
+        g2_test::require(result.status_ == PoseStatus::Unique,
+            "gap must not undo independent trusted-prior exclusion");
         prior.stamp_.session_id_ = "old-session";
         result = PoseEstimator(prior_cfg).estimate_planar(c.mark_points_m_, points,
             c.camera_.image_size_, stamp_, c.mark_target_id_, prior);
@@ -163,7 +218,7 @@ int main()
             c.camera_.image_size_, stamp_, c.mark_target_id_, prior);
         g2_test::require(result.status_ == PoseStatus::Ambiguous,
                           "T25 过期历史不得消歧");
-        std::cout << "G2 pose contract T01-T25 PASS (24 permutations included)\n";
+        std::cout << "G2 pose contract T01-T25 + gap/absolute ordering PASS (24 permutations included)\n";
         return 0;
     }
     catch (const std::exception &e)

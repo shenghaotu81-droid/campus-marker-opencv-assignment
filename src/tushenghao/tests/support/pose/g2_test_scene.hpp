@@ -19,6 +19,8 @@ inline mark::pose::G2Config config()
     auto c = mark::pose::load_pose_config(root / "config/pose.yaml");
     c.budgets_.max_rmse_px_ = 0.05;
     c.budgets_.max_corner_error_px_ = 0.1;
+    // 旧筛选契约与新差距规则独立测试，避免生产调参改变测试前提。
+    c.selection_.min_rmse_gap_px_.reset();
     return c;
 }
 
