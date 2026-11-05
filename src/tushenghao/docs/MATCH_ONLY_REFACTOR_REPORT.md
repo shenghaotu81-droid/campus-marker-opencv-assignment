@@ -8,7 +8,7 @@
 
 本轮按用户后续授权实施原先延期的 D05–D09，以及建议书中的四边形直接给边、固定身份和完整性契约。保留第一批已经实施的质量标签、自检迁入测试等决定。本轮不把已改标签的残差、角误差、extension 变回拒绝门，也没有添加拟合质量拒绝预算。
 
-用户本轮授权在仓库 `docs/` 写新规则和报告、整理此前任务文档，因此将此前根目录的 [SLIMMING_REPORT.md](SLIMMING_REPORT.md)、[CORNER_FIT_REFACTOR_PROPOSAL.md](CORNER_FIT_REFACTOR_PROPOSAL.md) 移到这里并标注历史状态。其他历史取证文档及其源快照未清理；它们不参与构建。flow-guide 仍在 [src/tushenghao/docs/flow-guide.md](../src/tushenghao/docs/flow-guide.md)，没有移到仓库根目录。`main`、`refactor/lean` 没有改动。
+用户本轮授权在仓库 `docs/` 写新规则和报告、整理此前任务文档，因此将此前根目录的 [SLIMMING_REPORT.md](SLIMMING_REPORT.md)、[CORNER_FIT_REFACTOR_PROPOSAL.md](CORNER_FIT_REFACTOR_PROPOSAL.md) 移到这里并标注历史状态。其他历史取证文档及其源快照未清理；它们不参与构建。flow-guide 仍在 [src/tushenghao/docs/flow-guide.md](flow-guide.md)，没有移到仓库根目录。`main`、`refactor/lean` 没有改动。
 
 ## 2. V1.0.3 规则核对
 
@@ -38,13 +38,13 @@ PDF SHA256：V1.0.2=`fc3490a3c507161e6f9bb1bb86b4e1623c5e7ca4e67b55ca7ea75068418
 | 改动 | 位置 | 最终行为 |
 |---|---|---|
 | 删除D05–D09 | `src/detection/geometry/{parent,validation,completion}`及旧L观察入口 | 删除三L排列、仿射拟合／验证、M/S投影匹配、有界绑定、hypothesis/batch/完整性枚举；没有把原搜索搬进拟合 |
-| 直接匹配四边形 | [match_quad.cpp](../src/tushenghao/src/detection/geometry/matching/match_quad.cpp)、`contour_topology.hpp` | 当前白片局部归组、凸包实测顶点、四个不同角片、六边一凹的外角关系、三个长角＋一个短M；M固定P1，正绕序固定其余角 |
+| 直接匹配四边形 | [match_quad.cpp](../src/detection/geometry/matching/match_quad.cpp)、`contour_topology.hpp` | 当前白片局部归组、凸包实测顶点、四个不同角片、六边一凹的外角关系、三个长角＋一个短M；M固定P1，正绕序固定其余角 |
 | 清理中间值 | `geometry_types.hpp`、`prepared_image.hpp` | WhiteComponent只剩轮廓、bbox、碰边；删除ShapeObservation、ComponentAssignment等类型和PreparedFrame内的旧组件适配字段 |
-| 直接原图定位 | [corner_resolver.cpp](../src/tushenghao/src/detection/corners/measurement/corner_resolver.cpp)、`corner_observation.*` | 只接物理序四边形；统一以前邻→当前、当前→后邻给边提示。原图每帧分割一次；四角不能复用同一原图组件。删回调Source、工作图组件双向映射缓存与模型投影 |
-| 两条拟合路线 | [corner_edge_fit.cpp](../src/tushenghao/src/detection/corners/fitting/corner_edge_fit.cpp)、`periodic_line_fit.*` | 普通L2主路，失败后周期相位中位数＋后验位置回退。删零斜率、独立周期OLS、L1及全端点退路；拟合缓存从6槽减2槽，支持描述只留一个域 |
+| 直接原图定位 | [corner_resolver.cpp](../src/detection/corners/measurement/corner_resolver.cpp)、`corner_observation.*` | 只接物理序四边形；统一以前邻→当前、当前→后邻给边提示。原图每帧分割一次；四角不能复用同一原图组件。删回调Source、工作图组件双向映射缓存与模型投影 |
+| 两条拟合路线 | [corner_edge_fit.cpp](../src/detection/corners/fitting/corner_edge_fit.cpp)、`periodic_line_fit.*` | 普通L2主路，失败后周期相位中位数＋后验位置回退。删零斜率、独立周期OLS、L1及全端点退路；拟合缓存从6槽减2槽，支持描述只留一个域 |
 | 改候选排序 | 同上 | `s=(r0+r1)√(1/n0+1/n1)`，减轻短支持弧偶然低残差的偏好；无新增门、预算或可调系数。error仍为r0+r1，不将s伪装成误差或协方差 |
-| 精简CornerEvidence | [corner_types.hpp](../src/tushenghao/include/vision/types/detection/corner_types.hpp)、`corner_evidence_validation.cpp` | 删除stable_id字符串和模型边／顶点ID；保留物理身份、当前帧／原图组件、连续弧索引与像素、拟合线、double交点、raw／校正残差、extension、corner_error和质量输出 |
-| 重写编排 | [decode_stage.cpp](../src/tushenghao/src/detection/pipeline/decode/decode_stage.cpp)、`detector.cpp` | Detector不再加载部件模型；按独立匹配调用拟合／排序／校验／发布。删不再需要的方向假设语义归并及其测试，M身份由match契约保证 |
+| 精简CornerEvidence | [corner_types.hpp](../include/vision/types/detection/corner_types.hpp)、`corner_evidence_validation.cpp` | 删除stable_id字符串和模型边／顶点ID；保留物理身份、当前帧／原图组件、连续弧索引与像素、拟合线、double交点、raw／校正残差、extension、corner_error和质量输出 |
+| 重写编排 | [decode_stage.cpp](../src/detection/pipeline/decode/decode_stage.cpp)、`detector.cpp` | Detector不再加载部件模型；按独立匹配调用拟合／排序／校验／发布。删不再需要的方向假设语义归并及其测试，M身份由match契约保证 |
 | 配置、测试、构建清理 | `config/detector*.yaml`、`src/config/detector`、检测CMake及测试 | 删assignment_completion全部键、父验证／面积比／搜索上限、检测marker_geometry_path、原图组件映射预算及allowlist。原64px²内部边对分歧预算改名max_pair_disagreement_px2，数值不变；旧键严格报错 |
 
 这里的“外框”始终指80×80白色MARK的结构外框。115×120外板、屏幕boundingRect或三个L推测的第四角不能作输入。22/80是30/80与14/80的结构中点；它不具有严格透视不变性。只有通过结构匹配的粗框才进入拟合，精角始终从原图真实两边求交，不能用粗框顶点直接发布。
@@ -86,7 +86,7 @@ PDF SHA256：V1.0.2=`fc3490a3c507161e6f9bb1bb86b4e1623c5e7ca4e67b55ca7ea75068418
 
 **4360没有漏跑。**先在旧输入上独立消融：只并路线时，4360次全部成功，4359主路＋1回退，除路线编号外所有数值逐项完全相同；将原轮廓与边提示冻结后，再由当前构建的拟合器直接重放全部4360旧输入，仍4359主路＋1回退、0失败。新match不再产生重复父解释，frame313、382各少一个相同目标的父候选，故最终是1088×4=4352次。精度比较按同一1088帧、同一四物理角，未通过漏检难帧美化指标。
 
-新实现的4352次全走L2。frame784 P1由旧 `(352.3113008891,322)` 改为 `(352.5653669311,322)`，位移0.254066px；整帧RMSE从0.812881降至0.712787px。用户已接受新边提示下由主路恢复。冻结的[frame784原图轮廓与旧边提示](../src/tushenghao/tests/detection/data/frame784-p1.txt)仍在自动测试中检查**必须走第二路**并恢复原交点（1e-8px容差）；没有按帧号强行回退。
+新实现的4352次全走L2。frame784 P1由旧 `(352.3113008891,322)` 改为 `(352.5653669311,322)`，位移0.254066px；整帧RMSE从0.812881降至0.712787px。用户已接受新边提示下由主路恢复。冻结的[frame784原图轮廓与旧边提示](../tests/detection/data/frame784-p1.txt)仍在自动测试中检查**必须走第二路**并恢复原交点（1e-8px容差）；没有按帧号强行回退。
 
 4352角的新旧位移：中位0，P95=0.587441px，最大1.907949px；2084角变化超过1e-8px。位移是版本差异，不是真值误差。逐帧PnP有503帧变小、349帧变大、236帧在1e-9内相同；最大单帧增加0.497713px。因此不能宣称每帧更好。本轮“不退化”按相同帧集合的中位／P95／最大值、独立真值角误差和覆盖率一起判断。
 
@@ -165,7 +165,7 @@ PDF SHA256：V1.0.2=`fc3490a3c507161e6f9bb1bb86b4e1623c5e7ca4e67b55ca7ea75068418
 
 ## 9. 可复算材料与命令
 
-[validation/match-only](validation/match-only/)保存原4360、两路线消融、最终4352、合成前后TSV、前后PnP输出、最终G4输出和真值，均为gzip；[metrics.json](validation/match-only/metrics.json)为机器计算统计，[manifest.json](validation/match-only/manifest.json)记录压缩前后SHA256。完整视频输出保留在 `/tmp/match-final-replay/`；同配置旧版在 `/tmp/match-controlled-before-replay/`。
+[validation/match-only](../../../docs/validation/match-only)保存原4360、两路线消融、最终4352、合成前后TSV、前后PnP输出、最终G4输出和真值，均为gzip；[metrics.json](validation/match-only/metrics.json)为机器计算统计，[manifest.json](validation/match-only/manifest.json)记录压缩前后SHA256。完整视频输出保留在 `/tmp/match-final-replay/`；同配置旧版在 `/tmp/match-controlled-before-replay/`。
 
 ```bash
 cmake -S src/tushenghao -B build -DMARK_BUILD_G2=ON -DMARK_BUILD_G4=ON
@@ -175,7 +175,7 @@ ctest --test-dir build --output-on-failure
 build/marker_app --video data/raw/marker_video.avi --config src/tushenghao/config/detector.yaml
 build/corner_route_test data/raw/marker_video.avi /tmp/routes.tsv
 build/corner_route_test data/raw/calibration_video.avi /tmp/negative.tsv
-gzip -dc docs/validation/match-only/frozen-inputs-4360.txt.gz > /tmp/frozen-inputs.txt
+gzip -dc src/tushenghao/docs/validation/match-only/frozen-inputs-4360.txt.gz > /tmp/frozen-inputs.txt
 build/corner_route_test --frozen /tmp/frozen-inputs.txt /tmp/current-frozen.tsv
 python3 src/tushenghao/tests/detection/replay_metrics.py generate /tmp/new-truth
 # 生成truth.avi和truth.json；目录必须不存在，生成依赖Python OpenCV+NumPy，非生产依赖。
@@ -185,13 +185,13 @@ python3 src/tushenghao/tests/detection/replay_metrics.py generate /tmp/new-truth
 
 ```bash
 python3 src/tushenghao/tests/detection/replay_metrics.py compare \
-  --before-fits docs/validation/match-only/baseline-4360.tsv.gz \
-  --after-fits docs/validation/match-only/final-4352.tsv.gz \
-  --before-poses docs/validation/match-only/observations-before.yaml.gz \
-  --after-poses docs/validation/match-only/observations-after.yaml.gz \
-  --truth docs/validation/match-only/synthetic-truth.json \
-  --before-truth-fits docs/validation/match-only/synthetic-before.tsv.gz \
-  --after-truth-fits docs/validation/match-only/synthetic-after.tsv.gz \
+  --before-fits src/tushenghao/docs/validation/match-only/baseline-4360.tsv.gz \
+  --after-fits src/tushenghao/docs/validation/match-only/final-4352.tsv.gz \
+  --before-poses src/tushenghao/docs/validation/match-only/observations-before.yaml.gz \
+  --after-poses src/tushenghao/docs/validation/match-only/observations-after.yaml.gz \
+  --truth src/tushenghao/docs/validation/match-only/synthetic-truth.json \
+  --before-truth-fits src/tushenghao/docs/validation/match-only/synthetic-before.tsv.gz \
+  --after-truth-fits src/tushenghao/docs/validation/match-only/synthetic-after.tsv.gz \
   --output /tmp/metrics.json
 ```
 

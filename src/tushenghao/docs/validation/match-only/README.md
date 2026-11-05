@@ -17,7 +17,7 @@ TSV无表头，列依次为：frame_id、匹配索引（旧表为父候选索引
 冻结输入为重复记录：一行 `frame_id match_index physical_corner contour_point_count`，随后4行原图边提示端点（每行x y，两个边各两个端点），然后N行原图轮廓整数像素（x y）。帧号只用于输出索引，不传入拟合器。
 
 ```bash
-gzip -dc docs/validation/match-only/frozen-inputs-4360.txt.gz > /tmp/frozen-inputs.txt
+gzip -dc src/tushenghao/docs/validation/match-only/frozen-inputs-4360.txt.gz > /tmp/frozen-inputs.txt
 build/corner_route_test --frozen /tmp/frozen-inputs.txt /tmp/current-frozen.tsv
 ```
 
