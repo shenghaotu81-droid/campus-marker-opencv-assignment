@@ -1,8 +1,6 @@
-// 周期模型和三个估计器分别具名；所有状态都是局部 scratch，不读取图像、帧号或环境。
+// 周期相位中位数模型；所有状态都是局部 scratch，不读取图像、帧号或环境。
 #include "corners/fitting/periodic_line_fit.hpp"
 #include "vision/math/observed_geometry.hpp"
-#include <map>
-#include <set>
 #include <climits>
 
 namespace mark
@@ -49,73 +47,7 @@ namespace mark
             return {loss, physicalLine(axis, slope, center, intercept, coefficient)};
         }
 
-        // 消去截距后的坐标 L1 目标凸且分段线性；固定 40 次搜索，再精确复算区间拐点。
-        PeriodicLineFit refineL1(const std::vector<ScanPoint> &points,
-                                 const PeriodicLineFit &initial, PhaseScratch &scratch)
-        {
-            const int axis = initial.axis;
-            const double center = initial.line[axis ? 3 : 2];
-            const double slope = initial.line[axis ? 0 : 1] / initial.line[axis ? 1 : 0];
-            auto evaluate = [&](double candidate)
-            {
-                return phaseEstimate(points, axis, center, candidate, scratch);
-            };
-            // 每个扫描坐标的中位损失是任意 a/b/c 的下界；仅严格相等才采用快速证书。
-            std::map<double, std::vector<double>> scans;
-            double min_z = INFINITY, max_z = -INFINITY;
-            for (const auto &point : points)
-            {
-                scans[point.t].push_back(point.z);
-                min_z = std::min(min_z, point.z);
-                max_z = std::max(max_z, point.z);
-            }
-            double lower_bound = 0;
-            for (auto &scan : scans)
-            {
-                const double center_z = median(scan.second);
-                for (double z : scan.second)
-                    lower_bound += std::abs(z - center_z);
-            }
-            const auto zero = evaluate(0);
-            auto best = evaluate(slope);
-            if (zero.first == lower_bound)
-                return best.first <= zero.first ? best.second : zero.second;
 
-            // 整数同相位的非零 dt 至少为 2，有限拐点均在 ±max(1,zmax-zmin) 内。
-            const double bound = std::max(1.0, max_z - min_z);
-            double lo = -bound, hi = bound;
-            for (int iteration = 0; iteration < 40; ++iteration)
-            {
-                const double left = (2 * lo + hi) / 3, right = (lo + 2 * hi) / 3;
-                if (evaluate(left).first <= evaluate(right).first)
-                    hi = right;
-                else
-                    lo = left;
-            }
-            auto consider = [&](double candidate)
-            {
-                auto estimate = evaluate(candidate);
-                if (estimate.first < best.first)
-                    best = std::move(estimate);
-            };
-            // 严格小于才换解；保留原斜率、中心、零斜率和首次拐点的确定性顺序。
-            consider((lo + hi) / 2);
-            consider(0);
-            std::set<double> seen;
-            for (size_t i = 0; i < points.size(); ++i)
-                for (size_t j = 0; j < i; ++j)
-                {
-                    if (points[i].h != points[j].h)
-                        continue;
-                    const double dt = points[i].t - points[j].t;
-                    if (dt == 0)
-                        continue;
-                    const double knot = (points[i].z - points[j].z) / dt;
-                    if (knot >= lo && knot <= hi && seen.insert(knot).second)
-                        consider(knot);
-                }
-            return best.second;
-        }
     }
 
     double scanPhase(cv::Point2d point, int axis)
@@ -142,21 +74,16 @@ namespace mark
         return std::abs(raw - (axis ? -line[1] : line[0]) * coefficient * scanPhase(point, axis));
     }
 
-    std::optional<PeriodicLineFit> fitPeriodicLine(const std::vector<cv::Point2d> &support,
-                                                   LineFitModel model)
+    std::optional<PeriodicLineFit> fitPeriodicLine(const std::vector<cv::Point2d> &support)
     {
         PeriodicLineFitScratch scratch;
-        return fitPeriodicLine(support, model, scratch);
+        return fitPeriodicLine(support, scratch);
     }
 
     std::optional<PeriodicLineFit> fitPeriodicLine(const std::vector<cv::Point2d> &support,
-                                                   LineFitModel model,
                                                    PeriodicLineFitScratch &scratch)
     {
-        if (support.size() < 3 ||
-            (model != LineFitModel::PeriodicLeastSquares &&
-             model != LineFitModel::PeriodicPhaseMedian && model != LineFitModel::PeriodicL1 &&
-             model != LineFitModel::PeriodicZeroSlope))
+        if (support.size() < 3)
             return std::nullopt;
         cv::Point2d minimum{INFINITY, INFINITY}, maximum{-INFINITY, -INFINITY};
         for (auto point : support)
@@ -210,17 +137,10 @@ namespace mark
         if (!std::isfinite(a) || !std::isfinite(b) || !std::isfinite(c))
             return std::nullopt;
         auto result = physicalLine(axis, a, mt, b, c);
-        if (model == LineFitModel::PeriodicLeastSquares)
-            return result;
         for (auto &group : scratch.groups)
             group.reserve(points.size());
         const double slope = result.line[axis ? 0 : 1] / result.line[axis ? 1 : 0];
-        // 零斜率是同一模型的 a=0 子空间；仍要求完整支持和两相位/满秩，不宣称必然最优。
-        result = phaseEstimate(points, axis, mt,
-                               model == LineFitModel::PeriodicZeroSlope ? 0 : slope, scratch)
-                     .second;
-        if (model == LineFitModel::PeriodicL1)
-            result = refineL1(points, result, scratch);
+        result = phaseEstimate(points, axis, mt, slope, scratch).second;
         for (double value : result.line.val)
             if (!std::isfinite(value))
                 return std::nullopt;

@@ -6,7 +6,7 @@
 #include "corners/fitting/periodic_line_fit.hpp"
 #include "corners/measurement/corner_resolver.hpp"
 #include "corners/publication/detection_publication.hpp"
-#include "recovery112_reference.hpp"
+#include "edge_fit_reference.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include "support_pixel_count.hpp"
 #include <limits>
@@ -29,7 +29,7 @@ namespace
         for (int y = 20; y <= 60; ++y)
             support.emplace_back(100 + 0.125 * (y - 40) + 0.75 * (y % 2 ? 1 : -1), y);
         const auto vertical =
-            mark::fitPeriodicLine(support, mark::LineFitModel::PeriodicLeastSquares);
+            mark::fitPeriodicLine(support);
         check(vertical && vertical->axis == 1, "periodic OLS axis wrong");
         check(std::abs(vertical->line[0] / vertical->line[1] - 0.125) < 1e-12 &&
                   std::abs(vertical->line[2] - 100) < 1e-12 &&
@@ -42,29 +42,17 @@ namespace
         for (auto &point : support)
             std::swap(point.x, point.y);
         const auto horizontal =
-            mark::fitPeriodicLine(support, mark::LineFitModel::PeriodicPhaseMedian);
+            mark::fitPeriodicLine(support);
         check(horizontal && horizontal->axis == 0 &&
                   std::abs(horizontal->line[1] / horizontal->line[0] - 0.125) < 1e-12 &&
                   std::abs(horizontal->coefficient - 0.75) < 1e-12,
               "horizontal periodic symmetry wrong");
-        support.clear();
-        for (int y = 20; y <= 60; ++y)
-            support.emplace_back(100 + (y % 2 ? 1 : -1), y);
-        support.emplace_back(103, 20);
-        const auto zero = mark::fitPeriodicLine(support, mark::LineFitModel::PeriodicZeroSlope);
-        const auto l1 = mark::fitPeriodicLine(support, mark::LineFitModel::PeriodicL1);
-        check(zero && zero->line[0] == 0 && zero->line[2] == 100 && zero->coefficient == 1,
-              "zero slope did not use phase medians");
-        check(l1 && std::abs(l1->line[2] - 100) < 1e-10 && std::abs(l1->coefficient - 1) < 1e-10,
-              "L1 refinement wrong");
-        check(!mark::fitPeriodicLine({{100, 20}, {100, 22}, {100, 24}},
-                                     mark::LineFitModel::PeriodicLeastSquares),
+        check(!mark::fitPeriodicLine({{100, 20}, {100, 22}, {100, 24}}),
               "single phase model accepted");
-        check(!mark::fitPeriodicLine({{100, 20}, {101, 21}, {100, 20}, {101, 21}},
-                                     mark::LineFitModel::PeriodicLeastSquares),
+        check(!mark::fitPeriodicLine({{100, 20}, {101, 21}, {100, 20}, {101, 21}}),
               "rank deficient model accepted");
         support[0].x = std::numeric_limits<double>::quiet_NaN();
-        check(!mark::fitPeriodicLine(support, mark::LineFitModel::PeriodicZeroSlope),
+        check(!mark::fitPeriodicLine(support),
               "nonfinite periodic support accepted");
         check(mark::scanPhase({-3, -2}, 0) == 1 && mark::scanPhase({-3, -2}, 1) == -1 &&
                   mark::scanPhase({0, 1.6}, 1) == -1,
@@ -79,7 +67,7 @@ namespace
         mark::EdgePairFitTrace indexed_trace, reference_trace;
         const auto indexed =
             mark::fitObservedEdgePair(contour, edges, config, &indexed_trace);
-        const auto reference = mark::recovery112_reference::fitObservedEdgePair(
+        const auto reference = mark::edge_fit_reference::fitObservedEdgePair(
             contour, edges, config, &reference_trace);
         check(indexed_trace.arcs.size() == reference_trace.arcs.size(),
               "eligible arc coverage changed");
@@ -140,7 +128,7 @@ namespace
         auto config = fixture::cornerConfig();
         config.min_line_points_ = 10;
         config.max_line_fit_error_ = 0.5;
-        config.observation_budget_ = mark::CornerObservationBudget{3, 9, 4.5, 2, 13.5, 9.5, 14};
+        config.observation_budget_ = mark::CornerObservationBudget{3, 9, 2, 13.5, 9.5, 14};
         size_t comparisons = 0;
         for (int variation = 0; variation < 5; ++variation)
         {
@@ -209,9 +197,9 @@ namespace
         auto config = fixture::cornerConfig();
         config.min_line_points_ = 10;
         config.max_line_fit_error_ = 0.5;
-        config.observation_budget_ = mark::CornerObservationBudget{3, 9, 4.5, 2, 13.5, 9.5, 14};
+        config.observation_budget_ = mark::CornerObservationBudget{3, 9, 2, 13.5, 9.5, 14};
         const auto resolved =
-            mark::resolveObservedCorners(scene.frame, scene.hypothesis, scene.geometry, config);
+            fixture::resolve(scene,config);
         check(bool(resolved.measurement_), resolved.rejection_reason_.c_str());
         std::optional<mark::CornerEvidence> selected;
         size_t periodic_edge = 0;
@@ -372,11 +360,11 @@ namespace
     void qualityLabels() {
         const auto scene=fixture::scene();
         auto c=fixture::cornerConfig();
-        const auto before=mark::resolveObservedCorners(scene.frame,scene.hypothesis,scene.geometry,c);
+        const auto before=fixture::resolve(scene,c);
         c.max_line_fit_error_=0;
         c.max_corner_error_=0;
         c.observation_budget_->max_support_extension_px=0;
-        const auto after=mark::resolveObservedCorners(scene.frame,scene.hypothesis,scene.geometry,c);
+        const auto after=fixture::resolve(scene,c);
         check(before.measurement_ && after.measurement_, "quality thresholds dropped measurement");
         check(before.measurement_->physical_corners_==after.measurement_->physical_corners_, "labels changed corner coordinates");
         std::string reason;
@@ -410,7 +398,7 @@ namespace
         c.min_line_points_ = 10;
         c.max_line_fit_error_ = 0.5;
         c.max_corner_error_ = 1.5;
-        c.observation_budget_ = mark::CornerObservationBudget{1, 2, 4.5, 2, 13.5, 9.5, 14};
+        c.observation_budget_ = mark::CornerObservationBudget{1, 2, 2, 13.5, 9.5, 14};
         auto result = mark::fitObservedEdgePair(contours.at(0), edges, c);
         check(bool(result.evidence), result.reason.c_str());
         check(cv::norm(result.evidence->intersection_ - expected) <= 2,
@@ -462,17 +450,14 @@ namespace
         c.min_line_points_ = 10;
         c.max_line_fit_error_ = 0.5;
         c.max_corner_error_ = 1.5;
-        c.observation_budget_ = mark::CornerObservationBudget{3, 9, 4.5, 2, 13.5, 9.5, 14};
+        c.observation_budget_ = mark::CornerObservationBudget{3, 9, 2, 13.5, 9.5, 14};
         auto result = mark::fitObservedEdgePair(contour, edges, c);
         check(bool(result.evidence), result.reason.c_str());
         check(std::isfinite(result.evidence->corner_error_px_), "video corner label missing");
         // 真实弧证据送进生产复算校验，防止只通过局部fit却违反连续性或端点绑定。
         auto evidence = *result.evidence;
-        evidence.stable_id_ = "frame-1/M1";
         evidence.component_id_ = 7;
         evidence.physical_corner_ = static_cast<mark::PhysicalCorner>(1);
-        evidence.model_vertex_id_ = 1;
-        evidence.model_edge_ids_ = {0, 1};
         std::string reason;
         check(mark::verifyCornerEvidence(evidence, evidence.intersection_, 1, c, reason),
               reason.c_str());
@@ -480,6 +465,21 @@ namespace
             for (auto p : arc)
                 check(std::find(contour.begin(), contour.end(), cv::Point(p)) != contour.end(),
                       "fabricated video support");
+    }
+
+    void frame784Fallback() {
+        std::ifstream source(std::filesystem::path(VISION_SOURCE_ROOT)/"tests/detection/data/frame784-p1.txt");
+        check(bool(source),"frame 784 frozen fixture missing");
+        cv::Point2d expected;source>>expected.x>>expected.y;
+        std::array<std::array<cv::Point2d,2>,2> edges;
+        for(auto &edge:edges)for(auto &p:edge)source>>p.x>>p.y;
+        std::vector<cv::Point> contour;int x,y;while(source>>x>>y)contour.emplace_back(x,y);
+        auto c=fixture::cornerConfig();c.min_line_points_=10;c.max_line_fit_error_=.5;
+        c.observation_budget_=mark::CornerObservationBudget{3,9,2,13.5,9.5,14};
+        mark::EdgePairFitTrace trace;auto fit=mark::fitObservedEdgePair(contour,edges,c,&trace);
+        check(bool(fit.evidence),fit.reason.c_str());
+        check(trace.pairs.back().stage==1,"frozen old input no longer exercises periodic posterior fallback");
+        check(cv::norm(fit.evidence->intersection_-expected)<1e-8,"frozen fallback corner changed");
     }
 
 }
@@ -497,6 +497,7 @@ int main()
           {"FragmentedVideoBoundary", fragmentedVideoBoundary},
           {"ManySimplifiedSegments", manySimplifiedSegments},
           {"PeriodicParameters", periodicParameters},
+          {"Frame784FrozenFallback",frame784Fallback},
           {"PeriodicEvidenceContract", periodicEvidenceContract},
           {"IndexedSearchReference", indexedSearchReference}})
     {

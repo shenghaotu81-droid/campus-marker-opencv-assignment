@@ -24,21 +24,6 @@ namespace mark::observed
         return std::isfinite(p.x) && std::isfinite(p.y);
     }
 
-    // 原三L矩阵只消费不重估；整体镜像不能混同局部模板绕向。
-    inline bool validAffine(const cv::Mat &m)
-    {
-        return m.rows == 2 && m.cols == 3 && m.type() == CV_64FC1 && cv::checkRange(m) &&
-               (m.at<double>(0, 0) * m.at<double>(1, 1) - m.at<double>(0, 1) * m.at<double>(1, 0)) >
-                   0;
-    }
-
-    // 模型投影只能引导验证，不作为任何有效角点输出。
-    inline cv::Point2d project(const cv::Mat &m, cv::Point2d p)
-    {
-        return {m.at<double>(0, 0) * p.x + m.at<double>(0, 1) * p.y + m.at<double>(0, 2),
-                m.at<double>(1, 0) * p.x + m.at<double>(1, 1) * p.y + m.at<double>(1, 2)};
-    }
-
     // 点到有限线段；裁剪的是内部投影参数，不是检测角坐标。
     inline double segmentDistance(cv::Point2d p, cv::Point2d a, cv::Point2d b)
     {

@@ -1,43 +1,10 @@
 #pragma once
-
+#include "vision/types/detection/prepared_image.hpp"
 #include "vision/types/detection/corner_types.hpp"
 #include "vision/config/detector_config.hpp"
-#include "vision/types/detection/geometry_types.hpp"
-#include "vision/types/marker_geometry.hpp"
-#include "vision/types/detection/prepared_image.hpp"
-
-namespace mark
-{
-
-    // 原入口保留独立调用语义；decode 用此内部重载显式共享同帧只读来源索引。
-    struct OriginalContourSource;
-    CornerResolution resolveObservedCorners(const PreparedFrame &frame,
-                                            const std::vector<WhiteComponent> &components,
-                                            const GeometryHypothesis &hypothesis,
-                                            const MarkerGeometry &model, const CornerConfig &config,
-                                            const OriginalContourSource &source, ScreenOrder *screen_order = nullptr);
-
-    /**
-     * @brief 根据当前几何假设恢复四个物理角
-     *
-     * 输入：
-     * - 当前帧观测；
-     * - Block 2 几何假设；
-     * - MARK 模型；
-     * - 角点恢复配置。
-     *
-     * 输出：
-     * - 成功：CornerMeasurement + 四个 CornerEvidence；
-     * - 失败：FAILED + 中文拒绝原因。
-     *
-     * 不负责：
-     * - 屏幕排序；
-     * - 语义归并；
-     * - 稳定输出。
-     */
-    CornerResolution resolveObservedCorners(const PreparedFrame &frame,
-                                            const GeometryHypothesis &hypothesis,
-                                            const MarkerGeometry &model,
-                                            const CornerConfig &config);
-
-} // namespace mark
+#include "geometry/matching/match_quad.hpp"
+namespace mark {
+class OriginalContourIndex;
+CornerResolution resolveObservedCorners(const PreparedFrame&,const MatchQuad&,
+    const CornerConfig&,OriginalContourIndex&,ScreenOrder* = nullptr);
+}

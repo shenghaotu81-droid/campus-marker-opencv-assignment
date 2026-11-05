@@ -1,235 +1,49 @@
-// D01 配置契约：检测参数；离线输出由 AppConfig 持有。
+// 检测配置；离线输出由 AppConfig 持有，G2/G4各自拥有自己的配置。
 #pragma once
-
 #include <string>
-#include <cstddef>
 #include <optional>
-
-namespace mark
-{
-    // C3/C4/C5必须显式fixture或获批配置，缺预算不能沿用三L宽松门限。
-    struct AssignmentCompletionConfig
-    {
-        double max_boundary_distance_work_px;
-        double approximation_epsilon_work_px; // 简化上限；保留五比例并增加1/4及至多两额外顶点有界候选，不读真值
-        double max_direction_diff_deg;
-        double max_relative_area_error;
-        double boundary_sample_step_work_px;
-        size_t max_candidates;
-        size_t max_expansions;
-        size_t max_output_branches;
-    };
-    // 把 YAML 里的配置，映射成 C++ 结构，让 Detector 使用
-
-    // 检测器
-    // YAML detector.mode uses "SegmentedMark"; enum limits valid states.
-    // YAML detector.mode 使用字符串 "SegmentedMark"，enum 用于限制合法状态空间。
-    enum class DetectorMode
-    {
-        SegmentedMark
-    };          // 唯一检测模式，编排当前帧完整检测流程
-
-    // 输入相关配置
-    // Keep C++ structure aligned with YAML hierarchy for field-path validation.
-    // 保持 C++ 结构与 YAML 层级一致，便于错误字段路径对应。
-    struct InputConfig
-    {
-        std::string pixel_format = "BGR8";        // 图像格式（OpenCV 默认彩色格式）
-        std::string timestamp_unit = "us";        //时间戳单位是微秒
-    };
-
-    // 预处理参数（原图->resize->thershold->findCountours）
-    struct PreprocessConfig
-    {
-        int work_width = 960;
-        int work_height = 720;             // 图像统一缩到这个尺寸再算（快）
-        int threshold = 200;               // 二值化阈值，灰度超 200 变白——用来找白色角标
-    };
-
-    // 几何观察相关配置。
-    // Block2 使用这些参数从白色区域中提取几何信息。
-    // 具体阈值由后续合成数据测量确定。// TODO: 以下参数为占位值，待合成数据测量后调优（校内赛前）。
-    struct GeometryConfig
-    {
-        // 白色区域二值化阈值。
-        // 为什么需要：
-        // extractWhiteComponents 需要把白色 MARK 区域从背景中分离出来。
-        // 当前值只是占位，后续通过数据测量调整。
-        int white_threshold_ = 200;
-
-        // approxPolyDP 多边形简化精度。（简化误差）
-        // 为什么需要：
-        // 原始 contour 点数量可能过多，需要压缩成几何顶点。
-        // 当前值只是占位。
-        double approximation_epsilon_ = 2.0;
-
-        // 白色组件面积过滤下限。
-        // 为什么需要：
-        // 去除噪声产生的小连通区域。
-        // 当前值只是占位。
-        double min_area_ = 0.0;
-
-        // 几何假设搜索最大数量。
-        // 防止组合爆炸导致资源不可控。
-        std::size_t max_hypothesis_count_ = 1000;
-
-        // Block2 Step 7 几何验证最大允许残差。
-        // 用于比较模型投影轮廓与实际观测轮廓。
-        double max_validation_residual_ = 5.0;
-
-        // Step 7 面积比例验证范围。
-        // ratio = 投影面积 / 观测面积。
-        double min_area_ratio_ = 0.5;
-
-        double max_area_ratio_ = 2.0;
-    };
-
-    /**
-     * @brief Block 3 角点恢复配置（Block 3 角点恢复的 6 个可调参数（局部搜索范围、最小点数、拟合误差、最小夹角、交点误差、截断拒绝））
-     *
-     * 控制：
-     * - 局部边搜索；
-     * - 直线拟合；
-     * - 交点稳定性检查。
-     *
-     * 不负责：
-     * - 屏幕排序；
-     * - 语义归并；
-     * - 时序稳定。
-     */
-    // G4 原图边关联预算没有生产默认值；显式fixture可赋值，正式值待报告审批。
-    struct CornerObservationBudget
-    {
-        double max_edge_direction_diff_deg;
-        double max_edge_position_distance_px;
-        double max_component_mapping_distance_px;
-        double turn_trim_distance_px;
-        double max_turn_connection_length_px;
-        double max_support_extension_px;
-        double min_support_span_px;
-    };
-
-    struct CornerConfig
-    {
-
-        /**
-         * @brief 拟合直线所需最少点数
-         *
-         * 点数不足时，
-         * 当前边没有足够观测证据。
-         */
-        int min_line_points_{5};
-
-        /**
-         * @brief 最大直线拟合误差
-         *
-         * 超过该值说明当前边段不满足直线假设。
-         */
-        double max_line_fit_error_{2.0};
-
-        /**
-         * @brief 两条边允许的最小夹角
-         *
-         * 防止近平行直线产生不稳定交点。
-         */
-        double min_intersection_angle_deg_{10.0};
-
-        /**
-         * @brief 最大角点交点误差
-         *
-         * 检查交点是否仍位于实际转折附近。
-         */
-        double max_corner_error_{5.0};
-
-
-        /**
-         * @brief Block 3 轮廓近似参数
-         *
-         * 用于 corner_resolver.cpp 内部 approxPolyDP。
-         *
-         * 与 Block 2 的 GeometryConfig::approximation_epsilon_
-         * 分开维护。
-         *
-         * Block 2 负责形状观察，
-         * Block 3 负责角点边定位，
-         * 两者调参目的不同。
-         */
-        double approximation_epsilon_{2.0};
-
-
-        /**
-         * @brief 假设间几何一致性阈值
-         *
-         * 用于 Step 5 语义归并时，
-         * 判断两个 CornerMeasurement 是否描述同一个几何对象。
-         *
-         * 比较公式：
-         *
-         * Σ ||pi - qi||²
-         *
-         * 单位：
-         * pixel²
-         *
-         * 它不是单角误差阈值，
-         * 不参与直线拟合和角点检测。
-         */
-        double semantic_geometry_threshold_{64.0};
-
-        // 缺预算表示阶段未就绪，不沿用旧占位参数偷偷开始正式定位。
-        std::optional<CornerObservationBudget> observation_budget_;
-    };
-
-    // 调试开关
-    struct DebugConfig
-    {
-        bool timing_enabled = false;         // 打开处理耗时统计
-
-    };
-
-    // DetectorConfig 总结构
-    struct DetectorConfig
-    {
-        int schema_version = 1;           // 配置文件版本号，以后加字段就升版
-
-        InputConfig input;
-
-        PreprocessConfig preprocess;
-
-        GeometryConfig geometry_;
-
-        /**
-         * @brief Block 3 角点恢复配置
-         *
-         * 控制物理角恢复阶段的搜索和误差判断。
-         */
-        CornerConfig corner_;   // 从 detector.yaml 的 corner: 节点读值，填进 config.corner_（后面调用）
-        std::optional<AssignmentCompletionConfig> assignment_completion_;
-
-        // MARK 几何模型 YAML 路径
-        // 用于 Block 2 geometry matcher 加载模型几何描述。
-        std::string marker_geometry_path_ = "config/marker_geometry.yaml";
-
-        DetectorMode mode = DetectorMode::SegmentedMark;
-
-
-
-        DebugConfig debug;
-    };              // 和 YAML 配置层级一致！参数  给定默认值再覆盖（如果 YAML 没写，使用默认值）
-
-} // namespace mark
-
-/*
-读取 app.yaml
-
-        ↓
-
-AppConfig
-
-        ↓
-
-DetectorConfig
-
-        ↓
-
-创建 Detector（使用配置进行检测）
-*/
+namespace mark {
+enum class DetectorMode { SegmentedMark };
+struct InputConfig {
+    std::string pixel_format="BGR8";
+    std::string timestamp_unit="us";
+};
+struct PreprocessConfig {
+    int work_width=960,work_height=720;
+    int threshold=200; // 当前原图白片分割阈值；工作图另读 geometry.white_threshold。
+};
+struct GeometryConfig {
+    int white_threshold_=200;
+    double approximation_epsilon_=2.; // 工作图轮廓简化尺度，非拟合质量门。
+    double min_area_=0.;
+};
+struct CornerObservationBudget {
+    double max_edge_direction_diff_deg;
+    double max_edge_position_distance_px;
+    double turn_trim_distance_px;
+    double max_turn_connection_length_px;
+    double max_support_extension_px; // 质量标签阈值，不拒绝交点。
+    double min_support_span_px;
+};
+struct CornerConfig {
+    int min_line_points_{5};
+    double max_line_fit_error_{2.}; // 残差质量标签阈值。
+    double min_intersection_angle_deg_{10.}; // 数值求交的原有病态角限制。
+    double max_corner_error_{5.}; // 交点到实测转折弧的距离标签阈值。
+    double approximation_epsilon_{2.}; // 原图支持候选，与工作图观察独立。
+    // 原 semantic_geometry_threshold 的拟合内部用途；数值保持64 px²。
+    // 同一角的两个可行边对若产生冲突交点，仍不能强选唯一角。
+    double max_pair_disagreement_px2_{64.};
+    std::optional<CornerObservationBudget> observation_budget_;
+};
+struct DebugConfig { bool timing_enabled=false; };
+struct DetectorConfig {
+    int schema_version=1;
+    InputConfig input;
+    PreprocessConfig preprocess;
+    GeometryConfig geometry_;
+    CornerConfig corner_;
+    DetectorMode mode=DetectorMode::SegmentedMark;
+    DebugConfig debug;
+};
+}

@@ -3,7 +3,6 @@
 #include "detector/config.hpp"
 #include "vision/detection/detector.hpp"
 #include "preprocess/preprocess.hpp"
-#include "corners/semantics/semantic_resolver.hpp"
 #include "block3_fixture.hpp"
 #include "corner_evidence_check.hpp"
 #include "corners/measurement/corner_resolver.hpp"
@@ -117,49 +116,17 @@ namespace
     }
 
     // 零语义门限表示精确相等，不应把同一组四点判成冲突。
-    void zeroSemanticThreshold()
-    {
-        mark::CornerMeasurement measurement{};
-        measurement.physical_corners_ = {{{0, 0}, {10, 0}, {10, 10}, {0, 10}}};
-        for (auto &evidence : measurement.evidence_)
-            evidence.error_ = 0;
-        mark::CornerConfig cfg{};
-        cfg.semantic_geometry_threshold_ = 0;
-        auto result = mark::resolveSemantics({measurement, measurement}, false, cfg);
-        check(result.geometry_consistent_ && result.orientation_unique_,
-              "exact equality rejected at zero");
-    }
+
 
     // 同残差的测量容器重排后仍由稳定观测编号决定，非法残差不能参与选择。
-    void stableSemantics()
-    {
-        auto s = fixture::scene();
-        auto r = mark::resolveObservedCorners(s.frame, s.hypothesis, s.geometry,
-                                              fixture::cornerConfig());
-        check(bool(r.measurement_), "fixture corner failed");
-        auto a = *r.measurement_, b = a;
-        for (auto &e : a.evidence_)
-            e.stable_id_ = "a/" + e.stable_id_;
-        for (auto &e : b.evidence_)
-            e.stable_id_ = "b/" + e.stable_id_;
-        for (auto input : {std::vector<mark::CornerMeasurement>{a, b},
-                           std::vector<mark::CornerMeasurement>{b, a}})
-        {
-            auto result = mark::resolveSemantics(input, false, fixture::cornerConfig());
-            check(result.retained_measurements_[0].evidence_[0].stable_id_[0] == 'a',
-                  "residual tie depends on input order");
-        }
-        a.evidence_[0].error_ = std::numeric_limits<double>::quiet_NaN();
-        check(!mark::resolveSemantics({a}, false, fixture::cornerConfig()).geometry_consistent_,
-              "NaN residual accepted");
-    }
+
 
     // 凸四点不是完整证据；错物理标签/截断/伪交点/NaN误差均须拒绝。
     void invalidEvidence()
     {
         auto s = fixture::scene();
         auto c = fixture::cornerConfig();
-        auto r = mark::resolveObservedCorners(s.frame, s.hypothesis, s.geometry, c);
+        auto r = fixture::resolve(s,c);
         check(bool(r.measurement_), "fixture failed");
         auto order =
             mark::orderScreenCorners(r.measurement_->physical_corners_, c).screen_order_.value();
@@ -236,7 +203,7 @@ namespace
                                                 &mark::CornerConfig::max_corner_error_,
                                                 &mark::CornerConfig::min_intersection_angle_deg_,
                                                 &mark::CornerConfig::approximation_epsilon_,
-                                                &mark::CornerConfig::semantic_geometry_threshold_};
+                                                &mark::CornerConfig::max_pair_disagreement_px2_};
         for (auto field : fields)
             for (double value : {std::numeric_limits<double>::quiet_NaN(),
                                  std::numeric_limits<double>::infinity()})
@@ -259,17 +226,10 @@ namespace
         double mark::CornerObservationBudget::*observation_fields[] = {
             &mark::CornerObservationBudget::max_edge_direction_diff_deg,
             &mark::CornerObservationBudget::max_edge_position_distance_px,
-            &mark::CornerObservationBudget::max_component_mapping_distance_px,
             &mark::CornerObservationBudget::turn_trim_distance_px,
             &mark::CornerObservationBudget::max_turn_connection_length_px,
             &mark::CornerObservationBudget::max_support_extension_px,
             &mark::CornerObservationBudget::min_support_span_px};
-        double mark::AssignmentCompletionConfig::*assignment_fields[] = {
-            &mark::AssignmentCompletionConfig::max_boundary_distance_work_px,
-            &mark::AssignmentCompletionConfig::approximation_epsilon_work_px,
-            &mark::AssignmentCompletionConfig::max_direction_diff_deg,
-            &mark::AssignmentCompletionConfig::max_relative_area_error,
-            &mark::AssignmentCompletionConfig::boundary_sample_step_work_px};
         for (double value :
              {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()})
         {
@@ -291,24 +251,6 @@ namespace
                 }
                 check(threw, "nonfinite observation budget accepted");
             }
-            for (auto field : assignment_fields)
-            {
-                mark::AppConfig app{};
-                app.detector_config = config();
-                app.detector_config.assignment_completion_ =
-                    mark::AssignmentCompletionConfig{3, 1, 10, 0.08, 1, 100, 100, 100};
-                app.detector_config.assignment_completion_.value().*field = value;
-                bool threw = false;
-                try
-                {
-                    mark::validateConfig(app);
-                }
-                catch (const mark::ConfigError &)
-                {
-                    threw = true;
-                }
-                check(threw, "nonfinite assignment budget accepted");
-            }
         }
         auto path =
             std::filesystem::temp_directory_path() /
@@ -317,17 +259,14 @@ namespace
         mark::AppConfig app{};
         app.detector_config = config();
         app.detector_config.corner_ = fixture::cornerConfig();
-        app.detector_config.assignment_completion_ =
-            mark::AssignmentCompletionConfig{3, 1, 10, 0.08, 1, 100, 100, 100};
         mark::writeEffectiveConfig(app, path);
         auto restored = mark::loadConfig(path).detector_config;
-        check(restored.corner_.observation_budget_->max_support_extension_px == 6 &&
-                  restored.assignment_completion_->max_expansions == 100,
+        check(restored.corner_.observation_budget_->max_support_extension_px == 6,
               "explicit budget lost on roundtrip");
         std::ifstream source(path);
         std::string text((std::istreambuf_iterator<char>(source)), {});
         source.close();
-        for (const std::string suffix : {"\nunknown_budget: 1\n", "\nschema_version: 1\n"})
+        for (const std::string suffix : {"\nunknown_budget: 1\n", "\nschema_version: 1\n", "\nmarker_geometry_path: obsolete.yaml\n"})
         {
             {
                 std::ofstream out(path);
@@ -462,8 +401,6 @@ int main()
         {"sequence", sequence},
         {"near_tie", nearTie},
         {"nonfinite", nonFinite},
-        {"zero_semantic_threshold", zeroSemanticThreshold},
-        {"stable_semantics", stableSemantics},
         {"invalid_evidence", invalidEvidence},
         {"preprocess_mapping", preprocessMapping},
         {"budget_config", budgetConfig},

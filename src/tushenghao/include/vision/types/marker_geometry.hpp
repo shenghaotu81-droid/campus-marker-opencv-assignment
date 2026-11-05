@@ -10,15 +10,15 @@
 
 namespace mark
 {
-    // Q04→D11/P01/D16：固定图纸的四物理角身份；仅共享身份，不共享拟合/复算结果。
+    // G2图纸取点的固定身份；检测直接接四边形，不再消费部件边号。
     struct ModelCornerBinding
     {
         const char *part;
-        int vertex, a, b;
+        int vertex;
     };
     using ModelCornerContract = std::array<ModelCornerBinding, 4>;
     inline constexpr ModelCornerContract model_corner_contract{{
-        {"L0", 0, 5, 0}, {"M1", 1, 0, 1}, {"L2", 0, 5, 0}, {"L3", 0, 5, 0}}};
+        {"L0", 0}, {"M1", 1}, {"L2", 0}, {"L3", 0}}};
 
     // 一个白色几何块（L/M/S）的模型
     // 几何多边形模型：描述一个 MARK 几何组件的顶点和锚点。

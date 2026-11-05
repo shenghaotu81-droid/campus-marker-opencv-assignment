@@ -24,10 +24,8 @@ namespace mark
         std::array<std::vector<double>, 2> groups;
     };
 
+    std::optional<PeriodicLineFit> fitPeriodicLine(const std::vector<cv::Point2d> &support);
     std::optional<PeriodicLineFit> fitPeriodicLine(const std::vector<cv::Point2d> &support,
-                                                   LineFitModel model);
-    std::optional<PeriodicLineFit> fitPeriodicLine(const std::vector<cv::Point2d> &support,
-                                                   LineFitModel model,
                                                    PeriodicLineFitScratch &scratch);
     double scanPhase(cv::Point2d point, int axis);
     double periodicLineDistance(cv::Point2d point, const cv::Vec4d &line, int axis,

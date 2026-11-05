@@ -51,7 +51,7 @@ namespace
         detector.corner_.min_intersection_angle_deg_ = 10.0;
         detector.corner_.max_corner_error_ = 5.0;
         detector.corner_.approximation_epsilon_ = 2.0;
-        detector.corner_.semantic_geometry_threshold_ = 64.0; // Step 5 假设间几何一致性阈值 单位：pixel²
+        detector.corner_.max_pair_disagreement_px2_ = 64.0; // Step 5 假设间几何一致性阈值 单位：pixel²
 
         return config;
     }
@@ -83,7 +83,7 @@ namespace
                a.corner_.min_intersection_angle_deg_ == b.corner_.min_intersection_angle_deg_ &&
                a.corner_.max_corner_error_ == b.corner_.max_corner_error_ &&
                a.corner_.approximation_epsilon_ == b.corner_.approximation_epsilon_ &&
-               a.corner_.semantic_geometry_threshold_ == b.corner_.semantic_geometry_threshold_;
+               a.corner_.max_pair_disagreement_px2_ == b.corner_.max_pair_disagreement_px2_;
     }
 
 } // namespace

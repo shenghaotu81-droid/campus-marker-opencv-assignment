@@ -1,7 +1,6 @@
 // 旧Validator只看凸四点即可放行；这里要求四角真实来源并复算证据，失败给明确原因。
 #include "corner_evidence_check.hpp"
 #include "corners/fitting/periodic_line_fit.hpp"
-#include "vision/types/marker_geometry.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
 #include <set>
@@ -31,12 +30,9 @@ namespace mark
             return fail("CORNER_BUDGET_NOT_CONFIGURED");
         if (e.truncated_)
             return fail("TRUNCATED_EVIDENCE: 不能发布截断角");
-        const auto &binding = model_corner_contract[index];
-        if (!e.original_observation_ || e.stable_id_.empty() ||
+        if (!e.original_observation_ ||
             e.component_id_ == std::numeric_limits<size_t>::max() ||
             static_cast<int>(e.physical_corner_) != index ||
-            e.model_vertex_id_ != binding.vertex ||
-            e.model_edge_ids_ != std::array<int, 2>{binding.a, binding.b} ||
             e.observed_segment_ids_.size() != 2 || e.observed_segment_ids_[0] < 0 ||
             e.observed_segment_ids_[1] < 0 ||
             e.observed_segment_ids_[0] == e.observed_segment_ids_[1] ||
@@ -61,9 +57,10 @@ namespace mark
             double model_sum = 0, model_maximum = 0;
             const auto kind = e.line_model_kinds_[edge];
             // 周期参数不能相信调用方；从完整有序支持重建估计器，拒绝模型/轴/c/物理线篡改。
-            if (kind != LineFitModel::Legacy)
+            if (kind != LineFitModel::L2)
             {
-                auto rebuilt = fitPeriodicLine(support, kind);
+                if(kind!=LineFitModel::PeriodicPhaseMedian)return fail("UNKNOWN_LINE_MODEL");
+                auto rebuilt = fitPeriodicLine(support);
                 if (!rebuilt || rebuilt->axis != e.periodic_axes_[edge] ||
                     !same(rebuilt->coefficient, e.periodic_coefficients_[edge]))
                     return fail("PERIODIC_MODEL_MISMATCH");
@@ -93,7 +90,7 @@ namespace mark
                 maximum = std::max(maximum, d);
                 const cv::Vec4d normalized{direction.x, direction.y, origin.x, origin.y};
                 const double model_distance =
-                    kind == LineFitModel::Legacy
+                    kind == LineFitModel::L2
                         ? d
                         : periodicLineDistance(p, normalized, e.periodic_axes_[edge],
                                                e.periodic_coefficients_[edge]);
@@ -107,7 +104,7 @@ namespace mark
             if (segment[0] != support.front() || segment[1] != support.back())
                 return fail("SEGMENT_SUPPORT_MISMATCH");
             double mean = sum / support.size(), extension = lo > 0 ? lo : hi < 0 ? -hi : 0;
-            // raw 与校正残差分别复算；原 0.5 只约束所声明模型的平均垂距，旧字段定义不变。
+            // raw 与校正残差分别复算；超限只标质量，字段仍保持原定义，旧字段定义不变。
             const double model_mean = model_sum / support.size();
             if (!same(model_mean, e.model_mean_residual_px_[edge]) ||
                 !same(model_maximum, e.model_max_residual_px_[edge]))
@@ -118,7 +115,7 @@ namespace mark
                 return fail("INVALID_EVIDENCE_ERROR: 误差/有限支持延伸不合格");
             // 旧线同样不能仅凭自述参数接受：从已验证的全部原像素重建 cv::fitLine。
             // Legacy 没有奇偶校正，轴/c 必须保持默认；新校正字段在该模型下等于 raw。
-            if (kind == LineFitModel::Legacy)
+            if (kind == LineFitModel::L2)
             {
                 if (e.periodic_axes_[edge] != 0 || e.periodic_coefficients_[edge] != 0)
                     return fail("LEGACY_MODEL_MISMATCH");

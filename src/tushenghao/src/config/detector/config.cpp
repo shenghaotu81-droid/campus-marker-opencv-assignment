@@ -79,20 +79,19 @@ namespace mark
 
         // 在转换强类型之前逐层检查结构，保留OpenCV FileStorage单一加载路径。
         checkFields(fs.root(), path, "root",
-                    {"schema_version", "input", "preprocess", "marker_geometry_path", "detector",
+                    {"schema_version", "input", "preprocess", "detector",
                      "geometry", "output", "debug"});
         checkFields(fs["input"], path, "input", {"pixel_format", "timestamp_unit"});
         checkFields(fs["preprocess"], path, "preprocess",
                     {"work_width", "work_height", "threshold"});
         checkFields(fs["geometry"], path, "geometry",
-                    {"white_threshold", "approximation_epsilon", "min_area", "max_hypothesis_count",
-                     "max_validation_residual", "min_area_ratio", "max_area_ratio"});
-        checkFields(fs["detector"], path, "detector", {"mode", "corner", "assignment_completion"});
+                    {"white_threshold", "approximation_epsilon", "min_area"});
+        checkFields(fs["detector"], path, "detector", {"mode", "corner"});
         checkFields(fs["detector"]["corner"], path, "detector.corner",
                     {"min_line_points", "max_line_fit_error",
                      "min_intersection_angle_deg", "max_corner_error",
                      "approximation_epsilon",
-                     "semantic_geometry_threshold", "observation"});
+                     "max_pair_disagreement_px2", "observation"});
         checkFields(fs["output"], path, "output", {"run_directory", "video_fourcc", "video_filename"});
         checkFields(fs["debug"], path, "debug", {"timing_enabled"});
 
@@ -152,23 +151,6 @@ namespace mark
 
         detector.geometry_.min_area_ = readDouble(geometry["min_area"], path, "geometry.min_area");
 
-        detector.geometry_.max_validation_residual_ = readDouble(
-            geometry["max_validation_residual"], path, "geometry.max_validation_residual");
-
-        detector.geometry_.min_area_ratio_ =
-            readDouble(geometry["min_area_ratio"], path, "geometry.min_area_ratio");
-
-        detector.geometry_.max_area_ratio_ =
-            readDouble(geometry["max_area_ratio"], path, "geometry.max_area_ratio");
-
-        // 几何假设搜索资源上限。
-        detector.geometry_.max_hypothesis_count_ = static_cast<std::size_t>(
-            readInt(geometry["max_hypothesis_count"], path, "geometry.max_hypothesis_count"));
-
-        // MARK 几何模型文件路径（Block 2 加载用）。
-        detector.marker_geometry_path_ =
-            readString(fs["marker_geometry_path"], path, "marker_geometry_path");
-
         cv::FileNode detector_node = requireNode("detector");
 
         // Block 3 角点恢复参数。
@@ -192,8 +174,7 @@ namespace mark
             readDouble(corner_node["approximation_epsilon"], path, "corner.approximation_epsilon");
 
 
-        detector.corner_.semantic_geometry_threshold_ = readDouble(
-            corner_node["semantic_geometry_threshold"], path, "corner.semantic_geometry_threshold");
+        detector.corner_.max_pair_disagreement_px2_ = readDouble(corner_node["max_pair_disagreement_px2"], path,"corner.max_pair_disagreement_px2");
 
         // 先检查字段存在，再检查类型，避免 YAML 类型错误被直接转换掩盖。
         // 新预算节点可缺省为显式未配置；出现后每个字段必填，不从旧参数继承数值。
@@ -201,15 +182,13 @@ namespace mark
         {
             auto node = corner_node["observation"];
             checkFields(node, path, "detector.corner.observation",
-                        {"max_edge_direction_diff_deg", "max_edge_position_distance_px",
-                         "max_component_mapping_distance_px", "turn_trim_distance_px",
+                        {"max_edge_direction_diff_deg", "max_edge_position_distance_px", "turn_trim_distance_px",
                          "max_turn_connection_length_px", "max_support_extension_px",
                          "min_support_span_px"});
             CornerObservationBudget b{};
             const std::pair<const char *, double *> fields[] = {
                 {"max_edge_direction_diff_deg", &b.max_edge_direction_diff_deg},
                 {"max_edge_position_distance_px", &b.max_edge_position_distance_px},
-                {"max_component_mapping_distance_px", &b.max_component_mapping_distance_px},
                 {"turn_trim_distance_px", &b.turn_trim_distance_px},
                 {"max_turn_connection_length_px", &b.max_turn_connection_length_px},
                 {"max_support_extension_px", &b.max_support_extension_px},
@@ -219,38 +198,7 @@ namespace mark
                                        std::string("detector.corner.observation.") + f.first);
             detector.corner_.observation_budget_ = b;
         }
-        if (!detector_node["assignment_completion"].empty())
-        {
-            auto node = detector_node["assignment_completion"];
-            checkFields(node, path, "detector.assignment_completion",
-                        {"max_boundary_distance_work_px", "approximation_epsilon_work_px",
-                         "max_direction_diff_deg", "max_relative_area_error",
-                         "boundary_sample_step_work_px", "max_candidates", "max_expansions",
-                         "max_output_branches"});
-            AssignmentCompletionConfig b{};
-            const std::pair<const char *, double *> fields[] = {
-                {"max_boundary_distance_work_px", &b.max_boundary_distance_work_px},
-                {"approximation_epsilon_work_px", &b.approximation_epsilon_work_px},
-                {"max_direction_diff_deg", &b.max_direction_diff_deg},
-                {"max_relative_area_error", &b.max_relative_area_error},
-                {"boundary_sample_step_work_px", &b.boundary_sample_step_work_px}};
-            for (auto f : fields)
-                *f.second = readDouble(node[f.first], path,
-                                       std::string("detector.assignment_completion.") + f.first);
-            const std::pair<const char *, size_t *> counts[] = {
-                {"max_candidates", &b.max_candidates},
-                {"max_expansions", &b.max_expansions},
-                {"max_output_branches", &b.max_output_branches}};
-            for (auto f : counts)
-            {
-                int value = readInt(node[f.first], path,
-                                    std::string("detector.assignment_completion.") + f.first);
-                if (value <= 0)
-                    throwConfigError(path, f.first, "expected positive count");
-                *f.second = static_cast<size_t>(value);
-            }
-            detector.assignment_completion_ = b;
-        }
+
 
         cv::FileNode mode_node = detector_node["mode"];
 
@@ -285,19 +233,6 @@ namespace mark
             config.offline.video_fourcc = readString(output["video_fourcc"], path, "output.video_fourcc");
         if (!output["video_filename"].empty())
             config.offline.video_filename = readString(output["video_filename"], path, "output.video_filename");
-
-        // marker_geometry_path_ 若为相对路径，转成相对于 detector.yaml 所在目录的绝对路径。
-        // 消除 CWD 依赖，Block 4/5 及 Codex 不用再 cd。
-        {
-            namespace fs = std::filesystem;
-            fs::path yaml_dir = fs::path(path).parent_path();
-            fs::path geom_path(config.detector_config.marker_geometry_path_);
-            if (geom_path.is_relative())
-            {
-                geom_path = yaml_dir / geom_path;
-                config.detector_config.marker_geometry_path_ = geom_path.string();
-            }
-        }
 
         validateConfig(config);
 
@@ -358,30 +293,6 @@ namespace mark
             throw ConfigError("Config error: field=geometry.min_area, reason=must be non-negative");
         }
 
-        // 搜索上限必须大于 0。
-        if (detector.geometry_.max_hypothesis_count_ == 0)
-        {
-            throw ConfigError(
-                "Config error: field=geometry.max_hypothesis_count, reason=must be greater than zero");
-        }
-
-        // Step 7 残差验证阈值必须为正
-        if (!std::isfinite(detector.geometry_.max_validation_residual_) ||
-            detector.geometry_.max_validation_residual_ <= 0)
-        {
-            throw ConfigError(
-                "Config error: field=geometry.max_validation_residual, reason=must be positive");
-        }
-
-        // Step 7 面积比例范围检查
-        if (!std::isfinite(detector.geometry_.min_area_ratio_) ||
-            !std::isfinite(detector.geometry_.max_area_ratio_) ||
-            detector.geometry_.min_area_ratio_ <= 0 || detector.geometry_.max_area_ratio_ <= 0 ||
-            detector.geometry_.min_area_ratio_ >= detector.geometry_.max_area_ratio_)
-        {
-            throw ConfigError("Config error: field=geometry.area_ratio, reason=invalid range");
-        }
-
         // Block 3 corner 参数校验
         const auto &corner = detector.corner_;
 
@@ -410,12 +321,7 @@ namespace mark
                 "Config error: field=corner.max_corner_error, reason=must be non-negative and finite");
         }
 
-        if (!std::isfinite(detector.corner_.semantic_geometry_threshold_) ||
-            detector.corner_.semantic_geometry_threshold_ < 0.0)
-        {
-            throw ConfigError(
-                "Config error: field=corner.semantic_geometry_threshold, reason=must be non-negative and finite");
-        }
+
 
         if (!std::isfinite(corner.approximation_epsilon_) || corner.approximation_epsilon_ <= 0.0)
         {
@@ -424,32 +330,11 @@ namespace mark
         }
 
 
+        if (!std::isfinite(corner.max_pair_disagreement_px2_) || corner.max_pair_disagreement_px2_<0)
+            throw ConfigError("Config error: corner.max_pair_disagreement_px2");
         if (corner.observation_budget_)
             validateCornerObservationBudget(corner);
-        if (detector.assignment_completion_)
-        {
-            const auto &b = *detector.assignment_completion_;
-            for (double value : {b.max_boundary_distance_work_px, b.approximation_epsilon_work_px,
-                                 b.max_direction_diff_deg, b.max_relative_area_error,
-                                 b.boundary_sample_step_work_px})
-                if (!std::isfinite(value) || value < 0)
-                    throw ConfigError(
-                        "ASSIGNMENT_CONFIG_INVALID: nonnegative finite budget required");
-            if (b.approximation_epsilon_work_px <= 0 || b.boundary_sample_step_work_px <= 0 ||
-                b.max_direction_diff_deg > 90 || !b.max_candidates || !b.max_expansions ||
-                !b.max_output_branches ||
-                b.max_candidates > static_cast<size_t>(std::numeric_limits<int>::max()) ||
-                b.max_expansions > static_cast<size_t>(std::numeric_limits<int>::max()) ||
-                b.max_output_branches > static_cast<size_t>(std::numeric_limits<int>::max()))
-                throw ConfigError("ASSIGNMENT_CONFIG_INVALID: invalid sample/resource budget");
-        }
 
-        // MARK 几何模型路径不能为空。
-        if (detector.marker_geometry_path_.empty())
-        {
-            throw ConfigError(
-                "Config error: field=marker_geometry_path, reason=path must not be empty");
-        }
 
         if (detector.mode != DetectorMode::SegmentedMark)
         {
@@ -539,17 +424,7 @@ namespace mark
 
         fs << "min_area" << detector.geometry_.min_area_;
 
-        fs << "max_hypothesis_count" << static_cast<int>(detector.geometry_.max_hypothesis_count_);
-
-        fs << "max_validation_residual" << detector.geometry_.max_validation_residual_;
-
-        fs << "min_area_ratio" << detector.geometry_.min_area_ratio_;
-
-        fs << "max_area_ratio" << detector.geometry_.max_area_ratio_;
-
         fs << "}";
-
-        fs << "marker_geometry_path" << detector.marker_geometry_path_;
 
         fs << "detector"
            << "{";
@@ -574,15 +449,15 @@ namespace mark
         fs << "approximation_epsilon" << detector.corner_.approximation_epsilon_;
 
 
-        fs << "semantic_geometry_threshold" << detector.corner_.semantic_geometry_threshold_;
 
+
+        fs << "max_pair_disagreement_px2" << detector.corner_.max_pair_disagreement_px2_;
         if (detector.corner_.observation_budget_)
         {
             const auto &b = *detector.corner_.observation_budget_;
             fs << "observation" << "{";
             fs << "max_edge_direction_diff_deg" << b.max_edge_direction_diff_deg
                << "max_edge_position_distance_px" << b.max_edge_position_distance_px
-               << "max_component_mapping_distance_px" << b.max_component_mapping_distance_px
                << "turn_trim_distance_px" << b.turn_trim_distance_px
                << "max_turn_connection_length_px" << b.max_turn_connection_length_px
                << "max_support_extension_px" << b.max_support_extension_px << "min_support_span_px"
@@ -591,19 +466,7 @@ namespace mark
 
         fs << "}";
 
-        if (detector.assignment_completion_)
-        {
-            const auto &b = *detector.assignment_completion_;
-            fs << "assignment_completion" << "{";
-            fs << "max_boundary_distance_work_px" << b.max_boundary_distance_work_px
-               << "approximation_epsilon_work_px" << b.approximation_epsilon_work_px
-               << "max_direction_diff_deg" << b.max_direction_diff_deg << "max_relative_area_error"
-               << b.max_relative_area_error << "boundary_sample_step_work_px"
-               << b.boundary_sample_step_work_px << "max_candidates"
-               << static_cast<int>(b.max_candidates) << "max_expansions"
-               << static_cast<int>(b.max_expansions) << "max_output_branches"
-               << static_cast<int>(b.max_output_branches) << "}";
-        }
+
 
         fs << "}";
 

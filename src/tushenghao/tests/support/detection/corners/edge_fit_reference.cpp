@@ -1,7 +1,7 @@
 // 本轮先独立验收的完整枚举器保留为 reference；仅测试链接，绝非复制历史沙盒。
 // 完整轮廓上分段并保留原始索引；联合验证两条指定外边及其凸转折连接弧。
 // 不允许独立挑两条方向最近的无限线，也不使用预测交点补观测。
-#include "recovery112_reference.hpp"
+#include "edge_fit_reference.hpp"
 #include "corners/fitting/periodic_line_fit.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include "detector/corner_budget_validation.hpp"
@@ -10,9 +10,8 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
-#include <numeric>
 
-namespace mark::recovery112_reference
+namespace mark::edge_fit_reference
 {
     namespace
     {
@@ -26,8 +25,8 @@ namespace mark::recovery112_reference
             std::set<std::pair<double, double>> support;
             // 原共享像素检查无论空间上是否相交都查询集合；残差遍历顺便保存精确 AABB。
             cv::Point2d minimum{INFINITY, INFINITY}, maximum_point{-INFINITY, -INFINITY};
-            // 旧 mean/maximum 保留 raw 含义；模型误差单独用于新增周期质量门控。
-            LineFitModel model{LineFitModel::Legacy};
+            // 旧 mean/maximum 保留 raw 含义；模型误差单独用于周期模型质量标签。
+            LineFitModel model{LineFitModel::L2};
             int axis{0};
             double coefficient{0}, model_mean{INFINITY}, model_maximum{INFINITY};
         };
@@ -47,12 +46,12 @@ namespace mark::recovery112_reference
             if (arc.support.size() < static_cast<size_t>(config.min_line_points_))
                 return false;
             arc.model = model;
-            if (model == LineFitModel::Legacy)
+            if (model == LineFitModel::L2)
                 cv::fitLine(arc.points, arc.line, cv::DIST_L2, 0, 0.01, 0.01);
             else
             {
                 // 原单线不能表达两行结构；物理线只取趋势，c 只解释扫描相位，不改支持。
-                const auto periodic = fitPeriodicLine(arc.points, model);
+                const auto periodic = fitPeriodicLine(arc.points);
                 if (!periodic)
                     return false;
                 arc.line = periodic->line;
@@ -81,7 +80,7 @@ namespace mark::recovery112_reference
                 sum += d;
                 arc.maximum = std::max(arc.maximum, d);
                 const double model_distance =
-                    model == LineFitModel::Legacy
+                    model == LineFitModel::L2
                         ? d
                         : periodicLineDistance(p, arc.line, arc.axis, arc.coefficient);
                 model_sum += model_distance;
@@ -133,7 +132,7 @@ namespace mark::recovery112_reference
     // 原候选只覆盖简化端点；补查仍枚举真实轮廓连续弧，分别修复位置检查时机和端点覆盖。
     static EdgePairFitResult fitStage(const std::vector<cv::Point> &contour,
                                       const std::array<std::array<cv::Point2d, 2>, 2> &edges,
-                                      const CornerConfig &config, bool all_endpoints,
+                                      const CornerConfig &config,
                                       bool posterior, LineFitModel model, EdgePairFitTrace *trace,
                                       size_t stage)
     {
@@ -196,14 +195,9 @@ namespace mark::recovery112_reference
             }
         std::sort(indices.begin(), indices.end());
         indices.erase(std::unique(indices.begin(), indices.end()), indices.end());
-        if (all_endpoints)
-        {
-            indices.resize(contour.size());
-            std::iota(indices.begin(), indices.end(), 0);
-        }
+
         std::vector<Arc> arcs;
         // 全端点的不同区间可能回走到同一有序像素序列；必须按全序列去重，不能只看端点。
-        std::set<std::vector<std::pair<double, double>>> sequences;
         std::map<std::string, size_t> rejected;
         // 简化只用于标记真实轮廓上的转折，支持点仍来自CHAIN_APPROX_NONE连续弧。
         // 栅格圆角会在一条直边末端插入额外简化顶点，原单段实现误当缺边。
@@ -250,14 +244,7 @@ namespace mark::recovery112_reference
                         ++rejected["direction_or_position_arc"];
                         continue;
                     }
-                    if (all_endpoints)
-                    {
-                        std::vector<std::pair<double, double>> sequence;
-                        for (auto p : arc.points)
-                            sequence.emplace_back(p.x, p.y);
-                        if (!sequences.insert(std::move(sequence)).second)
-                            continue;
-                    }
+
                     if (!fitArc(arc, config, model))
                     {
                         ++rejected["short_or_residual_arc"];
@@ -375,7 +362,7 @@ namespace mark::recovery112_reference
                 if (result.evidence &&
                     cv::norm(result.evidence->intersection_ - intersection) *
                             cv::norm(result.evidence->intersection_ - intersection) >
-                        config.semantic_geometry_threshold_)
+                        config.max_pair_disagreement_px2_)
                 {
                     result.evidence.reset();
                     result.reason = "AMBIGUOUS_EDGE_PAIR: 外边观测解几何冲突";
@@ -386,9 +373,13 @@ namespace mark::recovery112_reference
                                            static_cast<int>(second.begin)};
                 const std::array<int, 2> ends{
                     {static_cast<int>(first.end), static_cast<int>(second.end)}};
+                const double score=error*std::sqrt(1./first.points.size()+1./second.points.size());
+                double previous_score=INFINITY;
+                if(result.evidence){const auto &e=*result.evidence;
+                    previous_score=e.error_*std::sqrt(1./e.original_support_arcs_[0].size()+1./e.original_support_arcs_[1].size());}
                 if (result.evidence &&
-                    !(error < result.evidence->error_ ||
-                      (error == result.evidence->error_ &&
+                    !(score < previous_score ||
+                      (score == previous_score &&
                        std::tie(ids, ends) < std::tie(result.evidence->observed_segment_ids_,
                                                       result.evidence->observed_segment_end_ids_))))
                     continue;
@@ -448,32 +439,15 @@ namespace mark::recovery112_reference
 
             EdgePairFitResult run()
             {
-            auto result = stage(false, false, LineFitModel::Legacy);
-            if (result.evidence) return result;
-            for (bool posterior : {false, true})
-                for (auto model : {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicZeroSlope}) {
-                    result = stage(false, posterior, model);
-                    if (result.evidence) return result;
-                }
-            // 零命中退路仍共用同一stage；不凭单段录像删掉不同的支持域/估计器。
-            for (auto mode : {std::pair<bool,bool>{false,true}, {true,false}}) {
-                result = stage(mode.first, mode.second, LineFitModel::Legacy);
-                if (result.evidence) return result;
-            }
-            result = stage(true, false, LineFitModel::PeriodicPhaseMedian);
-            if (result.evidence) return result;
-            for (auto mode : {std::pair<bool,bool>{false,false}, {false,true}, {true,false}}) {
-                result = stage(mode.first, mode.second, LineFitModel::PeriodicL1);
-                if (result.evidence) return result;
-            }
-            return result;
-
+                auto result=stage(false,LineFitModel::L2);
+                if(result.evidence)return result;
+                return stage(true,LineFitModel::PeriodicPhaseMedian);
             }
 
           private:
-            EdgePairFitResult stage(bool all, bool posterior, LineFitModel model)
+            EdgePairFitResult stage(bool posterior, LineFitModel model)
             {
-                return fitStage(contour_, edges_, config_, all, posterior, model, trace_, stage_++);
+                return fitStage(contour_, edges_, config_, posterior, model, trace_, stage_++);
             }
 
             EdgePairFitTrace *trace_;

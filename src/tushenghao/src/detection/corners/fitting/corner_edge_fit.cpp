@@ -1,10 +1,9 @@
-// 完整轮廓上的连续支持搜索；索引只复用计算，别名顺序、所有质量门控和歧义检查保留。
+// 两路线共享完整轮廓支持搜索、数值求交和质量输出；索引只复用计算。
 #include "corners/fitting/corner_edge_fit.hpp"
 #include "corners/fitting/periodic_line_fit.hpp"
 #include "detector/corner_budget_validation.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
-#include <numeric>
 #include <set>
 #include <sstream>
 #include <unordered_map>
@@ -13,7 +12,7 @@ namespace mark
 {
     namespace
     {
-        using ModelEdges = std::array<std::array<cv::Point2d, 2>, 2>;
+        using EdgeGuidance = std::array<std::array<cv::Point2d, 2>, 2>;
 
         uint64_t pixelKey(cv::Point point)
         {
@@ -61,7 +60,7 @@ namespace mark
             SupportRecord *support{nullptr};
             bool valid{false};
             cv::Vec4d line{};
-            LineFitModel model{LineFitModel::Legacy};
+            LineFitModel model{LineFitModel::L2};
             int axis{0};
             double coefficient{0}, mean{INFINITY}, maximum{INFINITY};
             double model_mean{INFINITY}, model_maximum{INFINITY};
@@ -105,26 +104,11 @@ namespace mark
             double corner_error{INFINITY}, first_extension{INFINITY}, second_extension{INFINITY};
         };
 
-        struct SequenceLess
-        {
-            bool operator()(const std::vector<cv::Point2d> *a,
-                            const std::vector<cv::Point2d> *b) const
-            {
-                // 回走可使不同 raw range 产生同一全序列；比较全部有序点，严禁只比较端点。
-                return std::lexicographical_compare(a->begin(), a->end(), b->begin(), b->end(),
-                                                    [](cv::Point2d p, cv::Point2d q)
-                                                    {
-                                                        return std::tie(p.x, p.y) <
-                                                               std::tie(q.x, q.y);
-                                                    });
-            }
-        };
-
         // 单次 fit 的 scratch：所有输入只读，缓存不跨帧、组件、模型边或预算复用。
         class EdgePairFitter
         {
           public:
-            EdgePairFitter(const std::vector<cv::Point> &contour, const ModelEdges &edges,
+            EdgePairFitter(const std::vector<cv::Point> &contour, const EdgeGuidance &edges,
                            const CornerConfig &config,
                            EdgePairFitTrace *trace)
                 : contour_(contour), edges_(edges), config_(config),
@@ -258,18 +242,13 @@ namespace mark
                 return range;
             }
 
-            const std::vector<SupportRange> &descriptors(bool all)
+            const std::vector<SupportRange> &descriptors()
             {
-                auto &cached = descriptors_[all];
+                auto &cached = descriptors_;
                 if (!cached)
                 {
                     cached.emplace();
                     auto indices = original_indices_;
-                    if (all)
-                    {
-                        indices.resize(contour_.size());
-                        std::iota(indices.begin(), indices.end(), 0);
-                    }
                     // 支持描述按旧 i/segments 顺序保存；模型/位置阶段复用，不丢原端点别名。
                     cached->reserve(indices.size() * (indices.empty() ? 0 : indices.size() - 1));
                     std::vector<size_t> excluded;
@@ -317,12 +296,12 @@ namespace mark
                                     : lengths_.back() - lengths_[begin] + lengths_[end];
             }
 
-            EdgePairFitResult stage(bool all, bool posterior, LineFitModel model);
+            EdgePairFitResult stage(bool posterior, LineFitModel model);
             void select(EdgePairFitResult &result, const ArcAlias &a, const ArcAlias &b,
                         bool direct, const PairGeometry &geometry, size_t stage);
 
             const std::vector<cv::Point> &contour_;
-            const ModelEdges &edges_;
+            const EdgeGuidance &edges_;
             const CornerConfig &config_;
             const CornerObservationBudget &budget_;
             EdgePairFitTrace *const trace_;
@@ -333,10 +312,10 @@ namespace mark
             std::vector<double> lengths_;
             std::array<std::vector<size_t>, 2> bad_positions_;
             std::vector<std::optional<std::vector<size_t>>> exclusions_;
-            std::array<std::optional<std::vector<SupportRange>>, 2> descriptors_;
+            std::optional<std::vector<SupportRange>> descriptors_;
             std::unordered_map<size_t, SupportRecord> supports_;
             // 三元键 (modelKind,firstRaw,lastRaw)；拒绝结果同样缓存，引用只活在本实例。
-            std::array<std::unordered_map<size_t, FittedSupport>, 6> fits_;
+            std::array<std::unordered_map<size_t, FittedSupport>, 2> fits_;
             // 同一调用的周期估计器共享向量容量；输入与参数仍每条弧从头计算，不跨帧共享。
             PeriodicLineFitScratch periodic_scratch_;
         };
@@ -366,11 +345,11 @@ namespace mark
             }
             if (!support.enough_unique)
                 return fit;
-            if (model == LineFitModel::Legacy)
+            if (model == LineFitModel::L2)
                 cv::fitLine(support.points, fit.line, cv::DIST_L2, 0, 0.01, 0.01);
             else
             {
-                const auto periodic = fitPeriodicLine(support.points, model, periodic_scratch_);
+                const auto periodic = fitPeriodicLine(support.points, periodic_scratch_);
                 if (!periodic)
                     return fit;
                 fit.line = periodic->line;
@@ -401,7 +380,7 @@ namespace mark
                 sum += d;
                 fit.maximum = std::max(fit.maximum, d);
                 const double corrected =
-                    model == LineFitModel::Legacy
+                    model == LineFitModel::L2
                         ? d
                         : periodicLineDistance(point, fit.line, fit.axis, fit.coefficient);
                 model_sum += corrected;
@@ -566,7 +545,7 @@ namespace mark
             if (result.evidence &&
                 cv::norm(result.evidence->intersection_ - geometry.intersection) *
                         cv::norm(result.evidence->intersection_ - geometry.intersection) >
-                    config_.semantic_geometry_threshold_)
+                    config_.max_pair_disagreement_px2_)
             {
                 result.evidence.reset();
                 result.reason = "AMBIGUOUS_EDGE_PAIR: 外边观测解几何冲突";
@@ -580,8 +559,12 @@ namespace mark
             {
                 const std::array<int, 2> previous{{result.evidence->observed_segment_ids_[0],
                                                    result.evidence->observed_segment_ids_[1]}};
-                if (!(error < result.evidence->error_ ||
-                      (error == result.evidence->error_ &&
+                // 支持长度正则化排序：短弧的偶然低残差不应占便宜；不改变测量误差或准入。
+                const double score=error*std::sqrt(1./first.support->points.size()+1./second.support->points.size());
+                const auto &previous_e=*result.evidence;
+                const double previous_score=previous_e.error_*std::sqrt(1./previous_e.original_support_arcs_[0].size()+1./previous_e.original_support_arcs_[1].size());
+                if (!(score < previous_score ||
+                      (score == previous_score &&
                        std::tie(ids, ends) <
                            std::tie(previous, result.evidence->observed_segment_end_ids_))))
                     return;
@@ -614,15 +597,13 @@ namespace mark
             result.evidence = std::move(evidence);
         }
 
-        EdgePairFitResult EdgePairFitter::stage(bool all, bool posterior, LineFitModel model)
+        EdgePairFitResult EdgePairFitter::stage(bool posterior, LineFitModel model)
         {
             EdgePairFitResult result;
             const size_t stage = stage_number_++;
             std::array<size_t, 7> rejected{};
             std::vector<ArcAlias> arcs;
-            std::set<size_t> ranges_seen;
-            std::set<const std::vector<cv::Point2d> *, SequenceLess> sequences_seen;
-            for (const auto &range : descriptors(all))
+            for (const auto &range : descriptors())
             {
                 if (!range.continuous)
                 {
@@ -647,10 +628,6 @@ namespace mark
                     continue;
                 }
                 auto &support = supportFor(range);
-                // 全端点先排严格相同 raw range，再按全部有序像素排不同 range 的同序列。
-                if (all && (!ranges_seen.insert(support.id).second ||
-                            !sequences_seen.insert(&support.points).second))
-                    continue;
                 auto &fit = fitFor(support, model);
                 if (!fit.valid)
                 {
@@ -735,40 +712,27 @@ namespace mark
         {
             if (polygon_.size() < 3)
                 return {std::nullopt, "SHORT_SUPPORT: 原图轮廓不足"};
-            auto result = stage(false, false, LineFitModel::Legacy);
-            if (result.evidence) return result;
-            for (bool posterior : {false, true})
-                for (auto model : {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicZeroSlope}) {
-                    result = stage(false, posterior, model);
-                    if (result.evidence) return result;
-                }
-            // 零命中退路仍共用同一stage；不凭单段录像删掉不同的支持域/估计器。
-            for (auto mode : {std::pair<bool,bool>{false,true}, {true,false}}) {
-                result = stage(mode.first, mode.second, LineFitModel::Legacy);
-                if (result.evidence) return result;
-            }
-            result = stage(true, false, LineFitModel::PeriodicPhaseMedian);
-            if (result.evidence) return result;
-            for (auto mode : {std::pair<bool,bool>{false,false}, {false,true}, {true,false}}) {
-                result = stage(mode.first, mode.second, LineFitModel::PeriodicL1);
-                if (result.evidence) return result;
-            }
-            return result;
+            auto result=stage(false,LineFitModel::L2);
+            if(result.evidence)return result;
+            return stage(true,LineFitModel::PeriodicPhaseMedian);
 
         }
     }
 
     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
-                                          const ModelEdges &edges, const CornerConfig &config,
+                                          const EdgeGuidance &edges, const CornerConfig &config,
                                           EdgePairFitTrace *trace)
     {
         validateCornerObservationBudget(config);
+        for(const auto &edge:edges)
+            if(!observed::finite(edge[0]) || !observed::finite(edge[1]) || edge[0]==edge[1])
+                return {std::nullopt,"INVALID_EDGE_GUIDANCE"};
         EdgePairFitter fitter(contour, edges, config, trace);
         return fitter.run();
     }
 
     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
-        const ModelEdges &edges, const CornerConfig &config) {
+        const EdgeGuidance &edges, const CornerConfig &config) {
         return fitObservedEdgePair(contour, edges, config, nullptr);
     }
 }

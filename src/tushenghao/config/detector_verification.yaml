@@ -19,8 +19,6 @@ preprocess:
   work_height: 720
   threshold: 200
 
-# MARK 几何模型文件路径，Block 2 加载用
-marker_geometry_path: "marker_geometry.yaml"
 
 # 用哪个检测器，SegmentedMark 执行当前帧检测
 detector:
@@ -28,18 +26,19 @@ detector:
 
   # D11：原图角点恢复预算；与工作图几何观察分别配置。
   corner:
+    max_pair_disagreement_px2: 64.0
 
     # 拟合单条直线需要的最少观测点数量
     min_line_points: 10
 
-    # 允许的最大直线拟合误差
+    # 平均残差质量标签阈值（超限不丢角）
     max_line_fit_error: 0.5
 
     # 两条边允许的最小夹角（度）
     # 小于该值认为两直线近平行，交点不稳定
     min_intersection_angle_deg: 5.0
 
-    # 允许的最大角点交点误差
+    # 交点误差质量标签阈值（超限不丢角）
     # 2026-10-06用户授权实拍713组：max(P0..P3 P99)+1原图px；合成历史1.5保留于文档。
     max_corner_error: 4.131595359474918
 
@@ -47,36 +46,15 @@ detector:
     # 与 Block 2 geometry.approximation_epsilon 分开
     approximation_epsilon: 1.0
 
-    # Step 5 假设间几何一致性判断阈值
-    # 单位：pixel²
-    # 比较四个角点无标签集合距离：
-    # Σ ||pi-qi||²
-    semantic_geometry_threshold: 64.0
-
-    # C-v1/C-v4预算已批准；2026-10-06批准C-v6真实三L父变换三项修正。
     # 全部为原图px，direction为度；真值2px预算仅用于验收。
     observation:
       max_edge_direction_diff_deg: 3.0
       max_edge_position_distance_px: 9.0
-      max_component_mapping_distance_px: 4.5
       turn_trim_distance_px: 2.0
       max_turn_connection_length_px: 13.5
       max_support_extension_px: 9.5
       min_support_span_px: 14.0
 
-  # 工作图px/度/相对面积；epsilon上限保留五比例+1/4和有界拓扑候选，不读真值。
-  # candidates为每父每缺片；expansions和output为整个batch上限。
-  assignment_completion:
-    max_boundary_distance_work_px: 9.5
-    approximation_epsilon_work_px: 3.0
-    max_direction_diff_deg: 30.0
-    max_relative_area_error: 0.045
-    boundary_sample_step_work_px: 1.0
-    max_candidates: 128
-    max_expansions: 4096
-    max_output_branches: 64
-
-# 二维时序稳定与文字保持；预算和开关保持现行值
 output:
   video_fourcc: "MJPG"
   video_filename: "overlay.mp4"
@@ -84,17 +62,9 @@ output:
 # 调试开关
 debug:
   timing_enabled: 1
-  
+
 # 几何观察参数（Block 2，阈值待合成数据测量后调整）
 geometry:
   white_threshold: 200
   approximation_epsilon: 2.0
   min_area: 0.0
-  # 三L观察固定六尺度拓扑；1000上限计入每个实测凹点元组尝试（含无效仿射）。
-  max_hypothesis_count: 1000
-  
-  max_validation_residual: 5.0
-  min_area_ratio: 0.5
-  max_area_ratio: 2.0
-
-# A03/A08：显示与检测配置分离，开关取值保持迁移前一致。

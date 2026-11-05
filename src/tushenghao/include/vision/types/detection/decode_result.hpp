@@ -8,6 +8,5 @@ struct DecodeStageResult {
     std::vector<Detection> detections;
     std::vector<CornerMeasurement> measurements;
     std::vector<std::string> diagnostics;
-    bool search_truncated{false};
 };
 }

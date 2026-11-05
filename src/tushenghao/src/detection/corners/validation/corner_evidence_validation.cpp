@@ -1,6 +1,5 @@
 // 生产只检查来源、完整性和数值合法性；claimed值复算移入测试。
 #include "corners/validation/corner_evidence_validation.hpp"
-#include "vision/types/marker_geometry.hpp"
 #include "vision/math/observed_geometry.hpp"
 namespace mark {
 bool validateCornerEvidence(const CornerEvidence &e, cv::Point2d corner, int index,
@@ -8,10 +7,8 @@ bool validateCornerEvidence(const CornerEvidence &e, cv::Point2d corner, int ind
     auto fail=[&](const char *s) { reason=s; return false; };
     if (!config.observation_budget_) return fail("CORNER_BUDGET_NOT_CONFIGURED");
     if (index<0 || index>=4 || e.truncated_) return fail("TRUNCATED_OR_INVALID_CORNER");
-    const auto &binding=model_corner_contract[index];
-    if (!e.original_observation_ || e.stable_id_.empty() ||
+    if (!e.original_observation_ ||
         e.component_id_==std::numeric_limits<size_t>::max() || int(e.physical_corner_)!=index ||
-        e.model_vertex_id_!=binding.vertex || e.model_edge_ids_!=std::array<int,2>{binding.a,binding.b} ||
         e.observed_segment_ids_.size()!=2 || e.observed_segment_ids_[0]<0 || e.observed_segment_ids_[1]<0 ||
         e.observed_segment_ids_[0]==e.observed_segment_ids_[1]) return fail("MISSING_CORNER_EVIDENCE");
     if (!observed::finite(corner) || !observed::finite(e.intersection_) ||

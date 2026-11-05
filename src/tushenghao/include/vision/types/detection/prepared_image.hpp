@@ -42,8 +42,8 @@ namespace mark
 
         double scale_y_{1.0};
 
-        // 旧独立 decode/resolver 夹具适配入口；主链组件单独由 GeometryStepsOutput 交付。
-        std::vector<WhiteComponent> components_;
+
+
 
         // 帧上下文。
         // 用于后续阶段 audit 和结果关联。

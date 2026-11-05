@@ -22,17 +22,6 @@ namespace
     {
         mark::DetectorConfig config;
 
-        // 测试用几何模型绝对路径，避免 CWD 依赖。
-        // config.marker_geometry_path_ = "/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/config/marker_geometry.yaml";
-
-        // 测试用几何模型路径：从本测试文件位置推导，不依赖 CWD。
-        {
-            std::filesystem::path source_root(VISION_SOURCE_ROOT);
-            std::filesystem::path cfg =
-                source_root / "config" / "marker_geometry.yaml";
-            config.marker_geometry_path_ = cfg.string();
-        }
-
         config.schema_version = 1;
 
         config.input.pixel_format = "BGR8";

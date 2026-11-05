@@ -1,19 +1,16 @@
 #include "vision/detection/detector.hpp"
 #include "detector/config.hpp"
-#include "model/marker_geometry_loader.hpp"
 #include "pipeline/decode/decode_stage.hpp"
 #include "pipeline/input/frame_sequence.hpp"
 namespace mark {
 struct Detector::Impl {
     DetectorConfig config;
-    MarkerGeometry model;
     std::optional<FrameStamp> last_input;
     std::optional<cv::Size> original_size;
 };
 Detector::Detector(DetectorConfig config) : impl_(std::make_unique<Impl>()) {
     validateDetectorConfig(config);
     impl_->config = std::move(config);
-    impl_->model = loadMarkerGeometry(impl_->config.marker_geometry_path_);
 }
 Detector::~Detector() = default;
 FrameResult Detector::process(const FrameInput &frame) {
@@ -31,7 +28,7 @@ FrameResult Detector::process(const FrameInput &frame) {
     }
     const bool size_changed = impl_->original_size && *impl_->original_size != frame.image.size();
     if (size_changed) reset(ResetReason::InputChanged);
-    auto decoded = runDecodePipeline(frame, impl_->config, impl_->model);
+    auto decoded = runDecodePipeline(frame, impl_->config);
     result.status = decoded.status;
     result.detections = std::move(decoded.detections);
     result.diagnostics = std::move(decoded.diagnostics);

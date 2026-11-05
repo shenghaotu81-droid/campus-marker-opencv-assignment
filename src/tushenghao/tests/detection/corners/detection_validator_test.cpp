@@ -57,8 +57,7 @@ namespace mark
         {
             // 合法正例来自当前真实fixture取证，不能再用空证据凸四点冒充成功。
             auto scene = fixture::scene();
-            auto result = resolveObservedCorners(scene.frame, scene.hypothesis, scene.geometry,
-                                                 fixture::cornerConfig());
+            auto result = fixture::resolve(scene,fixture::cornerConfig());
             if (!result.measurement_)
                 throw std::runtime_error(result.rejection_reason_);
             return *result.measurement_;

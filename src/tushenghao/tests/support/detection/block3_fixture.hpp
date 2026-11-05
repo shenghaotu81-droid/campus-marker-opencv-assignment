@@ -1,8 +1,10 @@
 // 仅测试用：固定已核对模型渲染成真实BGR画面，再经真实preprocess/工作图分割。
-// assignment和affine由fixture显式给定，用于隔离原图定位；不传给正式检测。
+// 隔离拟合时用渲染真值四边形；端到端匹配另测，不传模型变换。
 #pragma once
 #include "preprocess/preprocess.hpp"
 #include "vision/types/detection/corner_types.hpp"
+#include "corners/measurement/corner_resolver.hpp"
+#include "corners/observation/corner_observation.hpp"
 #include "vision/types/marker_geometry.hpp"
 #include "model/marker_geometry_loader.hpp"
 #include <opencv2/imgproc.hpp>
@@ -19,7 +21,7 @@ namespace fixture
         c.max_corner_error_ = 5;
         c.approximation_epsilon_ = 1;
         c.min_intersection_angle_deg_ = 5;
-        c.observation_budget_ = mark::CornerObservationBudget{10, 4, 5, 2, 12, 6, 5};
+        c.observation_budget_ = mark::CornerObservationBudget{10, 4, 2, 12, 6, 5};
         return c;
     }
 
@@ -33,7 +35,7 @@ namespace fixture
     struct Scene
     {
         mark::PreparedFrame frame;
-        mark::GeometryHypothesis hypothesis;
+        mark::MatchQuad quad;
         mark::MarkerGeometry geometry;
     };
 
@@ -65,27 +67,15 @@ namespace fixture
         pre.work_height = work_height;
         pre.threshold = 200;
         s.frame = mark::preprocess(input, pre);
-        s.hypothesis.affine_transform_ =
-            (cv::Mat_<double>(2, 3) << 2 * cs * s.frame.scale_x_, -2 * sn * s.frame.scale_x_,
-             (1000 - 80 * cs + 80 * sn + 0.5) * s.frame.scale_x_ - 0.5, 2 * sn * s.frame.scale_y_,
-             2 * cs * s.frame.scale_y_, (750 - 80 * sn - 80 * cs + 0.5) * s.frame.scale_y_ - 0.5);
-        // 对每个已知白片独立栅格化工作图，身份仅在测试侧建立；正式检测不访问fixture。
-        for (size_t i = 0; i < polygons.size(); ++i)
-        {
-            cv::Mat one = cv::Mat::zeros(input.image.size(), CV_8UC1), work;
-            cv::fillPoly(one, std::vector<std::vector<cv::Point>>{polygons[i]}, cv::Scalar(255));
-            cv::resize(one, work, s.frame.image_.size());
-            cv::threshold(work, work, 200, 255, cv::THRESH_BINARY);
-            std::vector<std::vector<cv::Point>> contours;
-            cv::findContours(work, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-            mark::WhiteComponent c{};
-            c.component_id_ = 100 + i * 7;
-            c.contour_ = contours.at(0);
-            c.area_ = cv::contourArea(c.contour_);
-            c.bounding_box_ = cv::boundingRect(c.contour_);
-            s.frame.components_.insert(s.frame.components_.begin(), c);
-            s.hypothesis.assignments_.push_back({s.geometry.polygons[i].id, c.component_id_});
-        }
+        const std::array<cv::Point2d,4> model_corners{{{0,0},{80,0},{80,80},{0,80}}};
+        for(size_t i=0;i<4;++i)s.quad[i]=transform(model_corners[i]);
         return s;
     }
+}
+
+namespace fixture {
+inline mark::CornerResolution resolve(const Scene &s,const mark::CornerConfig &c) {
+    mark::OriginalContourIndex index(s.frame);
+    return mark::resolveObservedCorners(s.frame,s.quad,c,index);
+}
 }
