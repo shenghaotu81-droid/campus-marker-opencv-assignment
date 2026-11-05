@@ -105,7 +105,10 @@ int main() {
         auto app=mark::loadConfig(source/"config/detector.yaml");
         app.offline.directory=(root/"run").string();
         test_support::check(mark::runOffline(app,video.string(),(source/"config/detector.yaml").string())==0,"offline chain failed");
-        cv::VideoCapture output((root/"run/overlay.mp4").string());
+        cv::VideoCapture output((root/"run/overlay.avi").string());
+        test_support::check(output.isOpened() &&
+            static_cast<int>(output.get(cv::CAP_PROP_FOURCC))==cv::VideoWriter::fourcc('M','J','P','G'),
+            "AVI export silently changed MJPG codec");
         cv::Mat frame; int count=0;
         while(output.read(frame)) { ++count; test_support::check(frame.size()==image.size(),"overlay dimensions changed"); }
         test_support::check(count==4,"overlay frame count differs");

@@ -346,7 +346,7 @@ namespace mark
     void validateOfflineConfig(const AppConfig &config)
     {
         if (config.offline.directory.empty() || config.offline.video_fourcc != "MJPG" ||
-            config.offline.video_filename != "overlay.mp4")
+            config.offline.video_filename != "overlay.avi")
             throw ConfigError("Config error: output directory/video parameters");
     }
 

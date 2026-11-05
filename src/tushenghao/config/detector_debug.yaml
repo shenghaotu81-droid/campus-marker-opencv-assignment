@@ -57,7 +57,7 @@ detector:
 
 output:
   video_fourcc: "MJPG"
-  video_filename: "overlay.mp4"
+  video_filename: "overlay.avi"
 
 # 调试开关
 debug:
