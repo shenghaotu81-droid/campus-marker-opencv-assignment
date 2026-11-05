@@ -1,0 +1,63 @@
+[  2%] Built target vision_observability
+[  5%] Built target vision_math
+[ 12%] Built target vision_calibration
+[ 13%] Building CXX object src/config/CMakeFiles/vision_config.dir/detector/config.cpp.o
+[ 16%] Building CXX object src/config/CMakeFiles/vision_config.dir/pose/pose_config.cpp.o
+[ 17%] Building CXX object src/config/CMakeFiles/vision_config.dir/pose/tag_config_validation.cpp.o
+[ 18%] Built target calibration_tool
+[ 20%] Linking CXX static library libvision_config.a
+[ 21%] Built target vision_config
+[ 22%] Building CXX object src/pose/CMakeFiles/vision_pose.dir/estimation/pose_estimator.cpp.o
+[ 24%] Building CXX object src/pose/CMakeFiles/vision_pose.dir/validation/pose_geometry.cpp.o
+[ 25%] Building CXX object src/pose/CMakeFiles/vision_pose.dir/tag/tag_detector.cpp.o
+[ 26%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/execution/detector.cpp.o
+[ 28%] Linking CXX static library libvision_detection.a
+[ 45%] Built target vision_detection
+[ 48%] Building CXX object tests/config/CMakeFiles/config_error_test.dir/config_error_test.cpp.o
+[ 48%] Building CXX object tests/config/CMakeFiles/config_roundtrip_test.dir/config_roundtrip_test.cpp.o
+[ 49%] Linking CXX executable ../../config_roundtrip_test
+[ 52%] Linking CXX static library libvision_pose.a
+[ 52%] Building CXX object tests/detection/CMakeFiles/block3_contract_regression_test.dir/pipeline/block3_contract_regression_test.cpp.o
+[ 52%] Built target vision_pose
+[ 53%] Linking CXX executable ../../corner_edge_fit_test
+[ 53%] Built target config_roundtrip_test
+[ 54%] Linking CXX executable ../../corner_resolver_test
+[ 58%] Built target corner_edge_fit_test
+[ 60%] Linking CXX executable ../../detection_validator_test
+[ 61%] Built target corner_resolver_test
+[ 62%] Linking CXX executable ../../detector_contract_test
+[ 64%] Built target detection_validator_test
+[ 65%] Linking CXX executable ../../geometry_model_test
+[ 66%] Built target detector_contract_test
+[ 68%] Linking CXX executable ../../screen_order_test
+[ 69%] Built target geometry_model_test
+[ 70%] Building CXX object tests/detection/CMakeFiles/corner_route_test.dir/corners/corner_route_test.cpp.o
+[ 72%] Built target screen_order_test
+[ 73%] Linking CXX executable ../../match_quad_test
+[ 74%] Built target match_quad_test
+[ 76%] Building CXX object tests/pose/CMakeFiles/pose_contract_test.dir/estimation/pose_contract_test.cpp.o
+[ 77%] Linking CXX executable ../../config_error_test
+[ 77%] Built target config_error_test
+[ 78%] Building CXX object tests/pose/CMakeFiles/tag_detector_test.dir/tag/tag_detector_test.cpp.o
+[ 80%] Linking CXX executable ../../block3_contract_regression_test
+[ 81%] Linking CXX executable ../../corner_route_test
+[ 82%] Built target block3_contract_regression_test
+[ 84%] Building CXX object src/app/CMakeFiles/vision_app.dir/offline/offline_runner.cpp.o
+[ 84%] Built target corner_route_test
+[ 85%] Building CXX object src/app/CMakeFiles/vision_app.dir/rendering/debug_renderer.cpp.o
+[ 86%] Linking CXX executable ../../pose_contract_test
+[ 86%] Built target pose_contract_test
+[ 88%] Building CXX object src/app/CMakeFiles/vision_app.dir/export/video_exporter.cpp.o
+[ 89%] Linking CXX executable ../../tag_detector_test
+[ 89%] Built target tag_detector_test
+[ 90%] Linking CXX static library libvision_app.a
+[ 92%] Built target vision_app
+[ 96%] Building CXX object tests/app/CMakeFiles/offline_chain_test.dir/offline/offline_chain_test.cpp.o
+[ 96%] Building CXX object tests/app/CMakeFiles/debug_renderer_test.dir/rendering/debug_renderer_test.cpp.o
+[ 96%] Building CXX object tools/apps/CMakeFiles/marker_app.dir/marker/main.cpp.o
+[ 97%] Linking CXX executable ../../marker_app
+[ 98%] Linking CXX executable ../../debug_renderer_test
+[ 98%] Built target marker_app
+[100%] Built target debug_renderer_test
+[100%] Linking CXX executable ../../offline_chain_test
+[100%] Built target offline_chain_test

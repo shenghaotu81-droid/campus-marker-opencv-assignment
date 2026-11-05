@@ -17,4 +17,4 @@
 
 ## 标志物尺寸参考
 
-[科技核心 MARK 灯尺寸示意图](../docs/assets/marker_dimensions.jpg)提供标志物外观、尺寸标注和局部细节。进行位姿估计时，请确认尺寸单位，并使所选图像关键点与模型中的三维点一一对应。
+[科技核心 MARK 灯尺寸示意图](../src/tushenghao/docs/assets/marker_dimensions.jpg)提供标志物外观、尺寸标注和局部细节。进行位姿估计时，请确认尺寸单位，并使所选图像关键点与模型中的三维点一一对应。

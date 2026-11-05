@@ -1,5 +1,7 @@
 # MARK match-only 与两路线拟合改动报告
 
+> 后续状态：G2预算／消歧和视频容器已在a582c48之后更新，见[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。本文的历史复跑数字和旧输出名保留原时点含义；现行执行顺序见[flow-guide](flow-guide.md)。
+
 工作分支：`refactor/vision-lean`。比较基线：`b600635`（第一批交付）。本轮先提交规则草案 `16b72b0`，再按试验结果提交规则取舍 `e24568d`，之后实施代码（`1b3aff4`，随后`a01604a`清理未用周期损失计算）。最终规则见 [MATCH_ONLY_RULES.md](MATCH_ONLY_RULES.md)。
 
 本轮完成 D05–D09 删除、直接四边形输入和两路线拟合。1676 帧的检出帧集合完全一致；相同 1088 帧的 PnP RMSE 中位、P95、最大值均降低。独立合成共同集的角点真值误差中位保持不变，P95、最大值降低。这里的结论限于下述验证集与统计口径，逐帧结果并非都改善，MaixCam 实拍尚未提供。
@@ -165,7 +167,7 @@ PDF SHA256：V1.0.2=`fc3490a3c507161e6f9bb1bb86b4e1623c5e7ca4e67b55ca7ea75068418
 
 ## 9. 可复算材料与命令
 
-[validation/match-only](../../../docs/validation/match-only)保存原4360、两路线消融、最终4352、合成前后TSV、前后PnP输出、最终G4输出和真值，均为gzip；[metrics.json](validation/match-only/metrics.json)为机器计算统计，[manifest.json](validation/match-only/manifest.json)记录压缩前后SHA256。完整视频输出保留在 `/tmp/match-final-replay/`；同配置旧版在 `/tmp/match-controlled-before-replay/`。
+[validation/match-only](validation/match-only)保存原4360、两路线消融、最终4352、合成前后TSV、前后PnP输出、最终G4输出和真值，均为gzip；[metrics.json](validation/match-only/metrics.json)为机器计算统计，[manifest.json](validation/match-only/manifest.json)记录压缩前后SHA256。完整视频输出保留在 `/tmp/match-final-replay/`；同配置旧版在 `/tmp/match-controlled-before-replay/`。
 
 ```bash
 cmake -S src/tushenghao -B build -DMARK_BUILD_G2=ON -DMARK_BUILD_G4=ON

@@ -2,8 +2,10 @@
 
 当前实现与复核入口：
 
+- [G01_G02_VALIDATION_REPORT.md](G01_G02_VALIDATION_REPORT.md)：a582c48后G2消歧、真实Unique到G4条件复验、NIS与MJPG AVI完整读回。
+
 - [MATCH_ONLY_RULES.md](MATCH_ONLY_RULES.md)：比赛尺寸／规则依据、match-only契约、两路线与质量原则。
-- [MATCH_ONLY_REFACTOR_REPORT.md](MATCH_ONLY_REFACTOR_REPORT.md)：本轮代码改动、构建、1676帧与真值对照、MaixCam待验项。
+- [MATCH_ONLY_REFACTOR_REPORT.md](MATCH_ONLY_REFACTOR_REPORT.md)：a582c48的match-only代码改动、构建、1676帧与真值对照、MaixCam待验项。
 - [flow-guide.md](flow-guide.md)：原位维护的执行顺序、输入输出和替换点。
 - [validation/match-only/metrics.json](validation/match-only/metrics.json)：统计及可复算数据。
 
@@ -12,4 +14,4 @@
 - [SLIMMING_REPORT.md](SLIMMING_REPORT.md)：第一批瘦身报告。
 - [CORNER_FIT_REFACTOR_PROPOSAL.md](CORNER_FIT_REFACTOR_PROPOSAL.md)：第一批建议与本轮评估回填。
 
-这些任务文档由根目录移到docs整理；其他历史证据快照保留原样，不参与当前构建。
+这些任务文档由根目录统一移到src/tushenghao/docs整理；其他历史证据快照保留原样，不参与当前构建。

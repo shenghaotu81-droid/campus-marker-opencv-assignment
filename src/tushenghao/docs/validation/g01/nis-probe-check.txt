@@ -1,0 +1,1 @@
+frames=1676 live_comparisons=1103 public_velocity_comparisons=1011 accepted_nis_comparisons=1037 max_position_diff=0 max_covariance_diff=0 max_velocity_diff=0 max_accepted_nis_diff=0

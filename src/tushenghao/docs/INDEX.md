@@ -1,8 +1,11 @@
 # 文档索引
 
-布局执行记录见 [restructure-changes.md](restructure-changes.md)。现行代码首先读 [流程导读](flow-guide.md) 与 [瘦身修改报告](lean-changes.md)，再查 [数据流与接口](dataflow-interfaces.md)。以下各阶段验收数字与旧目录描述保留原时点含义；本轮没有关闭 G-01/G-02/G-03，也没有升级硬件资格。
+当前入口：match-only规则、角拟合两路线与最新G2筛选见[MATCH_ONLY_RULES](MATCH_ONLY_RULES.md)、[flow-guide](flow-guide.md)和[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。新代码真实录像1054 Unique／34 Ambiguous／0 NoSolution，G4已完成原profile数值下的条件实测链验证；生产profile仍空，G-02真实速度协方差校准与硬件时间验证仍OPEN。下文保留旧阶段验收的原时点含义，旧入口／预算／关卡不代表现行代码。
 
-当前实现先读[README](../README.md)与[Block3当前状态](block3.md)，再查[预算及审批](block3_budget.md)、[适用边界](evidence/block3/05-L-observation-v5-v7/适用边界与已知局限.md)。Block3/4/5 已合入；算法基准为冻结v7，H已PASS，人工 V/Q 等验收仍待完成；Block4代码及G-B已批准落地，批准范围内Block4验收已完成，公共流程按预算就绪，未标注视频不报正确率。
+
+布局执行记录见 [restructure-changes.md](restructure-changes.md)。现行代码首先读 [流程导读](flow-guide.md) 与 [瘦身修改报告](lean-changes.md)，再查 [数据流与接口](dataflow-interfaces.md)。以下各阶段验收数字与旧目录描述保留原时点含义；该旧瘦身轮次没有关闭G-01/G-02/G-03；最新软件条件链结论见上方G-01报告，硬件资格不升级。
+
+历史Block阶段先读[README](../README.md)与[Block3当前状态](block3.md)，再查[预算及审批](block3_budget.md)、[适用边界](evidence/block3/05-L-observation-v5-v7/适用边界与已知局限.md)。Block3/4/5 已合入；算法基准为冻结v7，H已PASS，人工 V/Q 等验收仍待完成；Block4代码及G-B已批准落地，批准范围内Block4验收已完成，公共流程按预算就绪，未标注视频不报正确率。
 
 | 入口 | 内容 |
 |---|---|
@@ -17,7 +20,7 @@
 | [工具索引](../docs/tools/INDEX.md) | 用途、构建入口、命令及退出语义 |
 | [Block3历史](history/block3-before-final-organization.md) | 完整过程及已撤回计划，仅作历史对照 |
 
-[block1.md](block1.md)、[block2.md](block2.md)、[corner_semantics.md](corner_semantics.md)保留原记录；其中旧路径/阶段计划按记录时点理解，现行实现以Block3当前状态和README为准。
+[block1.md](block1.md)、[block2.md](block2.md)、[corner_semantics.md](corner_semantics.md)保留原记录；其中旧路径/阶段计划按记录时点理解，现行实现以本页顶部规则、flow-guide和README为准。
 
 冻结总汇总有6条原有引用指向未提供文档，ref原文保持；缺失清单见[整理验证](architecture/docs-tools-organization.md)。当前可编辑导航均已校验。
 

@@ -1,0 +1,16 @@
+[ 11%] Built target vision_observability
+[ 11%] Built target vision_math
+[ 17%] Building CXX object src/config/CMakeFiles/vision_config.dir/pose/pose_config.cpp.o
+[ 17%] Building CXX object src/config/CMakeFiles/vision_config.dir/detector/config.cpp.o
+[ 20%] Building CXX object src/config/CMakeFiles/vision_config.dir/pose/tag_config_validation.cpp.o
+[ 23%] Linking CXX static library libvision_config.a
+[ 29%] Built target vision_config
+[ 32%] Building CXX object src/pose/CMakeFiles/vision_pose.dir/validation/pose_geometry.cpp.o
+[ 35%] Building CXX object src/pose/CMakeFiles/vision_pose.dir/estimation/pose_estimator.cpp.o
+[ 38%] Building CXX object src/pose/CMakeFiles/vision_pose.dir/tag/tag_detector.cpp.o
+[ 41%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/execution/detector.cpp.o
+[ 44%] Linking CXX static library libvision_detection.a
+[ 82%] Built target vision_detection
+[ 85%] Linking CXX static library libvision_pose.a
+[ 85%] Built target vision_pose
+[100%] Built target vision_tracking

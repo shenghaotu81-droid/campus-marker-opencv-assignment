@@ -17,9 +17,9 @@
 │   ├── README.md
 │   ├── raw/
 │   └── camera/
-├── docs/
-│   └── assets/
 ├── src/
+│   └── tushenghao/
+│       └── docs/          # 规则、报告、素材与验证记录
 └── submissions/
 ```
 

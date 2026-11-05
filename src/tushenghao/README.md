@@ -1,90 +1,43 @@
-# MARK 检测：快速开始
+# MARK视觉链：构建与运行
 
-本目录实现基于白色几何结构的 MARK 检测、当前帧角点取证、时序稳定及离线诊断。以下操作适用于 Ubuntu/Linux，均从**仓库根目录**执行；输入视频由你提供。
+当前实现按三L＋短M完整匹配确定80×80mm白片结构的物理身份，四边形直接给角边，两条角拟合路线，G2保留IPPE多解、绝对预算和充分差距消歧，G4保留NIS与coast。先读[流程导读](docs/flow-guide.md)、[match-only规则](docs/MATCH_ONLY_RULES.md)和[最新G-01/G-02验证报告](docs/G01_G02_VALIDATION_REPORT.md)；旧阶段材料按记录时点理解。
 
-布局迁移明细见 [布局重构记录](docs/restructure-changes.md)。代码按实际执行顺序阅读见 [流程导读](docs/flow-guide.md)，本次瘦身范围、裁决和验证见 [修改报告](docs/lean-changes.md)。现行模式名为 `SegmentedMark`，显示开关归 `display`；旧键会明确报错。历史验收结论保留各自原适用范围。
+## 构建
 
-## 第一步：安装依赖并构建
-
-需要 C++17、CMake ≥3.16、OpenCV 和 OpenSSL。每条命令均为单行：
+从仓库根目录执行。依赖C++17、CMake≥3.16、OpenCV；启用G2需AprilTag 3开发包。
 
 ```bash
-sudo apt-get update && sudo apt-get install --no-install-recommends build-essential cmake libopencv-dev libssl-dev
-cmake -S src/tushenghao -B build/release -DCMAKE_BUILD_TYPE=Release && cmake --build build/release -j4
+sudo apt-get install --no-install-recommends build-essential cmake libopencv-dev libapriltag-dev
+cmake -S src/tushenghao -B build -DCMAKE_BUILD_TYPE=Release -DMARK_BUILD_G2=ON -DMARK_BUILD_G4=ON
+cmake --build build -j4
+ctest --test-dir build --output-on-failure
 ```
 
-几何夹具／测量工具额外需要 `nlohmann-json3-dev`，见[工具索引](docs/tools/INDEX.md)；普通 App 无须构建这些工具。`clang-format` 仅用于开发排版，不是运行依赖。
+只检测可关闭G2/G4，G4依赖G2。`VISION_BUILD_TOOLS=OFF`可只构建库，`BUILD_TESTING=OFF`不构建测试。检测库不链接G2/G4；各模块公开接口在`include/vision/`。
 
-## 第二步：检查配置并选择一种运行方式
-
-替换下面的视频占位符；路径含空格时保留双引号。
+## 运行
 
 ```bash
-VIDEO="<你的视频绝对路径>"
-build/release/marker_app --check-config --config src/tushenghao/config/detector_verification.yaml
-build/release/marker_app --check-config --config src/tushenghao/config/detector.yaml
-build/release/marker_app --check-config --config src/tushenghao/config/detector_debug.yaml
+build/marker_app --video data/raw/marker_video.avi --config src/tushenghao/config/detector.yaml
 ```
 
-三种配置均检查通过后，选择一种方式运行，不必首次全部执行：
+摄像头用`--camera 0`替换`--video ...`。CLI仅接受`--video`／`--camera`二选一及可选`--config`；旧mode、display、run-dir、expected-frames、pose_app和tracking_app入口均已删除。
 
-| 方式 | 用途 | 输出目录 |
-|---|---|---|
-| baseline | 无弹窗的处理与汇总 | `new-runs/quickstart-baseline-01` |
-| debug + display | 看检测框与逐帧诊断 | `new-runs/quickstart-debug-01` |
-| verification + export-video | 保留完整逐帧证据和带框视频 | `new-runs/quickstart-verification-01` |
-
-```bash
-build/release/marker_app --video "$VIDEO" --config src/tushenghao/config/detector.yaml --mode baseline --run-dir new-runs/quickstart-baseline-01
-build/release/marker_app --video "$VIDEO" --config src/tushenghao/config/detector_debug.yaml --mode debug --display --run-dir new-runs/quickstart-debug-01
-build/release/marker_app --video "$VIDEO" --config src/tushenghao/config/detector_verification.yaml --mode debug --run-purpose verification --export-video --run-dir new-runs/quickstart-verification-01
-```
-
-输出必须使用新目录。再次运行将对应后缀改成 `02` 等，不覆盖既有证据。`--display` 需要图形桌面；无图形环境时移除该选项或选择视频导出，以文件查看结果。verification 是报告用途，CLI 使用 `--mode debug --run-purpose verification`。
-
-`--expected-frames N` 可在帧数已知时核查截断，不是固定常量。省略时程序使用可用的容器帧数；无法可靠核验时报告“完整性未验证”，不能据此认定完整成功。已知本项目原视频回归才可显式填写 1676。
-
-## 第三步：查看结果
-
-在所选 `--run-dir` 中查看：
+输出目录由detector YAML的`output.run_directory`指定，未填为`outputs/marker`；已有目录拒绝覆盖。每次运行应配置新目录。资源路径相对配置文件解析；G2/G4从detector YAML同目录读取pose.yaml和tracking.yaml，临时复制配置时要带齐相对依赖。
 
 | 文件 | 内容 |
 |---|---|
-| `summary.yaml` | 帧数、处理时间和状态汇总 |
-| `frames.jsonl` | debug/verification 的逐帧状态和诊断；baseline 不输出帧详情 |
-| `effective_config.yaml`、`manifest.yaml` | 本次配置、输入与运行来源 |
-| `overlay.mp4` | 带框视频，仅启用导出时存在 |
+| observations.yaml | 启用G2时逐帧全部候选、筛选状态及质量旗 |
+| tracks.yaml | 启用G4时逐帧冻结状态；空检测也推进生命周期 |
+| overlay.avi | AVI＋MJPG叠加视频，完成后逐帧读回验证再发布 |
+| summary.yaml | 帧数、检测／位姿／跟踪计数与可选总耗时 |
 
-终端保留技术 ID；中文摘要帮助快速查看帧数、耗时和瓶颈。先看退出码和运行完整性；异常时查 `FAILED.json` 或 `INCOMPLETE.json`。检出数量不等于正确率。
+没有弹窗，文件输出只读消费主线结果。视频较大，可用Windows系统播放器或`ffplay outputs/marker/overlay.avi`查看；本次已独立解码1676帧，未在Windows GUI实测。
 
-导出采用现有 MJPG in MP4，部分 VS Code 内置播放器不支持。用系统播放器打开，或安装 FFmpeg 后执行：
+## 当前验证与边界
 
-```bash
-ffplay new-runs/quickstart-verification-01/overlay.mp4
-```
+固定1676帧录像：1088检出、588未检出；1054 Unique、34 Ambiguous、NoSolution=0。G2预算1.10px／1.10px、差距0.25px；相对a582c48全部2176候选数值不变，同一1088帧最佳RMSE中位／P95／最大为0.382429／0.766330／1.037059px。小差距不强选，角质量标签不回变拒绝门。
 
-## 路径与已知限制
+生产G4 profile仍空，默认NOT_READY。用户授权复用原合成profile的条件回放产生1050 MEASURED／53 COASTING／573 LOST、1011帧速度；相机profile错配和未知时间警告保留，qualified始终false。G-02没有独立速度真值，NIS无法唯一确定Pvv低估倍数。MaixCam、比赛灯光／运动、时间界和速度误差需实测；桌面录像不授予硬件或控制资格。
 
-配置模型路径相对 YAML 所在目录解析；命令中的视频和输出路径按当前工作目录解析。库使用者包含 `<vision/detection/detector.hpp>`，内部步骤见 `src/detection/`，其余模块各有自己的 `src/<模块>/CMakeLists.txt`。
-
-当前框来自当前帧测量，失检时不绘历史框；证据不足、结构截断或无法消除的几何竞争会拒绝，方向不唯一可保持 unknown。112恢复已落地：固定1676帧视频达到1088检测、112/112恢复，原976帧raw四角逐值不变，集合外新增0；单线程Release两次实测均值7.67/7.48ms、最大27.80/26.06ms，均0帧超33ms。历史沙盒参考为均值7.5ms、最大29.5ms、0超33ms，详见[112恢复验收](docs/fix112_recovery_acceptance.md)。
-
-结论限于固定1676帧基准，不保证任意输入/硬件的33ms最坏耗时；固定2px奇偶位移压力样本仍严格拒绝，保留这一盲区。一般透视、任意尺度/成像条件和实拍亚像素角点精度仍有适用范围限制；实拍视频没有独立真值标注，独立合成定位结果不能外推为实拍正确率。
-
-## G2 位姿与退出感知
-
-G2 是独立构建选项，原 MARK 检测器接口保持不变。安装/构建/运行/参数与限制见 [G2 使用说明](docs/g2.md)，验收状态见 [G2 验收记录](docs/g2_acceptance.md)。
-
-默认位姿预算和退出 Tag 信息尚未实测，候选解可用于离线验证；未经过实车确认。
-
-## G4 帧间跟踪与速度估计
-
-构建/运行/参数与[后续关闭流程](docs/g4.md#后续关闭流程)见[G4使用说明](docs/g4.md)，软件实测与三项OPEN关卡见[G4验收记录](docs/g4_acceptance.md)。本期只感知，不做控制；G2当前无真实Unique、速度误差界和有界时间仍待实测，未经过实车确认。
-
-## 文档导航
-
-- [完整文档索引](docs/INDEX.md)
-- [112恢复施工记录](docs/fix112_recovery_log.md)与[验收结果](docs/fix112_recovery_acceptance.md)
-- [后续小修施工记录](docs/fix2_followup_log.md)与[验收结果](docs/fix2_followup_acceptance.md)
-- [修改前 README 历史全文](docs/history/README_before_fix2_followup.md)：保留 Block3/4/5、Final-fixes、Path A 的全部历史说明和命令。
-- [G2 位姿与退出感知](docs/g2.md)：通用 PnP 求解器 + MARK/AprilTag 双 wrapper，含阈值标定与验收。
+全部报告、规则与验证资料统一在[src/tushenghao/docs](docs/INDEX.md)，专题入口见[视觉重构索引](docs/VISION_REFACTOR_INDEX.md)。

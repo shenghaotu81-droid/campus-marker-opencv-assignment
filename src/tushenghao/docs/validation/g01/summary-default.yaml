@@ -1,0 +1,28 @@
+%YAML:1.0
+---
+frames: "1676"
+detections: "1088"
+statuses:
+   -
+      name: DETECTED
+      count: "1088"
+   -
+      name: NOT_DETECTED
+      count: "588"
+reasons:
+   -
+      name: TRACKING_PROFILE_NOT_READY
+      count: "1676"
+poses:
+   -
+      name: AMBIGUOUS
+      count: "34"
+   -
+      name: NOT_DETECTED
+      count: "588"
+   -
+      name: UNIQUE
+      count: "1054"
+tracks:
+   []
+elapsed_s: 4.7878258080999998e+01

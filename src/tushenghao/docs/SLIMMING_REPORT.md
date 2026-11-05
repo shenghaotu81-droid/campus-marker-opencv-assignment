@@ -1,5 +1,7 @@
 # vision 初步瘦身（第一批）修改报告
 
+> 后续状态：G2预算／消歧和视频容器已在a582c48之后更新，见[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。本文的历史复跑数字和旧输出名保留原时点含义；现行执行顺序见[flow-guide](flow-guide.md)。
+
 > 历史文档：记录第一批（基线 b600635）的完成状态／建议。后续 match-only 实施已完成，当前结论和验证以 [MATCH_ONLY_REFACTOR_REPORT.md](MATCH_ONLY_REFACTOR_REPORT.md) 为准；本文旧的“尚未实施／保留D05–D09”等描述属于当时状态。
 
 本批代码和验证已完成，工作分支为 `refactor/vision-lean`，起点 `e09970c`。交付代码、本文、原位置的 `src/tushenghao/docs/flow-guide.md`，另交付根目录 `CORNER_FIT_REFACTOR_PROPOSAL.md`。

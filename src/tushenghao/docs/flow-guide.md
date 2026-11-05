@@ -224,17 +224,17 @@ decodeStage仅编排已完成匹配的四边形。缺原图观测预算时NOT_RE
 
 ### 22. 评价并筛选位姿（原 P07–P09）
 
-独立重投影、正深度、两个重投影预算、安装约束和显式 prior 仍按原顺序筛选。
+独立重投影、正深度、两个重投影预算、安装约束和显式 prior 仍按原顺序筛选。当前参考录像的RMSE／最大单角预算均为1.10px；保留全部IPPE原始候选。
 
 **输入／输出与替换点：**输入全部候选；输出 NoSolution、Ambiguous、BudgetMissing 或 Unique。替换单个谓词仍保留候选及拒绝原因。
 
-**难读点：**两个已标定预算才决定 budgets_ready；多解不能暗选最小误差。
+**难读点：**两个预算齐全才 budgets_ready；零合格仍NoSolution。有合格支后，若还有两个数值／正深度合法、未被原安装约束或可信prior排除的解，须差支RMSE−好支RMSE≥0.25px才消歧Unique。另一支即使刚超绝对预算也参与差距保护，小差距仍Ambiguous；不按候选槽位强选。没有第二个物理／约束合法解时沿用原筛选。阈值仅在当前录像验证，MaixCam需重验，见[G-01报告](G01_G02_VALIDATION_REPORT.md)。
 
 定位：[src/pose/estimation/pose_estimator.cpp](../src/pose/estimation/pose_estimator.cpp)。
 
 ### 23. 发布位姿与质量（原 P11）
 
-Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
+充分分离或原独立约束唯一确定的Unique即control_usable；Ambiguous不发布selected_index／位姿。保留stamp、可空协方差、所有原始候选及角点质量旗。
 
 **输入／输出与替换点：**输入筛选结果；输出 PoseObservation。替换 MARK 适配保持当前帧绑定和 corner_quality_flags。
 
@@ -324,11 +324,11 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 ### 32. 逐帧写视频（原 A10）
 
-离线工具无条件写 overlay.partial.mp4，结束关闭并读回检查后发布 overlay.mp4。
+离线工具无条件写 overlay.partial.avi，结束关闭并读回检查后发布 overlay.avi。
 
 **输入／输出与替换点：**输入当前 overlay、源 fps 和视频参数；输出可播放视频文件。替换 exporter 保留失败报错和避免覆盖。
 
-**难读点：**video_fourcc/video_filename 保留原值；没有窗口、display_probe、export_video 旗或 playback_fps。
+**难读点：**video_fourcc=MJPG、video_filename=overlay.avi；没有窗口、display_probe、export_video 旗或 playback_fps。
 
 定位：[src/app/export/video_exporter.cpp](../src/app/export/video_exporter.cpp)。
 
@@ -351,7 +351,7 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 旧4360次含frame313和382各一个重复父假设；新主链1088个独立完整匹配×4角=4352次，检出帧集合完全一致。frame784 P1在新边提示下由主路恢复；用户已接受这个触发变化，冻结旧支持与边提示的回归测试仍强制检查回退确实恢复，绝不按帧号选路线。
 
-同一1088帧的最佳正深度PnP候选RMSE中位／P95／最大值为0.382429／0.766330／1.037059px，基线为0.391535／0.797333／1.197445px；这是统计分析，实际仍1088帧Ambiguous，没有强选Unique。合成共同172角的独立真值误差中位不变、P95和最大值降低。真实录像无独立角点真值，不能把PnP改善当成绝对角点精度证明；原像素残差和逐帧差异也在 [完整报告](MATCH_ONLY_REFACTOR_REPORT.md) 中如实列出。
+同一1088帧的最佳正深度PnP候选RMSE中位／P95／最大值为0.382429／0.766330／1.037059px，基线为0.391535／0.797333／1.197445px；这是统计分析，该match-only历史基线a582c48仍1088帧Ambiguous；当前G2筛选交付为1054 Unique／34 Ambiguous／0 NoSolution，同一1088帧的全部候选数值不变，见[G-01报告](G01_G02_VALIDATION_REPORT.md)。合成共同172角的独立真值误差中位不变、P95和最大值降低。真实录像无独立角点真值，不能把PnP改善当成绝对角点精度证明；原像素残差和逐帧差异也在 [完整报告](MATCH_ONLY_REFACTOR_REPORT.md) 中如实列出。
 
 路线统计在tests/detection/corners/corner_route_test.cpp，生产没有全局计数器。冻结frame784反例及连续支持、周期参数、质量标签、自检复算均在自动测试。MaixCam待验项见规则与报告，不能由桌面录像替代。
 
@@ -369,6 +369,6 @@ ctest --test-dir build --output-on-failure
 ./build/marker_app --camera 0 --config src/tushenghao/config/detector.yaml
 ```
 
-输出目录来自detector YAML的output.run_directory，未填为outputs/marker，已有目录拒绝覆盖。G2/G4配置从detector YAML同目录读取pose.yaml/tracking.yaml；全链输出observations.yaml、tracks.yaml、overlay.mp4、summary.yaml。G4依赖G2；部分构建只运行启用模块。
+输出目录来自detector YAML的output.run_directory，未填为outputs/marker，已有目录拒绝覆盖。G2/G4配置从detector YAML同目录读取pose.yaml/tracking.yaml；全链输出observations.yaml、tracks.yaml、overlay.avi、summary.yaml。G4依赖G2；部分构建只运行启用模块。
 
-调试顺序：Detector::process → runDecodePipeline → matchQuads → resolveObservedCorners → fitObservedEdgePair → IPPE → TargetTracker::step/advance → renderDebugFrame。先看输入域、物理身份和状态，再看支持、残差与协方差。没有检测也要推进G4一帧；G4事务仅input_accepted后提交，predict_to不是当前测量。历史报告和建议书已移至仓库docs，当前入口见 [文档索引](VISION_REFACTOR_INDEX.md)。
+调试顺序：Detector::process → runDecodePipeline → matchQuads → resolveObservedCorners → fitObservedEdgePair → IPPE → TargetTracker::step/advance → renderDebugFrame。先看输入域、物理身份和状态，再看支持、残差与协方差。没有检测也要推进G4一帧；G4事务仅input_accepted后提交，predict_to不是当前测量。历史报告和建议书统一在src/tushenghao/docs，当前入口见 [文档索引](VISION_REFACTOR_INDEX.md)。

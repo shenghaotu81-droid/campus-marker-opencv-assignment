@@ -1,0 +1,31 @@
+[  4%] Built target vision_observability
+[  4%] Built target vision_math
+[ 10%] Built target vision_calibration
+[ 12%] Built target calibration_tool
+[ 20%] Built target vision_config
+[ 24%] Built target vision_pose
+[ 42%] Built target vision_detection
+[ 48%] Built target vision_tracking
+[ 49%] Building CXX object tests/pose/CMakeFiles/pose_contract_test.dir/estimation/pose_contract_test.cpp.o
+[ 51%] Built target tag_detector_test
+[ 54%] Built target config_error_test
+[ 56%] Built target config_roundtrip_test
+[ 60%] Built target block3_contract_regression_test
+[ 64%] Built target corner_edge_fit_test
+[ 67%] Built target corner_resolver_test
+[ 69%] Built target detection_validator_test
+[ 71%] Built target detector_contract_test
+[ 76%] Built target screen_order_test
+[ 76%] Built target geometry_model_test
+[ 78%] Built target corner_route_test
+[ 81%] Built target tracking_contract_test
+[ 83%] Built target match_quad_test
+[ 85%] Built target tracking_io_test
+[ 91%] Built target vision_app
+[ 97%] Built target marker_app
+[ 97%] Built target debug_renderer_test
+[ 97%] Building CXX object tests/app/CMakeFiles/offline_chain_test.dir/offline/offline_chain_test.cpp.o
+[ 98%] Linking CXX executable ../../pose_contract_test
+[ 98%] Built target pose_contract_test
+[100%] Linking CXX executable ../../offline_chain_test
+[100%] Built target offline_chain_test

@@ -1,0 +1,115 @@
+{
+  "baseline": "a582c48",
+  "g2_commit": "6a79929",
+  "video_commit": "3ddfce4",
+  "input_video": {
+    "path": "data/raw/marker_video.avi",
+    "sha256": "aa1219a7a7b702ea1265be8752853a267c982a651afa0f7846f516f9517c9ac7"
+  },
+  "files": {
+    "README.md": {
+      "sha256": "16a83d10dddb54b9695a5723b27a1759dcf89a0f4ad15c9b9212f1e0629f90d5",
+      "bytes": 3805
+    },
+    "analyze.py": {
+      "sha256": "8449ef15eb4f82a8a17d2f0b523f5dec4982aa776a4ca405b68a3e00bdad1e85",
+      "bytes": 8261
+    },
+    "baseline-candidates.json": {
+      "sha256": "c3ed62d580e8348b6bb023a5f279eabe77ec5c16bd4ea7d3b87c9a3bc2fd509f",
+      "bytes": 188213
+    },
+    "build.log": {
+      "sha256": "f44b66808711fb2b738167661f3d28b4549669da04bf3c4025436af05145162c",
+      "bytes": 1362
+    },
+    "detection-build.log": {
+      "sha256": "7f0073d92cecf7ba2341b225a060376c3911efb9f41e477410cc12c8973ecebf",
+      "bytes": 2970
+    },
+    "detection-test.log": {
+      "sha256": "1dba1081b4cb19f36ffad801c89b08585706f278cbd7b500f9f92ac307a13140",
+      "bytes": 1629
+    },
+    "ffprobe-conditional.json": {
+      "sha256": "913db06842fd66142948e8dcf8e7ad59ecd5719a5c0892ff055c27db132b7908",
+      "bytes": 374
+    },
+    "ffprobe-final.json": {
+      "sha256": "913db06842fd66142948e8dcf8e7ad59ecd5719a5c0892ff055c27db132b7908",
+      "bytes": 374
+    },
+    "g2-build.log": {
+      "sha256": "1c10fb943c0180fb658a5c09a832c19b80d5474ebfdaa7db5dea1d863ef529ce",
+      "bytes": 3911
+    },
+    "g2-test.log": {
+      "sha256": "cfea3289657bb33899709942c00065f1dc22cbb3b7baf4b17bdb144fd4ab5fcc",
+      "bytes": 1830
+    },
+    "libraries-build.log": {
+      "sha256": "d57c76b4979d0ce21f272f2d8e133e2c4ae8a94d9bfc92a18f28d0557b6677af",
+      "bytes": 1033
+    },
+    "nis-pre-gate.csv.gz": {
+      "sha256": "f0bae139658772ebc0a79259f1bd952d6c3e945dd895072877a445dc26b22ff2",
+      "bytes": 165360,
+      "uncompressed_sha256": "ed646d34794baa08499e035660fb27ec98348b8fe051e6cb911c65e40c472aa1"
+    },
+    "nis-probe-check.txt": {
+      "sha256": "92a26f5324373c5cfb7f650bb4a1afb07d9be3739aa425552ca051d5d62ef00f",
+      "bytes": 183
+    },
+    "nis_probe.cpp": {
+      "sha256": "7fd8a72528f0e38185384d8e31e29ff6e77c602b9b86f1e4ec19b325ec49e0c6",
+      "bytes": 7747
+    },
+    "observations-baseline.yaml.gz": {
+      "sha256": "63a788b63f7daec9791f276b207dea164545d4a378276ca7b3ce27ce7ba0b355",
+      "bytes": 269800,
+      "uncompressed_sha256": "d9d414a9a2d033939b5dd7bf9f8f9cbf345df8267942544ebd59fddce0eeed89"
+    },
+    "observations-final.yaml.gz": {
+      "sha256": "1f15f216a6bfb39a479a8831c14f97e2e3157732869afd6d1ff92e2a9ccee9c1",
+      "bytes": 299464,
+      "uncompressed_sha256": "d997f00ed0c699dac629aefb899e368e383663a1cd7a7dc080b5968e013275af"
+    },
+    "reference-profile.yaml": {
+      "sha256": "4bc784c08f66869c65aaa6f4b8a73018da4a233da11dac5056df18dd6a75ebd6",
+      "bytes": 948
+    },
+    "results.json": {
+      "sha256": "d1088d5f5edcdf55cf10e682631517212e2b1b3591bc5bd346cd6064435301df",
+      "bytes": 7883
+    },
+    "summary-conditional.yaml": {
+      "sha256": "0cfb7a8539b84b28fe214d846422a8d39f5d09a07be07e7d16949f173731dc85",
+      "bytes": 2357
+    },
+    "summary-default.yaml": {
+      "sha256": "d67cc5846c6d5771ffc29a3f8db2b06cef3a80936adb518f5aeeb016ddda757e",
+      "bytes": 419
+    },
+    "test.log": {
+      "sha256": "1f0f912e82da2ca23d0dd5b90430deb2fdd692ea78f02ae1e969e54f66fba34b",
+      "bytes": 2126
+    },
+    "threshold-sweep-initial.txt": {
+      "sha256": "b3bccbcc09551e8acc8c5d036b4f1dcd9d13fbefe488182bf70a0ebb78309597",
+      "bytes": 3971
+    },
+    "tracking-conditional.yaml": {
+      "sha256": "d1b5f9b03ca695bb8acf009a6fb5e95420a759ec1a3f1799c4c89765a81914a2",
+      "bytes": 314
+    },
+    "tracks-conditional.yaml.gz": {
+      "sha256": "54e750cb77841448720d7b35cfe43f4e58cc4761f17be417f915bde5006a8316",
+      "bytes": 444271,
+      "uncompressed_sha256": "ff624a80848a71679fd2a944d0a189683663c67ebbd50cd57e62deaa8695c500"
+    }
+  },
+  "local_videos": {
+    "/tmp/g01-final-replay/overlay.avi": "72b232ee0653e52ef30dbc832d58cb23c90a4f94330493b89644236799b6872d",
+    "/tmp/g01-conditional-replay/overlay.avi": "fde17968b9b316cf0385f061268e07bb47678a3407ff49212c5ae96d91f563b0"
+  }
+}

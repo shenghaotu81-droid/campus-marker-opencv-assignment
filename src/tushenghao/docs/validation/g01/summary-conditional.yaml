@@ -1,0 +1,120 @@
+%YAML:1.0
+---
+frames: "1676"
+detections: "1088"
+statuses:
+   -
+      name: DETECTED
+      count: "1088"
+   -
+      name: NOT_DETECTED
+      count: "588"
+reasons:
+   -
+      name: PENDING_RESEED_POSITION_ONLY
+      count: "4"
+   -
+      name: POSE_NOT_A_CURRENT_UNIQUE_MEASUREMENT
+      count: "622"
+   -
+      name: PROFILE_PROCESS_FRAME_MISMATCH
+      count: "1676"
+   -
+      name: TIME_QUALITY_UNKNOWN_OR_OUTSIDE_VALIDATED_DOMAIN
+      count: "1676"
+   -
+      name: "TRACK_CREATED:1"
+      count: "1"
+   -
+      name: "TRACK_CREATED:10"
+      count: "1"
+   -
+      name: "TRACK_CREATED:11"
+      count: "1"
+   -
+      name: "TRACK_CREATED:12"
+      count: "1"
+   -
+      name: "TRACK_CREATED:13"
+      count: "1"
+   -
+      name: "TRACK_CREATED:2"
+      count: "1"
+   -
+      name: "TRACK_CREATED:3"
+      count: "1"
+   -
+      name: "TRACK_CREATED:4"
+      count: "1"
+   -
+      name: "TRACK_CREATED:5"
+      count: "1"
+   -
+      name: "TRACK_CREATED:6"
+      count: "1"
+   -
+      name: "TRACK_CREATED:7"
+      count: "1"
+   -
+      name: "TRACK_CREATED:8"
+      count: "1"
+   -
+      name: "TRACK_CREATED:9"
+      count: "1"
+   -
+      name: "TRACK_LOST:10:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:11:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:12:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:1:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:2:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:3:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:5:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:6:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_LOST:8:POSITION_UNCERTAINTY_EXCEEDED"
+      count: "1"
+   -
+      name: "TRACK_RESEEDED_NEW_ID_OLD:4"
+      count: "1"
+   -
+      name: "TRACK_RESEEDED_NEW_ID_OLD:7"
+      count: "1"
+   -
+      name: "TRACK_RESEEDED_NEW_ID_OLD:9"
+      count: "1"
+poses:
+   -
+      name: AMBIGUOUS
+      count: "34"
+   -
+      name: NOT_DETECTED
+      count: "588"
+   -
+      name: UNIQUE
+      count: "1054"
+tracks:
+   -
+      name: COASTING
+      count: "53"
+   -
+      name: LOST
+      count: "573"
+   -
+      name: MEASURED
+      count: "1050"
+elapsed_s: 4.8687495401000000e+01

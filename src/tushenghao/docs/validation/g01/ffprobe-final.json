@@ -1,0 +1,19 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "codec_name": "mjpeg",
+            "codec_tag_string": "MJPG",
+            "width": 1440,
+            "height": 1080,
+            "r_frame_rate": "8801/125",
+            "avg_frame_rate": "8801/125",
+            "nb_read_frames": "1676"
+        }
+    ],
+    "format": {
+        "format_name": "avi"
+    }
+}

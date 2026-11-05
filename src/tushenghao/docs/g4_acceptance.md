@@ -1,5 +1,8 @@
 # G4 实施验收记录
 
+当前入口：match-only规则、角拟合两路线与最新G2筛选见[MATCH_ONLY_RULES](MATCH_ONLY_RULES.md)、[flow-guide](flow-guide.md)和[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。新代码真实录像1054 Unique／34 Ambiguous／0 NoSolution，G4已完成原profile数值下的条件实测链验证；生产profile仍空，G-02真实速度协方差校准与硬件时间验证仍OPEN。下文保留旧阶段验收的原时点含义，旧入口／预算／关卡不代表现行代码。
+
+
 本表记录实际分支施工结果；编写者隔离预验证不能直接复制成用户已验收。四栏分开：工程完成、离线证据、尚未证明、硬件关闭条件。
 
 ## 完成内容
