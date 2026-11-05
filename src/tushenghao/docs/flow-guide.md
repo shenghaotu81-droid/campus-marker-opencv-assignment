@@ -2,13 +2,15 @@
 
 从 main 进入，按下面连续编号读到输出；编号是阅读／调用展开顺序，不是新加的运行阶段或类。旧步骤码只作核对。本批主链已由 `marker_app` 在一个进程中连接检测 → G2 位姿 → G4 跟踪；可视化是只读旁支，不回馈主线。完整构建使用 `MARK_BUILD_G2=ON`、`MARK_BUILD_G4=ON`。
 
-板块仍是独立流程步骤。函数、只读值和模块自己的显式状态表达输入、输出和替换点；没有增加新的抽象层。D05–D09 按用户后续授权保留，待替代检测规则完成再删。更大的“四边形 + 拟合”结构只在根目录 `CORNER_FIT_REFACTOR_PROPOSAL.md` 提建议，当前尚未实施。
+板块仍是独立流程步骤。函数、只读值和模块自己的显式状态表达输入、输出和替换点；没有增加新的抽象层。D05–D09 已按 [match-only 规则](../../../docs/MATCH_ONLY_RULES.md) 删除。当前检测只输出物理序四边形，拟合直接使用相邻顶点连线；没有仿射、hypothesis、补片或方向假设归并。M提供P1身份，三个L提供其余角；完整性由当前帧是否存在完整匹配表达。
 
 BGR8 是蓝／绿／红三通道的 8 位图像；RAW 是当前原始检测。K/dist 是内参／畸变参数；profile 是跟踪的数值参数，配置为空时不会自动填入合成数据。物理角身份与屏幕角顺序分别表达。时间界不是高斯标准差；相机系速度含本车运动，是表观速度。
 
+比赛对象是80×80mm的MARK白色结构；115×120×15mm外板不进入PnP尺度或角拟合。V1.0.3与V1.0.2相关图纸和兑换运动规则一致，核对页码见 [本轮报告](../../../docs/MATCH_ONLY_REFACTOR_REPORT.md)。
+
 ## 主程序：从配置到一帧，再到运行结束
 
-真实顺序：main → loadConfig → runOffline → 打开输入 → 构造独立模块 → 建输出 → 逐帧 Detector::process → G2 → G4 → 写协议 → 只读渲染 → 写视频 → 下一帧 → 关闭输出与摘要。没有 STABLE、ExecutionScope、subset、窗口或逐帧取证分支。
+真实顺序：main → loadConfig → runOffline → 打开输入 → 构造独立模块 → 建输出 → 逐帧 Detector::process → G2 → G4 → 写协议 → 只读渲染 → 写视频 → 下一帧 → 关闭输出与摘要。没有STABLE、对应搜索、窗口或逐帧取证分支。
 
 ### 1. 主入口解析运行请求（原 A01）
 
@@ -18,7 +20,7 @@ BGR8 是蓝／绿／红三通道的 8 位图像；RAW 是当前原始检测。K/
 
 **难读点：**五个旧开关、窗口和导出旗已删除；现在没有无值开关，视频始终写出。
 
-定位：[tools/apps/marker/main.cpp:6](../tools/apps/marker/main.cpp#L6)。
+定位：[tools/apps/marker/main.cpp](../tools/apps/marker/main.cpp)。
 
 ### 2. 识别配置协议（原 Q01）
 
@@ -26,9 +28,9 @@ BGR8 是蓝／绿／红三通道的 8 位图像；RAW 是当前原始检测。K/
 
 **输入／输出与替换点：**输入配置路径；输出节点与字段约束。G2/G4 分别保留自己的 loader，不由 app 猜测算法参数。
 
-**难读点：**temporal、display、取证 level、mode、expected_frame_count 等旧键不再接受。
+**难读点：**temporal、display、assignment_completion、marker_geometry_path和旧几何验证键不再接受；detector.mode仍为单一SegmentedMark，CLI的--mode已删。
 
-定位：[src/config/detector/config.cpp:69](../src/config/detector/config.cpp#L69)。
+定位：[src/config/detector/config.cpp](../src/config/detector/config.cpp)。
 
 ### 3. 转换类型并保留未知值（原 Q02）
 
@@ -38,7 +40,7 @@ BGR8 是蓝／绿／红三通道的 8 位图像；RAW 是当前原始检测。K/
 
 **难读点：**空预算仍未知；删掉无消费者的期待帧数 token 机制，不再保留取证帧范围配置。
 
-定位：[src/config/reader/value_reader.hpp:7](../src/config/reader/value_reader.hpp#L7)。
+定位：[src/config/reader/value_reader.hpp](../src/config/reader/value_reader.hpp)。
 
 ### 4. 校验模块参数（原 Q03）
 
@@ -48,7 +50,7 @@ BGR8 是蓝／绿／红三通道的 8 位图像；RAW 是当前原始检测。K/
 
 **难读点：**合法配置不表示所有预算已就绪；不填经验值绕过未配置状态。
 
-定位：[src/config/detector/config.cpp:308](../src/config/detector/config.cpp#L308)。
+定位：[src/config/detector/config.cpp](../src/config/detector/config.cpp)。
 
 ### 5. 打开输入并读取帧率（原 A04）
 
@@ -58,17 +60,17 @@ runOffline(app, video, config_path) 打开视频或 camera:N，并检查输入�
 
 **难读点：**相机仍须由驱动给出有效 fps；没有 GUI、播放节流、subset 或期待总帧数核对。
 
-定位：[src/app/offline/offline_runner.cpp:22](../src/app/offline/offline_runner.cpp#L22)。
+定位：[src/app/offline/offline_runner.cpp](../src/app/offline/offline_runner.cpp)。
 
 ### 6. 构造独立模块并加载资源（原 Q04）
 
-检测器加载 MarkerGeometry；开启 G2 时从同目录 pose.yaml 读 calibration.yaml 的 K/dist 与米制点；开启 G4 时读 tracking.yaml 和显式 profile。
+检测器只保存自己的配置，不加载部件模型；开启 G2 时从同目录 pose.yaml 读 calibration.yaml 的 K/dist 与米制点；开启 G4 时读 tracking.yaml 和显式 profile。
 
 **输入／输出与替换点：**输入独立配置与资源路径；输出 Detector、PoseEstimator、可选 TagDetector、TargetTracker。替换一个模块仍消费其公开值契约。
 
 **难读点：**G4 依赖 G2；没有 profile 时跟踪报告 NOT_READY，不能把合成 profile 自动当生产标定。
 
-定位：[src/app/offline/offline_runner.cpp:32](../src/app/offline/offline_runner.cpp#L32)。
+定位：[src/app/offline/offline_runner.cpp](../src/app/offline/offline_runner.cpp)。
 
 ### 7. 建立输出文件
 
@@ -78,7 +80,7 @@ runOffline(app, video, config_path) 打开视频或 camera:N，并检查输入�
 
 **难读点：**已有目录拒绝覆盖；没有 manifest、来源指纹、环境快照或逐帧取证记录器。
 
-定位：[src/app/offline/offline_runner.cpp:45](../src/app/offline/offline_runner.cpp#L45)。
+定位：[src/app/offline/offline_runner.cpp](../src/app/offline/offline_runner.cpp)。
 
 ### 8. 逐帧读取并建立时间（原 A04）
 
@@ -88,7 +90,7 @@ runOffline(app, video, config_path) 打开视频或 camera:N，并检查输入�
 
 **难读点：**两者都不伪造曝光时刻或时间误差界；曝光／不确定度留空，接收时刻不能升级为有界时间。
 
-定位：[src/app/offline/offline_runner.cpp:69](../src/app/offline/offline_runner.cpp#L69)。
+定位：[src/app/offline/offline_runner.cpp](../src/app/offline/offline_runner.cpp)。
 
 ### 9. 核验检测输入序列
 
@@ -98,169 +100,119 @@ runOffline(app, video, config_path) 打开视频或 camera:N，并检查输入�
 
 **难读点：**Detector 不再拥有平滑、显示历史或诊断会话；reset 只清序列与尺寸。
 
-定位：[src/detection/pipeline/execution/detector.cpp:19](../src/detection/pipeline/execution/detector.cpp#L19)。
+定位：[src/detection/pipeline/execution/detector.cpp](../src/detection/pipeline/execution/detector.cpp)。
 
-### 10. 检查预算并预处理（原 D02）
+### 10. 预处理并保存坐标映射（原 D02）
 
-确认 assignment 与原图角观察预算存在，再调用 preprocess 生成工作图和原图映射。
+preprocess只resize，不修改原图；保存原图只读视图、白色分割阈值和像素中心映射。
 
-**输入／输出与替换点：**输入当前帧和检测配置；输出 PreparedFrame。替换 preprocess 保留原图只读视图和双向缩放。
+**输入／输出与替换点：**输入FrameInput、PreprocessConfig；输出PreparedFrame。替换resize必须保持双向坐标映射。
 
-**难读点：**删掉 STABLE 预算门后，仅缺实际消费者预算才 NOT_READY；主链只保留一条执行路径。
+**难读点：**映射是图像尺寸换算，不是MARK模型变换；后续精角必须来自原图。
 
-定位：[src/detection/pipeline/decode/decode_stage.cpp:125](../src/detection/pipeline/decode/decode_stage.cpp#L125)。
+定位：[src/detection/preprocess/preprocess.cpp](../src/detection/preprocess/preprocess.cpp)。
 
-### 11. 提取白片并形成形状观察（原 D03–D04）
+### 11. 从工作图提取白片（原 D03）
 
-从当前图像提取带来源 ID 的组件，计算几何与拓扑候选。
+灰度、白色阈值、外轮廓和原面积下限过滤。WhiteComponent只保留当前轮廓、bbox和碰边标记。
 
-**输入／输出与替换点：**输入 PreparedFrame、GeometryConfig；输出 WhiteComponent 和 ShapeObservation。替换观察不提前宣布物理身份。
+**输入／输出与替换点：**输入PreparedFrame和GeometryConfig；输出白片集合。替换分割不改变后续四边形契约。
 
-**难读点：**观察不是 MARK 对应；当前仍由后续 D05–D09 产生定位输入。
+**难读点：**没有ShapeObservation、L对应集合或部件ID；这里还没有MARK身份。
 
-定位：[src/detection/geometry/observation/geometry_observation.cpp:2](../src/detection/geometry/observation/geometry_observation.cpp#L2)。
+定位：[src/detection/geometry/observation/geometry_observation.cpp](../src/detection/geometry/observation/geometry_observation.cpp)。
 
-### 12. 枚举三 L 对应（原 D05，本批保留）
+### 12. 直接匹配 MARK 四边形
 
-枚举观测三 L 和模型三 L 的对应，遵守现有搜索资源上限。
+按观察白片跨度局部归组，S可作空间连通桥。取实测凸包的四顶点，各由不同角片支撑；六边一凹结构中，外角须与凹点在轮廓上相隔三顶点。按沿相邻框边的归一化跨度区分三个30mm长角与一个14mm短角，分界22/80；M为P1，正绕序固定其余身份。
 
-**输入／输出与替换点：**输入只读形状观察与模型；输出 ComponentAssignment 组合。替换枚举必须保留来源身份和截断状态。
+**输入／输出与替换点：**输入当前白片和原图映射；输出vector<MatchQuad>，每项是原图粗定位的P0…P3。可单独替换matchQuads，但必须继续保证实测外边、身份、完整性三条契约。
 
-**难读点：**删除此块已转后续任务；本批没有把对应藏进拟合或另造替代检测。
+**难读点：**外框是80×80 MARK，绝非115×120外板。无完整匹配就不拟合；不能由三个L补P1。22/80来自图纸，不是像素调参；它不是严格透视不变量，极端视角和混组需重验。
 
-定位：[src/detection/geometry/parent/geometry_matcher.cpp:104](../src/detection/geometry/parent/geometry_matcher.cpp#L104)。
+定位：[src/detection/geometry/matching/match_quad.cpp](../src/detection/geometry/matching/match_quad.cpp)。
 
-### 13. 拟合父仿射假设（原 D06，本批保留）
+### 13. 进入独立匹配循环并检查拟合预算
 
-用模型与实测锚点拟合 model→working 的二维仿射，并装配父假设。
+decodeStage仅编排已完成匹配的四边形。缺原图观测预算时NOT_READY；每次decode建立一个原图轮廓索引，按需准备，绝不跨帧缓存。
 
-**输入／输出与替换点：**输入候选对应、模型点和观测锚点；输出 GeometryHypothesis。替换拟合不把二维仿射称为相机位姿。
+**输入／输出与替换点：**输入PreparedFrame、匹配四边形集合、CornerConfig；输出测量、Detection和原因摘要。各拟合／排序／验证／发布函数仍独立。
 
-**难读点：**未来四边形输入可能直接给边；那部分只见根目录建议书，本批仍用现有仿射。
+**难读点：**同一空间组无法确定唯一MARK时不产生框；已分离的多个MARK分别拟合和发布，没有父假设循环或失败竞争归并。
 
-定位：[src/detection/geometry/parent/geometry_matcher.cpp:74](../src/detection/geometry/parent/geometry_matcher.cpp#L74)。
+定位：[src/detection/pipeline/decode/decode_stage.cpp](../src/detection/pipeline/decode/decode_stage.cpp)。
 
-### 14. 独立复核父假设（原 D07，本批保留）
+### 14. 四边形给边并取得当前原图轮廓
 
-按现有轮廓、面积与残差约束复核父候选。
+对q[i]直接使用q[i-1]→q[i]及q[i]→q[i+1]作为两条边提示。OriginalContourIndex每帧只分割一次原图，按粗角邻近边界取完整轮廓；四角不能复用同一原图角片，碰原图边界仍失败。
 
-**输入／输出与替换点：**输入父 batch、模型和当前组件；输出通过的 batch 与报错摘要。替换验证不暗改阈值。
+**输入／输出与替换点：**输入四边形、原图及配置；输出当前角轮廓和两边提示。替换原图取证不能用粗角本身当精角。
 
-**难读点：**本批不精简 G2 screening，也不借瘦身重定检测阈值。
+**难读点：**没有模型边投影、affine、hypothesis或回调Source；最近轮廓只是来源候选，真正连续边支持仍须通过后面的拟合结构检查。
 
-定位：[src/detection/geometry/validation/geometry_validation.cpp:196](../src/detection/geometry/validation/geometry_validation.cpp#L196)。
+定位：[src/detection/corners/measurement/corner_resolver.cpp](../src/detection/corners/measurement/corner_resolver.cpp)。
 
-### 15. 测量缺片候选（原 D08，本批保留）
+### 15. 提取连续支持弧（原 D12）
 
-在父仿射限定的范围测量 M/S 缺片候选。
+用原图轮廓简化顶点和沿弧trim邻域生成候选端点，枚举完整连续弧；同一调用缓存跨度、位置、拟合等重复计算。
 
-**输入／输出与替换点：**输入三 L 父候选、组件和显式 completion 预算；输出可供绑定的候选。替换观察保留有限搜索域。
+**输入／输出与替换点：**输入完整有序轮廓、两条四边形边提示和预算；输出支持弧及关联。替换搜索要保留所有内部像素、连续性和独立支持。
 
-**难读点：**M1 提供 P1；缺少必要对应不能靠屏幕排序或预测角点补上。
+**难读点：**两条路线用同一支持提取；全像素端点路线已删。回走路径不能仅按端点当作相同支持，不能拼不连续白片。
 
-定位：[src/detection/geometry/completion/geometry_assignment_completion.cpp:33](../src/detection/geometry/completion/geometry_assignment_completion.cpp#L33)。
+定位：[src/detection/corners/fitting/corner_edge_fit.cpp](../src/detection/corners/fitting/corner_edge_fit.cpp)。
 
-### 16. 完成有界绑定（原 D09，本批保留）
+### 16. 两条互补拟合路线（原 D13）
 
-完成六片一对一绑定并传播资源截断和完整性。
+主路普通L2＋原位置关联；没有合法边对才调用周期相位中位数＋后验位置关联。两路共用提取、求交、来源和质量输出。后验关联将实测支持投影到拟合线后检查与提示边的位置关系。
 
-**输入／输出与替换点：**输入候选与剩余身份；输出 segmented_assignments_ready 的 GeometryBatch。替换绑定保留唯一来源关系。
+**输入／输出与替换点：**输入同一角的真实连续支持；输出两条物理拟合线、raw残差和模型校正残差。替换估计器保持这些口径分开。
 
-**难读点：**触发资源上限不能冒称搜索完整；此块等替代检测规则准备好后另删。
+**难读点：**周期模型只解释扫描奇偶偏移，不等于MaixCam必有同样噪声；合法L2不主动改用周期解。ZeroSlope、L1、周期OLS作为独立路线及全端点退路均已删。
 
-定位：[src/detection/geometry/completion/geometry_assignment_completion.cpp:33](../src/detection/geometry/completion/geometry_assignment_completion.cpp#L33)。
+定位：[src/detection/corners/fitting/corner_edge_fit.cpp](../src/detection/corners/fitting/corner_edge_fit.cpp)。
 
-### 17. 进入当前帧候选循环
+### 17. 求交与候选选择（原 D14）
 
-逐候选确认完整片段集合，调用原图四角定位；失败竞争仍计入 unresolved。
+保留独立支持、短连接弧、凸转折、非病态夹角和有限交点检查。可行边对按(r0+r1)×sqrt(1/n0+1/n1)排序，相同分数用弧索引确定性选取；相互冲突交点仍按原64px²预算处理。
 
-**输入／输出与替换点：**输入完成绑定的 batch；输出角测量集合与诊断。替换编排仍显式调用下列独立步骤。
+**输入／输出与替换点：**输入两条拟合线及完整支持；输出唯一实测交点和证据。原semantic_geometry_threshold在拟合内的用途改名max_pair_disagreement_px2，数值不变。
 
-**难读点：**不能丢掉一个无法排除的失败候选，再把剩余候选强称唯一。
+**难读点：**该分数减轻短弧偶然低残差的偏好，不是协方差或精度证明。原error仍为r0+r1；角误差、extension和残差超限只标质量，不拒绝。
 
-定位：[src/detection/pipeline/decode/decode_stage.cpp:16](../src/detection/pipeline/decode/decode_stage.cpp#L16)。
+定位：[src/detection/corners/fitting/corner_edge_fit.cpp](../src/detection/corners/fitting/corner_edge_fit.cpp)。
 
-### 18. 按物理身份取原图轮廓和邻边（原 D10–D11）
+### 18. 形成四角证据并检查必要条件
 
-按 P0…P3 固定绑定查当前白片，关联原图完整轮廓，投影两条模型邻边。
+每角保留物理身份、帧／原图组件ID、连续弧起止、像素、拟合线、交点、raw／校正残差、延伸量和角误差。删除模型边／顶点ID及拼接stable_id字符串。
 
-**输入／输出与替换点：**输入 PreparedFrame、组件、hypothesis、模型和 OriginalContourSource；输出每角的轮廓与边提示。替换原图观察不得用模型点替代实测点。
+**输入／输出与替换点：**输入四个成功拟合；输出double CornerMeasurement。生产验证仅检查来源、完整性和数值；独立重拟合与claimed值比对留在测试verifyCornerEvidence。
 
-**难读点：**当前入口仍吃 hypothesis；去仿射、去 hypothesis 的四边形架构尚未实施。
+**难读点：**corner_error是交点到实测连接弧距离，不是独立真值误差；原图证据不完整仍不能伪造成功。
 
-定位：[src/detection/corners/measurement/corner_resolver.cpp:13](../src/detection/corners/measurement/corner_resolver.cpp#L13)。
+定位：[src/detection/corners/validation/corner_evidence_validation.cpp](../src/detection/corners/validation/corner_evidence_validation.cpp)。
 
-### 19. 枚举连续支持弧（原 D12）
+### 19. 排序与原图几何验证（原 D15–D16）
 
-从轮廓端点生成连续弧，按方向、有限边位置、独立支持和实际跨度检查。
+屏幕排序保留物理映射，随后检查四边形有限、严格凸、原图边界与证据来源。
 
-**输入／输出与替换点：**输入完整有序轮廓、两条边提示与预算；输出当前尝试的支持集合。替换搜索保留当前帧像素和歧义覆盖。
+**输入／输出与替换点：**输入四物理角和ScreenOrder；输出验证结果。排序和验证均可单独替换。
 
-**难读点：**回走轮廓端点相同不表示支持序列相同，不能用端点去重替代全序列语义。
+**难读点：**屏幕LT/RT/RB/LB不重猜P0…P3；部分出框仍未检出，由G4 coast与重捕接手。
 
-定位：[src/detection/corners/fitting/corner_edge_fit.cpp:617](../src/detection/corners/fitting/corner_edge_fit.cpp#L617)。
+定位：[src/detection/corners/validation/detection_validator.cpp](../src/detection/corners/validation/detection_validator.cpp)。
 
-### 20. 按顺序拟合不同模型（原 D13）
+### 20. 发布 RAW 角点和质量旗
 
-先普通 L2，再周期相位／零斜率及必要退路；共 11 个不同尝试，首个成功返回。
+将double实测点转float，再确认屏幕序、映射和bbox，发布Detection。方向来自match固定映射，不再调用语义假设归并。
 
-**输入／输出与替换点：**输入同一角的轮廓与边；输出两条拟合线及各类残差。替换估计器保持 raw 与模型校正误差分开。
+**输入／输出与替换点：**输入测量及已确定物理身份；输出Detection／FrameResult，供G2读取RAW。替换发布不能裁剪或移动实测角。
 
-**难读点：**原 8/9 路与 2/4 路完全重复，已删除；零命中不等于所有新场景都可删除该模型。
+**难读点：**quality_flags的1/2/4表示拟合残差／角误差／延伸超配置；只标记，不丢角。
 
-定位：[src/detection/corners/fitting/corner_edge_fit.cpp:734](../src/detection/corners/fitting/corner_edge_fit.cpp#L734)。
+定位：[src/detection/corners/publication/detection_publication.cpp](../src/detection/corners/publication/detection_publication.cpp)。
 
-### 21. 求直线交点（原 D14）
-
-检查支持不复用、转折连接、凸性、夹角和有限交点，计算角误差及延伸量。
-
-**输入／输出与替换点：**输入两条真实支持线；输出 PairGeometry 和当前实测交点。替换求交保留数值可求解性。
-
-**难读点：**角误差／extension 超限只保留数值标签；缺支持、近平行和截断仍不能发布成功角。
-
-定位：[src/detection/corners/fitting/corner_edge_fit.cpp:474](../src/detection/corners/fitting/corner_edge_fit.cpp#L474)。
-
-### 22. 形成四角证据并检查必要条件
-
-保留原图来源、残差、模型误差、延伸和角误差；生产检查来源、完整性及数值合法性。
-
-**输入／输出与替换点：**输入 CornerEvidence；输出必要合法性检查结果。独立重拟合、claimed 参数与误差比对由测试侧 verifyCornerEvidence 承担。
-
-**难读点：**生产不再每帧重拟合同一批支持像素；不能把标签值读成角点真值误差或协方差。
-
-定位：[src/detection/corners/validation/corner_evidence_validation.cpp:6](../src/detection/corners/validation/corner_evidence_validation.cpp#L6)。
-
-### 23. 排序与原图几何验证（原 D15–D16）
-
-排序保留物理映射；核对四边形严格凸、有限、在原图内及证据来源。
-
-**输入／输出与替换点：**输入四物理角与 ScreenOrder；输出验证结果。替换排序或验证时保持 double 和 float 的边界。
-
-**难读点：**出框仍未检出；本批不实施部分出框补角。
-
-定位：[src/detection/corners/validation/detection_validator.cpp:270](../src/detection/corners/validation/detection_validator.cpp#L270)。
-
-### 24. 归并语义与方向（原 D17）
-
-比较当前几何解释，按原确定性规则保留测量并判断方向唯一性。
-
-**输入／输出与替换点：**输入四角测量、截断状态和排序结果；输出保留测量与 orientation_unique。替换归并不按最小 PnP 误差猜方向。
-
-**难读点：**物理身份与屏幕角序分别表达；没有方向就留空。
-
-定位：[src/detection/corners/semantics/semantic_resolver.cpp:333](../src/detection/corners/semantics/semantic_resolver.cpp#L333)。
-
-### 25. 发布 RAW 角点和质量旗
-
-double 物理点转 float 后重新确认屏幕序、边界和 bbox，发布当前检测。
-
-**输入／输出与替换点：**输入测量与方向唯一性；输出 Detection，随后 Detector 返回 FrameResult。替换发布不移动原实测物理角。
-
-**难读点：**quality_flags 的 1/2/4 分别表示拟合残差、角误差、支持延伸超配置值；只标记，不删除角点。
-
-定位：[src/detection/corners/publication/detection_publication.cpp:10](../src/detection/corners/publication/detection_publication.cpp#L10)。
-
-### 26. 将 RAW 转物理点对并运行 IPPE（原 P01/P05/P06）
+### 21. 将 RAW 转物理点对并运行 IPPE（原 P01/P05/P06）
 
 按 orientation 还原物理角，与米制模型点配对，调用公共平面 IPPE 求解。
 
@@ -268,9 +220,9 @@ double 物理点转 float 后重新确认屏幕序、边界和 bbox，发布当�
 
 **难读点：**仍为 SOLVEPNP_IPPE，不改 IPPE_SQUARE；min_quad_area 预算与 LM 精修已删除。
 
-定位：[src/pose/estimation/pose_estimator.cpp:75](../src/pose/estimation/pose_estimator.cpp#L75)。
+定位：[src/pose/estimation/pose_estimator.cpp](../src/pose/estimation/pose_estimator.cpp)。
 
-### 27. 评价并筛选位姿（原 P07–P09）
+### 22. 评价并筛选位姿（原 P07–P09）
 
 独立重投影、正深度、两个重投影预算、安装约束和显式 prior 仍按原顺序筛选。
 
@@ -278,9 +230,9 @@ double 物理点转 float 后重新确认屏幕序、边界和 bbox，发布当�
 
 **难读点：**两个已标定预算才决定 budgets_ready；多解不能暗选最小误差。
 
-定位：[src/pose/estimation/pose_estimator.cpp:175](../src/pose/estimation/pose_estimator.cpp#L175)。
+定位：[src/pose/estimation/pose_estimator.cpp](../src/pose/estimation/pose_estimator.cpp)。
 
-### 28. 发布位姿与质量（原 P11）
+### 23. 发布位姿与质量（原 P11）
 
 Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
@@ -288,9 +240,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**手动 hardware_verified 全删；时间不确定度不在 G2 卡控制资格，G3/G5 应读下游时间标签。
 
-定位：[src/pose/estimation/pose_estimator.cpp:103](../src/pose/estimation/pose_estimator.cpp#L103)。
+定位：[src/pose/estimation/pose_estimator.cpp](../src/pose/estimation/pose_estimator.cpp)。
 
-### 29. 可选 Tag 分支（原 P02–P04）
+### 24. 可选 Tag 分支（原 P02–P04）
 
 配置了白名单才检测 Tag，按原图灰度解码和尺寸构造点对，复用平面求解与筛选。
 
@@ -298,9 +250,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**不把 MARK 屏幕序套给 Tag；未知 ID 尺寸不能猜。Tag 完成后与 MARK 位姿一起交给后续适配。
 
-定位：[src/pose/tag/tag_detector.cpp:56](../src/pose/tag/tag_detector.cpp#L56)。
+定位：[src/pose/tag/tag_detector.cpp](../src/pose/tag/tag_detector.cpp)。
 
-### 30. 每帧交付跟踪并检查测量（原 K01–K04）
+### 25. 每帧交付跟踪并检查测量（原 K01–K04）
 
 离线入口直接构造 TrackingFrame；检查当前 Unique、候选证据、身份、位置误差与可选世界变换。
 
@@ -308,9 +260,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**不再用中间文件串接 pose_app/tracking_app；两入口已删。空检测帧也调用 tracker。
 
-定位：[src/tracking/measurement/measurement_adapter.cpp:163](../src/tracking/measurement/measurement_adapter.cpp#L163)。
+定位：[src/tracking/measurement/measurement_adapter.cpp](../src/tracking/measurement/measurement_adapter.cpp)。
 
-### 31. 计算时间质量（原 K04）
+### 26. 计算时间质量（原 K04）
 
 根据绝对界语义、曝光和 profile 中唯一 validated_time_bound_s 判断时间标签。
 
@@ -318,9 +270,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**无 time_policy 模式；缺界不抛构造错误、不清空测量。重叠时间区间降标签，数值仍走名义时间。
 
-定位：[src/tracking/measurement/measurement_adapter.cpp:34](../src/tracking/measurement/measurement_adapter.cpp#L34)。
+定位：[src/tracking/measurement/measurement_adapter.cpp](../src/tracking/measurement/measurement_adapter.cpp)。
 
-### 32. 常速度预测与测量噪声增广（原 K06）
+### 27. 常速度预测与测量噪声增广（原 K06）
 
 已有轨迹按 dt 预测，再用时间误差及速度二阶矩增广测量 R；未知时间仅作条件数值估计。
 
@@ -328,9 +280,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**profile 缺界时以现有 max_dt 尺度增广噪声，不把该代用尺度发布成物理时间界；超 max_dt 的生命周期规则保留。
 
-定位：[src/tracking/lifecycle/target_tracker.cpp:179](../src/tracking/lifecycle/target_tracker.cpp#L179)。
+定位：[src/tracking/lifecycle/target_tracker.cpp](../src/tracking/lifecycle/target_tracker.cpp)。
 
-### 33. 关联、初始化与校正（原 K05/K07/K08）
+### 28. 关联、初始化与校正（原 K05/K07/K08）
 
 无 live 且唯一测量时 create；已有轨迹用 NIS 唯一关联，按确认状态 bootstrap 或 correct，失配可 pending/reseed。
 
@@ -338,9 +290,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**保留跟踪器自己的测量准入和 NIS；不因为时间标签差就删除合法测量。
 
-定位：[src/tracking/lifecycle/target_tracker.cpp:273](../src/tracking/lifecycle/target_tracker.cpp#L273)。
+定位：[src/tracking/lifecycle/target_tracker.cpp](../src/tracking/lifecycle/target_tracker.cpp)。
 
-### 34. 生命周期、冻结快照与提交（原 K09–K11）
+### 29. 生命周期、冻结快照与提交（原 K09–K11）
 
 未更新走 coast，超原有失效域则 Lost；先生成快照，input_accepted 后才提交候选状态。
 
@@ -348,9 +300,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**保留位置、表观速度、协方差及合格标签；仅删除 model_hardware_verified。qualified = measured + velocity + position_std + all_time_bounded。
 
-定位：[src/tracking/lifecycle/target_tracker.cpp:93](../src/tracking/lifecycle/target_tracker.cpp#L93)。
+定位：[src/tracking/lifecycle/target_tracker.cpp](../src/tracking/lifecycle/target_tracker.cpp)。
 
-### 35. 写位姿和跟踪协议（原 K12）
+### 30. 写位姿和跟踪协议（原 K12）
 
 完整构建下逐帧写 observations.yaml 和 tracks.yaml；文件输出只消费主线值。
 
@@ -358,9 +310,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**录像复跑中 Ambiguous 不产生三维测量；不能为演示跟踪而改预算或强选候选。
 
-定位：[src/tracking/io/tracking_io.cpp:267](../src/tracking/io/tracking_io.cpp#L267)。
+定位：[src/tracking/io/tracking_io.cpp](../src/tracking/io/tracking_io.cpp)。
 
-### 36. 叠加当前全链结果（原 A08）
+### 31. 叠加当前全链结果（原 A08）
 
 克隆原图，画检测角、MARK 位姿投影、跟踪原点和表观速度；coast 画现有轨迹。
 
@@ -368,9 +320,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**仅 app 依赖渲染；主线库不链接 app。世界系轨迹缺相机逆变换时不乱投影，仍可显示文字。
 
-定位：[src/app/rendering/debug_renderer.cpp:7](../src/app/rendering/debug_renderer.cpp#L7)。
+定位：[src/app/rendering/debug_renderer.cpp](../src/app/rendering/debug_renderer.cpp)。
 
-### 37. 逐帧写视频（原 A10）
+### 32. 逐帧写视频（原 A10）
 
 离线工具无条件写 overlay.partial.mp4，结束关闭并读回检查后发布 overlay.mp4。
 
@@ -378,9 +330,9 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**video_fourcc/video_filename 保留原值；没有窗口、display_probe、export_video 旗或 playback_fps。
 
-定位：[src/app/export/video_exporter.cpp:23](../src/app/export/video_exporter.cpp#L23)。
+定位：[src/app/export/video_exporter.cpp](../src/app/export/video_exporter.cpp)。
 
-### 38. 运行结束并写摘要（原 A12）
+### 33. 运行结束并写摘要（原 A12）
 
 关闭输出，按配置记录可选总耗时，写 summary.yaml 并打印检测、位姿和跟踪计数。
 
@@ -388,41 +340,35 @@ Unique 即 control_usable；保留 stamp、可空协方差及角点质量旗。
 
 **难读点：**保留报错和摘要；没有来源证据链、指纹、逐帧取证级别或宣称完整性的期待帧数机制。
 
-定位：[src/app/offline/offline_runner.cpp:146](../src/app/offline/offline_runner.cpp#L146)。
+定位：[src/app/offline/offline_runner.cpp](../src/app/offline/offline_runner.cpp)。
 
-## 拟合路线与本批复跑
+## 两路线与本轮验证
 
-11 个不同尝试的顺序如下。每项仍调用同一个独立 stage，不复制拟合实现；只去掉重复调度和只供旧实验入口使用的策略开关。
+| 路线 | 支持／位置 | 模型 | 新主链1676帧 | 冻结旧输入4360次 |
+|---|---|---|---:|---:|
+| 1 | 简化端点邻域／原位置 | 普通L2 | 4352 | 4359 |
+| 2 | 同一端点邻域／后验位置 | 周期相位中位数 | 0 | 1 |
 
-| 当前编号 | 原编号 | 支持／位置方式 | 拟合模型 | 1676 帧命中 |
-|---|---|---|---|---:|
-| 1 | 1 | 原端点／原位置 | Legacy L2 | 4359 |
-| 2 | 2（8 为重复） | 原端点／原位置 | PhaseMedian | 0 |
-| 3 | 3 | 原端点／原位置 | ZeroSlope | 0 |
-| 4 | 4（9 为重复） | 原端点／后验位置 | PhaseMedian | 1 |
-| 5 | 5 | 原端点／后验位置 | ZeroSlope | 0 |
-| 6 | 6 | 原端点／后验位置 | Legacy L2 | 0 |
-| 7 | 7 | 全端点／原位置 | Legacy L2 | 0 |
-| 8 | 10 | 全端点／原位置 | PhaseMedian | 0 |
-| 9–11 | 11–13 | 原端点、后验、全端点 | Periodic L1 | 0 |
+旧4360次含frame313和382各一个重复父假设；新主链1088个独立完整匹配×4角=4352次，检出帧集合完全一致。frame784 P1在新边提示下由主路恢复；用户已接受这个触发变化，冻结旧支持与边提示的回归测试仍强制检查回退确实恢复，绝不按帧号选路线。
 
-命中统计在 `tests/detection/corners/corner_route_test.cpp`，生产没有全局计数器。4360 次候选角拟合在合并前后逐项一致，最大坐标差 0px；1088 个检出帧的合法正深度候选最小 RMSE 中位均为 0.3915354321px。该最小值只用于统计，实际 1088 帧均保持 Ambiguous；没有强选为 Unique。它与历史约 0.43px 的口径不完全相同，不能当作真实角点精度改善。完整结果、局限和复跑位置见根目录 `SLIMMING_REPORT.md`。
+同一1088帧的最佳正深度PnP候选RMSE中位／P95／最大值为0.382429／0.766330／1.037059px，基线为0.391535／0.797333／1.197445px；这是统计分析，实际仍1088帧Ambiguous，没有强选Unique。合成共同172角的独立真值误差中位不变、P95和最大值降低。真实录像无独立角点真值，不能把PnP改善当成绝对角点精度证明；原像素残差和逐帧差异也在 [完整报告](../../../docs/MATCH_ONLY_REFACTOR_REPORT.md) 中如实列出。
+
+路线统计在tests/detection/corners/corner_route_test.cpp，生产没有全局计数器。冻结frame784反例及连续支持、周期参数、质量标签、自检复算均在自动测试。MaixCam待验项见规则与报告，不能由桌面录像替代。
 
 ## 构建、工具与跟一帧调试
 
-构建目标仅保留一套 `vision_*` 名称；没有 `vision::x` / `mark_x` 双别名或 `*_internal_headers` 转发层。types/math/config 在低层；检测、位姿、跟踪分别拥有实现；app 编排并消费它们，摘要与渲染不反向控制算法。`src/app` 本批不改名。
-
-`marker_app` 是全链入口；`pose_app`、`tracking_app`、audit、validation、fixture 与 synth_ref 工具已删。calibration_tool 在本分支原样保留，搬仓时再取走；标定输出 K、畸变和重投影误差，不自动填写阈值。其余历史 docs 保持原样，本导读是本批唯一更新的保留文档。
+构建目标只有vision_*名称；types/math/config在低层，检测／G2／G4独立实现，app消费公开结果并编排。检测不链接位姿或跟踪实现。marker_app是全链离线工具，可视化只读；calibration_tool原样保留，输出K/dist和重投影误差，不自动填写阈值。src/app本分支保持原名。
 
 ```bash
 cmake -S src/tushenghao -B build -DMARK_BUILD_G2=ON -DMARK_BUILD_G4=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 ./build/marker_app --video data/raw/marker_video.avi --config src/tushenghao/config/detector.yaml
-# 相机输入；需要可用设备与匹配的相机标定：
+./build/corner_route_test data/raw/marker_video.avi /tmp/routes.tsv
+# 相机需可用设备和匹配的K/dist、图像域、时间来源：
 ./build/marker_app --camera 0 --config src/tushenghao/config/detector.yaml
 ```
 
-输出目录来自 detector YAML 的 `output.run_directory`，未填时为当前目录下 `outputs/marker`，已有目录拒绝覆盖。G2/G4 配置从 detector YAML 同目录的 pose.yaml/tracking.yaml 读取；更新相机时相应 calibration.yaml 必须匹配。全链输出是 observations.yaml、tracks.yaml、overlay.mp4、summary.yaml；不完整构建只运行已开启模块。
+输出目录来自detector YAML的output.run_directory，未填为outputs/marker，已有目录拒绝覆盖。G2/G4配置从detector YAML同目录读取pose.yaml/tracking.yaml；全链输出observations.yaml、tracks.yaml、overlay.mp4、summary.yaml。G4依赖G2；部分构建只运行启用模块。
 
-调试沿 Detector::process → runDecodePipeline → resolver → fitter → IPPE → TargetTracker::step/advance → renderDebugFrame 跟一帧。G4 的事务候选只有 input_accepted 后提交；没有检测也必须推进一帧。查询 predict_to 不等于当前测量。首遍先看输入输出和状态，再下钻支持弧、周期模型和协方差数学；生产不再通过取证 recorder 读取内部状态，完整像素复算见测试侧 verifyCornerEvidence。
+调试顺序：Detector::process → runDecodePipeline → matchQuads → resolveObservedCorners → fitObservedEdgePair → IPPE → TargetTracker::step/advance → renderDebugFrame。先看输入域、物理身份和状态，再看支持、残差与协方差。没有检测也要推进G4一帧；G4事务仅input_accepted后提交，predict_to不是当前测量。历史报告和建议书已移至仓库docs，当前入口见 [文档索引](../../../docs/VISION_REFACTOR_INDEX.md)。

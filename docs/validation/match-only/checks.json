@@ -1,0 +1,70 @@
+{
+  "baseline_commit": "b600635",
+  "main_video": {
+    "frames": 1676,
+    "matched_frames_before": 1088,
+    "matched_frames_after": 1088,
+    "fit_calls_before": 4360,
+    "fit_calls_after": 4352,
+    "final_routes": {
+      "L2": 4352,
+      "periodic_posterior": 0
+    },
+    "decoded_overlay_frames": 1676,
+    "size": [
+      1440,
+      1080
+    ]
+  },
+  "frozen_current_fitter": {
+    "frames_with_fits": 1088,
+    "calls": 4360,
+    "failed": 0,
+    "routes": {
+      "L2": 4359,
+      "periodic_posterior": 1
+    }
+  },
+  "route_only_ablation": {
+    "calls": 4360,
+    "all_non_route_columns_exactly_equal": true
+  },
+  "negative_video": {
+    "path": "data/raw/calibration_video.avi",
+    "frames": 6966,
+    "match_quads": 0,
+    "failed": 0
+  },
+  "synthetic_chain": {
+    "frames": 24,
+    "unique_measured": 22,
+    "coasting": 2,
+    "apparent_velocity_present": true,
+    "unknown_time_preserved": true,
+    "qualified_for_g5": false
+  },
+  "production_g4": {
+    "profile_configured": false,
+    "tracks_empty": true,
+    "controlled_before_after_tracks_equal": true
+  },
+  "implementation_commits": [
+    "1b3aff4",
+    "a01604a"
+  ],
+  "ctest": {
+    "full": {
+      "passed": 17,
+      "total": 17
+    },
+    "detection_only": {
+      "passed": 13,
+      "total": 13
+    },
+    "g2_only": {
+      "passed": 15,
+      "total": 15
+    },
+    "libraries_only": "build passed"
+  }
+}
