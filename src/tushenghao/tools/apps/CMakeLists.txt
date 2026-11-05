@@ -1,6 +1,6 @@
 if(VISION_BUILD_TOOLS)
     add_executable(marker_app marker/main.cpp)
     target_include_directories(marker_app PRIVATE "${VISION_ROOT}/src/app" "${VISION_ROOT}/src/config")
-    target_link_libraries(marker_app PRIVATE vision_app vision_config vision_tool_common)
+    target_link_libraries(marker_app PRIVATE vision_app vision_config)
     target_compile_definitions(marker_app PRIVATE VISION_SOURCE_ROOT="${VISION_ROOT}")
 endif()
