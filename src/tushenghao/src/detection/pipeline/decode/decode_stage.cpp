@@ -17,14 +17,20 @@ DecodeStageResult decodeStage(const PreparedFrame &frame,const std::vector<Match
     OriginalContourIndex index(frame);
     for(size_t i=0;i<matches.size();++i) {
         auto log=[&](const std::string &reason){result.diagnostics.push_back("match/"+std::to_string(i)+"/"+reason);};
+        // 独立步骤：几何匹配不识别身份，按屏幕坐标排序后查安装映射。
+        const auto screen=orderScreenCorners(matches[i],config);
+        if(!screen.screen_order_){log(screen.rejection_reason_);continue;}
+        MatchQuad physical;
+        for(size_t p=0;p<4;++p)
+            physical[p]=screen.screen_order_->screen_points_[config.physical_to_screen_[p]];
         ScreenOrder order;
-        auto corner=resolveObservedCorners(frame,matches[i],config,index,&order);
+        auto corner=resolveObservedCorners(frame,physical,config,index,&order);
         if(!corner.measurement_){log(corner.rejection_reason_);continue;}
         auto valid=validateDetectionGeometry(*corner.measurement_,order,frame.original_image_.size(),config);
         if(!valid.valid_){log(valid.rejection_reason_);continue;}
         std::string reason;
-        // match已固定物理身份，不再搜索/归并方向解释。
-        auto detection=publishFloatDetection(*corner.measurement_,true,frame.original_image_.size(),config,reason);
+        // 安装配置已固定物理身份，不再搜索/归并方向解释。
+        auto detection=publishFloatDetection(*corner.measurement_,frame.original_image_.size(),config,reason);
         if(!detection){log(reason);continue;}
         result.measurements.push_back(std::move(*corner.measurement_));
         result.detections.push_back(std::move(*detection));

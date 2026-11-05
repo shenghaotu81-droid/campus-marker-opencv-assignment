@@ -88,7 +88,13 @@ int main(int argc,char **argv) {
                 const auto frame=mark::preprocess({image,frames,int64_t(frames*14000),mark::TimestampSource::Unknown},c.preprocess);
                 const auto components=mark::extractWhiteComponents(frame,c.geometry_);
                 const auto matches=mark::matchQuads(frame,components,c.geometry_);
-                for(size_t i=0;i<matches.size();++i)count(frame,matches[i],c.corner_,i,out);
+                for(size_t i=0;i<matches.size();++i) {
+                    auto screen=mark::orderScreenCorners(matches[i],c.corner_);
+                    if(!screen.screen_order_)throw std::runtime_error("screen order failed");
+                    mark::MatchQuad physical;
+                    for(size_t p=0;p<4;++p)physical[p]=screen.screen_order_->screen_points_[c.corner_.physical_to_screen_[p]];
+                    count(frame,physical,c.corner_,i,out);
+                }
                 ++frames;
             }
         }

@@ -1,0 +1,36 @@
+Internal ctest changing into directory: /tmp/vision-lean-g2-only
+Test project /tmp/vision-lean-g2-only
+      Start  1: config_error_test
+ 1/15 Test  #1: config_error_test .................   Passed    0.05 sec
+      Start  2: config_roundtrip_test
+ 2/15 Test  #2: config_roundtrip_test .............   Passed    0.00 sec
+      Start  3: block3_contract_regression_test
+ 3/15 Test  #3: block3_contract_regression_test ...   Passed    0.02 sec
+      Start  4: corner_edge_fit_test
+ 4/15 Test  #4: corner_edge_fit_test ..............   Passed    0.18 sec
+      Start  5: corner_resolver_test
+ 5/15 Test  #5: corner_resolver_test ..............   Passed    0.04 sec
+      Start  6: detection_validator_test
+ 6/15 Test  #6: detection_validator_test ..........   Passed    0.05 sec
+      Start  7: detector_contract_test
+ 7/15 Test  #7: detector_contract_test ............   Passed    0.01 sec
+      Start  8: geometry_model_test
+ 8/15 Test  #8: geometry_model_test ...............   Passed    0.00 sec
+      Start  9: screen_order_test
+ 9/15 Test  #9: screen_order_test .................   Passed    0.00 sec
+      Start 10: corner_route_test
+10/15 Test #10: corner_route_test .................   Passed    0.05 sec
+      Start 11: match_quad_test
+11/15 Test #11: match_quad_test ...................   Passed    0.09 sec
+      Start 12: debug_renderer_test
+12/15 Test #12: debug_renderer_test ...............   Passed    0.00 sec
+      Start 13: offline_chain_test
+13/15 Test #13: offline_chain_test ................   Passed    0.15 sec
+      Start 14: pose_contract_test
+14/15 Test #14: pose_contract_test ................   Passed    0.00 sec
+      Start 15: tag_detector_test
+15/15 Test #15: tag_detector_test .................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Total Test time (real) =   0.67 sec

@@ -46,6 +46,7 @@ namespace
 
         detector.debug.timing_enabled = false;
 
+        detector.corner_.physical_to_screen_ = {{1,2,3,0}};
         detector.corner_.min_line_points_ = 5;
         detector.corner_.max_line_fit_error_ = 2.0;
         detector.corner_.min_intersection_angle_deg_ = 10.0;
@@ -78,6 +79,7 @@ namespace
                a.debug.timing_enabled ==
                    b.debug.timing_enabled &&
 
+               a.corner_.physical_to_screen_ == b.corner_.physical_to_screen_ &&
                a.corner_.min_line_points_ == b.corner_.min_line_points_ &&
                a.corner_.max_line_fit_error_ == b.corner_.max_line_fit_error_ &&
                a.corner_.min_intersection_angle_deg_ == b.corner_.min_intersection_angle_deg_ &&

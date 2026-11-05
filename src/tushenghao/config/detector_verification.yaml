@@ -26,6 +26,8 @@ detector:
 
   # D11：原图角点恢复预算；与工作图几何观察分别配置。
   corner:
+    # P0/P1/P2/P3 -> LT/RT/RB/LB；安装后按文档验一次，换装时显式修改。
+    physical_to_screen: [0, 1, 2, 3]
     max_pair_disagreement_px2: 64.0
 
     # 拟合单条直线需要的最少观测点数量

@@ -395,6 +395,22 @@ namespace
     }
 }
 
+bool fixedMappingErrors(const std::filesystem::path &root) {
+    std::ifstream in(std::filesystem::path(VISION_SOURCE_ROOT)/"config/detector.yaml");
+    std::string original((std::istreambuf_iterator<char>(in)),{});
+    const std::string line="    physical_to_screen: [0, 1, 2, 3]";
+    for(const std::string replacement:{"", "    physical_to_screen: [0, 0, 2, 3]",
+        "    physical_to_screen: [0, 1, 2, 4]", "    physical_to_screen: [0, 1, 2]",
+        "    physical_to_screen: [0, 1, 2, 2.5]", "    physical_to_screen: wrong"}) {
+        auto text=original;auto pos=text.find(line);if(pos==std::string::npos)return false;
+        text.replace(pos,line.size(),replacement);auto path=root/"bad-fixed.yaml";
+        {std::ofstream out(path);out<<text;}
+        bool rejected=false;try{mark::loadConfig(path);}catch(const mark::ConfigError&){rejected=true;}
+        if(!rejected)return false;
+    }
+    return true;
+}
+
 int main()
 {
     try
@@ -416,6 +432,7 @@ int main()
             if(error)throw std::runtime_error("cannot create test directory: "+error.message());
         }
         const RunDirectory run{root};
+        if (!fixedMappingErrors(run.root)) return 1;
         if (!calibrationFlow(run.root)) return 1;
         if (!rejectedOldProtocol(run.root)) return 1;
         if (!calibrationConfigErrors(run.root)) return 1;

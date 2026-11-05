@@ -90,7 +90,7 @@ std::vector<MatchQuad> matchQuads(const PreparedFrame &frame,
         if (cv::contourArea(q, true) < 0)
             std::reverse(q.begin(), q.end());
         std::array<size_t, 4> owner{};
-        int p1 = -1;
+        int short_count = 0;
         bool valid = true;
         for (size_t i = 0; i < 4; ++i)
         {
@@ -123,19 +123,16 @@ std::vector<MatchQuad> matchQuads(const PreparedFrame &frame,
                 }
                 span = std::max(span, hi - lo);
             }
-            // 图纸30mm与14mm外臂的中点22mm；归一化到80mm框边，不按相机像素猜身份。
+            // 图纸30mm与14mm外臂的中点22mm；归一化到80mm框边，这里只确认三L一M，不分配物理身份。
             if (span < 22. / 80)
             {
-                if (p1 >= 0)
-                    valid = false;
-                p1 = int(i);
+                ++short_count;
             }
         }
-        if (!valid || p1 < 0)
+        if (!valid || short_count != 1)
             continue;
         MatchQuad match;
-        for (int i = 0; i < 4; ++i)
-            match[i] = frame.workToOriginal(q[(p1 + i + 3) % 4]);
+        for (int i=0;i<4;++i) match[i]=frame.workToOriginal(q[i]);
         result.push_back(match);
     }
     return result;

@@ -1,0 +1,50 @@
+[  2%] Built target vision_math
+[  5%] Built target vision_observability
+[ 12%] Built target vision_calibration
+[ 14%] Built target calibration_tool
+[ 21%] Built target vision_config
+[ 26%] Built target vision_pose
+[ 30%] Built target pose_contract_test
+[ 29%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/geometry/matching/match_quad.cpp.o
+[ 32%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/corners/measurement/corner_resolver.cpp.o
+[ 34%] Built target tag_detector_test
+[ 36%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/decode/decode_stage.cpp.o
+[ 37%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/execution/detector.cpp.o
+[ 38%] Linking CXX static library libvision_detection.a
+[ 52%] Built target vision_detection
+[ 60%] Built target vision_app
+[ 54%] Linking CXX executable ../../config_roundtrip_test
+[ 61%] Linking CXX executable ../../config_error_test
+[ 62%] Building CXX object tests/detection/CMakeFiles/block3_contract_regression_test.dir/pipeline/block3_contract_regression_test.cpp.o
+[ 64%] Building CXX object tests/detection/CMakeFiles/corner_edge_fit_test.dir/corners/corner_edge_fit_test.cpp.o
+[ 65%] Built target config_roundtrip_test
+[ 66%] Building CXX object tests/detection/CMakeFiles/corner_resolver_test.dir/corners/corner_resolver_test.cpp.o
+[ 68%] Built target config_error_test
+[ 69%] Building CXX object tests/detection/CMakeFiles/detection_validator_test.dir/corners/detection_validator_test.cpp.o
+[ 70%] Linking CXX executable ../../detection_validator_test
+[ 72%] Linking CXX executable ../../corner_resolver_test
+[ 72%] Built target detection_validator_test
+[ 73%] Linking CXX executable ../../detector_contract_test
+[ 74%] Linking CXX executable ../../block3_contract_regression_test
+[ 74%] Built target corner_resolver_test
+[ 76%] Linking CXX executable ../../geometry_model_test
+[ 77%] Built target detector_contract_test
+[ 78%] Linking CXX executable ../../screen_order_test
+[ 80%] Built target block3_contract_regression_test
+[ 81%] Building CXX object tests/detection/CMakeFiles/corner_route_test.dir/corners/corner_route_test.cpp.o
+[ 82%] Built target geometry_model_test
+[ 84%] Building CXX object tests/detection/CMakeFiles/match_quad_test.dir/geometry/match_quad_test.cpp.o
+[ 85%] Built target screen_order_test
+[ 86%] Linking CXX executable ../../debug_renderer_test
+[ 88%] Built target debug_renderer_test
+[ 89%] Building CXX object tests/app/CMakeFiles/offline_chain_test.dir/offline/offline_chain_test.cpp.o
+[ 90%] Linking CXX executable ../../corner_edge_fit_test
+[ 93%] Built target corner_edge_fit_test
+[ 94%] Linking CXX executable ../../marker_app
+[ 96%] Built target marker_app
+[ 97%] Linking CXX executable ../../corner_route_test
+[ 98%] Linking CXX executable ../../match_quad_test
+[100%] Linking CXX executable ../../offline_chain_test
+[100%] Built target match_quad_test
+[100%] Built target corner_route_test
+[100%] Built target offline_chain_test

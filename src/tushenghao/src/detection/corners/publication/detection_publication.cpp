@@ -1,14 +1,15 @@
 #include "vision/math/observed_geometry.hpp"
 #include "corners/publication/detection_publication.hpp"
-#include "corners/ordering/screen_order.hpp"
+#include "vision/types/detection/corner_types.hpp"
 #include <algorithm>
+#include "vision/config/detector_config.hpp"
 #include <cmath>
 
 namespace mark
 {
     // 先按物理编号舍入再排序，避免丢掉P标签后猜映射；严格表示检查不添加像素门限。
     std::optional<Detection> publishFloatDetection(const CornerMeasurement &measurement,
-                                                   bool orientation_unique, cv::Size size,
+                                                   cv::Size size,
                                                    const CornerConfig &config, std::string &reason)
     {
         reason.clear();
@@ -57,7 +58,9 @@ namespace mark
             }
             sign = cross;
         }
-        auto order = orderScreenCycle(rounded, config, reason);
+        auto ordered = orderScreenCorners(rounded, config);
+        auto order = ordered.screen_order_;
+        reason = ordered.rejection_reason_;
         if (!order)
         {
             reason = "PUBLISH_SCREEN_REJECTED: " + reason;
@@ -66,7 +69,7 @@ namespace mark
         Detection detection{};
         detection.category = MarkCategory::Unknown;
         for (size_t i = 0; i < 4; ++i)
-            detection.corners[i] = cv::Point2f(order->screen_points[i]);
+            detection.corners[i] = cv::Point2f(order->screen_points_[i]);
         for (const auto &e : measurement.evidence_) {
             if (e.corner_error_px_ > config.max_corner_error_) detection.quality_flags |= CornerErrorHigh;
             for (size_t edge=0;edge<2;++edge) {
@@ -77,8 +80,7 @@ namespace mark
             }
         }
         detection.bbox = observed::four_corner_bounds(detection.corners);
-        if (orientation_unique)
-            detection.attributes.orientation = order->input_to_screen;
+        detection.attributes.orientation = config.physical_to_screen_;
         return detection;
     }
 }

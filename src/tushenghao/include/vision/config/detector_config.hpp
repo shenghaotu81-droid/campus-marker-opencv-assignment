@@ -1,6 +1,7 @@
 // 检测配置；离线输出由 AppConfig 持有，G2/G4各自拥有自己的配置。
 #pragma once
 #include <string>
+#include <array>
 #include <optional>
 namespace mark {
 enum class DetectorMode { SegmentedMark };
@@ -26,6 +27,8 @@ struct CornerObservationBudget {
     double min_support_span_px;
 };
 struct CornerConfig {
+    // 安装契约：P0/P1/P2/P3 -> 屏幕LT/RT/RB/LB槽位；不逐帧推断身份。
+    std::array<int,4> physical_to_screen_{{0,1,2,3}};
     int min_line_points_{5};
     double max_line_fit_error_{2.}; // 残差质量标签阈值。
     double min_intersection_angle_deg_{10.}; // 数值求交的原有病态角限制。

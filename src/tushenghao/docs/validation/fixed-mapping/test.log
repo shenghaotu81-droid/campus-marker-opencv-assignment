@@ -1,0 +1,40 @@
+Internal ctest changing into directory: /home/tushenghao/projects/campus-marker-opencv-assignment/build
+Test project /home/tushenghao/projects/campus-marker-opencv-assignment/build
+      Start  1: config_error_test
+ 1/17 Test  #1: config_error_test .................   Passed    0.06 sec
+      Start  2: config_roundtrip_test
+ 2/17 Test  #2: config_roundtrip_test .............   Passed    0.00 sec
+      Start  3: block3_contract_regression_test
+ 3/17 Test  #3: block3_contract_regression_test ...   Passed    0.02 sec
+      Start  4: corner_edge_fit_test
+ 4/17 Test  #4: corner_edge_fit_test ..............   Passed    0.15 sec
+      Start  5: corner_resolver_test
+ 5/17 Test  #5: corner_resolver_test ..............   Passed    0.04 sec
+      Start  6: detection_validator_test
+ 6/17 Test  #6: detection_validator_test ..........   Passed    0.04 sec
+      Start  7: detector_contract_test
+ 7/17 Test  #7: detector_contract_test ............   Passed    0.01 sec
+      Start  8: geometry_model_test
+ 8/17 Test  #8: geometry_model_test ...............   Passed    0.00 sec
+      Start  9: screen_order_test
+ 9/17 Test  #9: screen_order_test .................   Passed    0.00 sec
+      Start 10: corner_route_test
+10/17 Test #10: corner_route_test .................   Passed    0.05 sec
+      Start 11: match_quad_test
+11/17 Test #11: match_quad_test ...................   Passed    0.10 sec
+      Start 12: debug_renderer_test
+12/17 Test #12: debug_renderer_test ...............   Passed    0.00 sec
+      Start 13: offline_chain_test
+13/17 Test #13: offline_chain_test ................   Passed    0.60 sec
+      Start 14: pose_contract_test
+14/17 Test #14: pose_contract_test ................   Passed    0.00 sec
+      Start 15: tag_detector_test
+15/17 Test #15: tag_detector_test .................   Passed    0.01 sec
+      Start 16: tracking_contract_test
+16/17 Test #16: tracking_contract_test ............   Passed    0.00 sec
+      Start 17: tracking_io_test
+17/17 Test #17: tracking_io_test ..................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Total Test time (real) =   1.10 sec

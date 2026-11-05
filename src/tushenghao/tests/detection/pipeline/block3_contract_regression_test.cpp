@@ -8,7 +8,7 @@
 #include "corners/measurement/corner_resolver.hpp"
 #include "corners/validation/detection_validator.hpp"
 #include "corners/publication/detection_publication.hpp"
-#include "corners/ordering/screen_order.hpp"
+#include "vision/types/detection/corner_types.hpp"
 #include "reader/config_error.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include <fstream>
@@ -82,22 +82,6 @@ namespace
         check(a.process(frame(2, 49)).status == mark::Status::INVALID_INPUT,
               "backwards time accepted");
         check(b.process(frame(0, 0)).status == mark::Status::NOT_DETECTED, "instance state leaked");
-    }
-
-    // 后来的能量略小但仍在冻结 64ε 平局集合内，旧循环会清除 tie。
-    void nearTie()
-    {
-        const std::array<cv::Point2d, 4> points{{{0, -1}, {1, 0}, {0, 1}, {-1, -1e-15}}};
-        auto result = mark::orderScreenCorners(points, {});
-        check(result.status_ == mark::ScreenOrderStatus::SUCCESS, "diamond rejected");
-        check(result.screen_order_->screen_order_tie_, "near tie lost");
-        check(result.screen_order_->screen_points_[0] == points[0],
-              "lexicographic tie rule violated");
-        for (int i = 0; i < 4; ++i)
-            check(result.screen_order_
-                          ->screen_points_[result.screen_order_->physical_to_screen_[i]] ==
-                      points[i],
-                  "physical identity lost");
     }
 
     // NaN/Inf 不能进入归一化；失败必须没有 payload 并携带原因。
@@ -297,73 +281,18 @@ namespace
         return m;
     }
 
-    // 同时核验规范序、物理坐标不移动、bbox与unknown，覆盖所有旋转和菱形分界两侧。
-    void publicationAngles()
-    {
-        std::vector<double> angles;
-        size_t original_conflicts = 0;
-        for (int a = 0; a < 360; a += 15)
-            angles.push_back(a);
-        for (int offset : {0, 90, 180, 270})
-            for (double a : {44.999999, 45., 45.000001})
-                angles.push_back(a + offset);
-        for (double angle : angles)
-            for (bool known : {false, true})
-            {
-                auto m = rotatedMeasurement(angle);
-                auto before = m.physical_corners_;
-                std::string reason;
-                auto d = mark::publishFloatDetection(m, known, {300, 300}, {}, reason);
-                check(d.has_value() && reason.empty(), "P01/P02/P04 publication failed");
-                check(m.physical_corners_ == before, "publication changed original measurement");
-                std::array<cv::Point2d, 4> rounded;
-                for (size_t p = 0; p < 4; ++p)
-                    rounded[p] = cv::Point2f(before[p]);
-                auto canonical = mark::orderScreenCycle(rounded, {}, reason);
-                check(bool(canonical), "float order rejected");
-                if (angle == 45.)
-                {
-                    check(canonical->tie, "P04 exact float diamond did not retain tie");
-                    check(canonical->screen_points[0] == rounded[0],
-                          "P04 frozen lexicographic tie rule changed");
-                }
-                auto old = mark::orderScreenCorners(before, {});
-                check(bool(old.screen_order_), "double precondition failed");
-                bool conflict = false;
-                for (size_t i = 0; i < 4; ++i)
-                    conflict = conflict ||
-                               cv::Point2f(old.screen_order_->screen_points_[i]) != d->corners[i];
-                if (conflict)
-                {
-                    ++original_conflicts;
-                    std::cout << "ROUTE_B_COUNTEREXAMPLE angle=" << angle << " known=" << known
-                              << " physical=";
-                    for (auto p : before)
-                        std::cout << p << ' ';
-                    std::cout << " old_float=";
-                    for (auto p : old.screen_order_->screen_points_)
-                        std::cout << cv::Point2f(p) << ' ';
-                    std::cout << " canonical_float=";
-                    for (auto p : d->corners)
-                        std::cout << p << ' ';
-                    std::cout << '\n';
-                }
-                for (size_t i = 0; i < 4; ++i)
-                    check(d->corners[i] == cv::Point2f(canonical->screen_points[i]),
-                          "float order not canonical");
-                check(d->attributes.orientation.has_value() == known,
-                      "unknown filled or known lost");
-                if (known)
-                    for (size_t p = 0; p < 4; ++p)
-                        check(d->corners[(*d->attributes.orientation)[p]] == cv::Point2f(before[p]),
-                              "physical float point moved");
-                check(d->bbox == mark::observed::four_corner_bounds(d->corners),
-                      "publication bbox inaccurate");
-                check(!d->confidence && !d->attributes.marker_code,
-                      "publication fabricated attributes");
-            }
-        check(original_conflicts > 0,
-              "P01 fixture did not exercise production double/float conflict");
+    // 固定安装的小晃动：float发布不移动角点、不从输入重新推断身份。
+    void publicationAngles() {
+        for(double angle:{-10.,-3.,0.,3.,10.}) {
+            auto m=rotatedMeasurement(angle);auto before=m.physical_corners_;
+            std::string reason;auto d=mark::publishFloatDetection(m,{300,300},{},reason);
+            check(bool(d),"small shake publication failed");
+            check(m.physical_corners_==before,"publication moved measurements");
+            for(size_t i=0;i<4;++i)check(d->corners[i]==cv::Point2f(before[i]),"float corner moved");
+            check(bool(d->attributes.orientation),"orientation presence changed");
+            check(*d->attributes.orientation==std::array<int,4>{{0,1,2,3}},"fixed identity lost");
+            check(d->bbox==mark::observed::four_corner_bounds(d->corners),"bbox changed");
+        }
     }
 
     // 表示舍入失败不能裁点/伪造点；覆盖原本画内却float越界和舍入后重合。
@@ -387,7 +316,7 @@ namespace
             if (variant == 6)
                 m.physical_corners_[2] = {150, 150};
             std::string why;
-            auto d = mark::publishFloatDetection(m, true, {300, 300}, {}, why);
+            auto d = mark::publishFloatDetection(m, {300, 300}, {}, why);
             check(!d && !why.empty(), "P03 invalid publication accepted");
         }
     }
@@ -399,7 +328,6 @@ int main()
     const std::pair<const char *, void (*)()> cases[] = {
         {"invalid_input", invalidInput},
         {"sequence", sequence},
-        {"near_tie", nearTie},
         {"nonfinite", nonFinite},
         {"invalid_evidence", invalidEvidence},
         {"preprocess_mapping", preprocessMapping},

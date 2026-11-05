@@ -1,5 +1,7 @@
 # 视觉瘦身与 match-only 文档索引
 
+固定安装分支最新交付：[固定映射报告与赛前核验](FIXED_MAPPING_REPORT.md)。匹配只识别完整目标，坐标排序／安装映射为独立步骤，G2/G4与拟合保持10eae9b行为。
+
 当前实现与复核入口：
 
 - [G01_G02_VALIDATION_REPORT.md](G01_G02_VALIDATION_REPORT.md)：a582c48后G2消歧、真实Unique到G4条件复验、NIS与MJPG AVI完整读回。

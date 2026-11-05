@@ -368,7 +368,7 @@ namespace
         check(before.measurement_ && after.measurement_, "quality thresholds dropped measurement");
         check(before.measurement_->physical_corners_==after.measurement_->physical_corners_, "labels changed corner coordinates");
         std::string reason;
-        const auto published=mark::publishFloatDetection(*after.measurement_,true,scene.frame.original_image_.size(),c,reason);
+        const auto published=mark::publishFloatDetection(*after.measurement_,scene.frame.original_image_.size(),c,reason);
         check(published && published->quality_flags!=0, "high errors did not become published quality labels");
         for(int i=0;i<4;++i) check(mark::verifyCornerEvidence(after.measurement_->evidence_[i],
             after.measurement_->physical_corners_[i],i,c,reason), reason.c_str());

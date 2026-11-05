@@ -1,0 +1,29 @@
+[  4%] Built target vision_math
+[  4%] Built target vision_observability
+[ 10%] Built target vision_calibration
+[ 15%] Built target calibration_tool
+[ 20%] Built target vision_config
+[ 24%] Built target vision_pose
+[ 42%] Built target vision_detection
+[ 44%] Built target tag_detector_test
+[ 51%] Built target pose_contract_test
+[ 52%] Built target vision_tracking
+[ 55%] Built target config_error_test
+[ 57%] Built target config_roundtrip_test
+[ 62%] Built target corner_edge_fit_test
+[ 65%] Built target block3_contract_regression_test
+[ 68%] Built target corner_resolver_test
+[ 70%] Built target detection_validator_test
+[ 72%] Built target geometry_model_test
+[ 75%] Built target detector_contract_test
+[ 77%] Built target screen_order_test
+[ 80%] Built target tracking_contract_test
+[ 81%] Building CXX object tests/detection/CMakeFiles/corner_route_test.dir/corners/corner_route_test.cpp.o
+[ 83%] Built target match_quad_test
+[ 89%] Built target tracking_io_test
+[ 91%] Built target vision_app
+[ 96%] Built target debug_renderer_test
+[ 96%] Built target marker_app
+[ 98%] Built target offline_chain_test
+[100%] Linking CXX executable ../../corner_route_test
+[100%] Built target corner_route_test

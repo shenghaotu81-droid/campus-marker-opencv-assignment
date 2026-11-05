@@ -1,5 +1,7 @@
 # MARK视觉链：构建与运行
 
+本固定安装分支使用显式屏幕→物理对应（配置存P→屏幕槽位），不逐帧猜身份；换装与赛前核验见[固定映射交付](docs/FIXED_MAPPING_REPORT.md)。
+
 当前实现按三L＋短M完整匹配确定80×80mm白片结构的物理身份，四边形直接给角边，两条角拟合路线，G2保留IPPE多解、绝对预算和充分差距消歧，G4保留NIS与coast。先读[流程导读](docs/flow-guide.md)、[match-only规则](docs/MATCH_ONLY_RULES.md)和[最新G-01/G-02验证报告](docs/G01_G02_VALIDATION_REPORT.md)；旧阶段材料按记录时点理解。
 
 ## 构建

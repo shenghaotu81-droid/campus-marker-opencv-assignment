@@ -1,0 +1,50 @@
+{
+  "baseline": "10eae9b",
+  "branch": "refactor/vision-lean-fixed",
+  "frames": 1676,
+  "detected": 1088,
+  "not_detected": 588,
+  "unique": 1054,
+  "ambiguous": 34,
+  "no_solution": 0,
+  "g4_conditional": {
+    "measured": 1050,
+    "coasting": 53,
+    "lost": 573,
+    "velocity_frames": 1011
+  },
+  "files": {
+    "default/observations.yaml": {
+      "sha256": "d997f00ed0c699dac629aefb899e368e383663a1cd7a7dc080b5968e013275af",
+      "equals_baseline": true
+    },
+    "default/tracks.yaml": {
+      "sha256": "5cf4ebc5595d40c2ab19bdb69baf4646cd6b46b22403535d846eadff0661e19c",
+      "equals_baseline": true
+    },
+    "default/overlay.avi": {
+      "sha256": "72b232ee0653e52ef30dbc832d58cb23c90a4f94330493b89644236799b6872d",
+      "equals_baseline": true
+    },
+    "conditional/observations.yaml": {
+      "sha256": "d997f00ed0c699dac629aefb899e368e383663a1cd7a7dc080b5968e013275af",
+      "equals_baseline": true
+    },
+    "conditional/tracks.yaml": {
+      "sha256": "ff624a80848a71679fd2a944d0a189683663c67ebbd50cd57e62deaa8695c500",
+      "equals_baseline": true
+    },
+    "conditional/overlay.avi": {
+      "sha256": "fde17968b9b316cf0385f061268e07bb47678a3407ff49212c5ae96d91f563b0",
+      "equals_baseline": true
+    }
+  },
+  "raw_exact": true,
+  "raw_sha256": "b75dcef3d094ced5b20ef5f232620bb127479672985043a88e032380fb5d2486",
+  "min_vertical_separation_px": 174.20159912109375,
+  "protected_refs": {
+    "main": "864fbaeb57a37439eb29118945b279d8a8e42518",
+    "refactor/lean": "e09970c75fb4d4019ff2557cf6c2ea22fdcf7c0e",
+    "refactor/vision-lean": "10eae9b32db44536fdc463cd815ea39f0d15a026"
+  }
+}

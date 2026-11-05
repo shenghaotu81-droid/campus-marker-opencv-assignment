@@ -1,5 +1,7 @@
 # 文档索引
 
+固定安装分支最新交付：[固定映射报告与赛前核验](FIXED_MAPPING_REPORT.md)。匹配只识别完整目标，坐标排序／安装映射为独立步骤，G2/G4与拟合保持10eae9b行为。
+
 当前入口：match-only规则、角拟合两路线与最新G2筛选见[MATCH_ONLY_RULES](MATCH_ONLY_RULES.md)、[flow-guide](flow-guide.md)和[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。新代码真实录像1054 Unique／34 Ambiguous／0 NoSolution，G4已完成原profile数值下的条件实测链验证；生产profile仍空，G-02真实速度协方差校准与硬件时间验证仍OPEN。下文保留旧阶段验收的原时点含义，旧入口／预算／关卡不代表现行代码。
 
 

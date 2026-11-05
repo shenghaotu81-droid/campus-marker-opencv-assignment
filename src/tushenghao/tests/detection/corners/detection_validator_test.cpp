@@ -78,7 +78,6 @@ namespace mark
             order.physical_to_screen_ = {0, 1, 2, 3};
 
             order.screen_points_ = make_valid_measurement().physical_corners_;
-            order.screen_order_tie_ = false;
 
             return order;
         }

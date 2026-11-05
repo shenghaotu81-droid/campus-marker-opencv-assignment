@@ -1,0 +1,11 @@
+[  5%] Built target vision_math
+[ 11%] Built target vision_observability
+[ 29%] Built target vision_config
+[ 41%] Built target vision_pose
+[ 47%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/geometry/matching/match_quad.cpp.o
+[ 47%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/decode/decode_stage.cpp.o
+[ 50%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/corners/measurement/corner_resolver.cpp.o
+[ 64%] Built target vision_tracking
+[ 67%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/execution/detector.cpp.o
+[ 70%] Linking CXX static library libvision_detection.a
+[100%] Built target vision_detection

@@ -52,7 +52,6 @@ struct CornerResolution {
 struct ScreenOrder {
     std::array<cv::Point2d,4> screen_points_{}; // LT/RT/RB/LB。
     std::array<int,4> physical_to_screen_{{-1,-1,-1,-1}};
-    bool screen_order_tie_{false};
 };
 enum class ScreenOrderStatus { SUCCESS,FAILED };
 struct ScreenOrderResult {

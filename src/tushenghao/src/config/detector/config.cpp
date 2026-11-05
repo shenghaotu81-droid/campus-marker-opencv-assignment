@@ -1,5 +1,6 @@
 // Q01→Q03→Q06：严格读取、分模块校验、导出生效配置；预算值仅来自输入。
 #include "detector/config.hpp"
+#include <algorithm>
 #include "reader/value_reader.hpp"
 #include "detector/corner_budget_validation.hpp"
 #include <set>
@@ -88,7 +89,7 @@ namespace mark
                     {"white_threshold", "approximation_epsilon", "min_area"});
         checkFields(fs["detector"], path, "detector", {"mode", "corner"});
         checkFields(fs["detector"]["corner"], path, "detector.corner",
-                    {"min_line_points", "max_line_fit_error",
+                    {"physical_to_screen", "min_line_points", "max_line_fit_error",
                      "min_intersection_angle_deg", "max_corner_error",
                      "approximation_epsilon",
                      "max_pair_disagreement_px2", "observation"});
@@ -156,6 +157,12 @@ namespace mark
         // Block 3 角点恢复参数。
         cv::FileNode corner_node = detector_node["corner"];
 
+
+        const auto mapping = corner_node["physical_to_screen"];
+        if (!mapping.isSeq() || mapping.size() != 4)
+            throwConfigError(path, "corner.physical_to_screen", "required permutation of 0..3");
+        for (int i=0;i<4;++i)
+            detector.corner_.physical_to_screen_[i] = readInt(mapping[i], path, "corner.physical_to_screen");
 
         detector.corner_.min_line_points_ =
             readInt(corner_node["min_line_points"], path, "corner.min_line_points");
@@ -272,6 +279,11 @@ namespace mark
         {
             throw ConfigError("Config error: field=preprocess.threshold, reason=range 0-255");
         }
+
+        auto mapping = detector.corner_.physical_to_screen_;
+        std::sort(mapping.begin(), mapping.end());
+        if (mapping != std::array<int,4>{{0,1,2,3}})
+            throw ConfigError("Config error: field=corner.physical_to_screen, reason=required permutation of 0..3");
 
         // geometry.white_threshold 与灰度阈值范围一致。
         if (detector.geometry_.white_threshold_ < 0 || detector.geometry_.white_threshold_ > 255)
@@ -437,6 +449,9 @@ namespace mark
            << "{";
 
 
+        fs << "physical_to_screen" << "[";
+        for (int slot : detector.corner_.physical_to_screen_) fs << slot;
+        fs << "]";
         fs << "min_line_points" << detector.corner_.min_line_points_;
 
         fs << "max_line_fit_error" << detector.corner_.max_line_fit_error_;
