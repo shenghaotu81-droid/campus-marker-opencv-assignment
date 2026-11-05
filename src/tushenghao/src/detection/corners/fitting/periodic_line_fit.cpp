@@ -29,8 +29,8 @@ namespace mark
                     axis, coefficient};
         }
 
-        // 固定斜率时消去两相位截距；反复求 L1 目标时复用向量，避免每次重新分配。
-        std::pair<double, PeriodicLineFit> phaseEstimate(const std::vector<ScanPoint> &points,
+        // 固定斜率下用两相位中位数估计截距；scratch只复用向量容量。
+        PeriodicLineFit phaseEstimate(const std::vector<ScanPoint> &points,
                                                          int axis, double center, double slope,
                                                          PhaseScratch &scratch)
         {
@@ -40,11 +40,7 @@ namespace mark
                 scratch.groups[point.h > 0].push_back(point.z - slope * (point.t - center));
             const double minus = median(scratch.groups[0]), plus = median(scratch.groups[1]);
             const double intercept = 0.5 * (minus + plus), coefficient = 0.5 * (plus - minus);
-            double loss = 0;
-            for (const auto &point : points)
-                loss += std::abs(point.z - slope * (point.t - center) - intercept -
-                                 coefficient * point.h);
-            return {loss, physicalLine(axis, slope, center, intercept, coefficient)};
+            return physicalLine(axis, slope, center, intercept, coefficient);
         }
 
 
@@ -140,7 +136,7 @@ namespace mark
         for (auto &group : scratch.groups)
             group.reserve(points.size());
         const double slope = result.line[axis ? 0 : 1] / result.line[axis ? 1 : 0];
-        result = phaseEstimate(points, axis, mt, slope, scratch).second;
+        result = phaseEstimate(points, axis, mt, slope, scratch);
         for (double value : result.line.val)
             if (!std::isfinite(value))
                 return std::nullopt;

@@ -129,7 +129,7 @@ namespace mark::edge_fit_reference
         }
     }
 
-    // 原候选只覆盖简化端点；补查仍枚举真实轮廓连续弧，分别修复位置检查时机和端点覆盖。
+    // 参考实现直接展开连续弧；两路只改变估计器和位置关联时机。
     static EdgePairFitResult fitStage(const std::vector<cv::Point> &contour,
                                       const std::array<std::array<cv::Point2d, 2>, 2> &edges,
                                       const CornerConfig &config,
@@ -197,7 +197,6 @@ namespace mark::edge_fit_reference
         indices.erase(std::unique(indices.begin(), indices.end()), indices.end());
 
         std::vector<Arc> arcs;
-        // 全端点的不同区间可能回走到同一有序像素序列；必须按全序列去重，不能只看端点。
         std::map<std::string, size_t> rejected;
         // 简化只用于标记真实轮廓上的转折，支持点仍来自CHAIN_APPROX_NONE连续弧。
         // 栅格圆角会在一条直边末端插入额外简化顶点，原单段实现误当缺边。
