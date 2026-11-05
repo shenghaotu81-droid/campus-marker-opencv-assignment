@@ -6,6 +6,6 @@ namespace mark::recovery112_reference
 {
     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
                                           const std::array<std::array<cv::Point2d, 2>, 2> &edges,
-                                          const CornerConfig &config, EdgePairFitStrategy strategy,
+                                          const CornerConfig &config,
                                           EdgePairFitTrace *trace = nullptr);
 }

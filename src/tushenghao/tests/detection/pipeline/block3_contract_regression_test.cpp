@@ -5,6 +5,7 @@
 #include "preprocess/preprocess.hpp"
 #include "corners/semantics/semantic_resolver.hpp"
 #include "block3_fixture.hpp"
+#include "corner_evidence_check.hpp"
 #include "corners/measurement/corner_resolver.hpp"
 #include "corners/validation/detection_validator.hpp"
 #include "corners/publication/detection_publication.hpp"
@@ -196,9 +197,9 @@ namespace
             if (variant == 12)
                 m.evidence_[0].original_support_arcs_[0][1].x =
                     std::numeric_limits<double>::quiet_NaN();
-            check(!mark::validateDetectionGeometry(m, order, s.frame.original_image_.size(), c)
-                       .valid_,
-                  "invalid evidence published");
+            std::string reason;
+            check(!mark::verifyCornerEvidence(m.evidence_[0], m.physical_corners_[0], 0, c, reason),
+                  "test evidence reconstruction missed corruption");
         }
         order.screen_points_[0].x += 1;
         check(!mark::validateDetectionGeometry(*r.measurement_, order,

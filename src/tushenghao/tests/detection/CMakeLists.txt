@@ -56,6 +56,13 @@ endif()
 
 get_property(test_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
 foreach(target IN LISTS test_targets)
-    target_include_directories(${target} PRIVATE "${VISION_ROOT}/src/config" "${VISION_ROOT}/src/detection"
-        "${VISION_ROOT}/src/pose" "${VISION_ROOT}/src/tracking" "${VISION_ROOT}/src/app" "${VISION_ROOT}/src/observability")
+    target_include_directories(${target} PRIVATE "${VISION_ROOT}/src/config" "${VISION_ROOT}/src/detection")
 endforeach()
+
+foreach(target corner_edge_fit_test block3_contract_regression_test)
+    target_sources(${target} PRIVATE "${VISION_ROOT}/tests/support/detection/corners/corner_evidence_check.cpp")
+endforeach()
+add_executable(corner_route_test corners/corner_route_test.cpp)
+target_link_libraries(corner_route_test PRIVATE vision_detection mark_test_support)
+target_include_directories(corner_route_test PRIVATE "${VISION_ROOT}/src/detection" "${VISION_ROOT}/src/config")
+add_test(NAME corner_route_test COMMAND corner_route_test)

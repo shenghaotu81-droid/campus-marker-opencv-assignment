@@ -50,8 +50,14 @@ int runOffline(AppConfig app, const std::string &video, const std::string &confi
 #ifdef VISION_HAS_POSE
     cv::FileStorage observations((directory / "observations.yaml").string(), cv::FileStorage::WRITE);
     if (!observations.isOpened()) throw std::runtime_error("POSE_OUTPUT_OPEN_FAILED");
+#ifdef VISION_HAS_TRACKING
     observations << "schema_version" << 4 << "stream_type" << "G4PoseReplay"
         << "position_unit" << "m" << "time_unit" << "us" << "frames" << "[";
+#else
+    observations << "schema_version" << 1 << "stream_type" << "G2PoseObservation"
+        << "session_id" << video << "camera_id" << pose_config->camera_.camera_id_
+        << "clock_domain" << (camera ? "host-monotonic-receive" : "video-fps") << "frames" << "[";
+#endif
 #endif
 #ifdef VISION_HAS_TRACKING
     cv::FileStorage tracks_file((directory / "tracks.yaml").string(), cv::FileStorage::WRITE);
@@ -99,14 +105,28 @@ int runOffline(AppConfig app, const std::string &video, const std::string &confi
         tracking::write_tracking_frame(observations, frame);
         tracking::write_tracking_result(tracks_file, result);
 #elif defined(VISION_HAS_POSE)
-        observations << "{" << "frame_id" << std::to_string(id) << "received_us"
-            << std::to_string(stamp.received_us_) << "observations" << "[";
+        observations << "{" << "frame_id" << std::to_string(id) << "timestamp_us"
+            << std::to_string(stamp.received_us_) << "mark" << "[";
         for (const auto &p : poses) {
-            observations << "{" << "source" << p.source_ << "status" << pose::pose_status_name(p.status_)
-                << "control_usable" << int(p.control_usable_);
+            observations << "{" << "source" << p.source_ << "target_id" << p.target_id_
+                << "detection_index" << std::to_string(p.detection_index_)
+                << "status" << pose::pose_status_name(p.status_) << "control_usable" << int(p.control_usable_)
+                << "corner_quality_flags" << int(p.corner_quality_flags_) << "candidates" << "[";
+            for (const auto &c : p.candidates_) {
+                observations << "{" << "rvec" << cv::Mat(c.pose_.rvec_) << "t_m" << cv::Mat(c.pose_.t_m_)
+                    << "metrics_valid" << int(c.metrics_valid_) << "eligible" << int(c.eligible_)
+                    << "rmse_px" << c.rmse_px_ << "max_error_px" << c.max_error_px_
+                    << "min_depth_m" << c.min_depth_m_ << "reasons" << "[";
+                for (const auto &reason : c.reasons_) observations << reason;
+                observations << "]" << "}";
+            }
+            observations << "]";
+            if (p.selected_index_) observations << "selected_index" << int(*p.selected_index_);
             if (p.T_camera_target_) observations << "rvec" << cv::Mat(p.T_camera_target_->rvec_)
                 << "t_m" << cv::Mat(p.T_camera_target_->t_m_);
-            observations << "}";
+            observations << "reasons" << "[";
+            for (const auto &reason : p.reasons_) observations << reason;
+            observations << "]" << "}";
         }
         observations << "]" << "}";
 #endif

@@ -202,7 +202,7 @@ void test_readiness_and_bootstrap()
     near((*track.velocity_mps_)[0], 1, 1e-9,
          "T04 相机相对速度不应被规则0.5m/s限幅");
     require(!track.qualified_for_g5_ && !track.time_bounded_,
-            "T05 nominal_research 数值通过不能赋予实车时间/任务资格");
+            "T05 未知时间语义的数值轨迹没有时间/下游资格");
 }
 
 // 七态不得压成“有候选就有测量”；所有非 Unique 状态都只会推进缺测生命周期。
@@ -360,6 +360,27 @@ void test_bounded_time()
     recovered.observations_[0].stamp_ = recovered.stamp_;
     require(one_track(tracker.step(recovered), "T24").state_ == TrackState::Measured,
             "T24 合法时间重新出现后可恢复测量");
+}
+
+// 缺时间上限可以构造；未知/重叠时间保持测量流，并保留否定的资格标签。
+void test_time_labels_without_mode() {
+    auto cfg=fixture_config();
+    cfg.stamp_uncertainty_semantics_="absolute_bound";
+    TargetTracker missing_bound(cfg);
+    auto f=observed_frame(1,0,{0,0,2});
+    f.stamp_.time_uncertainty_s_.reset();f.observations_[0].stamp_=f.stamp_;
+    const auto a=one_track(missing_bound.step(f),"missing bound");
+    require(a.position_m_ && !a.time_bounded_ && !a.qualified_for_g5_,"缺界不得阻止测量或获得资格");
+    require((*a.covariance_)(0,0)>cfg.profile_->camera_mse_m2_(0,0),"未知时间必须放大测量噪声");
+    cfg.profile_->validated_time_bound_s_=.1;
+    TargetTracker overlap(cfg);
+    f.stamp_.time_uncertainty_s_=.04;f.observations_[0].stamp_=f.stamp_;
+    overlap.step(f);
+    auto next=observed_frame(2,.05,{.025,0,2});
+    next.stamp_.time_uncertainty_s_=.04;next.observations_[0].stamp_=next.stamp_;
+    const auto b=one_track(overlap.step(next),"overlap");
+    require(b.state_==TrackState::Measured && b.confirmed_ && !b.time_bounded_ && !b.qualified_for_g5_,
+            "重叠时间区间仍走名义时间拟合，但不得声明有界资格");
 }
 
 void test_uncertainty_and_invalid_values()
@@ -678,6 +699,7 @@ int main()
         test_association_and_reseed();
         test_time_order_and_source_changes();
         test_bounded_time();
+        test_time_labels_without_mode();
         test_uncertainty_and_invalid_values();
         test_forecast_and_loss();
         test_world_coordinates();

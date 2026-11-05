@@ -26,7 +26,6 @@ namespace mark
         {
             Angle,
             Connection,
-            CornerOrExtension,
             DirectionOrPosition,
             Discontinuous,
             Nonconvex,
@@ -37,8 +36,8 @@ namespace mark
         };
 
         // 原热循环用字符串 map 计数；固定槽消除构造/树查询，输出仍按原字典序。
-        constexpr std::array<const char *, 8> rejection_names{
-            {"angle", "connection", "corner_or_extension", "direction_or_position_arc",
+        constexpr std::array<const char *, 7> rejection_names{
+            {"angle", "connection", "direction_or_position_arc",
              "discontinuous_arc", "nonconvex", "reused_support", "short_or_residual_arc"}};
 
         struct SupportRange
@@ -126,10 +125,10 @@ namespace mark
         {
           public:
             EdgePairFitter(const std::vector<cv::Point> &contour, const ModelEdges &edges,
-                           const CornerConfig &config, EdgePairFitStrategy strategy,
+                           const CornerConfig &config,
                            EdgePairFitTrace *trace)
                 : contour_(contour), edges_(edges), config_(config),
-                  budget_(*config.observation_budget_), strategy_(strategy), trace_(trace),
+                  budget_(*config.observation_budget_), trace_(trace),
                   exclusions_(contour.size())
             {
                 prepareContour();
@@ -326,7 +325,6 @@ namespace mark
             const ModelEdges &edges_;
             const CornerConfig &config_;
             const CornerObservationBudget &budget_;
-            const EdgePairFitStrategy strategy_;
             EdgePairFitTrace *const trace_;
             size_t stage_number_{0};
             double winding_{0}, length_roundoff_{0};
@@ -411,8 +409,7 @@ namespace mark
             }
             fit.mean = sum / support.points.size();
             fit.model_mean = model_sum / support.points.size();
-            fit.valid = hi - lo >= budget_.min_support_span_px &&
-                        fit.model_mean <= config_.max_line_fit_error_;
+            fit.valid = hi - lo >= budget_.min_support_span_px;
             return fit;
         }
 
@@ -545,13 +542,6 @@ namespace mark
                 observed::boundaryDistance(pair.intersection, pair.connector, false);
             pair.first_extension = extension(pair.intersection, first);
             pair.second_extension = extension(pair.intersection, second);
-            if (pair.corner_error > config_.max_corner_error_ ||
-                pair.first_extension > budget_.max_support_extension_px ||
-                pair.second_extension > budget_.max_support_extension_px)
-            {
-                pair.rejection = Rejection::CornerOrExtension;
-                return pair;
-            }
             pair.rejection = Rejection::Passed;
             return pair;
         }
@@ -628,7 +618,7 @@ namespace mark
         {
             EdgePairFitResult result;
             const size_t stage = stage_number_++;
-            std::array<size_t, 8> rejected{};
+            std::array<size_t, 7> rejected{};
             std::vector<ArcAlias> arcs;
             std::set<size_t> ranges_seen;
             std::set<const std::vector<cv::Point2d> *, SequenceLess> sequences_seen;
@@ -745,80 +735,40 @@ namespace mark
         {
             if (polygon_.size() < 3)
                 return {std::nullopt, "SHORT_SUPPORT: 原图轮廓不足"};
-            // D13：表序就是尝试序。位 0/1/2/3 分别为 Original/Linear/Periodic/Fast。
-            struct Route { bool all, posterior; LineFitModel model; unsigned strategies; int previous; };
-            static constexpr Route routes[] = {
-                {false,false,LineFitModel::Legacy,15,-1},
-                {false,false,LineFitModel::PeriodicPhaseMedian,8,-1},
-                {false,false,LineFitModel::PeriodicZeroSlope,8,-1},
-                {false,true,LineFitModel::PeriodicPhaseMedian,8,-1},
-                {false,true,LineFitModel::PeriodicZeroSlope,8,-1},
-                {false,true,LineFitModel::Legacy,14,-1},
-                {true,false,LineFitModel::Legacy,14,-1},
-                {false,false,LineFitModel::PeriodicPhaseMedian,12,1},
-                {false,true,LineFitModel::PeriodicPhaseMedian,12,3},
-                {true,false,LineFitModel::PeriodicPhaseMedian,12,-1},
-                {false,false,LineFitModel::PeriodicL1,12,-1},
-                {false,true,LineFitModel::PeriodicL1,12,-1},
-                {true,false,LineFitModel::PeriodicL1,12,-1}};
-            std::array<std::optional<EdgePairFitResult>,13> previous;
-            std::array<std::array<size_t,4>,13> trace_ranges{};
-            EdgePairFitResult result;
-            for(size_t i=0;i<std::size(routes);++i)
-            {
-                const auto &route=routes[i];
-                if(!(route.strategies & (1u<<static_cast<unsigned>(strategy_))))continue;
-                if(route.previous>=0 && previous[route.previous])
-                {
-                    // Fast 的第 8/9 路重用同输入失败结果；记录仍保留旧 stage 序号和完整弧/配对。
-                    result=*previous[route.previous];
-                    const auto stage=stage_number_++;
-                    if(trace_)
-                    {
-                        const auto &range=trace_ranges[route.previous];
-                        for(size_t j=range[0];j<range[1];++j) {
-                            auto entry=trace_->arcs[j];entry.stage=stage;trace_->arcs.push_back(std::move(entry));
-                        }
-                        for(size_t j=range[2];j<range[3];++j) {
-                            auto entry=trace_->pairs[j];entry.stage=stage;trace_->pairs.push_back(std::move(entry));
-                        }
-                    }
+            auto result = stage(false, false, LineFitModel::Legacy);
+            if (result.evidence) return result;
+            for (bool posterior : {false, true})
+                for (auto model : {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicZeroSlope}) {
+                    result = stage(false, posterior, model);
+                    if (result.evidence) return result;
                 }
-                else
-                {
-                    const auto arcs=trace_?trace_->arcs.size():0, pairs=trace_?trace_->pairs.size():0;
-                    result=stage(route.all,route.posterior,route.model);
-                    if(i==1 || i==3) {
-                        previous[i]=result;
-                        trace_ranges[i]={arcs,trace_?trace_->arcs.size():0,pairs,trace_?trace_->pairs.size():0};
-                    }
-                }
-                if(result.evidence)return result;
+            // 零命中退路仍共用同一stage；不凭单段录像删掉不同的支持域/估计器。
+            for (auto mode : {std::pair<bool,bool>{false,true}, {true,false}}) {
+                result = stage(mode.first, mode.second, LineFitModel::Legacy);
+                if (result.evidence) return result;
+            }
+            result = stage(true, false, LineFitModel::PeriodicPhaseMedian);
+            if (result.evidence) return result;
+            for (auto mode : {std::pair<bool,bool>{false,false}, {false,true}, {true,false}}) {
+                result = stage(mode.first, mode.second, LineFitModel::PeriodicL1);
+                if (result.evidence) return result;
             }
             return result;
+
         }
     }
 
     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
                                           const ModelEdges &edges, const CornerConfig &config,
-                                          EdgePairFitStrategy strategy, EdgePairFitTrace *trace)
+                                          EdgePairFitTrace *trace)
     {
         validateCornerObservationBudget(config);
-        EdgePairFitter fitter(contour, edges, config, strategy, trace);
+        EdgePairFitter fitter(contour, edges, config, trace);
         return fitter.run();
     }
 
     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
-                                          const ModelEdges &edges, const CornerConfig &config,
-                                          EdgePairFitStrategy strategy)
-    {
-        return fitObservedEdgePair(contour, edges, config, strategy, nullptr);
-    }
-
-    EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
-                                          const ModelEdges &edges, const CornerConfig &config)
-    {
-        // 普通入口固定采用批准的快速路线；实验 reference 策略仅由内部测试显式选择。
-        return fitObservedEdgePair(contour, edges, config, EdgePairFitStrategy::FastRecovery);
+        const ModelEdges &edges, const CornerConfig &config) {
+        return fitObservedEdgePair(contour, edges, config, nullptr);
     }
 }

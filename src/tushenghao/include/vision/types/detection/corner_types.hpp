@@ -15,9 +15,6 @@
 namespace mark
 {
 
-    // D14→A07/V03：角证据单独版本化；外层 FrameRecord schema 与公开 Detection 不变。
-    inline constexpr int corner_evidence_schema_version = 2;
-
     // 单线遗漏扫描行奇偶结构；内部模型类型明确区分估计目标，不改公开 Detection。
     enum class LineFitModel
     {
@@ -89,7 +86,7 @@ namespace mark
         std::array<std::vector<cv::Point2d>, 2> original_support_arcs_;
         std::vector<cv::Point2d> original_turn_arc_;
         bool original_observation_{false};
-        // 每线原图px残差/延伸；corner_error为交点到实测连接弧的距离。
+        // 质量标签（原图px），超限仍发布，由G2/G4/G3判断。corner_error为交点到实测连接弧的距离。
         std::array<double, 2> line_mean_residual_px_{
             {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}};
         std::array<double, 2> line_max_residual_px_{

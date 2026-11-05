@@ -131,6 +131,7 @@ void write_pose(cv::FileStorage &fs, const pose::PoseObservation &p)
     fs << "source" << p.source_ << "target_id" << p.target_id_
        << "detection_index" << std::to_string(p.detection_index_)
        << "status" << pose::pose_status_name(p.status_)
+       << "corner_quality_flags" << int(p.corner_quality_flags_)
        << "control_usable" << static_cast<int>(p.control_usable_) << "candidates" << "[";
     for (const auto &c : p.candidates_)
     {
@@ -161,6 +162,7 @@ pose::PoseObservation read_pose(const cv::FileNode &n, const pose::CaptureStamp 
     p.target_id_ = text(n, "target_id");
     p.detection_index_ = unsigned_integer(n["detection_index"]);
     p.status_ = read_status(n["status"]);
+    if (!n["corner_quality_flags"].empty()) p.corner_quality_flags_ = unsigned_integer(n["corner_quality_flags"]);
     p.control_usable_ = !legacy && flag(n, "control_usable");
     if (n["reasons"].isSeq())
         for (const auto &reason : n["reasons"])

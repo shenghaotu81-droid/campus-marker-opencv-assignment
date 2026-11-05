@@ -14,7 +14,6 @@ budgets:
   # 空字符串表示尚未标定；不继承二维角点拟合预算，不填经验值。(后定阈值)
   max_rmse_px: "31.2166"
   max_corner_error_px: "33.4116"
-  evidence: "unmeasured"
 # 可选的精细过滤器(空字符串 = "不启用这个过滤")
 selection:
   # 只接受距离在 X~Y 米之间的位姿

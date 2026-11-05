@@ -244,8 +244,10 @@ struct TrackerState
             if (!current_time_bounded_ || f.stamp_.time_uncertainty_s_.value_or(0) > 0)
             {
                 // 绝对时偏界产生位移误差MSE包络，绝不把界直接当高斯sigma。
+                const double fallback = p.validated_time_bound_s_.value_or(p.max_dt_s_);
+                // 无界/未知时间仍流过：仅作数值噪声增广，不把该代用尺度声明成曝光误差界。
                 const double b = f.stamp_.time_uncertainty_s_.value_or(
-                    p.validated_time_bound_s_.value_or(p.max_dt_s_));
+                    fallback > 0 ? fallback : p.max_dt_s_);
                 cv::Vec3d velocity(0, 0, 0);
                 cv::Matx33d velocity_second = cv::Matx33d::eye() * p.initial_velocity_variance_m2ps2_;
                 if (live_)

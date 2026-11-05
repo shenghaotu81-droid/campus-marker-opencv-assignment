@@ -21,7 +21,7 @@ add_library(vision_detection
     pipeline/execution/detector.cpp
 )
 target_link_libraries(vision_detection PUBLIC vision_types vision_config
-    PRIVATE vision_math vision_config)
+    PRIVATE vision_math)
 target_include_directories(vision_detection PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # 工程内测试／探针显式选择步骤声明，不向普通 Detector 消费者暴露实现树。
 

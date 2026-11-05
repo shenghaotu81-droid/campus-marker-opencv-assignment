@@ -32,7 +32,7 @@ if(MARK_BUILD_G2)
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
     )
-    target_link_libraries(vision_pose PUBLIC vision_types vision_config PRIVATE mark_apriltag vision_config)
+    target_link_libraries(vision_pose PUBLIC vision_types vision_config PRIVATE mark_apriltag)
     target_compile_options(vision_pose PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic>
     )

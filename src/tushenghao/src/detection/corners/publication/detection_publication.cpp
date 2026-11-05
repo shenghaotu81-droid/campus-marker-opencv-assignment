@@ -67,6 +67,15 @@ namespace mark
         detection.category = MarkCategory::Unknown;
         for (size_t i = 0; i < 4; ++i)
             detection.corners[i] = cv::Point2f(order->screen_points[i]);
+        for (const auto &e : measurement.evidence_) {
+            if (e.corner_error_px_ > config.max_corner_error_) detection.quality_flags |= CornerErrorHigh;
+            for (size_t edge=0;edge<2;++edge) {
+                if (e.model_mean_residual_px_[edge] > config.max_line_fit_error_)
+                    detection.quality_flags |= LineFitResidualHigh;
+                if (config.observation_budget_ && e.support_extension_px_[edge] > config.observation_budget_->max_support_extension_px)
+                    detection.quality_flags |= SupportExtensionHigh;
+            }
+        }
         detection.bbox = observed::four_corner_bounds(detection.corners);
         if (orientation_unique)
             detection.attributes.orientation = order->input_to_screen;

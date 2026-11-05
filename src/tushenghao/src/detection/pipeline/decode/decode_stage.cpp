@@ -101,7 +101,7 @@ DecodeStageResult decodeStage(const PreparedFrame &frame, const std::vector<Whit
         result.diagnostics.push_back("semantic/" + semantics.rejection_reason_);
         return result;
     }
-    // 原发布按double规范序直接转float，可能被稳定层拒绝；先完成全部发布再提交，失败竞争不能被删掉。
+    // double规范序转float后可能改变排序；先完成全部发布再提交，失败竞争不能被删掉。
     std::vector<Detection> pending;
     for (const auto &measurement : semantics.retained_measurements_)
     {

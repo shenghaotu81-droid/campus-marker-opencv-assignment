@@ -1,10 +1,8 @@
-#include "pose/tag_config_validation.hpp"
 // 小范围数学内部声明
 #pragma once
 
 #include "vision/types/pose_types.hpp"
 
-namespace mark::pose { struct TagConfig; }
 
 namespace mark::pose::detail
 {
@@ -14,7 +12,7 @@ namespace mark::pose::detail
 // 输入检查（解算前验时间戳、四边形合法）
 bool valid_stamp(const CaptureStamp &stamp_);
 bool valid_quad(const std::array<cv::Point2d, 4> &points, cv::Size size);
-// 算面积（给最小面积预算用）
+// 面积只检查几何非退化，不作面积预算门
 double quad_area(const std::array<cv::Point2d, 4> &points);
 // 算两个旋转的差（prior 比较、测试用）
 double rotation_distance(const cv::Vec3d &a, const cv::Vec3d &b);

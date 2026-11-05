@@ -17,8 +17,7 @@ if((BUILD_TESTING OR NOT DEFINED BUILD_TESTING) AND MARK_BUILD_G2)
     add_test(NAME tag_detector_test COMMAND tag_detector_test)
 endif()
 
-get_property(test_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
-foreach(target IN LISTS test_targets)
-    target_include_directories(${target} PRIVATE "${VISION_ROOT}/src/config" "${VISION_ROOT}/src/detection"
-        "${VISION_ROOT}/src/pose" "${VISION_ROOT}/src/tracking" "${VISION_ROOT}/src/app" "${VISION_ROOT}/src/observability")
-endforeach()
+
+if(MARK_BUILD_G2)
+    target_include_directories(pose_contract_test PRIVATE "${VISION_ROOT}/src/pose")
+endif()

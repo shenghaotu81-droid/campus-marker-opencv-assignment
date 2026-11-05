@@ -89,8 +89,7 @@ namespace mark::recovery112_reference
             }
             arc.mean = sum / arc.points.size();
             arc.model_mean = model_sum / arc.points.size();
-            return hi - lo >= config.observation_budget_->min_support_span_px &&
-                   arc.model_mean <= config.max_line_fit_error_;
+            return hi - lo >= config.observation_budget_->min_support_span_px;
         }
 
         // 指定有限模型边的方向与位置共同限制候选；内侧平行边不能仅凭方向获选。
@@ -364,12 +363,6 @@ namespace mark::recovery112_reference
                     continue;
                 double corner_error = observed::boundaryDistance(intersection, connector, false);
                 double ea = extension(intersection, first), eb = extension(intersection, second);
-                if (corner_error > config.max_corner_error_ ||
-                    ea > budget.max_support_extension_px || eb > budget.max_support_extension_px)
-                {
-                    ++rejected["corner_or_extension"];
-                    continue;
-                }
                 if (trace)
                     trace->pairs.push_back({stage,
                                             {first.begin, first.end, second.begin, second.end},
@@ -446,46 +439,35 @@ namespace mark::recovery112_reference
           public:
             EdgePairFitter(const std::vector<cv::Point> &contour,
                            const std::array<std::array<cv::Point2d, 2>, 2> &edges,
-                           const CornerConfig &config, EdgePairFitStrategy strategy,
+                           const CornerConfig &config,
                            EdgePairFitTrace *trace)
-                : contour_(contour), edges_(edges), config_(config), strategy_(strategy),
+                : contour_(contour), edges_(edges), config_(config),
                   trace_(trace)
             {
             }
 
             EdgePairFitResult run()
             {
-                auto original = stage(false, false, LineFitModel::Legacy);
-                if (original.evidence || strategy_ == EdgePairFitStrategy::OriginalOnly)
-                    return original;
-                // 快速路线只改变失败补查优先级，reference 仍完整枚举每个阶段。
-                if (strategy_ == EdgePairFitStrategy::FastRecovery)
-                    for (bool posterior : {false, true})
-                        for (auto model :
-                             {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicZeroSlope})
-                        {
-                            auto fast = stage(false, posterior, model);
-                            if (fast.evidence)
-                                return fast;
-                        }
-                // B：原端点的实测支持投影到物理线，再用原 9.0 有限段位置门限。
-                auto posterior = stage(false, true, LineFitModel::Legacy);
-                if (posterior.evidence)
-                    return posterior;
-                // A：保持原位置模式，覆盖全部真实端点；不是按残差删除区间中的像素。
-                auto exhaustive = stage(true, false, LineFitModel::Legacy);
-                if (exhaustive.evidence || strategy_ == EdgePairFitStrategy::LinearRecovery)
-                    return exhaustive;
-                // C1：先固定 OLS 斜率的两相位中位数；仍失败才精化同一 a/b/c 的 L1 目标。
-                for (auto model : {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicL1})
-                    for (auto mode :
-                         {std::pair<bool, bool>{false, false}, {false, true}, {true, false}})
-                    {
-                        exhaustive = stage(mode.first, mode.second, model);
-                        if (exhaustive.evidence)
-                            return exhaustive;
-                    }
-                return exhaustive;
+            auto result = stage(false, false, LineFitModel::Legacy);
+            if (result.evidence) return result;
+            for (bool posterior : {false, true})
+                for (auto model : {LineFitModel::PeriodicPhaseMedian, LineFitModel::PeriodicZeroSlope}) {
+                    result = stage(false, posterior, model);
+                    if (result.evidence) return result;
+                }
+            // 零命中退路仍共用同一stage；不凭单段录像删掉不同的支持域/估计器。
+            for (auto mode : {std::pair<bool,bool>{false,true}, {true,false}}) {
+                result = stage(mode.first, mode.second, LineFitModel::Legacy);
+                if (result.evidence) return result;
+            }
+            result = stage(true, false, LineFitModel::PeriodicPhaseMedian);
+            if (result.evidence) return result;
+            for (auto mode : {std::pair<bool,bool>{false,false}, {false,true}, {true,false}}) {
+                result = stage(mode.first, mode.second, LineFitModel::PeriodicL1);
+                if (result.evidence) return result;
+            }
+            return result;
+
             }
 
           private:
@@ -499,16 +481,15 @@ namespace mark::recovery112_reference
             const std::vector<cv::Point> &contour_;
             const std::array<std::array<cv::Point2d, 2>, 2> &edges_;
             const CornerConfig &config_;
-            const EdgePairFitStrategy strategy_;
         };
     }
 
     EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point> &contour,
                                           const std::array<std::array<cv::Point2d, 2>, 2> &edges,
-                                          const CornerConfig &config, EdgePairFitStrategy strategy,
+                                          const CornerConfig &config,
                                           EdgePairFitTrace *trace)
     {
-        EdgePairFitter fitter(contour, edges, config, strategy, trace);
+        EdgePairFitter fitter(contour, edges, config, trace);
         return fitter.run();
     }
 }

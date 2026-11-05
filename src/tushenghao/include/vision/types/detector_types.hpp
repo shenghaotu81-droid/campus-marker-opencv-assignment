@@ -9,29 +9,6 @@
 
 #include <opencv2/core.hpp>
 
-/*          快速恢复：NOTE
-FrameInput
-    |
-    | 输入
-    ↓
-
-Detector
-
-    |
-    | 输出
-    ↓
-
-FrameResult
-    |
-    ├── detections
-    |       当前检测
-    |
-    ├── tracks
-    |       稳定结果
-    |
-    └── display_state
-            显示历史状态
-*/
 
 namespace mark
 {
@@ -78,6 +55,8 @@ namespace mark
         TimestampSource time_source;
     };
 
+    enum DetectionQualityFlag : uint32_t { LineFitResidualHigh = 1u, CornerErrorHigh = 2u, SupportExtensionHigh = 4u };
+
     // 检测结果（输出important！）
     struct Detection
     {
@@ -109,7 +88,7 @@ namespace mark
         DETECTED
     };
 
-    // Detector 处理完一帧后的完整输出（包含状态、检测结果、稳定结果、显示状态等）
+    // Detector 处理完一帧后的当前帧RAW输出（状态、检测结果与报错）
     struct FrameResult
     {
         // 帧号（输入）

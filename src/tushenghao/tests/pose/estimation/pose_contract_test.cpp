@@ -28,7 +28,7 @@ int main()
                         "F08 snapshot Mat aliases internal camera storage");
         const auto base = solver.estimate_planar(c.mark_points_m_, points, c.camera_.image_size_,
                                                  stamp_, c.mark_target_id_);
-        g2_test::require(base.status_ == PoseStatus::Unique && base.T_camera_target_,
+        g2_test::require(base.status_ == PoseStatus::Unique && base.T_camera_target_ && base.control_usable_,
                           "T01 理想倾斜四点必须有质量可区分的唯一解");
         g2_test::require(cv::norm(base.T_camera_target_->t_m_ - g2_test::truth().t_m_) < 1e-7 &&
             detail::rotation_distance(base.T_camera_target_->rvec_, g2_test::truth().rvec_) < 1e-6,
@@ -36,13 +36,14 @@ int main()
         g2_test::require(!base.covariance_se3_,
                           "T03 协方差未知不能填零");
         auto raw = g2_test::raw(c);
+        raw.detections[0].quality_flags = mark::CornerErrorHigh;
         auto unknown_time = stamp_;
         unknown_time.exposure_us_.reset();
         unknown_time.received_us_ = raw.timestamp_us;
         unknown_time.time_uncertainty_s_.reset();
         const auto unbounded = solver.estimate_mark(raw, 0, c.camera_.image_size_, unknown_time);
         g2_test::require(unbounded.status_ == PoseStatus::Unique && unbounded.control_usable_ &&
-            !unbounded.stamp_.time_uncertainty_s_, "Unique保留未知时间标签，交下游判断");
+            !unbounded.stamp_.time_uncertainty_s_ && unbounded.corner_quality_flags_ == mark::CornerErrorHigh, "Unique保留未知时间标签，交下游判断");
         std::array<int, 4> perm{{0, 1, 2, 3}};
         do
         {

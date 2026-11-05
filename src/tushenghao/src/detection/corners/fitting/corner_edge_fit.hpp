@@ -5,15 +5,6 @@
 
 namespace mark
 {
-    // 旧路径成功必须先返回；策略属于单次拟合实例，不依赖环境变量或公开 YAML。
-    enum class EdgePairFitStrategy
-    {
-        OriginalOnly,
-        LinearRecovery,
-        PeriodicRecovery,
-        FastRecovery
-    };
-
     struct EdgePairFitResult
     {
         std::optional<CornerEvidence> evidence;
@@ -53,15 +44,7 @@ namespace mark
                         const std::array<std::array<cv::Point2d, 2>, 2> &model_edges_original,
                         const CornerConfig &config);
 
-    // 内部 reference 入口用于逐步验收；普通消费者仍使用原三参数签名。
-    EdgePairFitResult
-    fitObservedEdgePair(const std::vector<cv::Point> &contour,
-                        const std::array<std::array<cv::Point2d, 2>, 2> &model_edges_original,
-                        const CornerConfig &config, EdgePairFitStrategy strategy);
-
-    EdgePairFitResult
-    fitObservedEdgePair(const std::vector<cv::Point> &contour,
-                        const std::array<std::array<cv::Point2d, 2>, 2> &model_edges_original,
-                        const CornerConfig &config, EdgePairFitStrategy strategy,
-                        EdgePairFitTrace *trace);
+    // 测试可收集当前调用的弧/配对，不在生产累计路线命中。
+    EdgePairFitResult fitObservedEdgePair(const std::vector<cv::Point>&,
+        const std::array<std::array<cv::Point2d,2>,2>&, const CornerConfig&, EdgePairFitTrace*);
 }

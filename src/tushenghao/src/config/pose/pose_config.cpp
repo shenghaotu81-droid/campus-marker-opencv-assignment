@@ -125,7 +125,6 @@ G2Config load_pose_config(const std::filesystem::path &path)
     c.mark_target_id_ = text(geometry, "target_id");
     c.budgets_.max_rmse_px_ = optional_number(budgets_, "max_rmse_px");
     c.budgets_.max_corner_error_px_ = optional_number(budgets_, "max_corner_error_px");
-    (void)text(budgets_, "evidence");
     c.selection_.min_z_m_ = optional_number(selection_, "min_z_m");
     c.selection_.max_z_m_ = optional_number(selection_, "max_z_m");
     c.selection_.min_normal_z_ = optional_number(selection_, "min_normal_z");

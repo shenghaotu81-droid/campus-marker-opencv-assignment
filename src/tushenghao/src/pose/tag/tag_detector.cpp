@@ -2,6 +2,7 @@
 // C库生命周期/解码/Tag位姿适配
 #include "vision/pose/tag_detector.hpp"
 #include "validation/pose_geometry.hpp"
+#include "pose/tag_config_validation.hpp"
 
 #include <cmath>
 #include <limits>

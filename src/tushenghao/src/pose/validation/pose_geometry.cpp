@@ -29,7 +29,7 @@ const char *pose_status_name(PoseStatus status_) noexcept
 namespace detail
 {
 // 时间戳合法性
-// 跨会话/未知时钟不可视作同一时间轴；未知曝光与时间误差允许保留，但禁止控制放行。
+// 跨会话/未知时钟不可视作同一时间轴；未知曝光与时间误差作为质量字段保留，下游判断时间资格。
 bool valid_stamp(const CaptureStamp &s)
 {
     return !s.session_id_.empty() && !s.camera_id_.empty() && !s.clock_domain_.empty() &&

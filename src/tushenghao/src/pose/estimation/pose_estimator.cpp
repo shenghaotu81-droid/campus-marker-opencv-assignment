@@ -100,6 +100,7 @@ PoseObservation PoseEstimator::estimate_mark(
         return out;
     }
     const auto &d = raw.detections[index];
+    out.corner_quality_flags_ = d.quality_flags;
     if (!d.attributes.orientation)
     {
         out.status_ = PoseStatus::CorrespondenceMissing;
@@ -122,6 +123,7 @@ PoseObservation PoseEstimator::estimate_mark(
                           config_.mark_target_id_, prior);
     out.source_ = "MARK";
     out.detection_index_ = index;
+    out.corner_quality_flags_ = d.quality_flags;
     out.control_usable_ = out.status_ == PoseStatus::Unique;
     return out;
 }
@@ -241,8 +243,7 @@ PoseObservation PoseEstimator::estimate_planar(
         out.selected_rmse_px_ = selected.rmse_px_;
 
         out.status_ = PoseStatus::Unique;
-        // 通用入口不知道物理模型是否已验证；控制级资格只能由 MARK/Tag 类型适配器赋予。
-        out.control_usable_ = false;
+        out.control_usable_ = true;
     }
     catch (const cv::Exception &)
     {

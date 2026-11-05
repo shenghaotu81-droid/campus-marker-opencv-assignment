@@ -1,9 +1,11 @@
 // 边拟合独立反例：真实相切2px圆弧、真正近退化角/反向表示；不使用95°假门限。
 #include "block3_fixture.hpp"
+#include "corner_evidence_check.hpp"
 #include "corners/fitting/corner_edge_fit.hpp"
 #include "corners/validation/corner_evidence_validation.hpp"
 #include "corners/fitting/periodic_line_fit.hpp"
 #include "corners/measurement/corner_resolver.hpp"
+#include "corners/publication/detection_publication.hpp"
 #include "recovery112_reference.hpp"
 #include "vision/math/observed_geometry.hpp"
 #include "support_pixel_count.hpp"
@@ -72,13 +74,13 @@ namespace
     // 最终四角相同仍可能漏掉低分歧义候选；比较完整合格弧/配对序列及全部最终证据字段。
     void compareSearches(const std::vector<cv::Point> &contour,
                          const std::array<std::array<cv::Point2d, 2>, 2> &edges,
-                         const mark::CornerConfig &config, mark::EdgePairFitStrategy strategy)
+                         const mark::CornerConfig &config)
     {
         mark::EdgePairFitTrace indexed_trace, reference_trace;
         const auto indexed =
-            mark::fitObservedEdgePair(contour, edges, config, strategy, &indexed_trace);
+            mark::fitObservedEdgePair(contour, edges, config, &indexed_trace);
         const auto reference = mark::recovery112_reference::fitObservedEdgePair(
-            contour, edges, config, strategy, &reference_trace);
+            contour, edges, config, &reference_trace);
         check(indexed_trace.arcs.size() == reference_trace.arcs.size(),
               "eligible arc coverage changed");
         for (size_t i = 0; i < indexed_trace.arcs.size(); ++i)
@@ -164,14 +166,11 @@ namespace
             }
             std::vector<std::vector<cv::Point>> contours;
             cv::findContours(image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-            for (auto strategy : {mark::EdgePairFitStrategy::OriginalOnly,
-                                  mark::EdgePairFitStrategy::LinearRecovery,
-                                  mark::EdgePairFitStrategy::FastRecovery})
             {
-                compareSearches(contours.at(0), edges, config, strategy);
+                compareSearches(contours.at(0), edges, config);
                 auto reversed = contours.at(0);
                 std::reverse(reversed.begin(), reversed.end());
-                compareSearches(reversed, edges, config, strategy);
+                compareSearches(reversed, edges, config);
                 comparisons += 2;
             }
         }
@@ -185,8 +184,7 @@ namespace
             {
                 config.observation_budget_->turn_trim_distance_px = trim;
                 config.observation_budget_->max_turn_connection_length_px = connection;
-                compareSearches(contours.at(0), edges, config,
-                                mark::EdgePairFitStrategy::LinearRecovery);
+                compareSearches(contours.at(0), edges, config);
                 ++comparisons;
             }
         std::cout << "reference comparisons=" << comparisons
@@ -222,22 +220,21 @@ namespace
             for (size_t edge = 0; edge < 2; ++edge)
             {
                 const auto &candidate = resolved.measurement_->evidence_[corner];
-                if (!selected && candidate.line_model_kinds_[edge] != mark::LineFitModel::Legacy &&
-                    candidate.line_mean_residual_px_[edge] > 0.5)
+                if (!selected && candidate.line_mean_residual_px_[edge] > 0.5)
                 {
                     selected = candidate;
                     periodic_edge = edge;
                     corner_index = corner;
                 }
             }
-        check(bool(selected), "fixture did not require periodic model");
+        check(bool(selected), "fixture did not produce high residual evidence");
         auto evidence = *selected;
         std::string reason;
-        check(mark::validateCornerEvidence(evidence, evidence.intersection_, corner_index, config,
+        check(mark::verifyCornerEvidence(evidence, evidence.intersection_, corner_index, config,
                                            reason),
               reason.c_str());
         check(periodic_edge < 2 && evidence.line_mean_residual_px_[periodic_edge] > 0.5 &&
-                  evidence.model_mean_residual_px_[periodic_edge] <= 0.5,
+                  std::isfinite(evidence.model_mean_residual_px_[periodic_edge]),
               "raw residual was replaced by corrected error");
         for (int alteration = 0; alteration < 6; ++alteration)
         {
@@ -260,10 +257,10 @@ namespace
                 changed.line_mean_residual_px_[periodic_edge] += 0.01;
                 break;
             case 5:
-                changed.line_model_kinds_[periodic_edge] = mark::LineFitModel::Legacy;
+                changed.line_a_[2] += 1;
                 break;
             }
-            check(!mark::validateCornerEvidence(changed, changed.intersection_, corner_index,
+            check(!mark::verifyCornerEvidence(changed, changed.intersection_, corner_index,
                                                 config, reason),
                   "periodic evidence tampering accepted");
         }
@@ -368,7 +365,25 @@ namespace
         config.observation_budget_->max_support_extension_px = 100;
         config.observation_budget_->max_turn_connection_length_px = 100;
         auto result = mark::fitObservedEdgePair(contours[0], edges, config);
-        check(!result.evidence, "remote infinite-line intersection published");
+        check(result.evidence && result.evidence->corner_error_px_ > config.max_corner_error_,
+              "remote corner must remain available with its high error label");
+    }
+
+    void qualityLabels() {
+        const auto scene=fixture::scene();
+        auto c=fixture::cornerConfig();
+        const auto before=mark::resolveObservedCorners(scene.frame,scene.hypothesis,scene.geometry,c);
+        c.max_line_fit_error_=0;
+        c.max_corner_error_=0;
+        c.observation_budget_->max_support_extension_px=0;
+        const auto after=mark::resolveObservedCorners(scene.frame,scene.hypothesis,scene.geometry,c);
+        check(before.measurement_ && after.measurement_, "quality thresholds dropped measurement");
+        check(before.measurement_->physical_corners_==after.measurement_->physical_corners_, "labels changed corner coordinates");
+        std::string reason;
+        const auto published=mark::publishFloatDetection(*after.measurement_,true,scene.frame.original_image_.size(),c,reason);
+        check(published && published->quality_flags!=0, "high errors did not become published quality labels");
+        for(int i=0;i<4;++i) check(mark::verifyCornerEvidence(after.measurement_->evidence_[i],
+            after.measurement_->physical_corners_[i],i,c,reason), reason.c_str());
     }
 
     // 已保留H-v1失败数据；旧单简化段实现会断开直边末端，预算完全保持冻结v1。
@@ -450,7 +465,7 @@ namespace
         c.observation_budget_ = mark::CornerObservationBudget{3, 9, 4.5, 2, 13.5, 9.5, 14};
         auto result = mark::fitObservedEdgePair(contour, edges, c);
         check(bool(result.evidence), result.reason.c_str());
-        check(result.evidence->corner_error_px_ <= 1.5, "video corner gate changed");
+        check(std::isfinite(result.evidence->corner_error_px_), "video corner label missing");
         // 真实弧证据送进生产复算校验，防止只通过局部fit却违反连续性或端点绑定。
         auto evidence = *result.evidence;
         evidence.stable_id_ = "frame-1/M1";
@@ -459,7 +474,7 @@ namespace
         evidence.model_vertex_id_ = 1;
         evidence.model_edge_ids_ = {0, 1};
         std::string reason;
-        check(mark::validateCornerEvidence(evidence, evidence.intersection_, 1, c, reason),
+        check(mark::verifyCornerEvidence(evidence, evidence.intersection_, 1, c, reason),
               reason.c_str());
         for (auto &arc : result.evidence->original_support_arcs_)
             for (auto p : arc)
@@ -476,7 +491,8 @@ int main()
          {std::pair<const char *, void (*)()>{"UniqueSupportPixelCount", uniqueSupportPixelCount},
           {"RoundedCornerDoesNotCrash", roundedCorner},
           {"ParallelEdgesFail", parallelEdges},
-          {"RemoteIntersectionFails", remoteIntersection},
+          {"RemoteIntersectionLabels", remoteIntersection},
+          {"QualityLabels", qualityLabels},
           {"SplitRoundedBoundary", splitRoundedBoundary},
           {"FragmentedVideoBoundary", fragmentedVideoBoundary},
           {"ManySimplifiedSegments", manySimplifiedSegments},
