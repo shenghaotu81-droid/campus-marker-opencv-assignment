@@ -1,9 +1,0 @@
-{
- "schema_version":1,"source":"synthetic_gen_spec_Oyster_reviewed.md §5；全部为输入构造，不是算法结论",
- "baseline":{"theta":0,"ratio":1,"width":8,"phase":[0,0],"offset":0},
- "crop_depths":[0,0.5,4,12],"bridge_widths":[1,2,4],"wrong_shift":[20,20],
- "blocks":[{"shape":"square","vertices":[[-8,-8],[8,-8],[8,8],[-8,8]]},{"shape":"rectangle","vertices":[[-16,-4],[16,-4],[16,4],[-16,4]]},{"shape":"triangle","vertices":[[-8,-8],[8,-8],[-8,8]]}],
- "white_counts":[127,128,129],"white_grid":{"origin":[16,16],"step":16,"columns":58,"side":8},
- "l_counts":[15,16,17],"l_grid":{"origin":[24,24],"step":24,"columns":38,"width":4},
- "counter_limits":[560,3360,10000,64],"narrow_widths":[1,1.5],"strong_ratios":[3,4],"strong_rotations":[0,45],"perspective_k":[-0.5,0.5],"near_collinear_offset":0.5
-}

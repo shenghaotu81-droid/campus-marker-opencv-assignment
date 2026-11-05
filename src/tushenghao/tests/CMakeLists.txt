@@ -7,4 +7,3 @@ add_subdirectory(observability)
 add_subdirectory(app)
 add_subdirectory(pose)
 add_subdirectory(tracking)
-# 合成独立工程仍登记原 7 项；完整主工程仍为 27/默认 23，不混改历史用例集合。

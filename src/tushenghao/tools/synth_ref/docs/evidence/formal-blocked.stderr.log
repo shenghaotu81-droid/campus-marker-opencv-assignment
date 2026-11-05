@@ -1,3 +1,0 @@
-未创建新的运行目录；启动前错误请看终端。
-退出码3: APPROVAL_REQUIRED: 缺 inputs/approval.json；模型/实验未获批准；未创建运行目录
-先检查 inputs/、configs/ 或运行报告；命令帮助 --help。

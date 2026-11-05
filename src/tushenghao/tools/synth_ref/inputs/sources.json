@@ -1,9 +1,0 @@
-{
-  "schema_version": 1,
-  "sources": [
-    {"original_filename":"model_coordinates.md","path":"inputs/model_coordinates.md","sha256":"70b85217f501dadf032fcce2bc289548c3911af4facef6383de802f44bb7774a","status":"PENDING_USER_CONFIRMATION"},
-    {"original_filename":"error_budget.md","path":"inputs/error_budget.md","sha256":"dcf7c983a11a39f8f258299eba145fbc3d2b7317d30d5bb56a58eaec6d3e1a1a","status":"PROPOSED_NOT_APPROVED"},
-    {"original_filename":"板块2_几何原语_完整冻结文档.md","alias":"2.md","path":"inputs/2.md","sha256":"dddc29831b73505bdfbc89402b7b8f51842fcf16e79f61981a0a43d2af229b60","status":"FROZEN_METHOD_PENDING_MODEL_AND_BUDGET"},
-    {"original_filename":"synthetic_gen_spec_Oyster_reviewed.md","path":"inputs/synthetic_gen_spec_Oyster_reviewed.md","sha256":"a9785a9dacd021ab74ba0a55258bac07d795b7d008e97a947daaa4ccf6e28191","status":"TOOL_IMPLEMENTATION_AUTHORIZED_BY_CURRENT_REQUEST_MODEL_APPROVAL_SEPARATE"}
-  ]
-}

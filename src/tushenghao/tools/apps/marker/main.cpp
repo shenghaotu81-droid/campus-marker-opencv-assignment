@@ -112,7 +112,7 @@ int main(int argc, char **argv)
         if (purpose == "verification" && app.offline.mode != "debug")
             throw std::runtime_error("verification requires debug mode");
         return mark::runOffline(app, args["--video"], config, mark::ExecutionScope::Full, {},
-                                purpose, MARK_CODE_HASH);
+                                purpose, "vision-lean");
     }
     catch (const std::exception &e)
     {

@@ -148,7 +148,7 @@ namespace mark
                     std::filesystem::absolute(app_.detector_config.marker_geometry_path_)
                         .lexically_normal()
                         .string();
-                meta_.commit_label = MARK_COMMIT;
+                meta_.commit_label = "vision-lean";
                 meta_.code_fingerprint = identity_;
                 meta_.input_fingerprint = fingerprint_file(meta_.source_path);
                 meta_.environment = {
@@ -156,7 +156,7 @@ namespace mark
                     {"OS", "Linux"},
                     {"compiler", __VERSION__},
                     {"OpenCV", CV_VERSION},
-                    {"build_type", MARK_BUILD_TYPE},
+                    {"build_type", "unspecified"},
                     {"OpenCV_threads", std::to_string(cv::getNumThreads())},
                     {"CWD", std::filesystem::current_path().string()},
                     {"model_fingerprint", fingerprint_file(meta_.model_path)},
@@ -489,7 +489,7 @@ namespace mark
                    ExecutionScope scope, const std::set<uint64_t> &subset,
                    const std::string &purpose)
     {
-        return OfflineRunSession(std::move(app), video, config_path, scope, subset, purpose, MARK_CODE_HASH).run();
+        return OfflineRunSession(std::move(app), video, config_path, scope, subset, purpose, "vision-lean").run();
     }
     int runOffline(AppConfig app,const std::string &video,const std::string &config_path,
                    ExecutionScope scope,const std::set<uint64_t> &subset,const std::string &purpose,

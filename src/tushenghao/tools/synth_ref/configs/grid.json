@@ -1,8 +1,0 @@
-{
- "schema_version":1,"source":"error_budget.md §2；工具细则 synthetic_gen_spec_Oyster_reviewed.md §4",
- "seed":0,"canvas":[960,720],"pixel_centers":"INTEGER","subsamples":8,"fill":"EVEN_ODD_BOUNDARY_INSIDE","threshold":127,"background":0,"foreground":255,
- "rotations":[0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270,285,300,315,330,345],
- "ratios":[1,1.5,2],"widths":[2,3,4,6,8,12],"phases":[0,0.25,0.5,0.75],"offsets":[-1,-0.5,0,0.5,1],
- "local":{"rotations":[0,45,90,135],"ratios":[1],"widths":[2,4,8,12],"phases":[[0,0],[0.5,0.5]],"offsets":[-1,-0.5,0.5,1]},
- "shear":{"rotations":[0,45,90,135],"values":[-0.5,0.5],"widths":[2,4,8,12],"phases":[[0,0],[0.5,0.5]]}
-}

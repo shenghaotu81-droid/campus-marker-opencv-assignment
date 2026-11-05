@@ -1,7 +1,0 @@
-#pragma once
-// 保存配置阶段的环境，运行清单另记录实际库版本。
-#define SG_VERSION "@PROJECT_VERSION@"
-#define SG_CODE_HASH "@SG_CODE_HASH@"
-#define SG_COMPILER "@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@"
-#define SG_CMAKE "@CMAKE_VERSION@"
-#define SG_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
