@@ -3,7 +3,7 @@
 #include "geometry/parent/geometry_matcher.hpp"
 #include "geometry/observation/geometry_observation.hpp"
 #include "geometry/validation/geometry_validation.hpp"
-#include "observability_fixture.hpp"
+#include "detection_fixture.hpp"
 #include <iostream>
 #include <map>
 #include <set>
@@ -17,7 +17,7 @@ namespace
     void real_three_l()
     {
         auto scene = fixture::scene();
-        auto config = observability_fixture::app().detector_config.geometry_;
+        auto config = detection_fixture::app().detector_config.geometry_;
         auto model = fixture::model();
         std::map<std::string, std::size_t> truth;
         for (const auto &a : scene.hypothesis.assignments_)

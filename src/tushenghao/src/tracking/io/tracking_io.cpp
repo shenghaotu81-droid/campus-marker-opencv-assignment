@@ -269,8 +269,11 @@ void write_tracking_frames(const std::vector<TrackingFrame> &frames, const std::
     if (!fs.isOpened()) throw std::runtime_error("G4_FRAME_WRITE_FAILED");
     fs << "schema_version" << 4 << "stream_type" << "G4PoseReplay"
        << "position_unit" << "m" << "time_unit" << "us" << "frames" << "[";
-    for (const auto &f : frames)
-    {
+    for (const auto &f : frames) write_tracking_frame(fs, f);
+    fs << "]";
+}
+
+void write_tracking_frame(cv::FileStorage &fs, const TrackingFrame &f) {
         fs << "{" << "stamp";
         write_stamp(fs, f.stamp_);
         fs << "origin" << static_cast<int>(f.origin_) << "observations" << "[";
@@ -292,8 +295,6 @@ void write_tracking_frames(const std::vector<TrackingFrame> &frames, const std::
             fs << "}";
         }
         fs << "}";
-    }
-    fs << "]";
 }
 
 // 每帧连同拒绝事件写出，LOST不补旧位置；时间/资格/协方差口径随结果保存。
@@ -303,8 +304,13 @@ void write_tracking_results(const std::vector<TrackingResult> &results, const st
     cv::FileStorage fs(path.string(), cv::FileStorage::WRITE);
     if (!fs.isOpened()) throw std::runtime_error("G4_RESULT_WRITE_FAILED");
     fs << "schema_version" << 1 << "stream_type" << "G4TrackingResult" << "frames" << "[";
-    for (const auto &r : results)
-    {
+    for (const auto &r : results) write_tracking_result(fs, r);
+    fs << "]";
+}
+} // namespace mark::tracking
+
+namespace mark::tracking {
+void write_tracking_result(cv::FileStorage &fs, const TrackingResult &r) {
         fs << "{" << "stamp";
         write_stamp(fs, r.input_stamp_);
         fs << "input_accepted" << static_cast<int>(r.input_accepted_) << "ready" << static_cast<int>(r.ready_)
@@ -333,7 +339,5 @@ void write_tracking_results(const std::vector<TrackingResult> &results, const st
             fs << "}";
         }
         fs << "]" << "}";
-    }
-    fs << "]";
 }
-} // namespace mark::tracking
+}

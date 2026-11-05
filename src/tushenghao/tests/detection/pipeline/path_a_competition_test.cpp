@@ -1,8 +1,8 @@
-#include "temporal_fixture.hpp"
+#include "detection_fixture.hpp"
 #include "assertions.hpp"
 #include "case_runner.hpp"
 // Path A 集成与反证：前置资格不允许豁免合法父的角点取证失败。
-#include "observability_fixture.hpp"
+#include "detection_fixture.hpp"
 #include "geometry/parent/geometry_anchor_evidence.hpp"
 #include "geometry/observation/geometry_l_topology.hpp"
 #include "geometry/observation/geometry_observation.hpp"
@@ -33,7 +33,7 @@ namespace
     {
         Chain c;
         c.scene = fixture::scene();
-        c.config = observability_fixture::app().detector_config;
+        c.config = detection_fixture::app().detector_config;
         c.scene.frame.components_ = extractWhiteComponents(c.scene.frame, c.config.geometry_);
         c.observations = observeShapes(c.scene.frame.components_, c.config.geometry_);
         c.batch = completeSegmentedAssignments(
@@ -188,17 +188,16 @@ namespace
         check(a.status == b.status && a.detections.size() == b.detections.size(),
               "raw status/state changed");
         for (size_t i = 0; i < a.detections.size(); ++i)
-            check(temporal_fixture::same(a.detections[i], b.detections[i]),
+            check(detection_fixture::same(a.detections[i], b.detections[i]),
                   "raw fields changed with history");
     }
 
     void a13()
     {
-        auto cfg = observability_fixture::app().detector_config;
+        auto cfg = detection_fixture::app().detector_config;
         auto image = fixture::scene().frame.original_image_;
         Detector on(cfg);
         auto offcfg = cfg;
-        offcfg.temporal.stabilization_enabled = false;
         Detector off(offcfg);
         auto first = on.process({image, 0, 0, TimestampSource::Unknown});
         check(first.status == Status::DETECTED, "public real image failed");
@@ -211,8 +210,7 @@ namespace
         }
         auto empty = on.process(
             {cv::Mat::zeros(image.size(), image.type()), 4, 56000, TimestampSource::Unknown});
-        check(empty.status == Status::NOT_DETECTED && empty.detections.empty() &&
-                  empty.tracks.empty(),
+        check(empty.status == Status::NOT_DETECTED && empty.detections.empty(),
               "empty borrowed history geometry");
         on.reset(ResetReason::InputChanged);
         rawEqual(first, on.process({image, 0, 0, TimestampSource::Unknown}));

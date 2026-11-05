@@ -5,6 +5,8 @@
 
 namespace mark::tracking
 {
+void write_tracking_frame(cv::FileStorage&, const TrackingFrame&);
+void write_tracking_result(cv::FileStorage&, const TrackingResult&);
 // 原G2文件缺曝光/时间误差/协方差；兼容reader明确降级，不解析人类diagnostics字符串。
 std::vector<TrackingFrame> read_tracking_frames(const std::filesystem::path &path);
 void write_tracking_frames(const std::vector<TrackingFrame> &frames,

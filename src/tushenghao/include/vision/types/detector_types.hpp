@@ -109,37 +109,6 @@ namespace mark
         DETECTED
     };
 
-    // 一个稳定结果对应哪个当前检测。(时序稳定)
-    struct TrackResult
-    {
-        // 当前稳定结果引用的当前检测索引
-        // detection_index: index of current detection
-        size_t detection_index;
-
-        // 稳定结果
-        // stable result
-        Detection result;
-    };
-
-    // 显示层状态(用于显示和交互!=Detection看到（输出）的结果)
-    struct DisplayState
-    {
-        // 来源帧
-        // source frame
-        uint64_t source_frame_id;
-
-        // 历史年龄
-        // age of held state
-        uint64_t age;
-
-        // 是否沿用历史显示
-        // whether historical state is reused
-        bool is_held;
-
-        // G-ABI已批准选A：追加独立文字载荷，改变FrameResult嵌套ABI；所有目标须重建。
-        std::string value;
-    };
-
     // Detector 处理完一帧后的完整输出（包含状态、检测结果、稳定结果、显示状态等）
     struct FrameResult
     {
@@ -155,11 +124,6 @@ namespace mark
         // 当前检测结果
         std::vector<Detection> detections;
 
-        // 稳定结果（时序稳定层）
-        std::vector<TrackResult> tracks;
-
-        // 可选历史显示状态
-        std::optional<DisplayState> display_state;
 
         // Block5 已实现诊断字符串；类型与字段布局保持原契约。
         std::vector<std::string> diagnostics;

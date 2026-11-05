@@ -9,8 +9,8 @@
 #include "corners/validation/detection_validator.hpp"
 #include "corners/publication/detection_publication.hpp"
 #include "corners/ordering/screen_order.hpp"
-#include "temporal/stabilization/temporal_stabilizer.hpp"
 #include "reader/config_error.hpp"
+#include "vision/math/observed_geometry.hpp"
 #include <fstream>
 #include <chrono>
 #include <cmath>
@@ -82,21 +82,6 @@ namespace
         check(a.process(frame(2, 49)).status == mark::Status::INVALID_INPUT,
               "backwards time accepted");
         check(b.process(frame(0, 0)).status == mark::Status::NOT_DETECTED, "instance state leaked");
-    }
-
-    // G-B缺失仍NOT_READY，关闭平滑不能绕过；不因升级就绪fixture删除旧门控负例。
-    void missingTemporalBudget()
-    {
-        auto c = config();
-        c.temporal.correspondence_uncertainty_px.reset();
-        for (bool enabled : {false, true})
-        {
-            c.temporal.stabilization_enabled = enabled;
-            mark::Detector detector(c);
-            auto r = detector.process(frame(0, 0));
-            check(r.status == mark::Status::NOT_READY && r.detections.empty() && r.tracks.empty(),
-                  "missing G-B bypassed");
-        }
     }
 
     // 后来的能量略小但仍在冻结 64ε 平局集合内，旧循环会清除 tie。
@@ -432,15 +417,10 @@ namespace
                     for (size_t p = 0; p < 4; ++p)
                         check(d->corners[(*d->attributes.orientation)[p]] == cv::Point2f(before[p]),
                               "physical float point moved");
-                check(d->bbox == mark::boundingBoxFromCorners(d->corners),
+                check(d->bbox == mark::observed::four_corner_bounds(d->corners),
                       "publication bbox inaccurate");
                 check(!d->confidence && !d->attributes.marker_code,
                       "publication fabricated attributes");
-                auto c = config().temporal;
-                mark::TemporalStabilizer t(c);
-                auto r = t.update({*d}, {0, 0, mark::TimestampSource::Unknown}, {300, 300});
-                check(r.status == mark::Status::DETECTED && r.tracks.size() == 1,
-                      "published raw rejected by Temporal");
             }
         check(original_conflicts > 0,
               "P01 fixture did not exercise production double/float conflict");
@@ -479,7 +459,6 @@ int main()
     const std::pair<const char *, void (*)()> cases[] = {
         {"invalid_input", invalidInput},
         {"sequence", sequence},
-        {"missing_temporal_budget", missingTemporalBudget},
         {"near_tie", nearTie},
         {"nonfinite", nonFinite},
         {"zero_semantic_threshold", zeroSemanticThreshold},

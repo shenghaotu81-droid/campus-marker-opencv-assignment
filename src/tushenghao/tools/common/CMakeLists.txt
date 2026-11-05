@@ -1,4 +1,2 @@
-add_library(vision_record_reader frame_record_reader.cpp)
-add_library(mark_frame_record_reader ALIAS vision_record_reader)
-target_include_directories(vision_record_reader PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
-target_link_libraries(vision_record_reader PRIVATE vision_detection_internal_headers)
+add_library(vision_tool_common INTERFACE)
+target_include_directories(vision_tool_common INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")

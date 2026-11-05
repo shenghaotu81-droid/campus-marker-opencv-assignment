@@ -44,9 +44,6 @@ namespace
 
         config.mode = mark::DetectorMode::SegmentedMark;
 
-        config.temporal.stabilization_enabled = false;
-        config.temporal.display_hold_enabled = false;
-        config.temporal.max_hold_frames = 5;
 
 
         config.debug.timing_enabled = false;
@@ -93,8 +90,7 @@ namespace
         return result.status == mark::Status::NOT_READY &&
                result.frame_id == frame.frame_id &&
                result.timestamp_us == frame.timestamp_us &&
-               result.detections.empty() && result.tracks.empty() &&
-               !result.display_state.has_value();
+               result.detections.empty();
     }
 
     // 测试 reset 接口可以正常调用，期望不会崩溃。

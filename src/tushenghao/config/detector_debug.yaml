@@ -77,41 +77,13 @@ detector:
     max_output_branches: 64
 
 # 二维时序稳定与文字保持；预算和开关保持现行值
-temporal:
-  # Block4 G-B用户2026-10-06批准r=2/偏离=2原图px；范围及数据版本见docs/block4_budget.md。
-  stabilization_enabled: 1
-  correspondence_uncertainty_px: 2.0
-  max_smoothing_deviation_px: 2.0
-  reference_dt_ms: 14.0
-  reference_alpha: 0.7
-  history_max_gap_ms: 50.0
-  max_center_distance_diagonal_ratio: 0.5
-  min_area_ratio: 0.5
-  max_area_ratio: 2.0
-  display_hold_enabled: 0
-  max_hold_frames: 5
-
-# 要不要弹窗显示
 output:
-  expected_frame_count: 0
   video_fourcc: "MJPG"
   video_filename: "overlay.mp4"
-  display_probe_timeout_ms: 3000
-  run_mode: debug
-  export_evidence: 0
-  export_video: 0
-  playback_fps: 0.0
 
 # 调试开关
 debug:
   timing_enabled: 1
-  level: frame
-  detail_first: 0
-  detail_interval: 1
-  draw_raw: 1
-  draw_stable: 1
-  draw_corner_evidence: 0
-  draw_timing: 0
   
 # 几何观察参数（Block 2，阈值待合成数据测量后调整）
 geometry:
@@ -126,7 +98,3 @@ geometry:
   max_area_ratio: 2.0
 
 # A03/A08：显示与检测配置分离，开关取值保持迁移前一致。
-display:
-  show_window: 0
-  show_held_state: 0
-  draw_candidates: 0

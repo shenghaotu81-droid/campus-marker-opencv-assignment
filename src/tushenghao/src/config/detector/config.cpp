@@ -3,8 +3,6 @@
 #include "reader/value_reader.hpp"
 #include "detector/corner_budget_validation.hpp"
 #include <set>
-#include <fstream>
-#include <regex>
 #include <limits>
 
 #include <opencv2/core.hpp>
@@ -48,70 +46,6 @@ namespace mark
             });
         }
 
-        // Q02：FileStorage 整数已窄化，原 token 范围与节点基础类型必须同时核对。
-        void validate_exact_integer_tokens(const std::string &source,const std::regex &token,
-                                            const std::filesystem::path &path,const std::string &field)
-        {
-            for(std::sregex_iterator it(source.begin(),source.end(),token),end;it!=end;++it)
-                try
-                {
-                    const auto value=std::stoll((*it)[2].str());
-                    if(value<0 || value>std::numeric_limits<int>::max())
-                        throwConfigError(path,field,"integer overflow or negative");
-                }
-                catch(const std::out_of_range &)
-                {
-                    throwConfigError(path,field,"integer overflow");
-                }
-        }
-
-        uint64_t read_exact_integer(const cv::FileNode &node,const std::string &raw_text,
-                                    const std::filesystem::path &path)
-        {
-            if (!node.isInt())
-                throwConfigError(path, "output.expected_frame_count",
-                                 "expected nonnegative integer");
-            // FileStorage 的 int 只有 32 位；原始十进制 token 保留 uint64 完整范围并严格拒绝溢出。
-            const std::regex token(
-                R"((^|[\n{,])[ \t]*(?:"expected_frame_count"|expected_frame_count)[ \t]*:[ \t]*([^ \t\r\n,}#]+))");
-            std::smatch match;
-            if (!std::regex_search(raw_text, match, token))
-                throwConfigError(path, "output.expected_frame_count", "missing integer token");
-            const auto value = match[2].str();
-            if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
-                throwConfigError(path, "output.expected_frame_count",
-                                 "expected nonnegative integer");
-            try
-            {
-                return std::stoull(value);
-            }
-            catch (const std::exception &)
-            {
-                throwConfigError(path, "output.expected_frame_count", "uint64 overflow");
-            }
-        }
-
-        // Q06：FileStorage 没有 uint64 重载；仅替换本次生成的唯一占位并核验写失败。
-        void write_exact_integer(const std::filesystem::path &path,uint64_t value)
-        {
-        // FileStorage 无 uint64 写入重载；只替换本次生成的唯一占位字段为精确整数，避免截断或浮点舍入。
-        std::ifstream input(path);
-        std::string text((std::istreambuf_iterator<char>(input)), {});
-        input.close();
-        const std::regex placeholder(
-            R"count((expected_frame_count:[ \t]*)"?__FINAL_FIXES_EXPECTED_COUNT__"?)count");
-        std::smatch match;
-        if (!std::regex_search(text, match, placeholder))
-            throwConfigError(path, "output.expected_frame_count", "effective placeholder missing");
-        text.replace(size_t(match.position()), size_t(match.length()),
-                     match[1].str() + std::to_string(value));
-        std::ofstream out(path);
-        out << text;
-        out.flush();
-        if (!out)
-            throwConfigError(path, "output.expected_frame_count", "effective config write failed");
-        }
-
         // 冻结配置拒绝未知/重复键；否则拼错预算会静默回落到旧占位参数。
         void checkFields(const cv::FileNode &node, const std::filesystem::path &file,
                          const std::string &field, std::initializer_list<const char *> allowed)
@@ -146,7 +80,7 @@ namespace mark
         // 在转换强类型之前逐层检查结构，保留OpenCV FileStorage单一加载路径。
         checkFields(fs.root(), path, "root",
                     {"schema_version", "input", "preprocess", "marker_geometry_path", "detector",
-                     "geometry", "temporal", "output", "debug", "display"});
+                     "geometry", "output", "debug"});
         checkFields(fs["input"], path, "input", {"pixel_format", "timestamp_unit"});
         checkFields(fs["preprocess"], path, "preprocess",
                     {"work_width", "work_height", "threshold"});
@@ -159,22 +93,8 @@ namespace mark
                      "min_intersection_angle_deg", "max_corner_error",
                      "approximation_epsilon",
                      "semantic_geometry_threshold", "observation"});
-        checkFields(fs["temporal"], path, "temporal",
-                    {"stabilization_enabled", "display_hold_enabled", "max_hold_frames",
-                     "reference_dt_ms", "reference_alpha", "history_max_gap_ms",
-                     "max_center_distance_diagonal_ratio", "min_area_ratio", "max_area_ratio",
-                     "correspondence_uncertainty_px", "max_smoothing_deviation_px"});
-        checkFields(fs["output"], path, "output",
-                    {"run_mode", "run_directory",
-                     "export_evidence", "export_video", "playback_fps", "expected_frame_count",
-                     "video_fourcc", "video_filename", "display_probe_timeout_ms"});
-        checkFields(fs["debug"], path, "debug",
-                    {"timing_enabled", "level", "detail_first", "detail_last",
-                     "detail_interval", "draw_raw", "draw_stable", "draw_corner_evidence",
-                     "draw_timing"});
-
-        checkFields(fs["display"], path, "display",
-                    {"show_window", "show_held_state", "draw_candidates"});
+        checkFields(fs["output"], path, "output", {"run_directory", "video_fourcc", "video_filename"});
+        checkFields(fs["debug"], path, "debug", {"timing_enabled"});
 
         // Q02：算法字段写入检测配置，显示与运行字段写入应用配置。
         DetectorConfig &detector = config.detector_config;
@@ -356,125 +276,16 @@ namespace mark
             throwConfigError(path, "detector.mode", "unsupported mode");
         }
 
-        cv::FileNode temporal = requireNode("temporal");
+        const auto debug = requireNode("debug");
+        detector.debug.timing_enabled = readBool(debug["timing_enabled"], path, "debug.timing_enabled");
+        const auto output = requireNode("output");
+        if (!output["run_directory"].empty())
+            config.offline.directory = readString(output["run_directory"], path, "output.run_directory");
+        if (!output["video_fourcc"].empty())
+            config.offline.video_fourcc = readString(output["video_fourcc"], path, "output.video_fourcc");
+        if (!output["video_filename"].empty())
+            config.offline.video_filename = readString(output["video_filename"], path, "output.video_filename");
 
-        detector.temporal.stabilization_enabled =
-            readBool(temporal["stabilization_enabled"], path, "temporal.stabilization_enabled");
-
-        detector.temporal.display_hold_enabled =
-            readBool(temporal["display_hold_enabled"], path, "temporal.display_hold_enabled");
-
-        detector.temporal.max_hold_frames =
-            readInt(temporal["max_hold_frames"], path, "temporal.max_hold_frames");
-
-        // schema=1旧快照允许省略冻结起点；G-B缺失保持optional空，不能自动批准。
-        if (!temporal["reference_dt_ms"].empty())
-            detector.temporal.reference_dt_ms =
-                readDouble(temporal["reference_dt_ms"], path, "temporal.reference_dt_ms");
-        if (!temporal["reference_alpha"].empty())
-            detector.temporal.reference_alpha =
-                readDouble(temporal["reference_alpha"], path, "temporal.reference_alpha");
-        if (!temporal["history_max_gap_ms"].empty())
-            detector.temporal.history_max_gap_ms =
-                readDouble(temporal["history_max_gap_ms"], path, "temporal.history_max_gap_ms");
-        if (!temporal["max_center_distance_diagonal_ratio"].empty())
-            detector.temporal.max_center_distance_diagonal_ratio =
-                readDouble(temporal["max_center_distance_diagonal_ratio"], path,
-                           "temporal.max_center_distance_diagonal_ratio");
-        if (!temporal["min_area_ratio"].empty())
-            detector.temporal.min_area_ratio =
-                readDouble(temporal["min_area_ratio"], path, "temporal.min_area_ratio");
-        if (!temporal["max_area_ratio"].empty())
-            detector.temporal.max_area_ratio =
-                readDouble(temporal["max_area_ratio"], path, "temporal.max_area_ratio");
-        if (!temporal["correspondence_uncertainty_px"].empty())
-            detector.temporal.correspondence_uncertainty_px =
-                readDouble(temporal["correspondence_uncertainty_px"], path,
-                           "temporal.correspondence_uncertainty_px");
-        if (!temporal["max_smoothing_deviation_px"].empty())
-            detector.temporal.max_smoothing_deviation_px =
-                readDouble(temporal["max_smoothing_deviation_px"], path,
-                           "temporal.max_smoothing_deviation_px");
-        // OpenCV整数解析会先截断到32位（4294967296变0），节点值已丢失原值。
-        // 仅新增hold字段在原始YAML十进制token上补溢出检查，保持旧参数规则不变。
-        std::ifstream raw_file(path);
-        std::string raw_text((std::istreambuf_iterator<char>(raw_file)), {});
-        const std::regex hold_token(
-            R"((^|[\n{,])[ \t]*(?:"max_hold_frames"|max_hold_frames)[ \t]*:[ \t]*([+-]?[0-9]+))");
-        validate_exact_integer_tokens(raw_text, hold_token, path, "temporal.max_hold_frames");
-
-        cv::FileNode output = requireNode("output");
-
-        // Q02：显示字段只写入应用配置，旧 output/debug 下的显示键由 checkFields 拒绝。
-        const auto display = requireNode("display");
-        config.show_window = readBool(display["show_window"], path, "display.show_window");
-        config.render.show_held_state = readBool(display["show_held_state"], path,
-                                                 "display.show_held_state");
-        config.render.draw_candidates = readBool(display["draw_candidates"], path,
-                                                 "display.draw_candidates");
-
-        cv::FileNode debug = requireNode("debug");
-
-        detector.debug.timing_enabled =
-            readBool(debug["timing_enabled"], path, "debug.timing_enabled");
-
-
-        // 旧配置没有观测字段时采用冻结默认；存在字段仍走严格基础类型检查，不改变算法预算。
-        auto optionalString = [&](const cv::FileNode &node, const char *key, std::string &value,
-                                  const std::string &prefix)
-        {
-            if (!node[key].empty())
-                value = readString(node[key], path, prefix + key);
-        };
-        auto optionalBool =
-            [&](const cv::FileNode &node, const char *key, bool &value, const std::string &prefix)
-        {
-            if (!node[key].empty())
-                value = readBool(node[key], path, prefix + key);
-        };
-        optionalString(debug, "level", config.diagnostics.level, "debug.");
-        auto range = [&](const char *key) -> std::optional<uint64_t>
-        {
-            if (debug[key].empty())
-                return std::nullopt;
-            // FileStorage会先截断32位整数，先核原始十进制token，避免巨大帧号被默默改为0。
-            const std::regex token(std::string("(^|[\\n{,])[ \\t]*(?:\"") + key + "\"|" + key +
-                                   ")[ \\t]*:[ \\t]*([+-]?[0-9]+)");
-            validate_exact_integer_tokens(raw_text, token, path, std::string("debug.") + key);
-            const auto value = readDouble(debug[key], path, std::string("debug.") + key);
-            if (!debug[key].isInt() || value < 0 || value > std::numeric_limits<int>::max())
-                throwConfigError(path, std::string("debug.") + key,
-                                 "expected nonnegative integer within supported range");
-            return static_cast<uint64_t>(value);
-        };
-        if (auto v = range("detail_first"))
-            config.diagnostics.detail_first = *v;
-        config.diagnostics.detail_last = range("detail_last");
-        if (auto v = range("detail_interval"))
-            config.diagnostics.detail_interval = *v;
-        optionalBool(debug, "draw_raw", config.render.draw_raw, "debug.");
-        optionalBool(debug, "draw_stable", config.render.draw_stable, "debug.");
-        optionalBool(debug, "draw_corner_evidence", config.render.draw_corner_evidence, "debug.");
-        optionalBool(debug, "draw_timing", config.render.draw_timing, "debug.");
-        optionalString(output, "run_mode", config.offline.mode, "output.");
-        optionalString(output, "run_directory", config.offline.directory, "output.");
-        optionalBool(output, "export_evidence", config.offline.export_evidence, "output.");
-        optionalBool(output, "export_video", config.offline.export_video, "output.");
-        // 容器截断也可能正常 EOF；App 期待帧数单独加载，不进入 Detector 判据。
-        if (!output["expected_frame_count"].empty())
-        {
-            config.offline.expected_frame_count = read_exact_integer(output["expected_frame_count"], raw_text, path);
-        }
-        if (!output["playback_fps"].empty())
-            config.offline.playback_fps =
-                readDouble(output["playback_fps"], path, "output.playback_fps");
-
-        // 原未实现开关缺工程参数；编码和 GUI 超时只作用于 App。
-        optionalString(output, "video_fourcc", config.offline.video_fourcc, "output.");
-        optionalString(output, "video_filename", config.offline.video_filename, "output.");
-        if (!output["display_probe_timeout_ms"].empty())
-            config.offline.display_probe_timeout_ms = readInt(
-                output["display_probe_timeout_ms"], path, "output.display_probe_timeout_ms");
         // marker_geometry_path_ 若为相对路径，转成相对于 detector.yaml 所在目录的绝对路径。
         // 消除 CWD 依赖，Block 4/5 及 Codex 不用再 cd。
         {
@@ -491,38 +302,6 @@ namespace mark
         validateConfig(config);
 
         return config;
-    }
-
-    // 校验配置是否满足冻结字段要求和当前板块实现范围。（检查“配置虽然读进来了，但是能不能用”，即“格式正确，但参数错误”（合理性）；区别于loadConfig检查配置有没有。）
-    // Q03：只校验时序参数，独立构造不依赖应用默认配置；缺预算由调用入口保留原状态处理。
-    void validateTemporalConfig(const TemporalConfig &t)
-    {
-        // 新时序参数同时保护直接构造和YAML加载；缺预算允许NOT_READY审计。
-        auto positive = [](double v)
-        {
-            return std::isfinite(v) && v > 0;
-        };
-        if (!positive(t.reference_dt_ms) || !std::isfinite(t.reference_alpha) ||
-            t.reference_alpha <= 0 || t.reference_alpha >= 1 || !positive(t.history_max_gap_ms) ||
-            !positive(t.max_center_distance_diagonal_ratio) || !positive(t.min_area_ratio) ||
-            !positive(t.max_area_ratio) || t.min_area_ratio > 1 || t.max_area_ratio < 1)
-            throw ConfigError(
-                "Config error: field=temporal, reason=invalid finite temporal parameter");
-        if (t.correspondence_uncertainty_px && (!std::isfinite(*t.correspondence_uncertainty_px) ||
-                                                *t.correspondence_uncertainty_px < 0))
-            throw ConfigError(
-                "Config error: field=temporal.correspondence_uncertainty_px, reason=must be finite non-negative");
-        if (t.max_smoothing_deviation_px && !positive(*t.max_smoothing_deviation_px))
-            throw ConfigError(
-                "Config error: field=temporal.max_smoothing_deviation_px, reason=must be finite positive");
-
-        // temporal配置
-        if (t.max_hold_frames < 0)
-        {
-            throw ConfigError(
-                "Config error: field=temporal.max_hold_frames, reason=must be non-negative");
-        }
-
     }
 
     // Q03：检测输入/几何/角点与模式的合法性；不读取显示、导出或诊断配置。
@@ -672,7 +451,6 @@ namespace mark
                 "Config error: field=marker_geometry_path, reason=path must not be empty");
         }
 
-        validateTemporalConfig(detector.temporal);
         if (detector.mode != DetectorMode::SegmentedMark)
         {
             throw ConfigError("Config error: field=detector.mode, reason=unsupported mode");
@@ -680,40 +458,18 @@ namespace mark
 
     }
 
-    // Q03：应用独有的记录/导出参数；算法入口无须构造 AppConfig。
-    void validateObservabilityConfig(const AppConfig &config)
+    void validateOfflineConfig(const AppConfig &config)
     {
-        // 已实现观测开关解除旧禁用；模式冲突留给runner检查，Detector构造只校验值域。
-        if (config.diagnostics.level != "summary" && config.diagnostics.level != "frame" &&
-            config.diagnostics.level != "evidence")
-            throw ConfigError("Config error: debug.level");
-        if (!config.diagnostics.detail_interval ||
-            (config.diagnostics.detail_last &&
-             *config.diagnostics.detail_last < config.diagnostics.detail_first))
-            throw ConfigError("Config error: debug detail range/interval");
-        if (config.diagnostics.detail_first > std::numeric_limits<int>::max() ||
-            config.diagnostics.detail_interval > std::numeric_limits<int>::max() ||
-            (config.diagnostics.detail_last &&
-             *config.diagnostics.detail_last > std::numeric_limits<int>::max()))
-            throw ConfigError("Config error: debug range integer overflow");
-        if (config.offline.mode != "baseline" && config.offline.mode != "debug")
-            throw ConfigError("Config error: output.run_mode");
-        if (!std::isfinite(config.offline.playback_fps) || config.offline.playback_fps < 0)
-            throw ConfigError("Config error: output.playback_fps");
-        // 原视频导出全局拒绝；现在检查实际模式、固定编码/文件名及正超时。
-        if (config.offline.export_video && config.offline.mode != "debug")
-            throw ConfigError("Config error: baseline export_video conflict");
-        if (config.offline.video_fourcc != "MJPG" ||
-            config.offline.video_filename != "overlay.mp4" ||
-            config.offline.display_probe_timeout_ms <= 0)
-            throw ConfigError("Config error: output video/probe parameters");
+        if (config.offline.directory.empty() || config.offline.video_fourcc != "MJPG" ||
+            config.offline.video_filename != "overlay.mp4")
+            throw ConfigError("Config error: output directory/video parameters");
     }
 
     // Q03 总入口保留原检查顺序和错误语义，组合各模块的独立校验。
     void validateConfig(const AppConfig &config)
     {
         validateDetectorConfig(config.detector_config);
-        validateObservabilityConfig(config);
+        validateOfflineConfig(config);
     }
 
     // 将当前有效配置写出，并保证重新加载后配置值保持一致。(把程序最终实际使用的配置保存下来,用于debug，复现实验，记录比赛参数)
@@ -851,68 +607,9 @@ namespace mark
 
         fs << "}";
 
-        fs << "temporal"
-           << "{";
-
-        fs << "stabilization_enabled" << static_cast<int>(detector.temporal.stabilization_enabled);
-
-        fs << "reference_dt_ms" << detector.temporal.reference_dt_ms;
-        fs << "reference_alpha" << detector.temporal.reference_alpha;
-        fs << "history_max_gap_ms" << detector.temporal.history_max_gap_ms;
-        fs << "max_center_distance_diagonal_ratio"
-           << detector.temporal.max_center_distance_diagonal_ratio;
-        fs << "min_area_ratio" << detector.temporal.min_area_ratio;
-        fs << "max_area_ratio" << detector.temporal.max_area_ratio;
-        if (detector.temporal.correspondence_uncertainty_px)
-            fs << "correspondence_uncertainty_px"
-               << *detector.temporal.correspondence_uncertainty_px;
-        if (detector.temporal.max_smoothing_deviation_px)
-            fs << "max_smoothing_deviation_px" << *detector.temporal.max_smoothing_deviation_px;
-
-        fs << "display_hold_enabled" << static_cast<int>(detector.temporal.display_hold_enabled);
-
-        fs << "max_hold_frames" << detector.temporal.max_hold_frames;
-
-        fs << "}";
-
-        fs << "output"
-           << "{";
-
-        fs << "run_mode" << config.offline.mode << "run_directory" << config.offline.directory
-           << "export_evidence" << int(config.offline.export_evidence) << "export_video"
-           << int(config.offline.export_video) << "playback_fps" << config.offline.playback_fps
-           << "expected_frame_count" << "__FINAL_FIXES_EXPECTED_COUNT__"
-           << "video_fourcc" << config.offline.video_fourcc << "video_filename"
-           << config.offline.video_filename << "display_probe_timeout_ms"
-           << config.offline.display_probe_timeout_ms;
-
-
-        fs << "}";
-
-        // Q06：应用显示协议独立导出，数值与原开关保持一致。
-        fs << "display" << "{" << "show_window" << int(config.show_window)
-           << "show_held_state" << int(config.render.show_held_state)
-           << "draw_candidates" << int(config.render.draw_candidates) << "}";
-
-        fs << "debug"
-           << "{";
-
-        fs << "level" << config.diagnostics.level << "detail_first"
-           << int(config.diagnostics.detail_first) << "detail_interval"
-           << int(config.diagnostics.detail_interval);
-        if (config.diagnostics.detail_last)
-            fs << "detail_last" << int(*config.diagnostics.detail_last);
-        fs << "draw_raw" << int(config.render.draw_raw) << "draw_stable"
-           << int(config.render.draw_stable) << "draw_corner_evidence"
-           << int(config.render.draw_corner_evidence) << "draw_timing"
-           << int(config.render.draw_timing);
-        fs << "timing_enabled" << static_cast<int>(detector.debug.timing_enabled);
-
-
-        fs << "}";
-
-        fs.release();
-        write_exact_integer(path, config.offline.expected_frame_count);
+        fs << "output" << "{" << "run_directory" << config.offline.directory
+           << "video_fourcc" << config.offline.video_fourcc
+           << "video_filename" << config.offline.video_filename << "}";
+        fs << "debug" << "{" << "timing_enabled" << int(detector.debug.timing_enabled) << "}";
     }
-
 } // namespace mark

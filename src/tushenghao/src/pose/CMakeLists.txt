@@ -1,7 +1,7 @@
 # 独立开关和编译目标
-# G2 独立编译目标：不把位姿/退出逻辑塞入已封口的 mark_detector 源码清单。
+# G2 独立编译目标：不把位姿/退出逻辑塞入已封口的 vision_detection 源码清单。
 # G2 的独立构建开关（MARK_BUILD_G2 默认 OFF），主 CMakeLists.txt 末尾加一行 include(cmake/g2.cmake)
-# 定义 G2 的编译目标（mark_pose 库、pose_app 等），找 AprilTag 依赖
+# 定义 G2 的编译目标（vision_pose 库、pose_app 等），找 AprilTag 依赖
 # MARK_BUILD_G2 默认 OFF，不影响原检测器构建；开 G2 时 cmake -DMARK_BUILD_G2=ON
 
 # option() 定义开关，名字、说明、默认值 OFF
@@ -32,14 +32,14 @@ if(MARK_BUILD_G2)
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
     )
-    target_link_libraries(vision_pose PUBLIC vision::types vision::config PRIVATE mark_apriltag vision_config_internal_headers)
+    target_link_libraries(vision_pose PUBLIC vision_types vision_config PRIVATE mark_apriltag vision_config)
     target_compile_options(vision_pose PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic>
     )
 
-    add_library(vision::pose ALIAS vision_pose)
-    add_library(mark_pose ALIAS vision_pose)
-    add_library(vision_pose_internal_headers INTERFACE)
-    target_include_directories(vision_pose_internal_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
-    target_link_libraries(vision_pose_internal_headers INTERFACE vision::pose vision_config_internal_headers)
+
+endif()
+
+if(MARK_BUILD_G2)
+    target_include_directories(vision_pose PRIVATE "${VISION_ROOT}/src/config")
 endif()

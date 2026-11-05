@@ -51,7 +51,6 @@ int main()
             for (std::size_t p = 0; p < 4; ++p)
                 shuffled.detections[0].corners[perm[p]] = points[p];
             // 放入明显不同的稳定结果；证明 PnP 没有误读 tracks。
-            shuffled.tracks.push_back({0, mark::Detection{}});
             const auto result = solver.estimate_mark(shuffled, 0, c.camera_.image_size_, stamp_);
             g2_test::require(result.status_ == PoseStatus::Unique &&
                 cv::norm(result.T_camera_target_->t_m_ - g2_test::truth().t_m_) < 1e-5,

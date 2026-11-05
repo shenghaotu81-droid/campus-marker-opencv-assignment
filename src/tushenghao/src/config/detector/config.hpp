@@ -11,9 +11,8 @@ namespace mark
     AppConfig loadConfig(const std::filesystem::path &path);
 
     // Q03：模块独立输入校验；总入口按原顺序组合。
-    void validateTemporalConfig(const TemporalConfig &);
     void validateDetectorConfig(const DetectorConfig &);
-    void validateObservabilityConfig(const AppConfig &);
+    void validateOfflineConfig(const AppConfig &);
 
     // 检查配置是否合法
     void validateConfig(const AppConfig &config);
