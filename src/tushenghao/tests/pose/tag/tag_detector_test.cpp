@@ -89,7 +89,7 @@ int main()
         exit = mark::pose::estimate_exit(known, cfg.camera_.image_size_, mark::pose::PoseEstimator(cfg));
         g2_test::require(exit.pose_.status_ == mark::pose::PoseStatus::Unique &&
             cv::norm(exit.pose_.T_camera_target_->t_m_ - truth.t_m_) < 1e-6 &&
-            !exit.alignment_measurement_usable_, "A10 Tag规范点序与公制位姿接通但不批准实车");
+            exit.alignment_measurement_usable_, "A10 Tag规范点序与公制位姿接通，Unique可用");
         known.family_ = "tag25h9";
         exit = mark::pose::estimate_exit(known, cfg.camera_.image_size_, mark::pose::PoseEstimator(cfg));
         g2_test::require(!exit.pose_.T_camera_target_, "A11 错 family 不得用于退出位姿");

@@ -26,10 +26,6 @@ double number(const cv::FileNode &node)
 {
     return config_value::number(node,config_value::NumericPolicy::CompleteNumericString,number_error);
 }
-bool flag(const cv::FileNode &node,const char *key)
-{
-    return config_value::boolean(require(node,key),[&](auto){throw std::runtime_error(std::string("G4_CONFIG_EXPECT_BOOL01:")+key);});
-}
 std::optional<double> optional_number(const cv::FileNode &node,const char *key)
 {
     return config_value::optional_number(require(node,key),config_value::NumericPolicy::CompleteNumericString,
@@ -69,8 +65,6 @@ TrackingProfile load_tracking_profile(const std::filesystem::path &path)
     p.camera_id_ = text(fs.root(), "camera_id");
     p.basis_ = text(fs.root(), "basis");
     p.coordinate_mode_ = text(fs.root(), "coordinate_mode");
-    p.time_policy_ = text(fs.root(), "time_policy");
-    p.hardware_verified_ = flag(fs.root(), "hardware_verified");
     validate_tracking_profile(p);
     return p;
 }
@@ -95,9 +89,7 @@ void write_tracking_profile(const TrackingProfile &p, const std::filesystem::pat
     else
         fs << "";
     fs << "evidence_id" << p.evidence_id_ << "camera_id" << p.camera_id_
-       << "basis" << p.basis_ << "coordinate_mode" << p.coordinate_mode_
-       << "time_policy" << p.time_policy_
-       << "hardware_verified" << static_cast<int>(p.hardware_verified_);
+       << "basis" << p.basis_ << "coordinate_mode" << p.coordinate_mode_;
 }
 
 TrackingConfig load_tracking_config(const std::filesystem::path &path)
@@ -115,9 +107,7 @@ TrackingConfig load_tracking_config(const std::filesystem::path &path)
     c.coordinate_mode_ = coordinate == "camera_relative" ? CoordinateMode::CameraRelative :
                                                           CoordinateMode::LocalWorld;
     c.world_frame_id_ = text(fs.root(), "world_frame_id");
-    c.time_policy_ = text(fs.root(), "time_policy");
     c.stamp_uncertainty_semantics_ = text(fs.root(), "stamp_uncertainty_semantics");
-    c.max_time_uncertainty_s_ = optional_number(fs.root(), "max_time_uncertainty_s");
     const std::filesystem::path profile(text(fs.root(), "profile"));
     if (!profile.empty())
     {
@@ -138,12 +128,8 @@ void validate_tracking_profile(const TrackingProfile &p)
                         p.position_std_limit_m_, p.velocity_std_limit_mps_, p.max_dt_s_})
         if (!std::isfinite(value) || value <= 0)
             throw std::runtime_error("G4_PROFILE_NONPOSITIVE_VALUE");
-    // 有界域必须显式声明单帧时间界；构造时拒绝缺项，避免重建途中访问空optional。
-    if (p.time_policy_ == "bounded_only" && !p.validated_time_bound_s_)
-        throw std::runtime_error("G4_PROFILE_BOUNDED_TIME_BOUND_MISSING");
-    if (p.evidence_id_.empty() || p.basis_.empty() || (p.hardware_verified_ && p.camera_id_.empty()) ||
+    if (p.evidence_id_.empty() || p.basis_.empty() ||
         (p.coordinate_mode_ != "camera_relative" && p.coordinate_mode_ != "local_world") ||
-        (p.time_policy_ != "nominal_research" && p.time_policy_ != "bounded_only") ||
         (p.validated_time_bound_s_ && (!std::isfinite(*p.validated_time_bound_s_) ||
                                      *p.validated_time_bound_s_ < 0)))
         throw std::runtime_error("G4_PROFILE_NO_PROVENANCE_OR_TIME_BOUND");
@@ -152,19 +138,12 @@ void validate_tracking_profile(const TrackingProfile &p)
 void validate_tracking_config(const TrackingConfig &c)
 {
     if (c.source_.empty() || c.target_class_.empty() || c.world_frame_id_.empty() ||
-        (c.time_policy_ != "nominal_research" && c.time_policy_ != "bounded_only") ||
         (c.stamp_uncertainty_semantics_ != "unknown" &&
-         c.stamp_uncertainty_semantics_ != "absolute_bound") ||
-        (c.max_time_uncertainty_s_ && (!std::isfinite(*c.max_time_uncertainty_s_) ||
-                                      *c.max_time_uncertainty_s_ < 0)))
+         c.stamp_uncertainty_semantics_ != "absolute_bound"))
         throw std::runtime_error("G4_CONFIG_INVALID");
     if (c.profile_)
     {
         validate_tracking_profile(*c.profile_);
-        const auto mode = c.coordinate_mode_ == CoordinateMode::LocalWorld ? "local_world" : "camera_relative";
-        if (c.profile_->hardware_verified_ &&
-            (c.profile_->coordinate_mode_ != mode || c.profile_->time_policy_ != c.time_policy_))
-            throw std::runtime_error("G4_PROFILE_COORDINATE_DOMAIN_MISMATCH");
     }
 }
 } // namespace mark::tracking

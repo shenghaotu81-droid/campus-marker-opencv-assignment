@@ -120,23 +120,16 @@ G2Config load_pose_config(const std::filesystem::path &path)
     c.camera_.image_size_ = {integer(calibration.root(), "image_width"),
                            integer(calibration.root(), "image_height")};
     c.camera_.camera_id_ = text(camera_, "camera_id");
-    c.camera_.hardware_verified_ = boolean(camera_, "hardware_verified");
     c.mark_points_m_ = load_points(relative_resource(text(geometry, "model")),
                                  text(geometry, "source_unit"));
     c.mark_target_id_ = text(geometry, "target_id");
-    c.mark_geometry_verified_ = boolean(geometry, "hardware_verified");
     c.budgets_.max_rmse_px_ = optional_number(budgets_, "max_rmse_px");
     c.budgets_.max_corner_error_px_ = optional_number(budgets_, "max_corner_error_px");
-    c.budgets_.min_quad_area_px2_ = optional_number(budgets_, "min_quad_area_px2");
-    c.budgets_.max_time_uncertainty_s_ = optional_number(budgets_, "max_time_uncertainty_s");
-    c.budgets_.hardware_verified_ = boolean(budgets_, "hardware_verified");
     (void)text(budgets_, "evidence");
     c.selection_.min_z_m_ = optional_number(selection_, "min_z_m");
     c.selection_.max_z_m_ = optional_number(selection_, "max_z_m");
     c.selection_.min_normal_z_ = optional_number(selection_, "min_normal_z");
     c.selection_.max_normal_z_ = optional_number(selection_, "max_normal_z");
-    c.selection_.constraints_verified_ = boolean(selection_, "constraints_verified");
-    c.selection_.refine_lm_ = boolean(selection_, "refine_lm");
     c.selection_.prior_enabled_ = boolean(selection_, "prior_enabled");
     c.selection_.prior_max_age_s_ = optional_number(selection_, "prior_max_age_s");
     c.selection_.prior_max_translation_m_ = optional_number(selection_, "prior_max_translation_m");
@@ -150,7 +143,6 @@ G2Config load_pose_config(const std::filesystem::path &path)
     c.tag_.decode_sharpening_ = number(required(tag_, "decode_sharpening"));
     c.tag_.max_hamming_ = integer(tag_, "max_hamming");
     c.tag_.min_decision_margin_ = optional_number(tag_, "min_decision_margin");
-    c.tag_.hardware_verified_ = boolean(tag_, "hardware_verified");
     auto ids = required(tag_, "allowed_ids");
     auto sizes = required(tag_, "sizes");
     if (!ids.isSeq() || !sizes.isSeq())
@@ -192,8 +184,6 @@ void validate_pose_config(const G2Config &c)
         throw std::runtime_error("G2 模型不是非退化 P0-P1-P2-P3 平行四边形");
     positive(c.budgets_.max_rmse_px_, "max_rmse_px");
     positive(c.budgets_.max_corner_error_px_, "max_corner_error_px");
-    positive(c.budgets_.min_quad_area_px2_, "min_quad_area_px2");
-    positive(c.budgets_.max_time_uncertainty_s_, "max_time_uncertainty_s");
     positive(c.selection_.min_z_m_, "min_z_m");
     positive(c.selection_.max_z_m_, "max_z_m");
     positive(c.selection_.prior_max_age_s_, "prior_max_age_s");

@@ -20,7 +20,6 @@ struct PositionNoise
     std::size_t detection_index_{0};
     cv::Matx33d camera_mse_m2_{cv::Matx33d::zeros()};
     std::string evidence_id_;
-    bool hardware_verified_{false};
 };
 
 // 由外部里程/安装适配器提供同曝光时刻的 ^W T_C；本模块不读取 IMU/轮速驱动。
@@ -32,7 +31,6 @@ struct CameraTransform
     cv::Matx33d R_world_camera_{cv::Matx33d::eye()};
     cv::Vec3d t_world_camera_m_{0, 0, 0};
     std::optional<Mat6> covariance_;
-    bool hardware_verified_{false};
 };
 
 // 空 observations 也必须每帧调用；否则遮挡期间时钟/协方差/LOST不会推进。
@@ -62,7 +60,6 @@ struct TargetTrack
     std::optional<Mat6> covariance_;
     bool confirmed_{false};
     bool time_bounded_{false};
-    bool model_hardware_verified_{false};
     bool qualified_for_g5_{false};
     std::optional<double> observation_age_s_;
     std::optional<double> input_time_bound_s_;

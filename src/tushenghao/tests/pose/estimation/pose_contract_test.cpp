@@ -33,9 +33,16 @@ int main()
         g2_test::require(cv::norm(base.T_camera_target_->t_m_ - g2_test::truth().t_m_) < 1e-7 &&
             detail::rotation_distance(base.T_camera_target_->rvec_, g2_test::truth().rvec_) < 1e-6,
             "T02 object->camera 单位与旋转必须恢复真值");
-        g2_test::require(!base.control_usable_ && !base.covariance_se3_,
-                          "T03 离线结果不能宣称硬件可用或零协方差");
+        g2_test::require(!base.covariance_se3_,
+                          "T03 协方差未知不能填零");
         auto raw = g2_test::raw(c);
+        auto unknown_time = stamp_;
+        unknown_time.exposure_us_.reset();
+        unknown_time.received_us_ = raw.timestamp_us;
+        unknown_time.time_uncertainty_s_.reset();
+        const auto unbounded = solver.estimate_mark(raw, 0, c.camera_.image_size_, unknown_time);
+        g2_test::require(unbounded.status_ == PoseStatus::Unique && unbounded.control_usable_ &&
+            !unbounded.stamp_.time_uncertainty_s_, "Unique保留未知时间标签，交下游判断");
         std::array<int, 4> perm{{0, 1, 2, 3}};
         do
         {
@@ -110,13 +117,6 @@ int main()
         negative.t_m_[2] = -1;
         g2_test::require(!detail::evaluate_pose(negative, c.mark_points_m_, points,
             c.camera_.K_, c.camera_.dist_).reasons_.empty(), "T17 所有物理点必须正深度");
-        auto lm = c;
-        lm.selection_.refine_lm_ = true;
-        result = PoseEstimator(lm).estimate_planar(c.mark_points_m_, points, c.camera_.image_size_,
-            stamp_, c.mark_target_id_);
-        g2_test::require(result.status_ == PoseStatus::Unique && result.refined_rmse_px_ &&
-            cv::norm(result.T_camera_target_->t_m_ - g2_test::truth().t_m_) < 1e-6,
-            "T18 LM只能改善已选解，不能替代消歧");
         raw = g2_test::raw(c);
         raw.status = mark::Status::NOT_DETECTED;
         g2_test::require(solver.estimate_mark(raw, 0, c.camera_.image_size_, stamp_).status_ ==

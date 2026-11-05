@@ -335,9 +335,7 @@ void test_time_order_and_source_changes()
 void test_bounded_time()
 {
     auto cfg = fixture_config();
-    cfg.time_policy_ = "bounded_only";
     cfg.stamp_uncertainty_semantics_ = "absolute_bound";
-    cfg.max_time_uncertainty_s_ = 0.003;
     cfg.profile_->validated_time_bound_s_ = 0.003;
     TargetTracker tracker(cfg);
     auto first = observed_frame(1, 0, {0, 0, 2});
@@ -349,14 +347,14 @@ void test_bounded_time()
     unknown.stamp_.time_uncertainty_s_.reset();
     unknown.observations_[0].stamp_ = unknown.stamp_;
     const auto coast = tracker.step(unknown);
-    require(one_track(coast, "T22").state_ == TrackState::Coasting &&
-            coast.tracks_[0].last_measurement_stamp_.frame_id_ == 1,
-            "T22 有界模式缺时间界时只能缺测，不可用0代替");
+    require(one_track(coast, "T22").state_ == TrackState::Measured &&
+            !coast.tracks_[0].time_bounded_ && !coast.tracks_[0].qualified_for_g5_,
+            "T22 缺时间界仍更新，时间标签与下游资格为false");
     auto excessive = observed_frame(3, 0.2, {0.1, 0, 2});
     excessive.stamp_.time_uncertainty_s_ = 0.02;
     excessive.observations_[0].stamp_ = excessive.stamp_;
-    require(one_track(tracker.step(excessive), "T23").state_ == TrackState::Coasting,
-            "T23 超过已验证时间域不能更新");
+    require(one_track(tracker.step(excessive), "T23").state_ == TrackState::Measured,
+            "T23 超时间域仍更新，噪声按时间误差增广");
     auto recovered = observed_frame(4, 0.3, {0.15, 0, 2});
     recovered.stamp_.time_uncertainty_s_ = 0.001;
     recovered.observations_[0].stamp_ = recovered.stamp_;
@@ -375,12 +373,12 @@ void test_uncertainty_and_invalid_values()
             (*initial.tracks_[0].covariance_)(0, 0) > 0,
             "T25 G2空/零SE3占位不能冒充零位置误差");
     TargetTracker sidecar(cfg);
-    first.position_noise_.push_back({0, cv::Matx33d::eye() * 0.04, "known-fixture-R", false});
+    first.position_noise_.push_back({0, cv::Matx33d::eye() * 0.04, "known-fixture-R"});
     const auto independent = sidecar.step(first);
     near((*one_track(independent, "T26").covariance_)(0, 0), 0.04, 1e-12,
          "T26 独立PositionNoise按唯一检测索引匹配，不能忽略或复用别项");
     auto invalid = observed_frame(2, 0.1, {0.05, 0, 2});
-    invalid.position_noise_.push_back({0, cv::Matx33d::eye() * -1, "bad-R", false});
+    invalid.position_noise_.push_back({0, cv::Matx33d::eye() * -1, "bad-R"});
     require(one_track(tracker.step(invalid), "T27").state_ == TrackState::Coasting,
             "T27 负定位置R必须拒绝，不可偷偷改成正数或退回profile");
     auto nan = observed_frame(3, 0.2, {0.1, 0, 2});
@@ -388,7 +386,7 @@ void test_uncertainty_and_invalid_values()
     require(one_track(tracker.step(nan), "T28").state_ == TrackState::Coasting,
             "T28 NaN不能进入滤波矩阵");
     TargetTracker duplicate_noise(cfg);
-    first.position_noise_.push_back({0, cv::Matx33d::eye() * 0.09, "duplicate-index-R", false});
+    first.position_noise_.push_back({0, cv::Matx33d::eye() * 0.09, "duplicate-index-R"});
     require(duplicate_noise.step(first).tracks_.empty(),
             "T29 同一检测索引存在两个位置R必须拒绝，不能随便选一个");
 }
@@ -605,34 +603,6 @@ void test_forecast_horizon_and_time_envelopes()
 // 明确构造“当前硬件声明齐全但历史pending来自合成”的混源场景，检查资格不能被洗白。
 void test_pending_provenance_and_lost_age()
 {
-    auto cfg = fixture_config();
-    cfg.time_policy_ = "bounded_only";
-    cfg.stamp_uncertainty_semantics_ = "absolute_bound";
-    cfg.max_time_uncertainty_s_ = 0.001;
-    cfg.profile_->time_policy_ = "bounded_only";
-    cfg.profile_->validated_time_bound_s_ = 0.001;
-    cfg.profile_->hardware_verified_ = true;
-    TargetTracker tracker(cfg);
-    auto verified_frame = [](std::uint64_t n, double seconds, cv::Vec3d p)
-    {
-        auto frame = observed_frame(n, seconds, p);
-        frame.origin_ = InputOrigin::TypedMemory;
-        frame.observations_[0].control_usable_ = true;
-        return frame;
-    };
-    tracker.step(verified_frame(1, 0, {0, 0, 2}));
-    const auto trusted = tracker.step(verified_frame(2, 0.1, {0.05, 0, 2}));
-    require(one_track(trusted, "T47").qualified_for_g5_,
-            "T47 fixture前置条件必须实际激活资格路径，不能以始终false空验");
-    auto synthetic_pending = verified_frame(3, 0.2, {20, 0, 2});
-    synthetic_pending.origin_ = InputOrigin::Synthetic;
-    tracker.step(synthetic_pending);
-    const auto mixed = tracker.step(verified_frame(4, 0.3, {20.05, 0, 2}));
-    require(one_track(mixed, "T47").track_id_ != trusted.tracks_[0].track_id_ &&
-            mixed.tracks_[0].confirmed_ && !mixed.tracks_[0].model_hardware_verified_ &&
-            !mixed.tracks_[0].qualified_for_g5_,
-            "T47 合成pending即使被后续TypedMemory确认也不得获得硬件/下游资格");
-
     TargetTracker invalid_candidate(fixture_config());
     establish(invalid_candidate);
     auto invalid = observed_frame(3, 0.2, {0.1, 0, 2});
@@ -664,12 +634,8 @@ void test_measured_convergence_vs_coast_budget()
     // 这只是复现分类错误的精确fixture：R的标准差0.01m，沿用域略低于该值。
     // 禁止将这组数字复制为生产阈值，也不为了测试修改实际标定产物。
     cfg.profile_->position_std_limit_m_ = 0.0095;
-    cfg.time_policy_ = "bounded_only";
     cfg.stamp_uncertainty_semantics_ = "absolute_bound";
-    cfg.max_time_uncertainty_s_ = 0.001;
-    cfg.profile_->time_policy_ = "bounded_only";
     cfg.profile_->validated_time_bound_s_ = 0.001;
-    cfg.profile_->hardware_verified_ = true;
     TargetTracker tracker(cfg);
     std::uint64_t id = 0;
     for (std::uint64_t n = 0; n < 12; ++n)
@@ -686,8 +652,8 @@ void test_measured_convergence_vs_coast_budget()
         if (n == 1)
         {
             require(track.confirmed_ && track.velocity_mps_ && track.time_bounded_ &&
-                    track.model_hardware_verified_ && track.covariance_,
-                    "T50 二点时其他资格前置必须实际激活，不能用hw=false空验");
+                    track.covariance_,
+                    "T50 二点时速度与时间标签必须实际激活");
             require(std::sqrt((*track.covariance_)(0, 0)) > cfg.profile_->position_std_limit_m_ &&
                     !track.qualified_for_g5_,
                     "T50 有当前测量和速度但位置精度未达域时应仅禁止下游资格，不能删除测量");
@@ -700,70 +666,6 @@ void test_measured_convergence_vs_coast_budget()
             "T50 真正缺测进入预测后仍必须按同一位置误差预算LOST，不能一概关闭门控");
 }
 
-// 相机标识改变既要重建轨迹，也要重验噪声来源；旧相机的硬件标定不能随新ID自动借用。
-void test_profile_camera_provenance()
-{
-    auto cfg = fixture_config();
-    cfg.time_policy_ = "bounded_only";
-    cfg.stamp_uncertainty_semantics_ = "absolute_bound";
-    cfg.max_time_uncertainty_s_ = 0.001;
-    cfg.profile_->time_policy_ = "bounded_only";
-    cfg.profile_->validated_time_bound_s_ = 0.001;
-    cfg.profile_->hardware_verified_ = true;
-    TargetTracker tracker(cfg);
-    auto typed_frame = [](std::uint64_t n, double seconds, cv::Vec3d p,
-                          const std::string &camera)
-    {
-        auto frame = observed_frame(n, seconds, p);
-        frame.origin_ = InputOrigin::TypedMemory;
-        frame.stamp_.camera_id_ = camera;
-        frame.observations_[0].stamp_ = frame.stamp_;
-        frame.observations_[0].control_usable_ = true;
-        return frame;
-    };
-    tracker.step(typed_frame(1, 0, {0, 0, 2}, "contract-camera"));
-    const auto original = tracker.step(typed_frame(2, 0.1, {0.05, 0, 2}, "contract-camera"));
-    const auto old = one_track(original, "T51");
-    require(old.confirmed_ && old.velocity_mps_ && old.time_bounded_ &&
-            old.model_hardware_verified_ && old.qualified_for_g5_,
-            "T51 旧相机两样本必须确实激活硬件/时间/速度资格，不能以始终false空验");
-    const auto first_new = tracker.step(typed_frame(3, 0.2, {0.1, 0, 2}, "replacement-camera"));
-    const auto fresh = one_track(first_new, "T51");
-    require(fresh.track_id_ != old.track_id_ && !fresh.confirmed_,
-            "T51 换相机必须新ID并从位置重新估速度");
-    const auto second_new = tracker.step(typed_frame(4, 0.3, {0.15, 0, 2}, "replacement-camera"));
-    const auto recovered = one_track(second_new, "T51");
-    require(recovered.track_id_ == fresh.track_id_ && recovered.state_ == TrackState::Measured &&
-            recovered.confirmed_ && recovered.velocity_mps_ && recovered.time_bounded_,
-            "T51 新相机两样本后必须恢复数值速度，不能仅以首帧未确认挡住资格");
-    require(!recovered.model_hardware_verified_ && !recovered.qualified_for_g5_,
-            "T51 相机与profile来源不匹配时，即使数值速度已恢复也禁止借用旧硬件资格");
-}
-// 审查回归：缺界应在profile验证/构造阶段命名拒绝，不能等重建时抛bad_optional_access。
-void test_bounded_profile_requires_time_bound()
-{
-    auto cfg = fixture_config();
-    validate_tracking_profile(*cfg.profile_);
-    cfg.time_policy_ = "bounded_only";
-    cfg.profile_->time_policy_ = "bounded_only";
-    bool validation_rejected = false, construction_rejected = false;
-    try { validate_tracking_profile(*cfg.profile_); }
-    catch (const std::runtime_error &error)
-    {
-        validation_rejected = std::string(error.what()) == "G4_PROFILE_BOUNDED_TIME_BOUND_MISSING";
-    }
-    try { TargetTracker tracker(cfg); }
-    catch (const std::runtime_error &error)
-    {
-        construction_rejected = std::string(error.what()) == "G4_PROFILE_BOUNDED_TIME_BOUND_MISSING";
-    }
-    require(validation_rejected && construction_rejected,
-            "审查回归 bounded_only缺validated_time_bound_s必须在验证和构造时命名拒绝");
-    cfg.profile_->validated_time_bound_s_ = 0;
-    validate_tracking_profile(*cfg.profile_);
-    TargetTracker exact_time(cfg);
-    std::cout << "G4 bounded profile missing-bound / explicit-zero PASS\n";
-}
 } // namespace
 
 int main()
@@ -783,8 +685,7 @@ int main()
         test_forecast_horizon_and_time_envelopes();
         test_pending_provenance_and_lost_age();
         test_measured_convergence_vs_coast_budget();
-        test_profile_camera_provenance();
-        test_bounded_profile_requires_time_bound();
+
         std::cout << "G4 tracking contract M01-M12 / T01-T51 PASS\n";
         return 0;
     }

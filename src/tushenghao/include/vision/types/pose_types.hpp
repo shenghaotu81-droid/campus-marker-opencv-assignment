@@ -65,7 +65,6 @@ struct PoseObservation
     std::optional<std::size_t> selected_index_;
     std::optional<RigidPose> T_camera_target_;
     std::optional<double> selected_rmse_px_;
-    std::optional<double> refined_rmse_px_;
     // 未标定不确定度时保持空；零矩阵会错误宣称没有不确定性。
     std::optional<std::array<double, 36>> covariance_se3_;
     bool control_usable_{false};

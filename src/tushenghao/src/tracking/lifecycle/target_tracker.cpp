@@ -41,7 +41,6 @@ struct TrackerState
     bool confirmed_{false};
     bool all_time_bounded_{false};
     bool current_time_bounded_{false};
-    bool all_measurements_verified_{false};
     std::uint64_t next_id_{1};
     std::uint64_t id_{0};
     std::optional<pose::CaptureStamp> last_input_;
@@ -85,7 +84,6 @@ struct TrackerState
         live_ = true;
         confirmed_ = false;
         all_time_bounded_ = current_time_bounded_;
-        all_measurements_verified_ = m.hardware_verified_ && f.origin_ == InputOrigin::TypedMemory;
         state_ = TrackState::Measured;
         lost_.reset();
         pending_.reset();
@@ -107,9 +105,8 @@ struct TrackerState
         t.state_time_us_ = state_time_us_;
         t.confirmed_ = confirmed_;
         t.time_bounded_ = all_time_bounded_ && current_time_bounded_;
-        t.model_hardware_verified_ = all_measurements_verified_ && config.profile_->hardware_verified_;
         t.input_time_bound_s_ = last_input_ ? last_input_->time_uncertainty_s_ : std::nullopt;
-        t.uncertainty_scope_ = config.time_policy_ == "bounded_only" && t.time_bounded_ ?
+        t.uncertainty_scope_ = t.time_bounded_ ?
             "LOCAL_LINEAR_MSE_ENVELOPE_WITH_TIME_BOUNDS" : "MODEL_CONDITIONAL_ON_NOMINAL_TIME";
         t.observation_age_s_ = elapsed(state_time_us_, detail::sample_time(last_measurement_));
         if (live_)
@@ -120,7 +117,7 @@ struct TrackerState
                 t.velocity_mps_ = filter_.velocity();
             t.qualified_for_g5_ = state_ == TrackState::Measured && t.velocity_mps_ &&
                 filter_.position_std() <= config.profile_->position_std_limit_m_ &&
-                all_time_bounded_ && t.model_hardware_verified_ && config.time_policy_ == "bounded_only";
+                all_time_bounded_;
         }
         return t;
     }
@@ -135,15 +132,8 @@ struct TrackerState
         events.push_back("TRACK_LOST:" + std::to_string(id_) + ":" + reason);
     }
 
-    // 时间界不能被当标准差；区间下界<=0时不做两点速度除法。
-    bool interval_resolved(const pose::CaptureStamp &previous, const TrackingFrame &f, const TrackingConfig &config) const
-    {
-        if (config.time_policy_ != "bounded_only")
-            return true;
-        return previous.time_uncertainty_s_ && f.stamp_.time_uncertainty_s_ &&
-            elapsed(detail::sample_time(f.stamp_), detail::sample_time(previous)) >
-            *previous.time_uncertainty_s_ + *f.stamp_.time_uncertainty_s_;
-    }
+    // 区间重叠时仍走名义时间数值路径，时间标签为false，测量噪声增广。
+
 
     // 两点候选独立于旧滤波中心；旧模型失配时可重新建立，避免随机反转被永久拒绝。
     bool reseed(const detail::PositionMeasurement &m, const TrackingFrame &f,
@@ -153,12 +143,14 @@ struct TrackerState
         if (pending_)
         {
             const double dt = elapsed(detail::sample_time(f.stamp_), detail::sample_time(pending_stamp_));
-            if (dt > 0 && dt <= p.max_dt_s_ && interval_resolved(pending_stamp_, f, config))
+            if (dt > 0 && dt <= p.max_dt_s_)
             {
                 detail::CvFilter candidate;
                 candidate.initialize(pending_->position_m_, pending_->R_m2_, p.initial_velocity_variance_m2ps2_);
-                const double bound = config.time_policy_ == "bounded_only" ?
-                    *f.stamp_.time_uncertainty_s_ + *pending_stamp_.time_uncertainty_s_ : 0;
+                const double sum_bound = f.stamp_.time_uncertainty_s_.value_or(0) +
+                    pending_stamp_.time_uncertainty_s_.value_or(0);
+                const double bound = current_time_bounded_ && pending_stamp_.time_uncertainty_s_ &&
+                    sum_bound < dt ? sum_bound : 0;
                 candidate.predict(dt, p.acceleration_psd_m2ps3_, bound);
                 if (candidate.nis(m.position_m_, m.R_m2_) <= p.bootstrap_nis_limit_)
                 {
@@ -172,8 +164,8 @@ struct TrackerState
                                       bound > 0 ? *p.validated_time_bound_s_ : 0);
                     confirmed_ = true;
                     all_time_bounded_ = all_time_bounded_ && previous_stamp.exposure_us_ &&
-                        previous_stamp.time_uncertainty_s_;
-                    all_measurements_verified_ = all_measurements_verified_ && previous.hardware_verified_;
+                        previous_stamp.time_uncertainty_s_ &&
+                        detail::time_bounded(TrackingFrame{previous_stamp, f.origin_, {}, {}, {}}, config);
                     return true;
                 }
             }
@@ -211,6 +203,10 @@ struct TrackerState
         result.input_accepted_ = true;
         last_input_ = f.stamp_;
         current_time_bounded_ = detail::time_bounded(f, config);
+        if (current_time_bounded_ && previous_input && previous_time_bounded &&
+            elapsed(detail::sample_time(f.stamp_), detail::sample_time(*previous_input)) <=
+                *f.stamp_.time_uncertainty_s_ + *previous_input->time_uncertainty_s_)
+            current_time_bounded_ = false;
         if (!result.ready_)
         {
             result.events_.push_back("TRACKING_PROFILE_NOT_READY");
@@ -218,14 +214,13 @@ struct TrackerState
         }
         const auto &p = *config.profile_;
         const auto process_mode = config.coordinate_mode_ == CoordinateMode::LocalWorld ? "local_world" : "camera_relative";
-        const bool profile_frame_matches = p.coordinate_mode_ == process_mode && p.time_policy_ == config.time_policy_ &&
+        const bool profile_frame_matches = p.coordinate_mode_ == process_mode &&
             p.camera_id_ == f.stamp_.camera_id_;
         if (!profile_frame_matches)
-            result.events_.push_back("PROFILE_PROCESS_FRAME_UNVALIDATED_RESEARCH_ONLY");
+            result.events_.push_back("PROFILE_PROCESS_FRAME_MISMATCH");
         auto measurements = detail::adapt_measurements(f, config, result.events_);
-        if (config.time_policy_ == "bounded_only" && !current_time_bounded_)
+        if (!current_time_bounded_)
         {
-            measurements.clear();
             result.events_.push_back("TIME_QUALITY_UNKNOWN_OR_OUTSIDE_VALIDATED_DOMAIN");
         }
         const auto now = detail::sample_time(f.stamp_);
@@ -233,27 +228,24 @@ struct TrackerState
         {
             const double dt = elapsed(now, state_time_us_);
             state_time_us_ = now;
-            if (config.time_policy_ == "bounded_only" && current_time_bounded_ && !previous_time_bounded)
-                lose("TIME_DOMAIN_REACQUIRED_REBUILD", result.events_, config);
-            else if (dt > p.max_dt_s_)
+            if (dt > p.max_dt_s_)
                 lose("STEP_OUTSIDE_CALIBRATED_DT_DOMAIN", result.events_, config);
             else
             {
                 double bound = 0;
-                if (config.time_policy_ == "bounded_only" && current_time_bounded_ &&
-                    previous_time_bounded && previous_input)
+                if (current_time_bounded_ && previous_time_bounded && previous_input &&
+                    *f.stamp_.time_uncertainty_s_ + *previous_input->time_uncertainty_s_ < dt)
                     bound = *f.stamp_.time_uncertainty_s_ + *previous_input->time_uncertainty_s_;
                 filter_.predict(dt, p.acceleration_psd_m2ps3_, bound);
             }
         }
         for (auto &m : measurements)
         {
-            m.hardware_verified_ = m.hardware_verified_ && profile_frame_matches;
-            if (config.time_policy_ == "bounded_only" && current_time_bounded_ &&
-                *f.stamp_.time_uncertainty_s_ > 0)
+            if (!current_time_bounded_ || f.stamp_.time_uncertainty_s_.value_or(0) > 0)
             {
                 // 绝对时偏界产生位移误差MSE包络，绝不把界直接当高斯sigma。
-                const double b = *f.stamp_.time_uncertainty_s_;
+                const double b = f.stamp_.time_uncertainty_s_.value_or(
+                    p.validated_time_bound_s_.value_or(p.max_dt_s_));
                 cv::Vec3d velocity(0, 0, 0);
                 cv::Matx33d velocity_second = cv::Matx33d::eye() * p.initial_velocity_variance_m2ps2_;
                 if (live_)
@@ -285,7 +277,7 @@ struct TrackerState
                     accepted.emplace_back(i,std::move(innovation));
             }
             bool updated = false;
-            if (accepted.size() == 1 && interval_resolved(last_measurement_, f, config))
+            if (accepted.size() == 1)
             {
                 const auto &m = measurements[accepted.front().first];
                 result.association_nis_ = accepted.front().second.score;
@@ -294,9 +286,11 @@ struct TrackerState
                     const double dt = elapsed(now, detail::sample_time(last_measurement_));
                     filter_.bootstrap(seed_.position_m_, seed_.R_m2_, m.position_m_, m.R_m2_,
                                       dt, p.acceleration_psd_m2ps3_,
-                        config.time_policy_ == "bounded_only" && all_time_bounded_ && current_time_bounded_ ?
+                        all_time_bounded_ && current_time_bounded_ &&
+                        *f.stamp_.time_uncertainty_s_ + *last_measurement_.time_uncertainty_s_ < dt ?
                         *f.stamp_.time_uncertainty_s_ + *last_measurement_.time_uncertainty_s_ : 0,
-                        config.time_policy_ == "bounded_only" && all_time_bounded_ && current_time_bounded_ ?
+                        all_time_bounded_ && current_time_bounded_ &&
+                        *f.stamp_.time_uncertainty_s_ + *last_measurement_.time_uncertainty_s_ < dt ?
                         *p.validated_time_bound_s_ : 0);
                     confirmed_ = true;
                 }
@@ -305,8 +299,6 @@ struct TrackerState
                 last_measurement_ = f.stamp_;
                 seed_ = m;
                 all_time_bounded_ = all_time_bounded_ && current_time_bounded_;
-                all_measurements_verified_ = all_measurements_verified_ && m.hardware_verified_ &&
-                    f.origin_ == InputOrigin::TypedMemory;
                 state_ = TrackState::Measured;
                 pending_.reset();
                 updated = true;
@@ -326,6 +318,8 @@ struct TrackerState
             if (!updated && filter_.position_std() > p.position_std_limit_m_)
                 lose("POSITION_UNCERTAINTY_EXCEEDED", result.events_, config);
         }
+        if (live_)
+            all_time_bounded_ = all_time_bounded_ && current_time_bounded_;
         if (live_)
             result.tracks_.push_back(snapshot(config));
         else if (lost_)

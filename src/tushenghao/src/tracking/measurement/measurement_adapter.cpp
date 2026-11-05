@@ -34,10 +34,9 @@ bool same_sample(const pose::CaptureStamp &a, const pose::CaptureStamp &b)
 bool time_bounded(const TrackingFrame &f, const TrackingConfig &c)
 {
     return f.origin_ != InputOrigin::LegacyG2Replay &&
-        c.stamp_uncertainty_semantics_ == "absolute_bound" && c.max_time_uncertainty_s_ &&
+        c.stamp_uncertainty_semantics_ == "absolute_bound" &&
         c.profile_ && c.profile_->validated_time_bound_s_ && f.stamp_.exposure_us_ &&
         f.stamp_.time_uncertainty_s_ &&
-        *f.stamp_.time_uncertainty_s_ <= *c.max_time_uncertainty_s_ &&
         *f.stamp_.time_uncertainty_s_ <= *c.profile_->validated_time_bound_s_;
 }
 
@@ -108,8 +107,6 @@ std::optional<PositionMeasurement> one_measurement(
     m.detection_index_ = p.detection_index_;
     m.position_m_ = p.T_camera_target_->t_m_;
     m.R_m2_ = c.profile_->camera_mse_m2_;
-    m.hardware_verified_ = p.control_usable_ && c.profile_->hardware_verified_ &&
-        f.origin_ == InputOrigin::TypedMemory;
     std::size_t matched = 0;
     for (const auto &noise : f.position_noise_)
         if (noise.detection_index_ == p.detection_index_)
@@ -121,7 +118,6 @@ std::optional<PositionMeasurement> one_measurement(
                 return std::nullopt;
             }
             m.R_m2_ = noise.camera_mse_m2_;
-            m.hardware_verified_ = m.hardware_verified_ && noise.hardware_verified_;
         }
     if (matched > 1)
     {
@@ -156,9 +152,7 @@ std::optional<PositionMeasurement> one_measurement(
         else
         {
             events.push_back("WORLD_EGO_UNCERTAINTY_UNKNOWN_CONDITIONAL_ONLY");
-            m.hardware_verified_ = false;
         }
-        m.hardware_verified_ = m.hardware_verified_ && t.hardware_verified_;
     }
     if (!positive_definite(cv::Mat(m.R_m2_)))
         return std::nullopt;

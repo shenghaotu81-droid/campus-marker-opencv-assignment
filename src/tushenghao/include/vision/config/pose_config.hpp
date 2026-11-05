@@ -11,7 +11,7 @@
 
 namespace mark::pose
 {
-// 标定结果原来不带相机身份；身份与验证状态放新配置，不修改历史标定文件。
+// 标定结果原来不带相机身份；身份放配置，不修改历史标定文件。
 // K、dist、camera_id
 struct CameraModel
 {
@@ -19,17 +19,13 @@ struct CameraModel
     cv::Mat dist_;
     cv::Size image_size_;
     std::string camera_id_;
-    bool hardware_verified_{false};
 };
 
-// 四个空预算(G2 建好后有个 pose_sensitivity 工具，跑一遍生成 3456 组带真值的合成数据，看误差分布取 3σ，及均值)
+// 重投影预算；按相机 fx 比例缩放，在板子录像上验证分布。
 struct PoseBudgets
 {
     std::optional<double> max_rmse_px_;
     std::optional<double> max_corner_error_px_;
-    std::optional<double> min_quad_area_px2_;
-    std::optional<double> max_time_uncertainty_s_;   // 跟时间戳精度有关，硬件没到先空着
-    bool hardware_verified_{false};
 };
 
 struct SelectionConfig
@@ -39,8 +35,6 @@ struct SelectionConfig
     std::optional<double> max_z_m_;
     std::optional<double> min_normal_z_;
     std::optional<double> max_normal_z_;
-    bool constraints_verified_{false};
-    bool refine_lm_{false};
     bool prior_enabled_{false};
     std::optional<double> prior_max_age_s_;
     std::optional<double> prior_max_translation_m_;
@@ -58,7 +52,6 @@ struct TagConfig
     std::optional<double> min_decision_margin_;
     std::set<int> allowed_ids_;
     std::map<int, double> side_m_;
-    bool hardware_verified_{false};
 };
 
 // 总配置
@@ -67,7 +60,6 @@ struct G2Config
     CameraModel camera_;
     std::array<cv::Point3d, 4> mark_points_m_;
     std::string mark_target_id_;
-    bool mark_geometry_verified_{false};
     PoseBudgets budgets_;
     SelectionConfig selection_;
     TagConfig tag_;

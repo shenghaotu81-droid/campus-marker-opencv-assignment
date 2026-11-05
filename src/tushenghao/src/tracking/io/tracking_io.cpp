@@ -241,7 +241,6 @@ std::vector<TrackingFrame> read_tracking_frames(const std::filesystem::path &pat
                 p.detection_index_ = unsigned_integer(noise["detection_index"]);
                 p.camera_mse_m2_ = matrix<3, 3>(noise["camera_mse_m2"]);
                 p.evidence_id_ = text(noise, "evidence_id");
-                p.hardware_verified_ = flag(noise, "hardware_verified");
                 f.position_noise_.push_back(p);
             }
             if (!n["camera_transform"].empty())
@@ -253,7 +252,6 @@ std::vector<TrackingFrame> read_tracking_frames(const std::filesystem::path &pat
                 transform.R_world_camera_ = matrix<3, 3>(t["R_world_camera"]);
                 transform.t_world_camera_m_ = vector3(t["t_world_camera_m"]);
                 if (!t["covariance"].empty()) transform.covariance_ = matrix<6, 6>(t["covariance"]);
-                transform.hardware_verified_ = flag(t, "hardware_verified");
                 f.camera_transform_ = transform;
             }
         }
@@ -281,7 +279,7 @@ void write_tracking_frames(const std::vector<TrackingFrame> &frames, const std::
         for (const auto &p : f.position_noise_)
             fs << "{" << "detection_index" << std::to_string(p.detection_index_)
                << "camera_mse_m2" << cv::Mat(p.camera_mse_m2_) << "evidence_id" << p.evidence_id_
-               << "hardware_verified" << static_cast<int>(p.hardware_verified_) << "}";
+               << "}";
         fs << "]";
         if (f.camera_transform_)
         {
@@ -289,8 +287,7 @@ void write_tracking_frames(const std::vector<TrackingFrame> &frames, const std::
             fs << "camera_transform" << "{" << "stamp";
             write_stamp(fs, t.stamp_);
             fs << "world_frame_id" << t.world_frame_id_ << "R_world_camera" << cv::Mat(t.R_world_camera_)
-               << "t_world_camera_m" << cv::Mat(t.t_world_camera_m_)
-               << "hardware_verified" << static_cast<int>(t.hardware_verified_);
+               << "t_world_camera_m" << cv::Mat(t.t_world_camera_m_);
             if (t.covariance_) fs << "covariance" << cv::Mat(*t.covariance_);
             fs << "}";
         }
@@ -326,7 +323,6 @@ void write_tracking_results(const std::vector<TrackingResult> &results, const st
             if (t.last_detection_index_)
                 fs << "last_detection_index" << std::to_string(*t.last_detection_index_);
             fs << "confirmed" << static_cast<int>(t.confirmed_) << "time_bounded" << static_cast<int>(t.time_bounded_)
-               << "model_hardware_verified" << static_cast<int>(t.model_hardware_verified_)
                << "qualified_for_g5" << static_cast<int>(t.qualified_for_g5_)
                << "uncertainty_scope" << t.uncertainty_scope_;
             if (t.position_m_) fs << "position_m" << cv::Mat(*t.position_m_);

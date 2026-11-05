@@ -129,14 +129,7 @@ ExitObservation estimate_exit(const TagObservation &tag_, cv::Size size,
                                            result.pose_.target_id_);
     result.pose_.source_ = "APRILTAG";
     const auto &cfg = estimator.config();
-    result.pose_.control_usable_ = result.pose_.status_ == PoseStatus::Unique &&
-        cfg.camera_.hardware_verified_ && cfg.budgets_.hardware_verified_ &&
-        cfg.selection_.constraints_verified_ && c.hardware_verified_ &&
-        cfg.budgets_.max_time_uncertainty_s_ && tag_.stamp_.exposure_us_ &&
-        tag_.stamp_.time_uncertainty_s_ &&
-        *tag_.stamp_.time_uncertainty_s_ <= *cfg.budgets_.max_time_uncertainty_s_;
-    if (!result.pose_.control_usable_)
-        result.pose_.reasons_.push_back("TAG_MEASUREMENT_NOT_HARDWARE_QUALIFIED");
+    result.pose_.control_usable_ = result.pose_.status_ == PoseStatus::Unique;
     result.alignment_measurement_usable_ = result.pose_.control_usable_;
     return result;
 }

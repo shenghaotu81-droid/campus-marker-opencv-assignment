@@ -39,7 +39,7 @@ bool valid_stamp(const CaptureStamp &s)
            (std::isfinite(*s.time_uncertainty_s_) && *s.time_uncertainty_s_ >= 0));
 }
 
-// 四边形在图像里多大（像素）：太小了（太远）位姿不准，min_quad_area_px2 预算是卡这个的
+// 四边形面积仅用于检查非退化几何。
 double quad_area(const std::array<cv::Point2d, 4> &p)
 {
     double twice = 0;

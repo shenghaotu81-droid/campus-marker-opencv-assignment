@@ -97,7 +97,7 @@ int main()
         mark::tracking::write_tracking_profile(profile, out / "profile.yaml");
         const auto roundtrip = mark::tracking::load_tracking_profile(out / "profile.yaml");
         require(roundtrip.validated_time_bound_s_ && *roundtrip.validated_time_bound_s_ == 0 &&
-            roundtrip.evidence_id_ == profile.evidence_id_ && !roundtrip.hardware_verified_ &&
+            roundtrip.evidence_id_ == profile.evidence_id_ &&
             cv::norm(cv::Mat(roundtrip.camera_mse_m2_ - profile.camera_mse_m2_)) == 0,
             "I09 profile数值来源与未验证状态必须往返");
         std::cout << "G4 IO I01-I09 PASS\n";

@@ -11,7 +11,6 @@ struct PositionMeasurement
     std::size_t detection_index_{0};
     cv::Vec3d position_m_{0, 0, 0};
     cv::Matx33d R_m2_{cv::Matx33d::zeros()};
-    bool hardware_verified_{false};
 };
 
 // 时间与来源分别验证：缺曝光可研究，但不能借接收时刻获得真实时间资格。

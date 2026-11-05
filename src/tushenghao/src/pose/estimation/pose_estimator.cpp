@@ -69,15 +69,8 @@ G2Config PoseEstimator::config() const
 
 // MARK完整处理：验输入、转物理序、调求解、定 control_usable_
 // estimate_mark 做 MARK 特有的预处理（查时间戳、转物理序），然后把 4 对 2D-3D 点丢给 estimate_planar 做真正的 IPPE 求解
-/*   MARK 特有处理流程：
-    1. 验证输入数据的有效性（验检测器输出：帧号对上、状态是 DETECTED、序号不越界）
-    2. 转物理序：pixels[p] = corners[orientation[p]]，屏幕序→物理序
-    3. 调用 IPPE 算法求解位姿（planner常规）
-    4. 根据求解结果决定控制是否可用（定 control_usable_：Unique + 4 个硬件验证 + 时间误差，缺一不可）
-*/
-/*  estimate_planar 给核心：r/t（T_camera_target_）+ 状态（Unique/Ambiguous…）。
-estimate_mark 拿到后补 MARK 特有的：source_="MARK"、detection_index_，再按 MARK 的 4 个硬件验证算 control_usable_。
-*/
+
+
 // orientation[p] 是物理角到屏幕 slot 的映射；不能把屏幕排序当物理身份。
 PoseObservation PoseEstimator::estimate_mark(
     const FrameResult &raw, std::size_t index, cv::Size size, const CaptureStamp &stamp_,
@@ -129,31 +122,12 @@ PoseObservation PoseEstimator::estimate_mark(
                           config_.mark_target_id_, prior);
     out.source_ = "MARK";
     out.detection_index_ = index;
-    // control_usable_:Unique + 4 个 hardware_verified + 时间误差合格，缺一不可
-    out.control_usable_ = out.status_ == PoseStatus::Unique &&
-        config_.camera_.hardware_verified_ && config_.mark_geometry_verified_ &&
-        config_.budgets_.hardware_verified_ && config_.selection_.constraints_verified_ &&
-        config_.budgets_.max_time_uncertainty_s_ && stamp_.exposure_us_ &&
-        stamp_.time_uncertainty_s_ &&
-        *stamp_.time_uncertainty_s_ <= *config_.budgets_.max_time_uncertainty_s_;
-    if (!out.control_usable_)
-        out.reasons_.push_back("MARK_MEASUREMENT_NOT_HARDWARE_QUALIFIED");
+    out.control_usable_ = out.status_ == PoseStatus::Unique;
     return out;
 }
 
 // 通用求解：给 4 对 2D-3D 点算位姿（目标系到相机系（K/dist）的变换（R/t））
-/*  estimate_planar 流程：
-1. 验输入：时间戳、相机 ID、图像尺寸、四边形合法，模型点 z=0 且凸
-2. 查面积：四边形太小直接毙（QUAD_BELOW_APPROVED_AREA）
-3. IPPE 求解：solvePnPGeneric(..., SOLVEPNP_IPPE) 拿多候选
-4. 逐候选筛（四道）：
-evaluate_pose 独立复核（重投影 RMSE、正深度）
-预算：RMSE/最大误差超了毙
-passes_constraints：安装约束（z 范围、法向）
-passes_prior：离 prior 太远毙（开了才查）
-5. 预算没标定：直接 BudgetMissing返回，候选留着审计
-6. 数合格（eligible_）：0 个 → NoSolution；1 个 → Unique（可LM精修：refine_lm_ 开了，调 solvePnPRefineLM 试精修）；2+ → Ambiguous
-*/
+
 // 保留 IPPE 的平面多解；仅一个候选满足独立约束才发布，不按最小残差强选。
 PoseObservation PoseEstimator::estimate_planar(
     const std::array<cv::Point3d, 4> &object,
@@ -196,13 +170,8 @@ PoseObservation PoseEstimator::estimate_planar(
         previous_cross = cross;
     }
     const auto &b = config_.budgets_;
-    const bool budgets_ready = b.max_rmse_px_ && b.max_corner_error_px_ && b.min_quad_area_px2_;
-    if (b.min_quad_area_px2_ && detail::quad_area(image) < *b.min_quad_area_px2_)
-    {
-        out.status_ = PoseStatus::NoSolution;
-        out.reasons_.push_back("QUAD_BELOW_APPROVED_AREA");
-        return out;
-    }
+    const bool budgets_ready = b.max_rmse_px_ && b.max_corner_error_px_;
+
     const bool use_prior = prior && prior_is_usable(*prior, stamp_, id_, config_.selection_);
     if (prior && !use_prior)
         out.reasons_.push_back("PRIOR_IGNORED");
@@ -270,32 +239,7 @@ PoseObservation PoseEstimator::estimate_planar(
         out.selected_index_ = index;
         out.T_camera_target_ = selected.pose_;
         out.selected_rmse_px_ = selected.rmse_px_;
-        if (config_.selection_.refine_lm_)
-        {
-            try
-            {
-                auto refined = selected.pose_;
-                cv::solvePnPRefineLM(objects, pixels, config_.camera_.K_, config_.camera_.dist_,
-                                     refined.rvec_, refined.t_m_);    // Levenberg-Marquardt：非线性最小二乘优化。solvePnPRefineLM 拿已选中的解当起点，迭代微调 R/t 让重投影误差更小。只是"打磨"，选解还是前面的门控说了算。
-                const auto measured = detail::evaluate_pose(refined, object, image,
-                                                             config_.camera_.K_, config_.camera_.dist_);
-                if (measured.metrics_valid_)
-                    out.refined_rmse_px_ = measured.rmse_px_;
-                // LM 只能改进已选解，不能越过质量/安装/历史边界，原始候选证据保持不变。
-                if (measured.reasons_.empty() && measured.rmse_px_ <= selected.rmse_px_ &&
-                    measured.rmse_px_ <= *b.max_rmse_px_ && measured.max_error_px_ <= *b.max_corner_error_px_ &&
-                    passes_constraints(refined, config_.selection_) &&
-                    (!use_prior || passes_prior(refined, *prior, config_.selection_)))
-                    out.T_camera_target_ = refined;
-                else
-                    out.reasons_.push_back("LM_REJECTED_KEEP_ORIGINAL");
-            }
-            catch (const cv::Exception &)
-            {
-                // 可选精修失败不能抹掉已通过检查的原始解；保留原解并记录失败。
-                out.reasons_.push_back("LM_EXCEPTION_KEEP_ORIGINAL");
-            }
-        }
+
         out.status_ = PoseStatus::Unique;
         // 通用入口不知道物理模型是否已验证；控制级资格只能由 MARK/Tag 类型适配器赋予。
         out.control_usable_ = false;

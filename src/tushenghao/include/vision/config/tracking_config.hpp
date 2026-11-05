@@ -21,8 +21,6 @@ struct TrackingProfile
     std::string camera_id_;
     std::string basis_;
     std::string coordinate_mode_{"camera_relative"};
-    std::string time_policy_{"nominal_research"};
-    bool hardware_verified_{false};
 };
 
 struct TrackingConfig
@@ -31,10 +29,7 @@ struct TrackingConfig
     std::string target_class_{"mark-white-structure-v1"};
     CoordinateMode coordinate_mode_{CoordinateMode::CameraRelative};
     std::string world_frame_id_{"local-world"};
-    // nominal_research允许数值研究，始终不赋予时间资格；bounded_only要求真曝光与有界误差。
-    std::string time_policy_{"nominal_research"};
     std::string stamp_uncertainty_semantics_{"unknown"};
-    std::optional<double> max_time_uncertainty_s_;
     std::optional<TrackingProfile> profile_;
 };
 
