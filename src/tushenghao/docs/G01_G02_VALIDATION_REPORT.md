@@ -1,5 +1,7 @@
 # G-01真实Unique、G-02条件NIS与视频兼容性验证
 
+> 历史快照：后续单候选拟合与156项裁决已实施，现状见[最新报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)和[flow-guide](flow-guide.md)。本文保留当时验证和接口含义，不覆盖当前代码。
+
 基线：`refactor/vision-lean`的`a582c48`。本轮不改检测、角拟合和G4实现／阈值；G2保留IPPE、两个候选、原正深度和重投影screening。生产G4 profile仍为空；经用户确认，用已有合成profile的原数值作临时回放条件诊断，不冒充这段录像的实测标定。
 
 ## 先量数：a582c48完整1676帧

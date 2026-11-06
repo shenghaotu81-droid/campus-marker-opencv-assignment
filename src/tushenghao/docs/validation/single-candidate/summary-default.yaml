@@ -1,0 +1,23 @@
+%YAML:1.0
+---
+frames: "1676"
+detections: "1088"
+statuses:
+   -
+      name: DETECTED
+      count: "1088"
+   -
+      name: NOT_DETECTED
+      count: "588"
+reasons:
+   []
+poses:
+   -
+      name: AMBIGUOUS
+      count: "1088"
+   -
+      name: NOT_DETECTED
+      count: "588"
+tracks:
+   []
+elapsed_s: 2.4976039632999999e+01

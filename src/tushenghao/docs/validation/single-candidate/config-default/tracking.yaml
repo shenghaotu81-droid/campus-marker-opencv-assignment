@@ -1,0 +1,8 @@
+%YAML:1.0
+---
+schema_version: 2
+source: "MARK"
+target_class: "mark-white-structure-v1"
+stamp_uncertainty_semantics: "unknown"
+# 没有本片/板子实测R/Q，不猜默认值；离线对照用显式profile。
+profile: ""

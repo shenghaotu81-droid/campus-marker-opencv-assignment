@@ -1,0 +1,28 @@
+Internal ctest changing into directory: /tmp/single-build
+Test project /tmp/single-build
+      Start  1: config_error_test
+ 1/11 Test  #1: config_error_test ................   Passed    0.00 sec
+      Start  2: corner_edge_fit_test
+ 2/11 Test  #2: corner_edge_fit_test .............   Passed    0.02 sec
+      Start  3: detector_contract_test
+ 3/11 Test  #3: detector_contract_test ...........   Passed    0.02 sec
+      Start  4: screen_order_test
+ 4/11 Test  #4: screen_order_test ................   Passed    0.00 sec
+      Start  5: match_quad_test
+ 5/11 Test  #5: match_quad_test ..................   Passed    0.05 sec
+      Start  6: debug_renderer_test
+ 6/11 Test  #6: debug_renderer_test ..............   Passed    0.00 sec
+      Start  7: offline_chain_test
+ 7/11 Test  #7: offline_chain_test ...............   Passed    0.57 sec
+      Start  8: pose_contract_test
+ 8/11 Test  #8: pose_contract_test ...............   Passed    0.00 sec
+      Start  9: tag_detector_test
+ 9/11 Test  #9: tag_detector_test ................   Passed    0.01 sec
+      Start 10: tracking_contract_test
+10/11 Test #10: tracking_contract_test ...........   Passed    0.00 sec
+      Start 11: tracking_io_test
+11/11 Test #11: tracking_io_test .................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Total Test time (real) =   0.68 sec

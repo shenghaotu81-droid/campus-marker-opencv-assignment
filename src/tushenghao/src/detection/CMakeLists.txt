@@ -6,10 +6,7 @@ add_library(vision_detection
     corners/measurement/corner_resolver.cpp
     corners/observation/corner_observation.cpp
     corners/fitting/corner_edge_fit.cpp
-    corners/fitting/periodic_line_fit.cpp
-    corners/validation/corner_evidence_validation.cpp
     corners/ordering/screen_order.cpp
-    corners/validation/detection_validator.cpp
     corners/publication/detection_publication.cpp
     pipeline/decode/decode_stage.cpp
     pipeline/input/frame_sequence.cpp

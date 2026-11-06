@@ -24,6 +24,7 @@ if(MARK_BUILD_G2)
     target_link_libraries(mark_apriltag INTERFACE "${APRILTAG_LIBRARY}" Threads::Threads)
     add_library(vision_pose
 
+        io/pose_io.cpp
         validation/pose_geometry.cpp
         estimation/pose_estimator.cpp
         tag/tag_detector.cpp

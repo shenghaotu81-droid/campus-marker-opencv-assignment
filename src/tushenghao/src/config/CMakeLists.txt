@@ -1,5 +1,5 @@
 # Q01–Q06：配置自己拥有源表；仅依赖值与纯数学，不能链接 pose/tracking 实现。
-add_library(vision_config detector/config.cpp model/marker_geometry.cpp)
+add_library(vision_config detector/config.cpp)
 target_link_libraries(vision_config PUBLIC vision_types vision_math)
 target_include_directories(vision_config PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 if(MARK_BUILD_G2)

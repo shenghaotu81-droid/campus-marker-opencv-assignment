@@ -1,0 +1,44 @@
+[  4%] Built target vision_math
+[  8%] Built target vision_observability
+[ 18%] Built target vision_calibration
+[ 22%] Built target vision_config
+[ 26%] Built target calibration_tool
+[ 28%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/execution/detector.cpp.o
+[ 30%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/input/frame_sequence.cpp.o
+[ 32%] Linking CXX static library libvision_detection.a
+[ 50%] Built target vision_detection
+[ 52%] Building CXX object tests/config/CMakeFiles/config_error_test.dir/config_error_test.cpp.o
+[ 54%] Building CXX object tests/detection/CMakeFiles/corner_edge_fit_test.dir/corners/corner_edge_fit_test.cpp.o
+[ 56%] Building CXX object src/app/CMakeFiles/vision_app.dir/offline/offline_runner.cpp.o
+[ 58%] Linking CXX executable ../../config_error_test
+[ 58%] Built target config_error_test
+[ 60%] Building CXX object tests/detection/CMakeFiles/detector_contract_test.dir/pipeline/detector_contract_test.cpp.o
+[ 62%] Building CXX object src/app/CMakeFiles/vision_app.dir/rendering/debug_renderer.cpp.o
+[ 64%] Linking CXX executable ../../corner_edge_fit_test
+[ 64%] Built target corner_edge_fit_test
+[ 66%] Building CXX object tests/detection/CMakeFiles/screen_order_test.dir/corners/screen_order_test.cpp.o
+[ 68%] Linking CXX executable ../../screen_order_test
+[ 70%] Linking CXX executable ../../detector_contract_test
+[ 70%] Built target screen_order_test
+[ 72%] Building CXX object src/app/CMakeFiles/vision_app.dir/reporting/run_console.cpp.o
+[ 74%] Building CXX object tests/detection/CMakeFiles/match_quad_test.dir/geometry/match_quad_test.cpp.o
+[ 74%] Built target detector_contract_test
+[ 76%] Building CXX object tests/validation/CMakeFiles/detection_replay.dir/detection_replay.cpp.o
+[ 78%] Linking CXX static library libvision_app.a
+[ 80%] Built target vision_app
+[ 82%] Building CXX object tests/validation/CMakeFiles/frozen_fit_replay.dir/frozen_fit_replay.cpp.o
+[ 84%] Linking CXX executable ../../detection_replay
+[ 84%] Built target detection_replay
+[ 86%] Building CXX object tools/apps/CMakeFiles/marker_app.dir/marker/main.cpp.o
+[ 88%] Linking CXX executable ../../frozen_fit_replay
+[ 90%] Linking CXX executable ../../match_quad_test
+[ 90%] Built target frozen_fit_replay
+[ 90%] Built target match_quad_test
+[ 92%] Building CXX object tests/app/CMakeFiles/debug_renderer_test.dir/rendering/debug_renderer_test.cpp.o
+[ 94%] Building CXX object tests/app/CMakeFiles/offline_chain_test.dir/offline/offline_chain_test.cpp.o
+[ 96%] Linking CXX executable ../../marker_app
+[ 98%] Linking CXX executable ../../debug_renderer_test
+[ 98%] Built target marker_app
+[ 98%] Built target debug_renderer_test
+[100%] Linking CXX executable ../../offline_chain_test
+[100%] Built target offline_chain_test

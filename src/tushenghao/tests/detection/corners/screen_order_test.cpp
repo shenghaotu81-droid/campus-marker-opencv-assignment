@@ -1,30 +1,38 @@
-#include "assertions.hpp"
 #include "vision/types/detection/corner_types.hpp"
-#include "vision/config/detector_config.hpp"
-#include "detector/config.hpp"
+#include "corners/publication/detection_publication.hpp"
+#include "assertions.hpp"
 #include <algorithm>
 #include <iostream>
-int main(){try{
-    using test_support::check;
-    mark::CornerConfig c;
-    for(double angle:{-10.,0.,10.}) {
-        std::array<cv::Point2d,4> q{{{0,0},{100,0},{100,80},{0,80}}};
-        double a=angle*CV_PI/180;
-        for(auto &p:q)p={300+std::cos(a)*p.x-std::sin(a)*p.y,200+std::sin(a)*p.x+std::cos(a)*p.y};
-        for(int start=0;start<4;++start){auto ring=q;std::rotate(ring.begin(),ring.begin()+start,ring.end());
-            auto r=mark::orderScreenCorners(ring,c);check(bool(r.screen_order_),"shake rejected");
-            check(r.screen_order_->screen_points_==q,"small shake changed screen slots");
-            check(r.screen_order_->physical_to_screen_==c.physical_to_screen_,"mapping inferred from input");}
+int main()
+{
+    try{
+        using test_support::check;
+        for (double degrees:{-10., 0., 10.})
+        {
+            mark::CornerPoints q{{{0, 0}, {100, 0}, {100, 80}, {0, 80}}};
+            double a = degrees * CV_PI / 180;
+            for (auto &p:q)
+                p = {150 + std::cos(a) * p.x - std::sin(a) * p.y, 150 + std::sin(a) * p.x + std::cos(a) * p.y};
+            for (int start = 0; start < 4; ++start)
+            {
+                auto input = q;
+                std::rotate(input.begin(), input.begin() + start, input.end());
+                std::string why;
+                auto sorted = mark::orderScreenCorners(input, why);
+                check(sorted && *sorted == q, "shake changed screen slots");
+            }
+        }
+        std::string why;
+        mark::CornerPoints duplicate{{{0, 0}, {0, 0}, {10, 10}, {0, 10}}};
+        check(!mark::orderScreenCorners(duplicate, why), "duplicate accepted");
+        mark::CornerPoints roundoff{{{100, 100}, {100 + 1e-6, 100}, {200, 200}, {100, 200}}};
+        check(!mark::publishFloatDetection(roundoff, {300, 300}, {}, why), "float collision accepted");
+        mark::CornerPoints boundary{{{10, 10}, {300 - 1e-7, 10}, {299, 200}, {10, 200}}};
+        check(!mark::publishFloatDetection(boundary, {300, 300}, {}, why), "float out of image accepted");
+        return 0;
     }
-    std::array<cv::Point2d,4> q{{{0,0},{100,0},{100,80},{0,80}}};
-    c.physical_to_screen_={{3,0,1,2}};
-    check(mark::orderScreenCorners(q,c).screen_order_->physical_to_screen_==c.physical_to_screen_,"installation mapping ignored");
-    c.physical_to_screen_={{0,0,2,3}};
-    check(!mark::orderScreenCorners(q,c).screen_order_,"invalid mapping accepted");
-    mark::DetectorConfig d;d.corner_=c;bool rejected=false;
-    try{mark::validateDetectorConfig(d);}catch(const std::exception&){rejected=true;}
-    check(rejected,"config validation accepted duplicate mapping");
-    c={};q[1]=q[0];check(!mark::orderScreenCorners(q,c).screen_order_,"duplicate point accepted");
-    q={{{0,0},{1,0},{2,0},{3,0}}};check(!mark::orderScreenCorners(q,c).screen_order_,"collinear accepted");
-    std::cout<<"fixed screen mapping and shake PASS\n";return 0;
-}catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}}
+    catch (const std::exception &e){
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+}

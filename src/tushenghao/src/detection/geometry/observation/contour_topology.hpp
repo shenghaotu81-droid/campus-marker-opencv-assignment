@@ -1,7 +1,8 @@
 #pragma once
 #include "vision/math/observed_geometry.hpp"
 #include <opencv2/imgproc.hpp>
-namespace mark {
+namespace mark
+{
     // 面积绕向归一化凹凸，反向遍历轮廓也保持同一结构身份。
     inline double normalizedTurn(const std::vector<cv::Point2d> &p, size_t i)
     {
@@ -15,53 +16,43 @@ namespace mark {
         return (a.x * b.y - a.y * b.x) * area;
     }
 
-    // RDP会同时删除两个近邻顶点，顶点数可能从7直接跳5；补枚举至多两个额外顶点。
-    // 仅保留实测轮廓上的顶点，每条合并边覆盖的完整原始弧都必须在同一epsilon上限内。
-    // 不改变完整轮廓的边界/面积指标，不据模型投影产生新点，不增加误差预算。
-    inline std::vector<std::vector<cv::Point2d>>
-    boundedTopologyPolygons(const std::vector<cv::Point> &contour,
-                            const std::vector<cv::Point> &simple, size_t target, double epsilon)
+    // 六边L/M的RDP偶尔保留一个额外顶点。只修复7→6，删除无贡献的8点组合搜索。
+    inline std::vector<std::vector<cv::Point2d> > cornerTopologyPolygons(
+        const std::vector<cv::Point> &contour, const std::vector<cv::Point> &simple, double epsilon)
     {
-        std::vector<std::vector<cv::Point2d>> result;
-        if (simple.size() == target)
+        std::vector<std::vector<cv::Point2d> > result;
+        if (simple.size() == 6)
         {
             result.emplace_back(simple.begin(), simple.end());
             return result;
         }
-        if (simple.size() < target || simple.size() > target + 2 || simple.size() > 8)
+        if (simple.size() != 7)
             return result;
         std::vector<size_t> indices;
-        for (auto p : simple)
+        for (auto p:simple)
         {
-            auto found = std::find(contour.begin(), contour.end(), p);
-            if (found == contour.end())
+            auto it = std::find(contour.begin(), contour.end(), p);
+            if (it == contour.end())
                 return result;
-            indices.push_back(found - contour.begin());
+            indices.push_back(size_t(it - contour.begin()));
         }
-        // 闭合RDP维持原轮廓遍历顺序；位掩码最多2^8，候选数有固定上界。
-        for (unsigned mask = 0; mask < (1u << simple.size()); ++mask)
+        for (size_t omit = 0; omit < 7; ++omit)
         {
-            size_t count = 0;
-            for (size_t i = 0; i < simple.size(); ++i)
-                count += (mask >> i) & 1u;
-            if (count != target)
-                continue;
-            std::vector<size_t> selected;
             std::vector<cv::Point2d> polygon;
-            for (size_t i = 0; i < simple.size(); ++i)
-                if ((mask >> i) & 1u)
+            std::vector<size_t> selected;
+            for (size_t i = 0; i < 7; ++i)
+                if (i != omit)
                 {
-                    selected.push_back(i);
                     polygon.push_back(simple[i]);
+                    selected.push_back(indices[i]);
                 }
             bool bounded = true;
-            for (size_t i = 0; i < target && bounded; ++i)
+            for (size_t i = 0; i < 6 && bounded; ++i)
             {
-                size_t begin = indices[selected[i]], end = indices[selected[(i + 1) % target]];
+                size_t begin = selected[i], end = selected[(i + 1) % 6];
                 for (size_t k = begin;; k = (k + 1) % contour.size())
                 {
-                    if (observed::segmentDistance(contour[k], polygon[i],
-                                                  polygon[(i + 1) % target]) > epsilon)
+                    if (observed::segmentDistance(contour[k], polygon[i], polygon[(i + 1) % 6]) > epsilon)
                     {
                         bounded = false;
                         break;

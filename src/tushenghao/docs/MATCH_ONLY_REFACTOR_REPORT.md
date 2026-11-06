@@ -1,5 +1,7 @@
 # MARK match-only 与两路线拟合改动报告
 
+> 历史快照：后续单候选拟合与156项裁决已实施，现状见[最新报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)和[flow-guide](flow-guide.md)。本文保留当时验证和接口含义，不覆盖当前代码。
+
 > 后续状态：G2预算／消歧和视频容器已在a582c48之后更新，见[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。本文的历史复跑数字和旧输出名保留原时点含义；现行执行顺序见[flow-guide](flow-guide.md)。
 
 工作分支：`refactor/vision-lean`。比较基线：`b600635`（第一批交付）。本轮先提交规则草案 `16b72b0`，再按试验结果提交规则取舍 `e24568d`，之后实施代码（`1b3aff4`，随后`a01604a`清理未用周期损失计算）。最终规则见 [MATCH_ONLY_RULES.md](MATCH_ONLY_RULES.md)。

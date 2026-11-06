@@ -1,10 +1,8 @@
 #pragma once
 #include "vision/types/detection/corner_types.hpp"
 #include "vision/types/detector_types.hpp"
-#include <optional>
-namespace mark {
-// 原double排序在float舍入后可能不再规范；此入口仅发布已验证的物理测量，不重取证。
-std::optional<Detection> publishFloatDetection(const CornerMeasurement& measurement,
-    cv::Size original_size, const CornerConfig& config,
-    std::string& rejection_reason);
+#include "vision/config/detector_config.hpp"
+namespace mark
+{
+    std::optional<Detection> publishFloatDetection(const CornerPoints &, cv::Size, const CornerConfig &, std::string &);
 }

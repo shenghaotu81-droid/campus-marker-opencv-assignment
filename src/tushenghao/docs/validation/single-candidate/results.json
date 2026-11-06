@@ -1,0 +1,141 @@
+{
+  "baseline": "f1ee955",
+  "before_status": {
+    "UNIQUE": 1054,
+    "NOT_DETECTED": 588,
+    "AMBIGUOUS": 34
+  },
+  "after_status": {
+    "AMBIGUOUS": 1088,
+    "NOT_DETECTED": 588
+  },
+  "before_best_rmse_px": {
+    "n": 1088,
+    "median": 0.38242876296479317,
+    "p95": 0.7663300748891906,
+    "max": 1.0370588351410313,
+    "mean": 0.3999580809097086
+  },
+  "after_best_rmse_px": {
+    "n": 1088,
+    "median": 0.3575726632510804,
+    "p95": 0.6906709466789221,
+    "max": 0.9263200336298759,
+    "mean": 0.3733586412790419
+  },
+  "lost_pose_frames": [],
+  "gained_pose_frames": [],
+  "lost_detection_frames": [],
+  "gained_detection_frames": [],
+  "after_corners": 4352,
+  "corner_displacement_px": {
+    "n": 4352,
+    "median": 0.3467311177385653,
+    "p95": 0.8391299308111037,
+    "max": 1.6020282777498056,
+    "mean": 0.3737356012030201
+  },
+  "nominal_pose_translation_change_m": {
+    "n": 1088,
+    "median": 0.0012972764721425802,
+    "p95": 0.0034186575813385145,
+    "max": 0.024406491345137372,
+    "mean": 0.0015700138480959963
+  },
+  "before_g4": {
+    "frames": 1676,
+    "states": {
+      "MEASURED": 1050,
+      "COASTING": 53,
+      "LOST": 573
+    },
+    "velocity_frames": 1011,
+    "track_ids": 13,
+    "position_frames": 1103,
+    "measured_position_residual_to_nominal_pose_m": {
+      "n": 1085,
+      "median": 0.0021957548729746425,
+      "p95": 0.007222782487881062,
+      "max": 0.03589143587360481,
+      "mean": 0.0029484646656970895
+    },
+    "reported_nis": {
+      "n": 1037,
+      "median": 0.38947964794939965,
+      "p95": 5.719148031386753,
+      "max": 12.54733843174664,
+      "mean": 1.3422588365155392
+    },
+    "minimum_covariance_eigenvalue": 1.2611801072634633e-06,
+    "maximum_covariance_eigenvalue": 0.31227321724815144
+  },
+  "after_g4": {
+    "frames": 1676,
+    "states": {
+      "MEASURED": 1088,
+      "COASTING": 588
+    },
+    "velocity_frames": 1675,
+    "track_ids": 1,
+    "position_frames": 1676,
+    "measured_position_residual_to_nominal_pose_m": {
+      "n": 1088,
+      "median": 0.0022390488226441616,
+      "p95": 0.007268144502404023,
+      "max": 0.015079026508469453,
+      "mean": 0.0028572355435529124
+    },
+    "reported_nis": {
+      "n": 1087,
+      "median": 0.5767639841970672,
+      "p95": 8.908428479643453,
+      "max": 58.05671193934961,
+      "mean": 2.3684776466719946
+    },
+    "minimum_covariance_eigenvalue": 7.397535780726494e-07,
+    "maximum_covariance_eigenvalue": 0.25499988020240605
+  },
+  "common_g4_position_change_m": {
+    "n": 1103,
+    "median": 0.0013902529699980554,
+    "p95": 0.003719741481918919,
+    "max": 0.012975062865087681,
+    "mean": 0.001676151668331731
+  },
+  "limitations": "No independent real corner/pose/velocity ground truth. Residual to nominal PnP is an internal consistency diagnostic, not position accuracy. Old reported NIS is gate-truncated; new NIS is unthresholded. Same reference R/Q/vv values, conditional camera-relative model only.",
+  "common_reference_g4_residual_m": {
+    "frames": 1085,
+    "reference": "Current nominal PnP translation, identical frames and reference for both filters; not ground truth",
+    "before": {
+      "n": 1085,
+      "median": 0.002557338008785598,
+      "p95": 0.007650407368919059,
+      "max": 0.019194876211319413,
+      "mean": 0.0031565271387149823
+    },
+    "after": {
+      "n": 1085,
+      "median": 0.002237360363224829,
+      "p95": 0.007268144502404023,
+      "max": 0.015079026508469453,
+      "mean": 0.0028483830911421953
+    }
+  },
+  "common_filtered_p0_reprojection_px": {
+    "reference": "Current detected P0; filtered translation projected as model origin, not four-corner PnP RMSE or ground truth",
+    "before": {
+      "n": 1085,
+      "median": 1.8351368325873376,
+      "p95": 13.113863710840931,
+      "max": 42.807196337734084,
+      "mean": 4.168809489833407
+    },
+    "after": {
+      "n": 1085,
+      "median": 2.1822053248882365,
+      "p95": 11.111524909517616,
+      "max": 29.494072596516464,
+      "mean": 3.814166302008995
+    }
+  }
+}

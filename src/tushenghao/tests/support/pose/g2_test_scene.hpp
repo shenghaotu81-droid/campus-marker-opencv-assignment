@@ -1,80 +1,46 @@
-// 理想场景/主动断言
-// 造测试用的 G2Config 和时间戳。注意 18-20 行写死的 0.05/0.1/1——测试专用理想阈值，严禁抄进生产 pose.yaml
-// 给测试喂数据的，别跟生产配置搞混（两个测试（pose_contract_test、tag_detector_test））
 #pragma once
-
 #include "vision/pose/pose_estimator.hpp"
-#include <algorithm>
+#include <opencv2/calib3d.hpp>
 #include <filesystem>
 #include <stdexcept>
-#include <vector>
-#include <opencv2/calib3d.hpp>
-
 namespace g2_test
 {
-// 测试专属理想成像预算，只验证算法/契约；严禁复制到生产 pose.yaml。
-inline mark::pose::G2Config config()
-{
-    const auto root = std::filesystem::path(VISION_SOURCE_ROOT);
-    auto c = mark::pose::load_pose_config(root / "config/pose.yaml");
-    c.budgets_.max_rmse_px_ = 0.05;
-    c.budgets_.max_corner_error_px_ = 0.1;
-    // 旧筛选契约与新差距规则独立测试，避免生产调参改变测试前提。
-    c.selection_.min_rmse_gap_px_.reset();
-    return c;
-}
+    inline void require(bool b, const char *m)
+    {
+        if (!b)
+            throw std::runtime_error(m);
+    }
 
-inline mark::pose::CaptureStamp stamp(const mark::pose::G2Config &c)
-{
-    mark::pose::CaptureStamp s;
-    s.session_id_ = "synthetic-test";
-    s.camera_id_ = c.camera_.camera_id_;
-    s.clock_domain_ = "synthetic-clock";
-    s.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
-    s.frame_id_ = 10;
-    s.received_us_ = 1000000;
-    s.exposure_us_ = 999000;
-    s.time_uncertainty_s_ = 0;
-    return s;
-}
+    inline mark::pose::G2Config config()
+    {
+        return mark::pose::load_pose_config(std::filesystem::path(VISION_SOURCE_ROOT) / "config/pose.yaml");
+    }
 
-inline mark::pose::RigidPose truth()
-{
-    return {cv::Vec3d(0.4, -0.3, 0.2), cv::Vec3d(-0.04, -0.04, 0.55)};
-}
+    inline mark::pose::CaptureStamp stamp(const mark::pose::G2Config &c)
+    {
+        mark::pose::CaptureStamp s;
+        s.session_id_ = "fixture";
+        s.camera_id_ = c.camera_.camera_id_;
+        s.clock_domain_ = "fixture";
+        s.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
+        s.frame_id_ = 1;
+        s.received_us_ = 0;
+        return s;
+    }
 
-// 从明确真值投影，不通过被测求解器生成目标位姿。
-inline std::array<cv::Point2d, 4> pixels(const mark::pose::G2Config &c)
-{
-    const auto p = truth();
-    std::vector<cv::Point2d> projected;
-    cv::projectPoints(std::vector<cv::Point3d>(c.mark_points_m_.begin(), c.mark_points_m_.end()),
-                      p.rvec_, p.t_m_, c.camera_.K_, c.camera_.dist_, projected);
-    std::array<cv::Point2d, 4> out;
-    std::copy(projected.begin(), projected.end(), out.begin());
-    return out;
-}
+    inline mark::pose::RigidPose truth()
+    {
+        return {{.15, -.1, .05}, {-.04, -.04, .55}};
+    }
 
-inline mark::FrameResult raw(const mark::pose::G2Config &c)
-{
-    const auto s = stamp(c);
-    mark::FrameResult out{};
-    out.frame_id = s.frame_id_;
-    out.timestamp_us = *s.exposure_us_;
-    out.status = mark::Status::DETECTED;
-    mark::Detection d{};
-    const auto p = pixels(c);
-    for (std::size_t i = 0; i < p.size(); ++i)
-        d.corners[i] = p[i];
-    d.attributes.orientation = std::array<int, 4>{{0, 1, 2, 3}};
-    out.detections.push_back(d);
-    return out;
-}
+    inline std::array<cv::Point2d, 4> pixels(const mark::pose::G2Config &c)
+    {
+        std::vector<cv::Point2d> p;
+        auto t = truth();
+        cv::projectPoints(std::vector<cv::Point3d>(c.mark_points_m_.begin(), c.mark_points_m_.end()), t.rvec_, t.t_m_, c.camera_.K_, c.camera_.dist_, p);
+        std::array<cv::Point2d, 4> out;
+        std::copy(p.begin(), p.end(), out.begin());
+        return out;
+    }
 
-// 不使用 assert：Release 下测试也必须真的失败，不能因 NDEBUG 自动变绿。
-inline void require(bool value, const char *message)
-{
-    if (!value)
-        throw std::runtime_error(message);
 }
-} // namespace g2_test

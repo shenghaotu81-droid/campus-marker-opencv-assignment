@@ -1,284 +1,120 @@
-// MARK适配、IPPE多解、原筛选及显式差距消歧。
 #include "vision/pose/pose_estimator.hpp"
 #include "validation/pose_geometry.hpp"
-
-#include <cmath>
-#include <set>
+#include <algorithm>
 #include <opencv2/calib3d.hpp>
-
 namespace mark::pose
 {
-namespace
-{
-// 筛候选（安装约束：z 范围/法向）
-// 不同安装条件分别排除候选；没有配置约束时不擅自假设目标法向朝向。
-bool passes_constraints(const RigidPose &p, const SelectionConfig &s)
-{
-    cv::Matx33d r;
-    if (s.min_normal_z_) cv::Rodrigues(p.rvec_, r);
-    return (!s.min_z_m_ || (p.t_m_[2] >= *s.min_z_m_ && p.t_m_[2] <= *s.max_z_m_)) &&
-           (!s.min_normal_z_ || (r(2, 2) >= *s.min_normal_z_ && r(2, 2) <= *s.max_normal_z_));
-}
-
-// 判断 prior 能不能用
-// 历史只有在身份、时钟、严格先后与年龄都匹配时可参与消歧；没有默认追踪器。
-bool prior_is_usable(const PosePrior &p, const CaptureStamp &s,
-                     const std::string &id_, const SelectionConfig &c)
-{
-    if (!c.prior_enabled_ || !p.trusted_unique_ || !detail::valid_stamp(p.stamp_) ||
-        !s.exposure_us_ || !p.stamp_.exposure_us_ || !s.time_uncertainty_s_ ||
-        !p.stamp_.time_uncertainty_s_ || p.target_id_ != id_ ||
-        p.stamp_.session_id_ != s.session_id_ || p.stamp_.camera_id_ != s.camera_id_ ||
-        p.stamp_.clock_domain_ != s.clock_domain_ || p.stamp_.frame_id_ >= s.frame_id_ ||
-        *p.stamp_.exposure_us_ >= *s.exposure_us_)
-        return false;
-    for (int i = 0; i < 3; ++i)
-        if (!std::isfinite(p.pose_.rvec_[i]) || !std::isfinite(p.pose_.t_m_[i]))
-            return false;
-    // 时间误差加入最坏年龄，不能把不确定性越大理解成历史越新。
-    const long double age = (static_cast<long double>(*s.exposure_us_) -
-                             *p.stamp_.exposure_us_) / 1e6L;
-    return age + *s.time_uncertainty_s_ + *p.stamp_.time_uncertainty_s_ <= *c.prior_max_age_s_;
-}
-
-// 候选离 prior 够不够近
-bool passes_prior(const RigidPose &p, const PosePrior &prior, const SelectionConfig &s)
-{
-    return cv::norm(p.t_m_ - prior.pose_.t_m_) <= *s.prior_max_translation_m_ &&
-           detail::rotation_distance(p.rvec_, prior.pose_.rvec_) <= *s.prior_max_rotation_rad_;     // norm算向量长度，passes_prior 里算平移差
-}
-} // namespace
-
-// 构造函数：收 G2Config，先 validate_pose_config 校验，再把 K/dist clone() 深拷贝。
-PoseEstimator::PoseEstimator(G2Config config) : config_(std::move(config))
-{
-    validate_pose_config(config_);
-    // cv::Mat 浅拷贝会允许外部改 K/dist；持有私有副本，避免求解中途被修改。
-    config_.camera_.K_ = config_.camera_.K_.clone();
-    config_.camera_.dist_ = config_.camera_.dist_.clone();
-}
-
-// P11 配置观察：输入本实例配置，输出无可写别名的值；求解仍只读内部副本。
-G2Config PoseEstimator::config() const
-{
-    G2Config snapshot = config_;
-    snapshot.camera_.K_ = config_.camera_.K_.clone();
-    snapshot.camera_.dist_ = config_.camera_.dist_.clone();
-    return snapshot;
-}
-
-// MARK完整处理：验输入、转物理序、调求解、定 control_usable_
-// estimate_mark 做 MARK 特有的预处理（查时间戳、转物理序），然后把 4 对 2D-3D 点丢给 estimate_planar 做真正的 IPPE 求解
-
-
-// orientation[p] 是物理角到屏幕 slot 的映射；不能把屏幕排序当物理身份。
-PoseObservation PoseEstimator::estimate_mark(
-    const FrameResult &raw, std::size_t index, cv::Size size, const CaptureStamp &stamp_,
-    const std::optional<PosePrior> &prior) const
-{
-    PoseObservation out;
-    out.stamp_ = stamp_;
-    out.source_ = "MARK";
-    out.target_id_ = config_.mark_target_id_;
-    out.detection_index_ = index;
-    const auto frame_time = stamp_.exposure_us_.value_or(stamp_.received_us_);
-    // 当前帧/物理对应先检查，随后原预算筛选与差距消歧；Unknown时间仍是质量信息。
-    if (raw.frame_id != stamp_.frame_id_ || raw.timestamp_us != frame_time)
+    PoseEstimator::PoseEstimator(G2Config c) : config_(std::move(c))
     {
-        out.reasons_.push_back("FRAME_STAMP_MISMATCH");
-        return out;
+        validate_pose_config(config_);
+        config_.camera_.K_ = config_.camera_.K_.clone();
+        config_.camera_.dist_ = config_.camera_.dist_.clone();
     }
-    if (raw.status != Status::DETECTED)
+
+    PoseObservation PoseEstimator::estimate_mark(const FrameResult &raw, size_t index, cv::Size size, const CaptureStamp &stamp) const
     {
-        out.status_ = raw.status == Status::NOT_DETECTED ? PoseStatus::NotDetected : PoseStatus::InvalidInput;
-        out.reasons_.push_back("RAW_DETECTOR_STATUS_UNAVAILABLE");
-        return out;
-    }
-    if (index >= raw.detections.size())
-    {
-        out.reasons_.push_back("RAW_DETECTION_INDEX_OUT_OF_RANGE");
-        return out;
-    }
-    const auto &d = raw.detections[index];
-    out.corner_quality_flags_ = d.quality_flags;
-    if (!d.attributes.orientation)
-    {
-        out.status_ = PoseStatus::CorrespondenceMissing;
-        out.reasons_.push_back("PHYSICAL_ORIENTATION_MISSING");
-        return out;
-    }
-    std::set<int> seen;
-    std::array<cv::Point2d, 4> pixels;
-    for (std::size_t p = 0; p < pixels.size(); ++p)
-    {
-        const int slot = (*d.attributes.orientation)[p];
-        if (slot < 0 || slot >= 4 || !seen.insert(slot).second)
+        PoseObservation out;
+        out.stamp_ = stamp;
+        out.source_ = "MARK";
+        out.target_id_ = config_.mark_target_id_;
+        out.detection_index_ = index;
+        if (raw.frame_id != stamp.frame_id_ || raw.timestamp_us != stamp.exposure_us_.value_or(stamp.received_us_))
         {
-            out.reasons_.push_back("ORIENTATION_NOT_PERMUTATION");
+            out.reason_ = "FRAME_STAMP_MISMATCH";
             return out;
         }
-        pixels[p] = d.corners[slot];     // orientation 映射：屏幕序转物理序
-    }
-    out = estimate_planar(config_.mark_points_m_, pixels, size, stamp_,
-                          config_.mark_target_id_, prior);
-    out.source_ = "MARK";
-    out.detection_index_ = index;
-    out.corner_quality_flags_ = d.quality_flags;
-    out.control_usable_ = out.status_ == PoseStatus::Unique;
-    return out;
-}
-
-// 通用求解：给 4 对 2D-3D 点算位姿（目标系到相机系（K/dist）的变换（R/t））
-
-// 保留IPPE多解；先原筛选，再按显式差距消歧，接近的两解仍为Ambiguous。
-PoseObservation PoseEstimator::estimate_planar(
-    const std::array<cv::Point3d, 4> &object,
-    const std::array<cv::Point2d, 4> &image,
-    cv::Size size, const CaptureStamp &stamp_, const std::string &id_,
-    const std::optional<PosePrior> &prior) const
-{
-    PoseObservation out;
-    out.stamp_ = stamp_;
-    out.source_ = "PLANAR";
-    out.target_id_ = id_;
-    if (!detail::valid_stamp(stamp_) || id_.empty() ||
-        stamp_.camera_id_ != config_.camera_.camera_id_ || size != config_.camera_.image_size_ ||
-        !detail::valid_quad(image, size))
-    {
-        out.reasons_.push_back("STAMP_CAMERA_SIZE_OR_QUAD_INVALID");
+        if (raw.status != Status::DETECTED)
+        {
+            out.status_ = raw.status == Status::NOT_DETECTED ? PoseStatus::NotDetected : PoseStatus::InvalidInput;
+            return out;
+        }
+        if (index >= raw.detections.size())
+        {
+            out.reason_ = "DETECTION_INDEX_INVALID";
+            return out;
+        }
+        const auto &d = raw.detections[index];
+        auto mapping = d.orientation;
+        std::sort(mapping.begin(), mapping.end());
+        if (mapping != std::array<int, 4>{{0, 1, 2, 3}})
+        {
+            out.reason_ = "MAPPING_INVALID";
+            return out;
+        }
+        std::array<cv::Point2d, 4> pixels;
+        for (size_t i = 0; i < 4; ++i)
+            pixels[i] = d.corners[d.orientation[i]];
+        out = estimate_planar(config_.mark_points_m_, pixels, size, stamp, config_.mark_target_id_);
+        out.source_ = "MARK";
+        out.detection_index_ = index;
         return out;
     }
-    // 通用入口只接受本期四点平面；防止 NaN、共线、乱序模型进入 IPPE。
-    std::array<cv::Point2d, 4> model_xy;
-    for (std::size_t i = 0; i < object.size(); ++i)
-    {
-        if (!std::isfinite(object[i].x) || !std::isfinite(object[i].y) || object[i].z != 0)
-        {
-            out.reasons_.push_back("OBJECT_NOT_FINITE_Z0_PLANE");
-            return out;
-        }
-        model_xy[i] = {object[i].x, object[i].y};
-    }
-    double previous_cross = 0;
-    for (std::size_t i = 0; i < model_xy.size(); ++i)
-    {
-        const double cross = (model_xy[(i + 1) % 4] - model_xy[i]).cross(
-            model_xy[(i + 2) % 4] - model_xy[(i + 1) % 4]);
-        if (cross == 0 || (i && cross * previous_cross <= 0))
-        {
-            out.reasons_.push_back("OBJECT_QUAD_DEGENERATE");
-            return out;
-        }
-        previous_cross = cross;
-    }
-    const auto &b = config_.budgets_;
-    const bool budgets_ready = b.max_rmse_px_ && b.max_corner_error_px_;
 
-    const bool use_prior = prior && prior_is_usable(*prior, stamp_, id_, config_.selection_);
-    if (prior && !use_prior)
-        out.reasons_.push_back("PRIOR_IGNORED");
-    const std::vector<cv::Point3d> objects(object.begin(), object.end());
-    const std::vector<cv::Point2d> pixels(image.begin(), image.end());
-    std::vector<cv::Mat> rotations, translations;
-    std::vector<std::size_t> comparable;
-    try
+    PoseObservation PoseEstimator::estimate_planar(const std::array<cv::Point3d, 4> &object, const std::array<cv::Point2d, 4> &image, cv::Size size, const CaptureStamp &stamp, const std::string &id) const
     {
-        // 理解：
-        // r（rvec）：旋转向量，3 个数。方向=旋转轴，长度=转多少弧度。Rodrigues 转成 3×3 矩阵用（MARK 朝哪：MARK 自身坐标系相对相机转了多少；R=单位阵时，MARK 正对相机（和像平面平行）；有旋转就是斜了。）。
-        // t（tvec）：平移向量，3 个数 (x,y,z)，单位米。目标原点在相机坐标系里的位置（MARK 在哪：z 是距离（米），x/y 是左右/上下偏了多少。）。
-        cv::solvePnPGeneric(objects, pixels, config_.camera_.K_, config_.camera_.dist_,
-                            rotations, translations, false, cv::SOLVEPNP_IPPE);      // 解 PnP 问题——已知 3D 点和它们在图上的 2D 投影，反推相机位姿（R/t）。IPPE 是专给平面目标的算法，会返回多个候选（平面有二义性），不帮你选。
-        // IPPE 对平面目标一般返回 2 个候选
-        // prior可以用来排歧义Ambiguous，如果有个独立可信的历史位姿（prior），就拿 rotation_distance 和平移距离比：谁离 prior 近留谁，远的毙掉。现在默认关闭，G4 的 Kalman 预测可以当 prior 用
-        // 筛候选：evaluate_pose 独立复核（重投影误差、正深度）→ 查预算（RMSE/最大误差超了就毙）→ passes_constraints安装约束（z 范围/法向） → passes_prior（prior 开了才查）；四道全过才 eligible_=true；挂掉的 eligible_=false，最后数还剩几个合格的
-        for (std::size_t i = 0; i < rotations.size(); ++i)
+        PoseObservation out;
+        out.stamp_ = stamp;
+        out.source_ = "PLANAR";
+        out.target_id_ = id;
+        if (!stamp.valid() || id.empty() || stamp.camera_id_ != config_.camera_.camera_id_ || size != config_.camera_.image_size_ || !detail::valid_quad(image, size))
         {
-            RigidPose p;
-            for (int k = 0; k < 3; ++k)
+            out.reason_ = "STAMP_CAMERA_OR_QUAD_INVALID";
+            return out;
+        }
+        std::array<cv::Point2d, 4> xy;
+        for (size_t i = 0; i < 4; ++i)
+        {
+            auto p = object[i];
+            if (!std::isfinite(p.x) || !std::isfinite(p.y) || p.z != 0)
             {
-                p.rvec_[k] = rotations[i].at<double>(k);
-                p.t_m_[k] = translations[i].at<double>(k);
+                out.reason_ = "MODEL_INVALID";
+                return out;
             }
-            auto candidate = detail::evaluate_pose(p, object, image,
-                                                    config_.camera_.K_, config_.camera_.dist_);
-            if (candidate.reasons_.empty() && budgets_ready)
+            xy[i] = {p.x, p.y};
+        }
+        // 只检查模型确有二维范围/凸环，不重复相机与不可变配置验证。
+        double sign = 0;
+        for (size_t i = 0; i < 4; ++i)
+        {
+            double cross = (xy[(i + 1) % 4] - xy[i]).cross(xy[(i + 2) % 4] - xy[(i + 1) % 4]);
+            if (cross == 0 || (i && (cross > 0) != (sign > 0)))
             {
-                const bool constraints_ok = passes_constraints(p, config_.selection_);
-                const bool prior_ok = !use_prior || passes_prior(p, *prior, config_.selection_);
-                // 超绝对预算的支仍可用于差距保护；独立物理/安装/prior已排除的支不参与。
-                if (constraints_ok && prior_ok)
-                    comparable.push_back(out.candidates_.size());
-                if (candidate.rmse_px_ > *b.max_rmse_px_ ||
-                    candidate.max_error_px_ > *b.max_corner_error_px_)
-                    candidate.reasons_.push_back("REPROJECTION_BUDGET_EXCEEDED");
-                if (!constraints_ok)
-                    candidate.reasons_.push_back("INSTALLATION_CONSTRAINT_REJECTED");
-                if (!prior_ok)
-                    candidate.reasons_.push_back("TRUSTED_PRIOR_REJECTED");
-                candidate.eligible_ = candidate.reasons_.empty();
+                out.reason_ = "MODEL_DEGENERATE";
+                return out;
             }
-            out.candidates_.push_back(std::move(candidate));
+            sign = cross;
+        }
+        try {
+            std::vector<cv::Mat> rotations, translations;
+            cv::solvePnPGeneric(std::vector<cv::Point3d>(object.begin(), object.end()), std::vector<cv::Point2d>(image.begin(), image.end()), config_.camera_.K_, config_.camera_.dist_, rotations, translations, false, cv::SOLVEPNP_IPPE);
+            for (size_t i = 0; i < rotations.size(); ++i)
+            {
+                RigidPose p;
+                for (int k = 0; k < 3; ++k)
+                {
+                    p.rvec_[k] = rotations[i].at<double>(k);
+                    p.t_m_[k] = translations[i].at<double>(k);
+                }
+                auto c = detail::evaluate_pose(p, object, image, config_.camera_.K_, config_.camera_.dist_);
+                if (c)
+                    out.candidates_.push_back(*c);
+            }
+        }
+        catch (const cv::Exception &){
+            out.reason_ = "PNP_NUMERICAL_FAILURE";
+            out.candidates_.clear();
         }
         if (out.candidates_.empty())
         {
             out.status_ = PoseStatus::NoSolution;
-            out.reasons_.push_back("IPPE_RETURNED_NO_CANDIDATE");
             return out;
         }
-        if (!budgets_ready)
+        out.selected_index_ = size_t(std::min_element(out.candidates_.begin(), out.candidates_.end(), [](const auto &a, const auto &b)
         {
-            out.status_ = PoseStatus::BudgetMissing;
-            out.reasons_.push_back("UNMEASURED_POSE_BUDGETS");
-            return out;
-        }
-        // 先计绝对预算与原约束的合格支；零合格仍沿用原NoSolution。
-        std::size_t eligible_count=0, sole_index=0;
-        for (std::size_t i = 0; i < out.candidates_.size(); ++i)
-            if (out.candidates_[i].eligible_)
-                { ++eligible_count; sole_index=i; }
-        if (eligible_count && config_.selection_.min_rmse_gap_px_ && comparable.size() == 2)
-        {
-            auto best = comparable[0], other = comparable[1];
-            if (out.candidates_[other].rmse_px_ < out.candidates_[best].rmse_px_)
-                std::swap(best, other);
-            const double gap = out.candidates_[other].rmse_px_ - out.candidates_[best].rmse_px_;
-            if (gap < *config_.selection_.min_rmse_gap_px_)
-            {
-                out.status_ = PoseStatus::Ambiguous;
-                out.reasons_.push_back("REPROJECTION_GAP_INSUFFICIENT");
-                return out;
-            }
-            if (eligible_count == 2)
-            {
-                out.candidates_[other].eligible_ = false;
-                out.candidates_[other].reasons_.push_back("REPROJECTION_GAP_SEPARATED");
-                eligible_count = 1;
-                sole_index = best;
-            }
-        }
-        if (eligible_count != 1)
-        {
-            out.status_ = eligible_count == 0 ? PoseStatus::NoSolution : PoseStatus::Ambiguous;
-            out.reasons_.push_back(eligible_count == 0 ? "ALL_CANDIDATES_REJECTED" : "PLANAR_AMBIGUITY");
-            return out;
-        }
-        const auto index = sole_index;
-        const auto &selected = out.candidates_[index];
-        out.selected_index_ = index;
-        out.T_camera_target_ = selected.pose_;
-        out.selected_rmse_px_ = selected.rmse_px_;
+            return a.rmse_px_ < b.rmse_px_;
+        }) - out.candidates_.begin());
+        out.status_ = out.candidates_.size() == 1 ? PoseStatus::Unique : PoseStatus::Ambiguous;
+        return out;
+    }
 
-        out.status_ = PoseStatus::Unique;
-        out.control_usable_ = true;
-    }
-    catch (const cv::Exception &)
-    {
-        out.status_ = PoseStatus::NoSolution;
-        out.selected_index_.reset();
-        out.T_camera_target_.reset();
-        out.control_usable_ = false;
-        out.reasons_.push_back("OPENCV_SOLVER_EXCEPTION");
-    }
-    return out;
 }
-} // namespace mark::pose

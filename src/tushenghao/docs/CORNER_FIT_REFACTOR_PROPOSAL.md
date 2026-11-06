@@ -1,5 +1,7 @@
 # 角点拟合重构建议（第一批历史建议）
 
+> 历史快照：后续单候选拟合与156项裁决已实施，现状见[最新报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)和[flow-guide](flow-guide.md)。本文保留当时验证和接口含义，不覆盖当前代码。
+
 > 后续状态：G2预算／消歧和视频容器已在a582c48之后更新，见[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。本文的历史复跑数字和旧输出名保留原时点含义；现行执行顺序见[flow-guide](flow-guide.md)。
 
 > 历史文档：记录第一批（基线 b600635）的完成状态／建议。后续 match-only 实施已完成，当前结论和验证以 [MATCH_ONLY_REFACTOR_REPORT.md](MATCH_ONLY_REFACTOR_REPORT.md) 为准；本文旧的“尚未实施／保留D05–D09”等描述属于当时状态。

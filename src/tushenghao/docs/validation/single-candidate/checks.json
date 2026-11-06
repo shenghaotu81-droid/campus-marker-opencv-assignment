@@ -1,0 +1,67 @@
+{
+  "branch": "refactor/vision-lean-fixed",
+  "baseline": "f1ee955",
+  "checkpoint": "60c4a6f",
+  "protected_refs": {
+    "main": "864fbaeb57a37439eb29118945b279d8a8e42518",
+    "refactor/lean": "e09970c75fb4d4019ff2557cf6c2ea22fdcf7c0e",
+    "refactor/vision-lean": "10eae9b32db44536fdc463cd815ea39f0d15a026"
+  },
+  "video": {
+    "path": "data/raw/marker_video.avi",
+    "sha256": "aa1219a7a7b702ea1265be8752853a267c982a651afa0f7846f516f9517c9ac7",
+    "frames": 1676,
+    "detections": 1088,
+    "corners": 4352
+  },
+  "observations_identical_across_profiles": true,
+  "tracking_public_api_replay_identical": true,
+  "final_raw_identical_to_first_single_fit_replay": true,
+  "negative_video": {
+    "path": "data/raw/calibration_video.avi",
+    "sha256": "5dc2e441a0807439e018cea55506940df32ce97809eb4a3279123f069e7318e2",
+    "frames": 6966,
+    "detections": 0
+  },
+  "frozen_old_guidance": {
+    "calls": 4360,
+    "failed": 6,
+    "case784p1_recovered_by_single_L2": true,
+    "current_quad_inputs": false
+  },
+  "builds": {
+    "full": "11/11",
+    "g2": "9/9",
+    "detection": "7/7",
+    "libraries_only": "PASS"
+  },
+  "config_duplicates_removed": [
+    "detector_debug.yaml",
+    "detector_verification.yaml"
+  ],
+  "production_profile_set": false,
+  "four_scale_small_shake_ablation": {
+    "angle_deg": -8,
+    "work_size": [
+      480,
+      360
+    ],
+    "without_half_and_three_quarter_scales": "FAIL",
+    "with_six_scales": "PASS"
+  },
+  "runtime_config_files": [
+    "calibration.yaml",
+    "tracking.yaml",
+    "pose.yaml",
+    "detector.yaml",
+    "marker_geometry.yaml"
+  ],
+  "after_timestamp_source_cleanup": {
+    "rebuilt_all_four_variants": true,
+    "full_1676_app_runs": 2,
+    "observations_identical_to_pre_cleanup": true,
+    "conditional_tracks_identical_to_pre_cleanup": true,
+    "raw_identical_to_pre_cleanup": true,
+    "negative_6966_frames_identical": true
+  }
+}

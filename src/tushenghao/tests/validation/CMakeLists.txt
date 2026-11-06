@@ -1,0 +1,12 @@
+# 长录像回放工具只进入测试构建，不向生产库增加钩子。
+add_executable(detection_replay detection_replay.cpp)
+target_link_libraries(detection_replay PRIVATE vision_detection)
+target_include_directories(detection_replay PRIVATE "${VISION_ROOT}/src/config")
+add_executable(frozen_fit_replay frozen_fit_replay.cpp)
+target_link_libraries(frozen_fit_replay PRIVATE vision_detection)
+target_include_directories(frozen_fit_replay PRIVATE "${VISION_ROOT}/src/detection")
+if(MARK_BUILD_G4)
+    add_executable(tracking_replay tracking_replay.cpp)
+    target_link_libraries(tracking_replay PRIVATE vision_tracking)
+    target_include_directories(tracking_replay PRIVATE "${VISION_ROOT}/src/tracking")
+endif()

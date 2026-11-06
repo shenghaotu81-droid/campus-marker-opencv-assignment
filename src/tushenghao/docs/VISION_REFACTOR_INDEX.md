@@ -1,15 +1,8 @@
 # 视觉瘦身与 match-only 文档索引
 
-固定安装分支最新交付：[固定映射报告与赛前核验](FIXED_MAPPING_REPORT.md)。匹配只识别完整目标，坐标排序／安装映射为独立步骤，G2/G4与拟合保持10eae9b行为。
+当前交付：[单候选拟合与156项瘦身报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)、[逐项落实表](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)、[flow-guide](flow-guide.md)、[规则v2](MATCH_ONLY_RULES.md)。1676帧：1088检测/4352角、PnP RMSE中位/P95/最大0.357573/0.690671/0.926320px。G2保留两解并给名义测量，G4联合改为接收Ambiguous并消费分歧；不再沿用1.10/0.25/Unique-only资格。生产profile为空，条件回放不等于实测速度标定。
 
-当前实现与复核入口：
-
-- [G01_G02_VALIDATION_REPORT.md](G01_G02_VALIDATION_REPORT.md)：a582c48后G2消歧、真实Unique到G4条件复验、NIS与MJPG AVI完整读回。
-
-- [MATCH_ONLY_RULES.md](MATCH_ONLY_RULES.md)：比赛尺寸／规则依据、match-only契约、两路线与质量原则。
-- [MATCH_ONLY_REFACTOR_REPORT.md](MATCH_ONLY_REFACTOR_REPORT.md)：a582c48的match-only代码改动、构建、1676帧与真值对照、MaixCam待验项。
-- [flow-guide.md](flow-guide.md)：原位维护的执行顺序、输入输出和替换点。
-- [validation/match-only/metrics.json](validation/match-only/metrics.json)：统计及可复算数据。
+[固定映射报告](FIXED_MAPPING_REPORT.md)、[G01/G02报告](G01_G02_VALIDATION_REPORT.md)、[match-only上一轮报告](MATCH_ONLY_REFACTOR_REPORT.md)、[第一批建议](CORNER_FIT_REFACTOR_PROPOSAL.md)是历史依据；其两路线/质量旗/G2门控描述按当时版本理解。
 
 历史材料（基线b600635，旧“保留D05–D09／建议未实施”为当时状态）：
 

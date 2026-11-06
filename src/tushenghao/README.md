@@ -2,7 +2,7 @@
 
 本固定安装分支使用显式屏幕→物理对应（配置存P→屏幕槽位），不逐帧猜身份；换装与赛前核验见[固定映射交付](docs/FIXED_MAPPING_REPORT.md)。
 
-当前实现按三L＋短M完整匹配确定80×80mm白片结构的物理身份，四边形直接给角边，两条角拟合路线，G2保留IPPE多解、绝对预算和充分差距消歧，G4保留NIS与coast。先读[流程导读](docs/flow-guide.md)、[match-only规则](docs/MATCH_ONLY_RULES.md)和[最新G-01/G-02验证报告](docs/G01_G02_VALIDATION_REPORT.md)；旧阶段材料按记录时点理解。
+当前实现：三L＋短M完整结构匹配→屏幕排序/固定安装映射→单候选四边形引导L2角点→IPPE多解/名义测量→相机系CV跟踪。没有角点候选搜索、周期回退或经验质量资格门。先读[当前修改报告](docs/SINGLE_CANDIDATE_SLIMMING_REPORT.md)、[156项落实表](docs/THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)与[流程导读](docs/flow-guide.md)。旧阶段材料按快照理解。
 
 ## 构建
 
@@ -29,17 +29,19 @@ build/marker_app --video data/raw/marker_video.avi --config src/tushenghao/confi
 
 | 文件 | 内容 |
 |---|---|
-| observations.yaml | 启用G2时逐帧全部候选、筛选状态及质量旗 |
-| tracks.yaml | 启用G4时逐帧冻结状态；空检测也推进生命周期 |
+| observations.yaml | 启用G2时schema5：逐帧数学合法候选、RMSE、名义索引与真实多解状态 |
+| tracks.yaml | 启用G4时schema2：相机系位置/速度/P、Measured或Coasting；空检测也推进预测 |
 | overlay.avi | AVI＋MJPG叠加视频，完成后逐帧读回验证再发布 |
-| summary.yaml | 帧数、检测／位姿／跟踪计数与可选总耗时 |
+| summary.yaml | 帧数、检测／位姿／跟踪计数与总耗时 |
 
 没有弹窗，文件输出只读消费主线结果。视频较大，可用Windows系统播放器或`ffplay outputs/marker/overlay.avi`查看；本次已独立解码1676帧，未在Windows GUI实测。
 
 ## 当前验证与边界
 
-固定1676帧录像：1088检出、588未检出；1054 Unique、34 Ambiguous、NoSolution=0。G2预算1.10px／1.10px、差距0.25px；相对a582c48全部2176候选数值不变，同一1088帧最佳RMSE中位／P95／最大为0.382429／0.766330／1.037059px。小差距不强选，角质量标签不回变拒绝门。
+固定1676帧录像：1088检出、588未检出、4352角，与f1ee955检出集合一致；全部1088帧有名义位姿，两合法解仍为Ambiguous，NoSolution=0。最佳PnP RMSE中位/P95/最大为0.357573/0.690671/0.926320px，三项低于基线。
 
-生产G4 profile仍空，默认NOT_READY。用户授权复用原合成profile的条件回放产生1050 MEASURED／53 COASTING／573 LOST、1011帧速度；相机profile错配和未知时间警告保留，qualified始终false。G-02没有独立速度真值，NIS无法唯一确定Pvv低估倍数。MaixCam、比赛灯光／运动、时间界和速度误差需实测；桌面录像不授予硬件或控制资格。
+G2不以误差预算删除合法候选，G4不再仅接Unique；双解平移分歧连续进入R。生产profile为空则跳过G4数值计算；条件回放复用原合成R/q/vv，得到1088 Measured、588 Coasting。coast是预测，不是仍检测到MARK；相机系速度包含自车运动。录像没有独立真实位置/速度真值，MaixCam精度、噪声与时间仍待实拍，详细指标和限制见报告。
+
+配置schema=2；只维护detector.yaml，已删除两个相同副本。位姿文件schema=5、跟踪schema=2；生产不维护旧文件读回或配置写回。回放比较工具和fixture属于tests，模块不依赖测试支撑。
 
 全部报告、规则与验证资料统一在[src/tushenghao/docs](docs/INDEX.md)，专题入口见[视觉重构索引](docs/VISION_REFACTOR_INDEX.md)。

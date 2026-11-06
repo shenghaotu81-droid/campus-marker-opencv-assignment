@@ -1,6 +1,7 @@
 #include "geometry/observation/geometry_observation.hpp"
 #include <opencv2/imgproc.hpp>
-namespace mark {
+namespace mark
+{
     std::vector<WhiteComponent> extractWhiteComponents(
         const PreparedFrame &frame,
         const GeometryConfig &config)
@@ -26,7 +27,7 @@ namespace mark {
             255,
             cv::THRESH_BINARY);
 
-        std::vector<std::vector<cv::Point>> contours;
+        std::vector<std::vector<cv::Point> > contours;
 
         cv::findContours(
             binary_image,
@@ -37,15 +38,7 @@ namespace mark {
 
         for (const auto &contour : contours)
         {
-            const double area =
-                cv::contourArea(contour);
 
-            // 过滤明显过小的噪声区域。
-            // 具体阈值由合成数据测量后调整。
-            if (area < config.min_area_)
-            {
-                continue;
-            }
 
             WhiteComponent component;
 

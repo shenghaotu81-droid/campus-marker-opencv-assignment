@@ -1,5 +1,7 @@
 # 固定安装映射：实现与完整验证
 
+> 历史快照：后续单候选拟合与156项裁决已实施，现状见[最新报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)和[flow-guide](flow-guide.md)。本文保留当时验证和接口含义，不覆盖当前代码。
+
 分支refactor/vision-lean-fixed，基线10eae9b。开始时已在该分支、HEAD正确、工作区干净；main、refactor/lean、refactor/vision-lean均不改。此交付替换身份确定和屏幕排序步骤，检测完整性、两路拟合数值、G2与G4逻辑和阈值不改。
 
 ## 判断与适用条件

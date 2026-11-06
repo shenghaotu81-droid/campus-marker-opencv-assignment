@@ -1,11 +1,10 @@
 # 文档索引
 
-固定安装分支最新交付：[固定映射报告与赛前核验](FIXED_MAPPING_REPORT.md)。匹配只识别完整目标，坐标排序／安装映射为独立步骤，G2/G4与拟合保持10eae9b行为。
+当前交付：[单候选拟合与156项瘦身报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)、[逐项落实表](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)、[flow-guide](flow-guide.md)、[规则v2](MATCH_ONLY_RULES.md)。1676帧：1088检测/4352角、PnP RMSE中位/P95/最大0.357573/0.690671/0.926320px。G2保留两解并给名义测量，G4联合改为接收Ambiguous并消费分歧；不再沿用1.10/0.25/Unique-only资格。生产profile为空，条件回放不等于实测速度标定。
 
-当前入口：match-only规则、角拟合两路线与最新G2筛选见[MATCH_ONLY_RULES](MATCH_ONLY_RULES.md)、[flow-guide](flow-guide.md)和[G-01/G-02报告](G01_G02_VALIDATION_REPORT.md)。新代码真实录像1054 Unique／34 Ambiguous／0 NoSolution，G4已完成原profile数值下的条件实测链验证；生产profile仍空，G-02真实速度协方差校准与硬件时间验证仍OPEN。下文保留旧阶段验收的原时点含义，旧入口／预算／关卡不代表现行代码。
+[固定映射报告](FIXED_MAPPING_REPORT.md)、[G01/G02报告](G01_G02_VALIDATION_REPORT.md)、[match-only上一轮报告](MATCH_ONLY_REFACTOR_REPORT.md)、[第一批建议](CORNER_FIT_REFACTOR_PROPOSAL.md)是历史依据；其两路线/质量旗/G2门控描述按当时版本理解。
 
-
-布局执行记录见 [restructure-changes.md](restructure-changes.md)。现行代码首先读 [流程导读](flow-guide.md) 与 [瘦身修改报告](lean-changes.md)，再查 [数据流与接口](dataflow-interfaces.md)。以下各阶段验收数字与旧目录描述保留原时点含义；该旧瘦身轮次没有关闭G-01/G-02/G-03；最新软件条件链结论见上方G-01报告，硬件资格不升级。
+布局执行记录见 [restructure-changes.md](restructure-changes.md)。现行代码以顶部最新报告和流程为准；[旧瘦身记录](lean-changes.md)与[旧接口记录](dataflow-interfaces.md)仅作阶段历史。以下各阶段验收数字与旧目录描述保留原时点含义；该旧瘦身轮次没有关闭G-01/G-02/G-03；最新软件条件链结论见上方G-01报告，硬件资格不升级。
 
 历史Block阶段先读[README](../README.md)与[Block3当前状态](block3.md)，再查[预算及审批](block3_budget.md)、[适用边界](evidence/block3/05-L-observation-v5-v7/适用边界与已知局限.md)。Block3/4/5 已合入；算法基准为冻结v7，H已PASS，人工 V/Q 等验收仍待完成；Block4代码及G-B已批准落地，批准范围内Block4验收已完成，公共流程按预算就绪，未标注视频不报正确率。
 

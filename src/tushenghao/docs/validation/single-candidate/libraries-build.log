@@ -1,0 +1,9 @@
+[  6%] Built target vision_math
+[ 12%] Built target vision_observability
+[ 29%] Built target vision_config
+[ 45%] Built target vision_pose
+[ 48%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/execution/detector.cpp.o
+[ 51%] Building CXX object src/detection/CMakeFiles/vision_detection.dir/pipeline/input/frame_sequence.cpp.o
+[ 67%] Built target vision_tracking
+[ 70%] Linking CXX static library libvision_detection.a
+[100%] Built target vision_detection

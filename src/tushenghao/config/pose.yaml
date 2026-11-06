@@ -1,45 +1,13 @@
 %YAML:1.0
 ---
-schema_version: 1
+schema_version: 2
 camera:
   calibration: "calibration.yaml"
-  # 这是参考数据身份，不是硬件序列号；领取相机后重新标定并核对身份。
   camera_id: "reference-maxicam-calibration"
 geometry:
   model: "marker_geometry.yaml"
   source_unit: "mm"
   target_id: "mark-white-structure-v1"
-  # 图纸 P0=L0.v0/P1=M1.v1/P2=L2.v0/P3=L3.v0，不是外板 115x120。
-budgets:
-  # a582c48实拍1088组：好支最大RMSE=1.037059、最大单角=1.059036px；取0.1px粒度上界。
-  # 这是当前参考相机录像适用域，MaixCam需按实际像素域迁移并独立复验。
-  max_rmse_px: "1.10"
-  max_corner_error_px: "1.10"
-# 可选的精细过滤器(空字符串 = "不启用这个过滤")
-selection:
-  # 小差距保留Ambiguous；含另一支刚越绝对预算的情况。不以原始候选槽位选解。
-  min_rmse_gap_px: "0.25"
-  # 只接受距离在 X~Y 米之间的位姿
-  min_z_m: ""
-  max_z_m: ""
-  # 只接受视角不太偏的（法向量 Z 分量范围）
-  min_normal_z: ""
-  max_normal_z: ""
-  # 用上一帧先验做时间一致性检查（G4 跟踪才用）
-  prior_enabled: 0
-  prior_max_age_s: ""
-  prior_max_translation_m: ""
-  prior_max_rotation_rad: ""
 tag:
-  family: "tag36h11"
-  # 以下是可复现的算法起点，不是比赛质量阈值；默认原分辨率、单线程、无纠错。
-  nthreads: 1
-  quad_decimate: 1.0
-  quad_sigma: 0.0
-  refine_edges: 1
-  decode_sharpening: 0.25
-  max_hamming: 0
-  min_decision_margin: ""
   allowed_ids: []
-  # 硬件确认后填写 id 与 side_m；边长量取黑白检测边界，这里不猜 ID/尺寸。
   sizes: []

@@ -1,0 +1,10 @@
+Four-scale matcher test, all other current code unchanged
+exit_code=1
+PASS ChangedMount
+PASS Incomplete
+PASS Clutter
+PASS IndependentTargets
+PASS OptionalS
+PASS WrongFacingL
+scene angle=-8 work=[480 x 360]
+FAIL SmallShakeScaleIdentityAndTruth: rotated/scaled MARK did not match uniquely

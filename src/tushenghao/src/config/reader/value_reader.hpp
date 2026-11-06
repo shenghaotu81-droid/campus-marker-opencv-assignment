@@ -1,14 +1,16 @@
 #pragma once
 #include <opencv2/core.hpp>
 #include <cmath>
-#include <optional>
 #include <string>
 
 namespace mark::config_value
 {
-    enum class NumericPolicy { NodeNumber, CompleteNumericString };
-    enum class OptionalPolicy { EmptyStringIsUnknown, NumberRequired };
-    enum class Error { Missing, String, Integer, Bool01, Number, PartialNumber, NonFinite };
+    enum class NumericPolicy {
+        NodeNumber, CompleteNumericString
+    };
+    enum class Error {
+        Missing, String, Integer, Bool01, Number, PartialNumber, NonFinite
+    };
 
     // Q02：只共享节点原语；模块显式提供数值/空值策略与抛错上下文；Fail 必须抛出异常。
     template<class Fail>
@@ -66,13 +68,4 @@ namespace mark::config_value
         return value;
     }
 
-    template<class Fail>
-    std::optional<double> optional_number(const cv::FileNode &node, NumericPolicy numeric,
-                                         OptionalPolicy optional, Fail fail)
-    {
-        if (optional == OptionalPolicy::EmptyStringIsUnknown && node.isString() &&
-            static_cast<std::string>(node).empty())
-            return std::nullopt;
-        return number(node, numeric, fail);
-    }
 }

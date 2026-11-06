@@ -1,0 +1,30 @@
+%YAML:1.0
+---
+frames: "1676"
+detections: "1088"
+statuses:
+   -
+      name: DETECTED
+      count: "1088"
+   -
+      name: NOT_DETECTED
+      count: "588"
+reasons:
+   -
+      name: TRACK_CREATED
+      count: "1"
+poses:
+   -
+      name: AMBIGUOUS
+      count: "1088"
+   -
+      name: NOT_DETECTED
+      count: "588"
+tracks:
+   -
+      name: COASTING
+      count: "588"
+   -
+      name: MEASURED
+      count: "1088"
+elapsed_s: 2.5745742551999999e+01
