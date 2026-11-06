@@ -12,7 +12,6 @@
 
 #include <filesystem>
 
-
 namespace mark
 {
 
@@ -28,23 +27,47 @@ namespace mark
         }
 
         // Q02：Detector 只接收真实数值节点，字符串和 bool 的原严格契约不放松。
-        bool readBool(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+        bool readBool(const cv::FileNode &node, const std::filesystem::path &file,
+                      const std::string &field)
         {
-            return config_value::boolean(node,[&](auto){throwConfigError(file,field,"expected integer 0/1");});
+            return config_value::boolean(node,
+                                         [&](auto)
+                                         {
+                                             throwConfigError(file, field, "expected integer 0/1");
+                                         });
         }
-        int readInt(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+
+        int readInt(const cv::FileNode &node, const std::filesystem::path &file,
+                    const std::string &field)
         {
-            return config_value::integer(node,[&](auto){throwConfigError(file,field,"expected integer");});
+            return config_value::integer(node,
+                                         [&](auto)
+                                         {
+                                             throwConfigError(file, field, "expected integer");
+                                         });
         }
-        std::string readString(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+
+        std::string readString(const cv::FileNode &node, const std::filesystem::path &file,
+                               const std::string &field)
         {
-            return config_value::text(node,[&](auto){throwConfigError(file,field,"expected string");});
+            return config_value::text(node,
+                                      [&](auto)
+                                      {
+                                          throwConfigError(file, field, "expected string");
+                                      });
         }
-        double readDouble(const cv::FileNode &node,const std::filesystem::path &file,const std::string &field)
+
+        double readDouble(const cv::FileNode &node, const std::filesystem::path &file,
+                          const std::string &field)
         {
-            return config_value::number(node,config_value::NumericPolicy::NodeNumber,[&](auto error){
-                throwConfigError(file,field,error==config_value::Error::NonFinite?"expected finite number":"expected number");
-            });
+            return config_value::number(node, config_value::NumericPolicy::NodeNumber,
+                                        [&](auto error)
+                                        {
+                                            throwConfigError(file, field,
+                                                             error == config_value::Error::NonFinite
+                                                                 ? "expected finite number"
+                                                                 : "expected number");
+                                        });
         }
 
         // 冻结配置拒绝未知/重复键；否则拼错预算会静默回落到旧占位参数。
@@ -79,9 +102,9 @@ namespace mark
         AppConfig config;
 
         // 在转换强类型之前逐层检查结构，保留OpenCV FileStorage单一加载路径。
-        checkFields(fs.root(), path, "root",
-                    {"schema_version", "input", "preprocess", "detector",
-                     "geometry", "output", "debug"});
+        checkFields(
+            fs.root(), path, "root",
+            {"schema_version", "input", "preprocess", "detector", "geometry", "output", "debug"});
         checkFields(fs["input"], path, "input", {"pixel_format", "timestamp_unit"});
         checkFields(fs["preprocess"], path, "preprocess",
                     {"work_width", "work_height", "threshold"});
@@ -90,10 +113,10 @@ namespace mark
         checkFields(fs["detector"], path, "detector", {"mode", "corner"});
         checkFields(fs["detector"]["corner"], path, "detector.corner",
                     {"physical_to_screen", "min_line_points", "max_line_fit_error",
-                     "min_intersection_angle_deg", "max_corner_error",
-                     "approximation_epsilon",
+                     "min_intersection_angle_deg", "max_corner_error", "approximation_epsilon",
                      "max_pair_disagreement_px2", "observation"});
-        checkFields(fs["output"], path, "output", {"run_directory", "video_fourcc", "video_filename"});
+        checkFields(fs["output"], path, "output",
+                    {"run_directory", "video_fourcc", "video_filename"});
         checkFields(fs["debug"], path, "debug", {"timing_enabled"});
 
         // Q02：算法字段写入检测配置，显示与运行字段写入应用配置。
@@ -157,12 +180,12 @@ namespace mark
         // Block 3 角点恢复参数。
         cv::FileNode corner_node = detector_node["corner"];
 
-
         const auto mapping = corner_node["physical_to_screen"];
         if (!mapping.isSeq() || mapping.size() != 4)
             throwConfigError(path, "corner.physical_to_screen", "required permutation of 0..3");
-        for (int i=0;i<4;++i)
-            detector.corner_.physical_to_screen_[i] = readInt(mapping[i], path, "corner.physical_to_screen");
+        for (int i = 0; i < 4; ++i)
+            detector.corner_.physical_to_screen_[i] =
+                readInt(mapping[i], path, "corner.physical_to_screen");
 
         detector.corner_.min_line_points_ =
             readInt(corner_node["min_line_points"], path, "corner.min_line_points");
@@ -176,12 +199,11 @@ namespace mark
         detector.corner_.max_corner_error_ =
             readDouble(corner_node["max_corner_error"], path, "corner.max_corner_error");
 
-
         detector.corner_.approximation_epsilon_ =
             readDouble(corner_node["approximation_epsilon"], path, "corner.approximation_epsilon");
 
-
-        detector.corner_.max_pair_disagreement_px2_ = readDouble(corner_node["max_pair_disagreement_px2"], path,"corner.max_pair_disagreement_px2");
+        detector.corner_.max_pair_disagreement_px2_ = readDouble(
+            corner_node["max_pair_disagreement_px2"], path, "corner.max_pair_disagreement_px2");
 
         // 先检查字段存在，再检查类型，避免 YAML 类型错误被直接转换掩盖。
         // 新预算节点可缺省为显式未配置；出现后每个字段必填，不从旧参数继承数值。
@@ -189,9 +211,9 @@ namespace mark
         {
             auto node = corner_node["observation"];
             checkFields(node, path, "detector.corner.observation",
-                        {"max_edge_direction_diff_deg", "max_edge_position_distance_px", "turn_trim_distance_px",
-                         "max_turn_connection_length_px", "max_support_extension_px",
-                         "min_support_span_px"});
+                        {"max_edge_direction_diff_deg", "max_edge_position_distance_px",
+                         "turn_trim_distance_px", "max_turn_connection_length_px",
+                         "max_support_extension_px", "min_support_span_px"});
             CornerObservationBudget b{};
             const std::pair<const char *, double *> fields[] = {
                 {"max_edge_direction_diff_deg", &b.max_edge_direction_diff_deg},
@@ -205,7 +227,6 @@ namespace mark
                                        std::string("detector.corner.observation.") + f.first);
             detector.corner_.observation_budget_ = b;
         }
-
 
         cv::FileNode mode_node = detector_node["mode"];
 
@@ -232,14 +253,18 @@ namespace mark
         }
 
         const auto debug = requireNode("debug");
-        detector.debug.timing_enabled = readBool(debug["timing_enabled"], path, "debug.timing_enabled");
+        detector.debug.timing_enabled =
+            readBool(debug["timing_enabled"], path, "debug.timing_enabled");
         const auto output = requireNode("output");
         if (!output["run_directory"].empty())
-            config.offline.directory = readString(output["run_directory"], path, "output.run_directory");
+            config.offline.directory =
+                readString(output["run_directory"], path, "output.run_directory");
         if (!output["video_fourcc"].empty())
-            config.offline.video_fourcc = readString(output["video_fourcc"], path, "output.video_fourcc");
+            config.offline.video_fourcc =
+                readString(output["video_fourcc"], path, "output.video_fourcc");
         if (!output["video_filename"].empty())
-            config.offline.video_filename = readString(output["video_filename"], path, "output.video_filename");
+            config.offline.video_filename =
+                readString(output["video_filename"], path, "output.video_filename");
 
         validateConfig(config);
 
@@ -282,8 +307,9 @@ namespace mark
 
         auto mapping = detector.corner_.physical_to_screen_;
         std::sort(mapping.begin(), mapping.end());
-        if (mapping != std::array<int,4>{{0,1,2,3}})
-            throw ConfigError("Config error: field=corner.physical_to_screen, reason=required permutation of 0..3");
+        if (mapping != std::array<int, 4>{{0, 1, 2, 3}})
+            throw ConfigError(
+                "Config error: field=corner.physical_to_screen, reason=required permutation of 0..3");
 
         // geometry.white_threshold 与灰度阈值范围一致。
         if (detector.geometry_.white_threshold_ < 0 || detector.geometry_.white_threshold_ > 255)
@@ -307,7 +333,6 @@ namespace mark
 
         // Block 3 corner 参数校验
         const auto &corner = detector.corner_;
-
 
         if (corner.min_line_points_ < 3)
         {
@@ -333,26 +358,22 @@ namespace mark
                 "Config error: field=corner.max_corner_error, reason=must be non-negative and finite");
         }
 
-
-
         if (!std::isfinite(corner.approximation_epsilon_) || corner.approximation_epsilon_ <= 0.0)
         {
             throw ConfigError(
                 "Config error: field=corner.approximation_epsilon, reason=must be positive");
         }
 
-
-        if (!std::isfinite(corner.max_pair_disagreement_px2_) || corner.max_pair_disagreement_px2_<0)
+        if (!std::isfinite(corner.max_pair_disagreement_px2_) ||
+            corner.max_pair_disagreement_px2_ < 0)
             throw ConfigError("Config error: corner.max_pair_disagreement_px2");
         if (corner.observation_budget_)
             validateCornerObservationBudget(corner);
-
 
         if (detector.mode != DetectorMode::SegmentedMark)
         {
             throw ConfigError("Config error: field=detector.mode, reason=unsupported mode");
         }
-
     }
 
     void validateOfflineConfig(const AppConfig &config)
@@ -448,9 +469,9 @@ namespace mark
         fs << "corner"
            << "{";
 
-
         fs << "physical_to_screen" << "[";
-        for (int slot : detector.corner_.physical_to_screen_) fs << slot;
+        for (int slot : detector.corner_.physical_to_screen_)
+            fs << slot;
         fs << "]";
         fs << "min_line_points" << detector.corner_.min_line_points_;
 
@@ -460,11 +481,7 @@ namespace mark
 
         fs << "max_corner_error" << detector.corner_.max_corner_error_;
 
-
         fs << "approximation_epsilon" << detector.corner_.approximation_epsilon_;
-
-
-
 
         fs << "max_pair_disagreement_px2" << detector.corner_.max_pair_disagreement_px2_;
         if (detector.corner_.observation_budget_)
@@ -481,13 +498,11 @@ namespace mark
 
         fs << "}";
 
-
-
         fs << "}";
 
-        fs << "output" << "{" << "run_directory" << config.offline.directory
-           << "video_fourcc" << config.offline.video_fourcc
-           << "video_filename" << config.offline.video_filename << "}";
+        fs << "output" << "{" << "run_directory" << config.offline.directory << "video_fourcc"
+           << config.offline.video_fourcc << "video_filename" << config.offline.video_filename
+           << "}";
         fs << "debug" << "{" << "timing_enabled" << int(detector.debug.timing_enabled) << "}";
     }
 } // namespace mark

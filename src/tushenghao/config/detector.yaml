@@ -28,6 +28,7 @@ detector:
   corner:
     # P0/P1/P2/P3 -> LT/RT/RB/LB；安装后按文档验一次，换装时显式修改。
     physical_to_screen: [0, 1, 2, 3]
+    # 防歧义（候选角点）
     max_pair_disagreement_px2: 64.0
 
     # 拟合单条直线需要的最少观测点数量
@@ -40,12 +41,11 @@ detector:
     # 小于该值认为两直线近平行，交点不稳定
     min_intersection_angle_deg: 5.0
 
-    # 交点误差质量标签阈值（超限不丢角）
-    # 2026-10-06用户授权实拍713组：max(P0..P3 P99)+1原图px；合成历史1.5保留于文档。
+    # 交点误差质量标签阈值（超限不丢角）交点离真实拐弯有多远
     max_corner_error: 4.131595359474918
 
-    # Block 3 轮廓近似参数
-    # 与 Block 2 geometry.approximation_epsilon 分开
+    # 角点拟合 轮廓近似参数（approxPolyDP多边形贴合轮廓允许多松）
+    # 与 找四边形轮廓 geometry.approximation_epsilon 分开
     approximation_epsilon: 1.0
 
     # 全部为原图px，direction为度；真值2px预算仅用于验收。
@@ -61,12 +61,13 @@ output:
   video_fourcc: "MJPG"
   video_filename: "overlay.avi"
 
-# 调试开关
+# 调试开关（记录总运行时间）
 debug:
   timing_enabled: 1
 
-# 几何观察参数（Block 2，阈值待合成数据测量后调整）
+# 几何观察参数
 geometry:
   white_threshold: 200
   approximation_epsilon: 2.0
+  # 轮廓/连通块的最小面积
   min_area: 0.0
