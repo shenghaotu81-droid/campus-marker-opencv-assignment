@@ -1,0 +1,55 @@
+{
+  "baseline": "a392bd4",
+  "frames": 1676,
+  "before_status": {
+    "AMBIGUOUS": 1088,
+    "NOT_DETECTED": 588
+  },
+  "after_status": {
+    "ESTIMATED": 1088,
+    "UNAVAILABLE": 588
+  },
+  "baseline_legal_solution_counts": {
+    "2": 1088
+  },
+  "nominal_rvec_translation_rmse_exact": true,
+  "translation_spread_matches_old_formula_exact": true,
+  "g4_stream_byte_identical": true,
+  "detection_raw_byte_identical": true,
+  "detections": 1088,
+  "corners": 4352,
+  "pnP_rmse_px": {
+    "n": 1088,
+    "median": 0.3575726632510804,
+    "p95": 0.6906709466789221,
+    "max": 0.9263200336298759,
+    "mean": 0.3733586412790419
+  },
+  "g4": {
+    "frames": 1676,
+    "states": {
+      "MEASURED": 1088,
+      "COASTING": 588
+    },
+    "velocity_frames": 1675,
+    "track_ids": 1,
+    "position_frames": 1676,
+    "measured_position_residual_to_nominal_pose_m": {
+      "n": 1088,
+      "median": 0.0022390488226441616,
+      "p95": 0.007268144502404023,
+      "max": 0.015079026508469453,
+      "mean": 0.0028572355435529124
+    },
+    "reported_nis": {
+      "n": 1087,
+      "median": 0.5767639841970672,
+      "p95": 8.908428479643453,
+      "max": 58.05671193934961,
+      "mean": 2.3684776466719946
+    },
+    "minimum_covariance_eigenvalue": 7.397535780726494e-07,
+    "maximum_covariance_eigenvalue": 0.25499988020240605
+  },
+  "limitations": "Same conditional synthetic R/q/vv profile; no independent corner/pose/velocity ground truth."
+}

@@ -28,7 +28,7 @@ namespace mark::tracking::detail
         std::vector<PositionMeasurement> out;
         std::set<size_t> seen, duplicates;
         for (const auto &p:f.observations_)
-            if (p.source_ == c.source_ && p.target_id_ == c.target_class_ && p.measurement())
+            if (p.source_ == c.source_ && p.target_id_ == c.target_class_ && p.estimate_)
                 if (!seen.insert(p.detection_index_).second)
                     duplicates.insert(p.detection_index_);
 
@@ -36,32 +36,12 @@ namespace mark::tracking::detail
         {
             if (p.source_ != c.source_ || p.target_id_ != c.target_class_ || duplicates.count(p.detection_index_) || !same_sample(p.stamp_, f.stamp_))
                 continue;
-            if (p.status_ != pose::PoseStatus::Unique && p.status_ != pose::PoseStatus::Ambiguous)
+            const auto &measurement = p.estimate_;
+            if (!measurement || !finite_vector(measurement->pose_.t_m_) || measurement->pose_.t_m_[2] <= 0 ||
+                !cv::checkRange(cv::Mat(measurement->translation_spread_m2_)))
                 continue;
-            const auto *selected = p.measurement();
-            if (!selected || !finite_vector(selected->pose_.t_m_) || selected->pose_.t_m_[2] <= 0 || !std::isfinite(selected->rmse_px_) || selected->rmse_px_ < 0)
-                continue;
-            PositionMeasurement m{selected->pose_.t_m_, c.profile_->camera_mse_m2_};
-            bool valid = true;
-            // 连续误差权重，没有差距/质量资格门。等误差时等权，劣支误差越大影响越小。
-            // 这是相对残差模型，不冒充标定过的后验概率。
-            for (size_t i = 0; i < p.candidates_.size(); ++i)
-                if (i != *p.selected_index_)
-                {
-                    const auto &other = p.candidates_[i];
-                    if (!finite_vector(other.pose_.t_m_) || other.pose_.t_m_[2] <= 0 || !std::isfinite(other.rmse_px_) || other.rmse_px_ < 0)
-                    {
-                        valid = false;
-                        break;
-                    }
-                    const double scale = std::max(selected->rmse_px_, other.rmse_px_);
-                    const double a = scale > 0 ? selected->rmse_px_ / scale : 1, b = scale > 0 ? other.rmse_px_ / scale : 1;
-                    const double weight = a * a / (a * a + b * b);
-                    auto delta = other.pose_.t_m_ - m.position;
-                    m.R += weight * (delta * delta.t());
-                }
-            if (valid)
-                out.push_back(m);
+            out.push_back({measurement->pose_.t_m_,
+                c.profile_->camera_mse_m2_ + measurement->translation_spread_m2_});
         }
         return out;
     }

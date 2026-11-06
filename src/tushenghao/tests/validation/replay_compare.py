@@ -24,6 +24,10 @@ def observations(path):
             p=obs.at(j)
             if p.getNode('source').string()!='MARK':continue
             statuses[p.getNode('status').string()]+=1
+            estimate=p.getNode('estimate')
+            if not estimate.empty():
+                out[i]=(estimate.getNode('rmse_px').real(),estimate.getNode('t_m').mat().reshape(3))
+                continue
             cs=p.getNode('candidates');candidates=[]
             for k in range(cs.size()):
                 c=cs.at(k)

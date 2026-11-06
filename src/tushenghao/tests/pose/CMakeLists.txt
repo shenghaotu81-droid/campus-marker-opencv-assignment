@@ -1,7 +1,7 @@
 if((BUILD_TESTING OR NOT DEFINED BUILD_TESTING) AND MARK_BUILD_G2)
     add_executable(pose_contract_test estimation/pose_contract_test.cpp)
     target_link_libraries(pose_contract_test PRIVATE vision_pose)
-    target_include_directories(pose_contract_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../support/pose")
+    target_include_directories(pose_contract_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../support/pose" "${VISION_ROOT}/src/pose")
     target_compile_definitions(pose_contract_test PRIVATE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/../..")
     set_target_properties(pose_contract_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
     add_test(NAME pose_contract_test COMMAND pose_contract_test)
@@ -15,9 +15,4 @@ if((BUILD_TESTING OR NOT DEFINED BUILD_TESTING) AND MARK_BUILD_G2)
     target_compile_definitions(tag_detector_test PRIVATE VISION_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/../..")
     set_target_properties(tag_detector_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
     add_test(NAME tag_detector_test COMMAND tag_detector_test)
-endif()
-
-
-if(MARK_BUILD_G2)
-    target_include_directories(pose_contract_test PRIVATE "${VISION_ROOT}/src/pose")
 endif()

@@ -26,13 +26,12 @@ namespace mark
         for (const auto &p : poses)
         {
             // 投影只使用当前有效位姿；不会把预测点作为新角点反馈给检测器。
-            text(p.source_ + ": " + std::string(p.status_ == pose::PoseStatus::Unique ? "Unique" :
-                                                p.status_ == pose::PoseStatus::Ambiguous ? "Nominal (two solutions)" : "No pose"), row++, {255, 255, 0});
-            if (!config || !p.measurement() || p.source_ != "MARK")
+            text(p.source_ + ": " + pose::pose_status_name(p), row++, {255, 255, 0});
+            if (!config || !p.estimate_ || p.source_ != "MARK")
                 continue;
             std::vector<cv::Point2d> pixels;
             cv::projectPoints(std::vector<cv::Point3d>(config->mark_points_m_.begin(), config->mark_points_m_.end()),
-                              p.measurement()->pose_.rvec_, p.measurement()->pose_.t_m_, config->camera_.K_, config->camera_.dist_, pixels);
+                              p.estimate_->pose_.rvec_, p.estimate_->pose_.t_m_, config->camera_.K_, config->camera_.dist_, pixels);
             for (int i = 0; i < 4; ++i)
                 cv::line(out, pixels[i], pixels[(i + 1) % 4], {255, 255, 0}, 1, cv::LINE_AA);
         }
@@ -41,15 +40,14 @@ namespace mark
             std::ostringstream label;
             label << "track " << t.track_id_ << (t.state_ == tracking::TrackState::Coasting ? " COAST" :
                                                  " MEASURED") << std::fixed << std::setprecision(3);
-            if (t.position_m_)
-                label << " p(m)=" << *t.position_m_;
+            label << " p(m)=" << t.position_m_;
             if (t.velocity_mps_)
                 label << " v(m/s)=" << *t.velocity_mps_;
             text(label.str(), row++, {0, 180, 255});
             // 轨迹均为相机坐标；只有可投影位置才画点/速度箭头。
-            if (!config || !t.position_m_ || (*t.position_m_)[2] <= 0)
+            if (!config || t.position_m_[2] <= 0)
                 continue;
-            const auto &p = *t.position_m_;
+            const auto &p = t.position_m_;
             std::vector<cv::Point3d> points{{p[0], p[1], p[2]}};
             if (t.velocity_mps_)
             {

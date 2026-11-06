@@ -41,7 +41,7 @@ int main()
         auto unknown = cfg.tag_;
         unknown.side_m_.clear();
         auto pixels = mark::pose::TagDetector(unknown).detect(image, s);
-        g2_test::require(pixels.size() == 1 && !mark::pose::estimate_exit(pixels[0], image.size(), mark::pose::PoseEstimator(cfg)).measurement(), "unknown metric size blocked pixel decode or invented pose");
+        g2_test::require(pixels.size() == 1 && !mark::pose::estimate_exit(pixels[0], image.size(), mark::pose::PoseEstimator(cfg)).estimate_, "unknown metric size blocked pixel decode or invented pose");
         auto denied = cfg.tag_;
         denied.allowed_ids_ = {1};
         denied.side_m_.clear();

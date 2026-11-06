@@ -1,4 +1,5 @@
 #include "vision/pose/pose_estimator.hpp"
+#include <vector>
 #include "validation/pose_geometry.hpp"
 #include <algorithm>
 #include <opencv2/calib3d.hpp>
@@ -25,7 +26,7 @@ namespace mark::pose
         }
         if (raw.status != Status::DETECTED)
         {
-            out.status_ = raw.status == Status::NOT_DETECTED ? PoseStatus::NotDetected : PoseStatus::InvalidInput;
+            if (raw.status != Status::NOT_DETECTED) out.reason_ = "DETECTION_INPUT_INVALID";
             return out;
         }
         if (index >= raw.detections.size())
@@ -84,6 +85,7 @@ namespace mark::pose
             }
             sign = cross;
         }
+        std::vector<detail::PoseCandidate> candidates;
         try {
             std::vector<cv::Mat> rotations, translations;
             cv::solvePnPGeneric(std::vector<cv::Point3d>(object.begin(), object.end()), std::vector<cv::Point2d>(image.begin(), image.end()), config_.camera_.K_, config_.camera_.dist_, rotations, translations, false, cv::SOLVEPNP_IPPE);
@@ -97,23 +99,34 @@ namespace mark::pose
                 }
                 auto c = detail::evaluate_pose(p, object, image, config_.camera_.K_, config_.camera_.dist_);
                 if (c)
-                    out.candidates_.push_back(*c);
+                    candidates.push_back(*c);
             }
         }
         catch (const cv::Exception &){
             out.reason_ = "PNP_NUMERICAL_FAILURE";
-            out.candidates_.clear();
+            candidates.clear();
         }
-        if (out.candidates_.empty())
+        if (candidates.empty())
         {
-            out.status_ = PoseStatus::NoSolution;
+            if (out.reason_.empty()) out.reason_ = "PNP_NO_LEGAL_SOLUTION";
             return out;
         }
-        out.selected_index_ = size_t(std::min_element(out.candidates_.begin(), out.candidates_.end(), [](const auto &a, const auto &b)
+        const auto best = std::min_element(candidates.begin(), candidates.end(),
+            [](const auto &a, const auto &b) { return a.rmse_px_ < b.rmse_px_; });
+        out.estimate_.emplace();
+        out.estimate_->pose_ = best->pose_;
+        out.estimate_->rmse_px_ = best->rmse_px_;
+        // 与此前G4中相同的连续残差权重；只把求解器内部多解收敛成位置二阶矩。
+        for (auto it = candidates.begin(); it != candidates.end(); ++it)
         {
-            return a.rmse_px_ < b.rmse_px_;
-        }) - out.candidates_.begin());
-        out.status_ = out.candidates_.size() == 1 ? PoseStatus::Unique : PoseStatus::Ambiguous;
+            if (it == best) continue;
+            const double scale = std::max(best->rmse_px_, it->rmse_px_);
+            const double a = scale > 0 ? best->rmse_px_ / scale : 1;
+            const double b = scale > 0 ? it->rmse_px_ / scale : 1;
+            const double weight = a * a / (a * a + b * b);
+            const auto delta = it->pose_.t_m_ - best->pose_.t_m_;
+            out.estimate_->translation_spread_m2_ += weight * (delta * delta.t());
+        }
         return out;
     }
 

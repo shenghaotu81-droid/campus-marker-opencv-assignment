@@ -1,6 +1,6 @@
 # MARK 主链流程导读
 
-当前分支：`refactor/vision-lean-fixed`。本页对应单候选四边形引导实现；改动和1676帧证据见[修改报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)，旧156项逐项去向见[落实表](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)。配置schema为2，位姿输出schema为5，跟踪输出schema为2。
+当前分支：`refactor/vision-lean-fixed`。本页对应单候选拟合和位姿输出收尾实现；最新改动与1676帧验证见[收尾报告](POSE_STATUS_FINALIZATION_REPORT.md)，之前156项去向见[落实快照](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)。配置schema为2，位姿输出schema为6，跟踪输出schema为2。
 
 ## 先看数据怎么走
 
@@ -12,9 +12,9 @@ flowchart TD
     D --> E[当前原图四个真实角片]
     E --> F[每角两组连续支持 各一次L2 求交]
     F --> G[float四角发布]
-    G --> H[G2 IPPE 数学合法解与RMSE]
-    H --> I[最佳支为名义测量 保留双解]
-    I --> J[G4 双解分歧进入测量噪声]
+    G --> H[G2 内部IPPE 数学合法解与RMSE]
+    H --> I[可选名义估计 加权平移分歧矩阵]
+    I --> J[G4 R加位置分歧矩阵]
     J --> K[CV预测 更新 或coast]
     G --> O[文件与叠加视频]
     I --> O
@@ -62,31 +62,31 @@ flowchart TD
 
 **发布。** 四个double交点转float后，`publishFloatDetection`再检查有限、图内和凸环，因为舍入可能改变几何；随后输出屏幕顺序四角和固定P→屏幕排列。没有category、confidence、bbox、质量旗或重复Evidence。未拟合到真实四角就不发布Detection；G2/G4预测不能反馈成检测。
 
-## 3. G2：保留双解，给出名义测量
+## 3. G2：内部处理多解，只输出可选名义估计
 
-公开`PoseEstimator`独立校验同帧对应、下标/排列、相机和图像域、四角凸环、合法平面模型，便于替换检测器而不依赖其内部类型。相机配置构造时验证并克隆，热路径不反复验证不可变K。
+公开`PoseEstimator`独立校验同帧对应、下标/排列、相机和图像域、四角凸环、合法平面模型。相机配置构造时验证并克隆，热路径不反复验证不可变K。检测器可以替换，不依赖其内部Evidence。
 
-`solvePnPGeneric(SOLVEPNP_IPPE)`产生平面候选。`evaluate_pose`独立重投影，去掉非有限、非正深度和不可投影的数学坏解；每支只保留位姿与二维欧氏RMSE。**没有1.10px绝对预算或0.25px差距门。**
+`solvePnPGeneric(SOLVEPNP_IPPE)`正常返回两支候选；`evaluate_pose`独立重投影，排除非有限、非正深度、不可投影的数学坏解。异常/退化或数学复核可能使合法候选减少，不能把“本片1088帧全两支”写成所有输入的保证。没有1.10px预算或0.25px差距门，也不因两解接近丢掉整帧。
 
-- 没有合法解：NoSolution；未检测到：NotDetected；非法输入：InvalidInput。
-- 一个合法解：Unique。
-- 多个合法解：Ambiguous，保留所有解；最低RMSE支的索引是名义测量，不改名为Unique。
+候选、重投影比较、名义支选择只在G2内部。成功返回`PoseObservation.estimate_`，包含：
 
-`PoseObservation::measurement()`只是取这个实际候选。RMSE有名义选支和G4权重两个消费者；没有eligible、reasons.empty总门、control_usable或重复selected_rmse。歧义不是“丢整帧”的理由，也不是证明所选姿态唯一正确。
+- `pose_`：最低RMSE合法支的rvec、米制平移；不宣称物理唯一。
+- `rmse_px_`：该支二维欧氏重投影RMSE，供位姿量测与诊断。
+- `translation_spread_m2_`：其他合法解相对名义平移的加权二阶矩S，G4实际消费。
 
-退出Tag通过真实AprilTag后端独立解码，保留ID白名单/重复ID保护。未知边长仍可返回像素角；只有实际边长存在时才能做米制位姿。退出状态不意味着控制权授予/完成兑换。
+对名义支t0/e0及其他支tj/ej，`wj=e0²/(e0²+ej²)`，两误差都0时取1/2；计算先按最大误差归一化防平方溢出。`S=Σwj(tj−t0)(tj−t0)^T`。只有一合法支时S=0，双支平移相同也可S=0；零矩阵不是姿态唯一性证明。权重是连续残差模型，未经后验概率标定，也不是完整SE3协方差。
 
-## 4. G4：把分歧放入不确定度，不再拒有限测量
+**只有两种结果：**estimate有值或无值。C++不再存PoseStatus、selected_index或候选vector，也没有重复的成功布尔。显示和文件状态由estimate是否有值统一生成`ESTIMATED / UNAVAILABLE`。未检测到正常返回空estimate；输入非法/求解失败也不返回估计，已有短`reason`说明故障，不再多存一组失败分类资格。
 
-输入是同帧`TrackingFrame{stamp, observations}`。模块不访问图像、检测器或模型内部；使用位姿最小接口。时间上下文变化重建轨迹；倒序/重复时刻不提交，数学异常保持上一步有效状态。
+退出Tag通过真实后端独立解码；保留ID/重复ID与实际尺度契约。未知边长能解码像素角，但米制估计为空并说明原因。Tag看到与否不表示控制权/兑换完成。
 
-Unique和Ambiguous都能输入。重复detection索引、错帧、非法位置/误差仍排除，避免同一数据二次更新。对所选支t0和另一支tj，用相对RMSE构造连续权重：
+## 4. G4：只接名义位置与分歧，不读求解器候选
 
-`wj = e0² / (e0² + ej²)`，两误差都为0时wj=1/2；实现先按最大误差归一化避免平方溢出。
+输入是同帧`TrackingFrame{stamp, observations}`，不访问图像、Detector或G2求解过程。只消费estimate是否存在、名义平移、S和真实身份/时间字段；不读候选、选支索引、Unique/Ambiguous，也不再检查未用于位置滤波的RMSE。RMSE仍由G2验证和使用。
 
-`R_eff = R_profile + Σ wj (tj−t0)(tj−t0)^T`。
+测量噪声直接是`R_eff=R_profile+S`。位置必须有限且正深度，实际消费的S必须有限；R/P的数学合法性继续由原滤波器验证。没有经验质量准入门或新增“歧义高”标签。时间上下文变化重建轨迹；重复/倒序不提交，数学异常保持上一步状态。
 
-等残差时充分表达双解分歧，劣支误差大时影响连续减小。它是简洁的残差权重假设，未经标定，不称为真实后验概率。没有差距阈值或新资格门，且不能表达仅旋转不同、平移相同的全部SE3不确定度；G4本来只估位置/速度。
+**G3只消费G4输出。**接口是Measured/Coasting、必填位置/协方差P、可选速度、实测时刻/当前时刻和轨迹ID。G2的平移分歧已通过R_eff进入P，不需要G3回头读G2或挖candidates。当前没有消费独立歧义bit/分数的G3实现，因此不另造死标签；P也不冒充完整姿态歧义信息。Measured/Coasting仍分别表示实际更新与预测，不能合并。
 
 CV滤波保持原位置/速度积分、过程噪声和Joseph更新。第一位置不能测速度；第二个不同时刻初始化速度。多个位置候选用NIS排序，精确平局或无轨迹时多目标不能确定身份则不硬选；没有NIS限值/高NIS重种。有限大创新也更新，不能把模型不一致直接当观测非法。
 
@@ -98,6 +98,6 @@ CV滤波保持原位置/速度积分、过程噪声和Joseph更新。第一位�
 
 应用写`observations.yaml`、`tracks.yaml`、`summary.yaml`和MJPG的`overlay.avi`，视频完成后全帧读回。writer只有生产应用实际调用的逐帧版本；没有生产反向reader、配置写回或“为了测试”的trace。叠加图只读，不反馈算法。
 
-测试工具`tests/validation/detection_replay.cpp`只调公开Detector，`tracking_replay.cpp`自己读schema5后调用公开G4，`replay_compare.py`对比历史数据；均留在测试侧。`BUILD_TESTING=OFF`不构建测试支撑。各模块可以单独替换：分割/匹配产MatchQuad，拟合收真实轮廓和两条粗边，发布产Detection，G2产PoseObservation，G4产相机系TargetTrack，无跨模块质量预算包。
+测试工具`tests/validation/detection_replay.cpp`只调公开Detector，`tracking_replay.cpp`自己读schema6后调用公开G4，`replay_compare.py`对比历史数据；均留在测试侧。`BUILD_TESTING=OFF`不构建测试支撑。各模块可以单独替换：分割/匹配产MatchQuad，拟合收真实轮廓和两条粗边，发布产Detection，G2产PoseObservation，G4产相机系TargetTrack，无跨模块质量预算包。
 
-当前录像：1676帧、1088检测/4352角，1088 Ambiguous但全有名义测量、0 NoSolution；RMSE中位/P95/最大0.357573/0.690671/0.926320px。条件profile回放1088 Measured、588 Coasting；它是合成R/Q复用的诊断，不是MaixCam或真实速度精度证明。完整证据与待验项见修改报告。
+当前录像：1676帧、1088检测/4352角，1088 ESTIMATED、588 UNAVAILABLE，求解失败0；RMSE中位/P95/最大0.357573/0.690671/0.926320px。条件profile回放1088 Measured、588 Coasting；它是合成R/Q复用的诊断，不是MaixCam或真实速度精度证明。新旧名义位姿/RMSE完全一致，条件G4逐字节一致；完整证据与限制见收尾报告。

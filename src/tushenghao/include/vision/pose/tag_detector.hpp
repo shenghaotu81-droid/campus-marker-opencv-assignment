@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <memory>
 #include "vision/pose/pose_estimator.hpp"
 namespace mark::pose

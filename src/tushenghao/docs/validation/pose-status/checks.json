@@ -1,0 +1,72 @@
+{
+  "baseline": "a392bd4",
+  "branch": "refactor/vision-lean-fixed",
+  "protected_refs": {
+    "main": "864fbaeb57a37439eb29118945b279d8a8e42518",
+    "refactor/lean": "e09970c75fb4d4019ff2557cf6c2ea22fdcf7c0e",
+    "refactor/vision-lean": "10eae9b32db44536fdc463cd815ea39f0d15a026"
+  },
+  "video": {
+    "path": "data/raw/marker_video.avi",
+    "sha256": "aa1219a7a7b702ea1265be8752853a267c982a651afa0f7846f516f9517c9ac7",
+    "frames": 1676
+  },
+  "build_configurations": {
+    "full": {
+      "BUILD_TESTING": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "MARK_BUILD_G2": "ON",
+      "MARK_BUILD_G4": "ON",
+      "VISION_BUILD_TOOLS": "ON"
+    },
+    "g2": {
+      "BUILD_TESTING": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "MARK_BUILD_G2": "ON",
+      "MARK_BUILD_G4": "OFF",
+      "VISION_BUILD_TOOLS": "ON"
+    },
+    "detection": {
+      "BUILD_TESTING": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "MARK_BUILD_G2": "OFF",
+      "MARK_BUILD_G4": "OFF",
+      "VISION_BUILD_TOOLS": "ON"
+    },
+    "libraries": {
+      "BUILD_TESTING": "OFF",
+      "CMAKE_BUILD_TYPE": "Release",
+      "MARK_BUILD_G2": "ON",
+      "MARK_BUILD_G4": "ON",
+      "VISION_BUILD_TOOLS": "OFF"
+    }
+  },
+  "tests": {
+    "full": "11/11",
+    "g2": "9/9",
+    "detection": "7/7",
+    "libraries": "PASS"
+  },
+  "actual_cpp_opencv": "4.6.0",
+  "raw_solution_distribution": {
+    "2": 1088
+  },
+  "legal_solution_distribution": {
+    "2": 1088
+  },
+  "old_tracks_sha256_uncompressed": "c4aa967e5ddf41043579e997501dd9c1fe65a5a6dd8ca20588075649ca17b2c0",
+  "new_tracks_sha256": "c4aa967e5ddf41043579e997501dd9c1fe65a5a6dd8ca20588075649ca17b2c0",
+  "old_raw_sha256_uncompressed": "58498e7c7f8a0ed74e8f25495274c77ac3a500140fb1701dbe4f60ce0a679ff2",
+  "new_raw_sha256": "58498e7c7f8a0ed74e8f25495274c77ac3a500140fb1701dbe4f60ce0a679ff2",
+  "new_observations_sha256_uncompressed": "3c20debf9f6c895688d721848baa9fb0ed138906549ccb7d06e03edc706b4a41",
+  "observations_identical_across_profiles": true,
+  "g4_public_replay_byte_identical": true,
+  "production_profile_configured": false,
+  "source_configuration_sha256": {
+    "calibration.yaml": "1f5f57452b62e9a1c4577fd8e858032d46a5b0c89d457e72e2790ae2b7723dca",
+    "tracking.yaml": "8ed15dc47860a5609443aa728811429ebe3113c19e32820ce6a7a5a23bf51a2c",
+    "pose.yaml": "9b0793e6ec1b59ae5890927a0c9c29dcf3904170689102e98b5cef93efcc5c39",
+    "detector.yaml": "d58311f0ddd54d6a7ca3c94961260b3231a282adcda89a3363419e81993233ea",
+    "marker_geometry.yaml": "844853098082c0eae1972f744e084ca8b928233bf62b6c3933c6af4ada374109"
+  }
+}

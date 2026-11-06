@@ -1,6 +1,6 @@
-# MARK match-only 检测与拟合规则（现行v2）
+# MARK match-only 检测与拟合规则（现行v2.1）
 
-本固定安装分支采用用户审阅156项后的新裁决：单候选四边形引导、无经验质量资格链。实施与证据见[报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)、[逐项落实](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)，执行细节见[flow-guide](flow-guide.md)。旧v1两路线与质量旗规则仅代表此前阶段，参见[10eae9b快照](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/10eae9b/src/tushenghao/docs/MATCH_ONLY_RULES.md)。
+本固定安装分支采用用户审阅156项后的新裁决：单候选四边形引导、无经验质量资格链。实施与证据见[最新收尾](POSE_STATUS_FINALIZATION_REPORT.md)与[156项报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)、[逐项落实](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)，执行细节见[flow-guide](flow-guide.md)。旧v1两路线与质量旗规则仅代表此前阶段，参见[10eae9b快照](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/10eae9b/src/tushenghao/docs/MATCH_ONLY_RULES.md)。
 
 ## 1. 比赛依据与物理对象
 
@@ -35,8 +35,9 @@ V1.0.3 相对 V1.0.2：封面／版本表更新；物资清单将“C610电机�
 
 ## 4. 位姿与跟踪衔接
 
-G2保留IPPE全部数学合法解，独立复算RMSE；无绝对误差/0.25差距门。双解仍Ambiguous，最佳RMSE支是名义测量，不硬称Unique。G4同步接收该测量，用两支相对残差加权的位置分歧连续增广R，无差距资格开关。
+G2内部保留IPPE全部数学合法解，独立复算RMSE；无绝对误差/0.25差距门。公共输出只有可选名义估计与平移分歧S，不再区分Unique/Ambiguous；estimate有无值生成ESTIMATED/UNAVAILABLE。无解或坏输入不输出估计，故障原因在已有reason中。
 
+G4直接接名义平移和S，用R_profile+S更新，不挖候选、不重做选支。G3只消费G4的状态/位置/速度/P，当前不添加无人消费的独立歧义标签。
 G4保留CV数学、实际NIS排序、两时刻速度初始化、数学异常不提交和coast；删除NIS/std/dt经验拒绝及资格标签。所有输出是相机系名义状态，预测与实测明确区分；没有本片/板端实测profile时不填假的生产噪声。
 
 ## 5. 验证原则

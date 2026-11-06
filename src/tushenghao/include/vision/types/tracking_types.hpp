@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "vision/types/pose_types.hpp"
 namespace mark::tracking
 {
@@ -18,8 +19,10 @@ namespace mark::tracking
         TrackState state_{TrackState::Coasting};
         pose::CaptureStamp last_measurement_stamp_;
         int64_t state_time_us_{};
-        std::optional<cv::Vec3d> position_m_, velocity_mps_;
-        std::optional<Mat6> covariance_;
+        // 有轨迹即有完整数值状态；首样本尚不能测速度。
+        cv::Vec3d position_m_{0, 0, 0};
+        Mat6 covariance_{Mat6::zeros()};
+        std::optional<cv::Vec3d> velocity_mps_;
     };
     struct TrackingResult
     {

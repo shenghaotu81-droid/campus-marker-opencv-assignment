@@ -1,5 +1,7 @@
 # 单候选角点拟合与156项瘦身交付
 
+> a392bd4阶段快照：后续已删除Unique/Ambiguous、公共候选/选支索引和重复状态存储，现状见[收尾报告](POSE_STATUS_FINALIZATION_REPORT.md)与[flow-guide](flow-guide.md)。本文保留当时数值和接口；旧schema5回放命令需使用a392bd4源码。
+
 日期：2026-11-06。分支`refactor/vision-lean-fixed`，比较基线`f1ee955`。先将原有整理与审查提交为`60c4a6f`，再实施本轮；未改main、refactor/lean、refactor/vision-lean。现行流程见[flow-guide](flow-guide.md)，156项逐项结果见[落实表](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)，原审查已固定为实施前快照。
 
 ## 结果先看

@@ -82,7 +82,6 @@ namespace mark::pose
             p.stamp_ = t.stamp_;
             p.source_ = "APRILTAG";
             p.target_id_ = "tag36h11:" + std::to_string(t.id_);
-            p.status_ = PoseStatus::NoSolution;
             p.reason_ = "METRIC_SIZE_MISSING_OR_INVALID";
             return p;
         }

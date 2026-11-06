@@ -17,12 +17,10 @@ namespace mark::tracking
         {
             fs << "{" << "track_id" << std::to_string(t.track_id_) << "state" << track_state_name(t.state_) << "state_time_us" << std::to_string(t.state_time_us_) << "last_measurement_stamp";
             pose::write_capture_stamp(fs, t.last_measurement_stamp_);
-            if (t.position_m_)
-                fs << "position_m" << cv::Mat(*t.position_m_);
+            fs << "position_m" << cv::Mat(t.position_m_);
             if (t.velocity_mps_)
                 fs << "velocity_mps" << cv::Mat(*t.velocity_mps_);
-            if (t.covariance_)
-                fs << "covariance" << cv::Mat(*t.covariance_);
+            fs << "covariance" << cv::Mat(t.covariance_);
             fs << "}";
         }
         fs << "]" << "}";

@@ -61,7 +61,7 @@ namespace mark
         cv::FileStorage observations((directory / "observations.yaml").string(), cv::FileStorage::WRITE);
         if (!observations.isOpened())
             throw std::runtime_error("POSE_OUTPUT_OPEN_FAILED");
-        observations << "schema_version" << 5 << "stream_type" << "PoseObservations"
+        observations << "schema_version" << 6 << "stream_type" << "PoseObservations"
                      << "position_unit" << "m" << "time_unit" << "us" << "frames" << "[";
 #endif
 #ifdef VISION_HAS_TRACKING
@@ -100,7 +100,7 @@ namespace mark
                     poses.push_back(pose::estimate_exit(tag, image.size(), solver));
 
             for (const auto &p : poses)
-                ++summary.poses[pose::pose_status_name(p.status_)];
+                ++summary.poses[pose::pose_status_name(p)];
 #endif
 #ifdef VISION_HAS_TRACKING
             tracking::TrackingFrame frame;

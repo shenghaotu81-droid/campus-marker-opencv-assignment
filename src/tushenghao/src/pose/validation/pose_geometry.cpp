@@ -1,6 +1,6 @@
-// 凸性/误差/正深度/旋转距离(自验证几何工具箱)
+// PnP几何与数值合法性；独立复算重投影RMSE。
 #include "validation/pose_geometry.hpp"
-#include "vision/config/pose_config.hpp"
+#include <vector>
 
 #include <algorithm>
 #include <cmath>
@@ -9,20 +9,6 @@
 
 namespace mark::pose
 {
-
-// 状态名用于机器日志；中文说明由文档给出，避免调用方解析自然语言错误。
-    const char *pose_status_name(PoseStatus status_) noexcept
-    {
-        switch (status_)
-        {
-        case PoseStatus::InvalidInput: return "INVALID_INPUT";
-        case PoseStatus::NotDetected: return "NOT_DETECTED";
-        case PoseStatus::NoSolution: return "NO_SOLUTION";
-        case PoseStatus::Ambiguous: return "AMBIGUOUS";
-        case PoseStatus::Unique: return "UNIQUE";
-        }
-        return "INVALID_INPUT";
-    }
 
     namespace detail
     {

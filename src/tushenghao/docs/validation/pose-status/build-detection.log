@@ -1,0 +1,24 @@
+[  4%] Built target vision_observability
+[  8%] Built target vision_math
+[ 18%] Built target vision_calibration
+[ 22%] Built target vision_config
+[ 26%] Built target calibration_tool
+[ 50%] Built target vision_detection
+[ 58%] Built target corner_edge_fit_test
+[ 58%] Built target config_error_test
+[ 60%] Building CXX object src/app/CMakeFiles/vision_app.dir/offline/offline_runner.cpp.o
+[ 64%] Built target detector_contract_test
+[ 68%] Built target screen_order_test
+[ 72%] Built target match_quad_test
+[ 76%] Built target detection_replay
+[ 78%] Building CXX object src/app/CMakeFiles/vision_app.dir/rendering/debug_renderer.cpp.o
+[ 82%] Built target frozen_fit_replay
+[ 84%] Linking CXX static library libvision_app.a
+[ 88%] Built target vision_app
+[ 92%] Linking CXX executable ../../offline_chain_test
+[ 92%] Building CXX object tests/app/CMakeFiles/debug_renderer_test.dir/rendering/debug_renderer_test.cpp.o
+[ 94%] Linking CXX executable ../../marker_app
+[ 96%] Built target offline_chain_test
+[ 98%] Built target marker_app
+[100%] Linking CXX executable ../../debug_renderer_test
+[100%] Built target debug_renderer_test

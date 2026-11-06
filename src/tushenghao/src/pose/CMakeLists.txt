@@ -1,11 +1,3 @@
-# 独立开关和编译目标
-# G2 独立编译目标：不把位姿/退出逻辑塞入已封口的 vision_detection 源码清单。
-# G2 的独立构建开关（MARK_BUILD_G2 默认 OFF），主 CMakeLists.txt 末尾加一行 include(cmake/g2.cmake)
-# 定义 G2 的编译目标（vision_pose 库、pose_app 等），找 AprilTag 依赖
-# MARK_BUILD_G2 默认 OFF，不影响原检测器构建；开 G2 时 cmake -DMARK_BUILD_G2=ON
-
-# option() 定义开关，名字、说明、默认值 OFF
-option(MARK_BUILD_G2 "构建 G2 位姿与退出感知" OFF)
 if(MARK_BUILD_G2)
     if(OpenCV_VERSION VERSION_LESS "4.6.0")
         message(FATAL_ERROR "G2 要求 OpenCV >= 4.6.0；已验证版本为 4.6.0")
@@ -23,7 +15,6 @@ if(MARK_BUILD_G2)
     target_include_directories(mark_apriltag SYSTEM INTERFACE "${APRILTAG_INCLUDE_ROOT}")
     target_link_libraries(mark_apriltag INTERFACE "${APRILTAG_LIBRARY}" Threads::Threads)
     add_library(vision_pose
-
         io/pose_io.cpp
         validation/pose_geometry.cpp
         estimation/pose_estimator.cpp
@@ -31,16 +22,11 @@ if(MARK_BUILD_G2)
     )
     target_include_directories(vision_pose
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
+        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${VISION_ROOT}/src/config"
     )
     target_link_libraries(vision_pose PUBLIC vision_types vision_config PRIVATE mark_apriltag)
     target_compile_options(vision_pose PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic>
     )
 
-
-endif()
-
-if(MARK_BUILD_G2)
-    target_include_directories(vision_pose PRIVATE "${VISION_ROOT}/src/config")
 endif()

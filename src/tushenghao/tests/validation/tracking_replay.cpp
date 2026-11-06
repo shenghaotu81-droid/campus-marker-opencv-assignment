@@ -1,4 +1,4 @@
-// 离线验证工具自己的最小schema-5 reader，不链接进任何生产库。
+// 离线验证工具自己的最小schema-6 reader，不链接进任何生产库。
 #include "vision/tracking/target_tracker.hpp"
 #include "io/tracking_io.hpp"
 #include <fstream>
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
         if (argc != 4)
             return 1;
         cv::FileStorage input(argv[1], cv::FileStorage::READ), out(argv[3], cv::FileStorage::WRITE);
-        if (!input.isOpened() || !out.isOpened() || int(input["schema_version"]) != 5)
+        if (!input.isOpened() || !out.isOpened() || int(input["schema_version"]) != 6)
             return 1;
         mark::tracking::TargetTracker tracker(mark::tracking::load_tracking_config(argv[2]));
         out << "schema_version" << 2 << "stream_type" << "G4TrackingResult" << "frames" << "[";
@@ -45,24 +45,21 @@ int main(int argc, char **argv)
                 o.source_ = p["source"].string();
                 o.target_id_ = p["target_id"].string();
                 o.detection_index_ = integer(p["detection_index"]);
-                auto status = p["status"].string();
-                o.status_ = status == "UNIQUE" ? mark::pose::PoseStatus::Unique : status == "AMBIGUOUS" ? mark::pose::PoseStatus::Ambiguous : mark::pose::PoseStatus::NotDetected;
-                for (const auto &c:p["candidates"])
+                const auto status = p["status"].string();
+                if (status == "ESTIMATED")
                 {
-                    mark::pose::PoseCandidate candidate;
-                    candidate.rmse_px_ = c["rmse_px"].real();
-                    cv::Mat r, t;
-                    c["rvec"] >> r;
-                    c["t_m"] >> t;
-                    for (int i = 0; i < 3; ++i)
-                    {
-                        candidate.pose_.rvec_[i] = r.at<double>(i);
-                        candidate.pose_.t_m_[i] = t.at<double>(i);
-                    }
-                    o.candidates_.push_back(candidate);
+                    o.estimate_.emplace();
+                    const auto m = p["estimate"];
+                    cv::Mat r, t, spread;
+                    m["rvec"] >> r; m["t_m"] >> t; m["translation_spread_m2"] >> spread;
+                    if (r.type() != CV_64F || r.total() != 3 || t.type() != CV_64F || t.total() != 3 ||
+                        spread.type() != CV_64F || spread.rows != 3 || spread.cols != 3) return 1;
+                    r.copyTo(cv::Mat(o.estimate_->pose_.rvec_, false));
+                    t.copyTo(cv::Mat(o.estimate_->pose_.t_m_, false));
+                    spread.copyTo(cv::Mat(o.estimate_->translation_spread_m2_, false));
+                    o.estimate_->rmse_px_ = m["rmse_px"].real();
                 }
-                if (!p["selected_index"].empty())
-                    o.selected_index_ = size_t(integer(p["selected_index"]));
+                else if (status != "UNAVAILABLE") return 1;
                 f.observations_.push_back(o);
             }
             auto result = tracker.step(f);

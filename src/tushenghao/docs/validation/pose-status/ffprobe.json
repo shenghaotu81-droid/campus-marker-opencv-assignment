@@ -1,0 +1,14 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "codec_name": "mjpeg",
+            "width": 1440,
+            "height": 1080,
+            "avg_frame_rate": "8801/125",
+            "nb_read_frames": "1676"
+        }
+    ]
+}

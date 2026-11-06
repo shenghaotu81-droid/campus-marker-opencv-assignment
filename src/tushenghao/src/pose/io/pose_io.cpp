@@ -15,14 +15,13 @@ namespace mark::pose
     {
         fs << "{" << "stamp";
         write_capture_stamp(fs, p.stamp_);
-        fs << "source" << p.source_ << "target_id" << p.target_id_ << "detection_index" << std::to_string(p.detection_index_) << "status" << pose_status_name(p.status_) << "candidates" << "[";
-        for (const auto &c:p.candidates_)
-            fs << "{" << "rvec" << cv::Mat(c.pose_.rvec_) << "t_m" << cv::Mat(c.pose_.t_m_) << "rmse_px" << c.rmse_px_ << "}";
-        fs << "]";
-        if (p.selected_index_)
-            fs << "selected_index" << std::to_string(*p.selected_index_);
-        if (auto m = p.measurement())
-            fs << "rvec" << cv::Mat(m->pose_.rvec_) << "t_m" << cv::Mat(m->pose_.t_m_);
+        fs << "source" << p.source_ << "target_id" << p.target_id_
+           << "detection_index" << std::to_string(p.detection_index_)
+           << "status" << pose_status_name(p);
+        if (const auto &m = p.estimate_)
+            fs << "estimate" << "{" << "rvec" << cv::Mat(m->pose_.rvec_)
+               << "t_m" << cv::Mat(m->pose_.t_m_) << "rmse_px" << m->rmse_px_
+               << "translation_spread_m2" << cv::Mat(m->translation_spread_m2_) << "}";
         if (!p.reason_.empty())
             fs << "reason" << p.reason_;
         fs << "}";

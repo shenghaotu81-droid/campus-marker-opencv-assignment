@@ -69,17 +69,17 @@ initial_velocity_variance_m2ps2: 4.
     }
     writer.release();
     auto app = mark::loadConfig(source / "config/detector.yaml");
-    app.offline.directory = (root / "unique-run").string();
+    app.offline.directory = (root / "pose-run").string();
     mark::runOffline(app, video.string(), (config / "detector.yaml").string());
-    cv::FileStorage poses((root / "unique-run/observations.yaml").string(), cv::FileStorage::READ);
-    cv::FileStorage tracks((root / "unique-run/tracks.yaml").string(), cv::FileStorage::READ);
+    cv::FileStorage poses((root / "pose-run/observations.yaml").string(), cv::FileStorage::READ);
+    cv::FileStorage tracks((root / "pose-run/tracks.yaml").string(), cv::FileStorage::READ);
     test_support::check(poses["frames"].size() == 24 && tracks["frames"].size() == 24, "perspective frames missing");
     bool velocity = false;
     for (int i = 0; i < 24; ++i)
     {
         const bool missing = i == 13 || i == 14;
         const auto pose = poses["frames"][i]["observations"][0];
-        test_support::check(std::string(pose["status"]) == (missing ? "NOT_DETECTED" : "AMBIGUOUS"), "perspective pose wrong");
+        test_support::check(std::string(pose["status"]) == (missing ? "UNAVAILABLE" : "ESTIMATED"), "perspective pose wrong");
         const auto track = tracks["frames"][i]["tracks"][0];
         test_support::check(std::string(track["state"]) == (missing ? "COASTING" : "MEASURED"), "G2 to G4 flow/coast broken");
         test_support::check(!track["position_m"].empty() && track["time_bounded"].empty() && track["qualified_for_g5"].empty(), "finite position missing/dead qualification label survived");

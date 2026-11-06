@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <vector>
 #include <opencv2/core.hpp>
 namespace mark::pose
 {
@@ -29,30 +28,27 @@ namespace mark::pose
     {
         cv::Vec3d rvec_{0, 0, 0}, t_m_{0, 0, 0};
     };
-    enum class PoseStatus {
-        InvalidInput, NotDetected, NoSolution, Ambiguous, Unique
-    };
-    struct PoseCandidate
+    struct PoseEstimate
     {
         RigidPose pose_;
         double rmse_px_{};
+        // 合法其他解相对名义平移的加权二阶矩；G4把它加到profile R。
+        // 不是完整SE3协方差，也不是经过标定的后验概率。
+        cv::Matx33d translation_spread_m2_{cv::Matx33d::zeros()};
     };
     struct PoseObservation
     {
         CaptureStamp stamp_;
         std::string source_, target_id_;
         size_t detection_index_{};
-        PoseStatus status_{PoseStatus::InvalidInput};
-        std::vector<PoseCandidate> candidates_;
-        std::optional<size_t> selected_index_;
+        // 有值仅表示有数学合法的名义估计，不表示唯一性或控制资格。
+        std::optional<PoseEstimate> estimate_;
         std::string reason_;
-        // selected只是名义最小重投影支；有第二解仍标Ambiguous，G4同时消费两支分歧。
-        const PoseCandidate *measurement() const
-        {
-            return selected_index_ && *selected_index_ < candidates_.size() ? &candidates_[*selected_index_] : nullptr;
-        }
-
     };
+    inline const char *pose_status_name(const PoseObservation &p) noexcept
+    {
+        return p.estimate_ ? "ESTIMATED" : "UNAVAILABLE";
+    }
     struct TagObservation
     {
         CaptureStamp stamp_;
@@ -60,5 +56,4 @@ namespace mark::pose
         double side_m_{};
         std::array<cv::Point2d, 4> corners_;
     };
-    const char *pose_status_name(PoseStatus) noexcept;
 }
