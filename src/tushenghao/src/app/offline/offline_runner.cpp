@@ -1,3 +1,4 @@
+// 总编排
 #include "offline/offline_runner.hpp"
 #include "vision/pose/pose_io.hpp"
 #include "detector/config.hpp"
@@ -58,7 +59,8 @@ namespace mark
         VideoExporter exporter;
         RunSummary summary;
 #ifdef VISION_HAS_POSE
-        cv::FileStorage observations((directory / "observations.yaml").string(), cv::FileStorage::WRITE);
+        cv::FileStorage observations((directory / "observations.yaml").string(),
+                                     cv::FileStorage::WRITE);
         if (!observations.isOpened())
             throw std::runtime_error("POSE_OUTPUT_OPEN_FAILED");
         observations << "schema_version" << 6 << "stream_type" << "PoseObservations"
@@ -68,15 +70,17 @@ namespace mark
         cv::FileStorage tracks_file((directory / "tracks.yaml").string(), cv::FileStorage::WRITE);
         if (!tracks_file.isOpened())
             throw std::runtime_error("TRACK_OUTPUT_OPEN_FAILED");
-        tracks_file << "schema_version" << 2 << "stream_type" << "G4TrackingResult" << "frames" << "[";
+        tracks_file << "schema_version" << 2 << "stream_type" << "G4TrackingResult" << "frames"
+                    << "[";
 #endif
         const auto start = Clock::now();
         cv::Mat image;
         for (uint64_t id = 0; capture.read(image); ++id)
         {
-            const long double timestamp = camera ?
-                                          std::chrono::duration<long double, std::micro>(Clock::now() - start).count() :
-                                          static_cast<long double>(id) * 1e6L / fps;
+            const long double timestamp =
+                camera
+                    ? std::chrono::duration<long double, std::micro>(Clock::now() - start).count()
+                    : static_cast<long double>(id) * 1e6L / fps;
             if (!std::isfinite(timestamp) || timestamp > std::numeric_limits<int64_t>::max() - .5L)
                 throw std::runtime_error("INPUT_TIMESTAMP_OVERFLOW");
             FrameInput input{image, id, std::llround(timestamp)};
@@ -118,13 +122,14 @@ namespace mark
             observations << "{" << "stamp";
             pose::write_capture_stamp(observations, stamp);
             observations << "observations" << "[";
-            for (const auto &p:poses)
+            for (const auto &p : poses)
                 pose::write_pose_observation(observations, p);
             observations << "]" << "}";
 #endif
             if (!exporter.opened())
                 exporter.open(directory, image.size(), fps, app.offline.video_fourcc);
-            exporter.write(renderDebugFrame(image, raw, poses, tracks, pose_config ? &*pose_config : nullptr));
+            exporter.write(
+                renderDebugFrame(image, raw, poses, tracks, pose_config ? &*pose_config : nullptr));
         }
         if (!summary.frames)
             throw std::runtime_error("INPUT_HAS_NO_FRAMES");

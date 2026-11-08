@@ -1,5 +1,6 @@
 #pragma once
 #include "vision/types/detector_types.hpp"
+
 namespace mark
 {
     struct DecodeStageResult

@@ -1,6 +1,7 @@
 #pragma once
 #include "vision/types/detector_types.hpp"
 #include <map>
+
 namespace mark
 {
     struct RunSummary
@@ -10,5 +11,6 @@ namespace mark
         double elapsed_s{};
         void add(const FrameResult &frame);
     };
+
     void writeRunSummary(const RunSummary &summary, const std::string &path);
 }

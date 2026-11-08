@@ -1,5 +1,7 @@
+// 控制台打印总结
 #include "reporting/run_console.hpp"
 #include <ostream>
+
 namespace mark
 {
     void write_run_console(std::ostream &out, const RunSummary &s)

@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <opencv2/core.hpp>
+
 namespace mark::pose
 {
     struct CameraModel
@@ -13,11 +14,13 @@ namespace mark::pose
         cv::Size image_size_;
         std::string camera_id_;
     };
+
     struct TagConfig
     {
         std::set<int> allowed_ids_;
         std::map<int, double> side_m_;
     };
+
     struct G2Config
     {
         CameraModel camera_;
@@ -25,6 +28,7 @@ namespace mark::pose
         std::string mark_target_id_;
         TagConfig tag_;
     };
+
     G2Config load_pose_config(const std::filesystem::path &);
     void validate_pose_config(const G2Config &);
 }

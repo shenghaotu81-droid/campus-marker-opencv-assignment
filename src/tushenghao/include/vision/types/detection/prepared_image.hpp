@@ -27,13 +27,12 @@ namespace mark
         // cv::resize 使用像素中心映射；仅引导搜索，最终角必须从原图直接测量。
         cv::Point2d workToOriginal(cv::Point2d point) const
         {
-            return {(point.x + 0.5) / scale_x_ - 0.5,
-                    (point.y + 0.5) / scale_y_ - 0.5};
+            return {(point.x + 0.5) / scale_x_ - 0.5, (point.y + 0.5) / scale_y_ - 0.5};
         }
+
         cv::Point2d originalToWork(cv::Point2d point) const
         {
-            return {(point.x + 0.5) * scale_x_ - 0.5,
-                    (point.y + 0.5) * scale_y_ - 0.5};
+            return {(point.x + 0.5) * scale_x_ - 0.5, (point.y + 0.5) * scale_y_ - 0.5};
         }
 
         // 原图坐标 -> 工作图坐标的缩放比例。
@@ -41,9 +40,6 @@ namespace mark
         double scale_x_{1.0};
 
         double scale_y_{1.0};
-
-
-
 
         // 帧上下文。
         // 用于后续阶段 audit 和结果关联。

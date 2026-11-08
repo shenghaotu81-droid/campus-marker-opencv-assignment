@@ -1,4 +1,6 @@
+// 写 summary.yaml 的地方
 #include "reporting/run_report.hpp"
+
 namespace mark
 {
     void RunSummary::add(const FrameResult &frame)
@@ -17,8 +19,10 @@ namespace mark
         if (!fs.isOpened())
             throw std::runtime_error("SUMMARY_WRITE_FAILED");
         fs << "frames" << std::to_string(s.frames) << "detections" << std::to_string(s.detections);
-        for (const auto &entry : {std::make_pair("statuses", &s.statuses), {"reasons", &s.reasons},
-                                  {"poses", &s.poses}, {"tracks", &s.tracks}})
+        for (const auto &entry : {std::make_pair("statuses", &s.statuses),
+                                  {"reasons", &s.reasons},
+                                  {"poses", &s.poses},
+                                  {"tracks", &s.tracks}})
         {
             fs << entry.first << "[";
             for (const auto &[name, count] : *entry.second)

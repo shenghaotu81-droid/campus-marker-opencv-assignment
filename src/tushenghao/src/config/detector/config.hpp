@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include "application/app_config.hpp"
+
 namespace mark
 {
     AppConfig loadConfig(const std::filesystem::path &);

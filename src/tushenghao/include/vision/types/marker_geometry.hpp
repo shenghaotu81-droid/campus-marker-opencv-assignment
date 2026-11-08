@@ -3,7 +3,6 @@
 
 #include <array>
 
-
 namespace mark
 {
     // G2图纸取点的固定身份；检测直接接四边形，不再消费部件边号。
@@ -12,8 +11,9 @@ namespace mark
         const char *part;
         int vertex;
     };
+
     using ModelCornerContract = std::array<ModelCornerBinding, 4>;
-    inline constexpr ModelCornerContract model_corner_contract{{
-        {"L0", 0}, {"M1", 1}, {"L2", 0}, {"L3", 0}}};
+    inline constexpr ModelCornerContract model_corner_contract{
+        {{"L0", 0}, {"M1", 1}, {"L2", 0}, {"L3", 0}}};
 
 }

@@ -1,26 +1,31 @@
+// renderDebugFrame，负责在每一帧上画调试信息（检测框、位姿、跟踪轨迹），画完再交给 exporter 写视频
 #include "rendering/debug_renderer.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iomanip>
 #include <sstream>
+
 namespace mark
 {
     cv::Mat renderDebugFrame(const cv::Mat &image, const FrameResult &raw,
-                             const std::vector<pose::PoseObservation> &poses, const std::vector<tracking::TargetTrack> &tracks,
+                             const std::vector<pose::PoseObservation> &poses,
+                             const std::vector<tracking::TargetTrack> &tracks,
                              const pose::G2Config *config)
     {
         cv::Mat out = image.clone();
         auto text = [&](const std::string &s, int row, cv::Scalar color)
-                    {
-                        cv::putText(out, s, {12, 24 + row * 24}, cv::FONT_HERSHEY_SIMPLEX, .55, color, 1, cv::LINE_AA);
-                    };
+        {
+            cv::putText(out, s, {12, 24 + row * 24}, cv::FONT_HERSHEY_SIMPLEX, .55, color, 1,
+                        cv::LINE_AA);
+        };
         text("frame " + std::to_string(raw.frame_id), 0, {255, 255, 255});
         for (const auto &d : raw.detections)
             for (int i = 0; i < 4; ++i)
             {
                 cv::line(out, d.corners[i], d.corners[(i + 1) % 4], {0, 255, 0}, 1, cv::LINE_AA);
                 cv::circle(out, d.corners[i], 3, {0, 255, 0}, -1);
-                cv::putText(out, std::to_string(i), d.corners[i], cv::FONT_HERSHEY_SIMPLEX, .5, {0, 255, 0});
+                cv::putText(out, std::to_string(i), d.corners[i], cv::FONT_HERSHEY_SIMPLEX, .5,
+                            {0, 255, 0});
             }
         int row = 1;
         for (const auto &p : poses)
@@ -30,16 +35,19 @@ namespace mark
             if (!config || !p.estimate_ || p.source_ != "MARK")
                 continue;
             std::vector<cv::Point2d> pixels;
-            cv::projectPoints(std::vector<cv::Point3d>(config->mark_points_m_.begin(), config->mark_points_m_.end()),
-                              p.estimate_->pose_.rvec_, p.estimate_->pose_.t_m_, config->camera_.K_, config->camera_.dist_, pixels);
+            cv::projectPoints(std::vector<cv::Point3d>(config->mark_points_m_.begin(),
+                                                       config->mark_points_m_.end()),
+                              p.estimate_->pose_.rvec_, p.estimate_->pose_.t_m_, config->camera_.K_,
+                              config->camera_.dist_, pixels);
             for (int i = 0; i < 4; ++i)
                 cv::line(out, pixels[i], pixels[(i + 1) % 4], {255, 255, 0}, 1, cv::LINE_AA);
         }
         for (const auto &t : tracks)
         {
             std::ostringstream label;
-            label << "track " << t.track_id_ << (t.state_ == tracking::TrackState::Coasting ? " COAST" :
-                                                 " MEASURED") << std::fixed << std::setprecision(3);
+            label << "track " << t.track_id_
+                  << (t.state_ == tracking::TrackState::Coasting ? " COAST" : " MEASURED")
+                  << std::fixed << std::setprecision(3);
             label << " p(m)=" << t.position_m_;
             if (t.velocity_mps_)
                 label << " v(m/s)=" << *t.velocity_mps_;
@@ -56,7 +64,8 @@ namespace mark
                     points.push_back({end[0], end[1], end[2]});
             }
             std::vector<cv::Point2d> pixels;
-            cv::projectPoints(points, cv::Vec3d(), cv::Vec3d(), config->camera_.K_, config->camera_.dist_, pixels);
+            cv::projectPoints(points, cv::Vec3d(), cv::Vec3d(), config->camera_.K_,
+                              config->camera_.dist_, pixels);
             if (!cv::checkRange(cv::Mat(pixels)))
                 continue;
             cv::circle(out, pixels[0], 5, {0, 180, 255}, 2);
