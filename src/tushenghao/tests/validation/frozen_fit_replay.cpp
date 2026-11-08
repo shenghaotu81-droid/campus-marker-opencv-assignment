@@ -1,5 +1,5 @@
 // 只读固定指导输入；不向生产拟合器添加trace。
-#include "corner_edge_fit.hpp"
+#include "corners/corner_edge_fit.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>

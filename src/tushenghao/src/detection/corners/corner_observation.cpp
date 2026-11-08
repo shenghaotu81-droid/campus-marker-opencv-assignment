@@ -1,6 +1,6 @@
 // 由粗角查询当前原图的最近真实轮廓，供两条邻边支持提取。
 // 从完整原图提取真实轮廓，避免 ROI 截边产生人工闭合边。
-#include "corner_observation.hpp"
+#include "corners/corner_observation.hpp"
 #include <cmath>
 #include <opencv2/imgproc.hpp>
 

@@ -1,10 +1,10 @@
 // 仅测试用：固定已核对模型渲染成真实BGR画面，再经真实preprocess/工作图分割。
 // 隔离拟合时用渲染真值四边形；端到端匹配另测，不传模型变换。
 #pragma once
-#include "preprocess.hpp"
+#include "preprocess/preprocess.hpp"
 #include "vision/types/corner_types.hpp"
-#include "decode_stage.hpp"
-#include "corner_observation.hpp"
+#include "pipeline/decode_stage.hpp"
+#include "corners/corner_observation.hpp"
 #include <opencv2/imgproc.hpp>
 #include <filesystem>
 

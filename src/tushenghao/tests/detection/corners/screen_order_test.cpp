@@ -1,5 +1,5 @@
 #include "vision/types/corner_types.hpp"
-#include "decode_stage.hpp"
+#include "pipeline/decode_stage.hpp"
 #include "assertions.hpp"
 #include <algorithm>
 #include <iostream>

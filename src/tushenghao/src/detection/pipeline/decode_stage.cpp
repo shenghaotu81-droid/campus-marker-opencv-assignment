@@ -1,10 +1,10 @@
 // 把工作图四边形映射到原图角片，逐角拟合并发布可供位姿使用的浮点四角。
-#include "decode_stage.hpp"
-#include "preprocess.hpp"
-#include "geometry_observation.hpp"
-#include "corner_edge_fit.hpp"
+#include "pipeline/decode_stage.hpp"
+#include "preprocess/preprocess.hpp"
+#include "geometry/geometry_observation.hpp"
+#include "corners/corner_edge_fit.hpp"
 #include <set>
-#include "corner_observation.hpp"
+#include "corners/corner_observation.hpp"
 
 namespace mark::detector
 {

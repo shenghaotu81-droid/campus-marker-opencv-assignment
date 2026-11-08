@@ -1,8 +1,8 @@
 #include "assertions.hpp"
 #include "case_runner.hpp"
 #include "block3_fixture.hpp"
-#include "geometry_observation.hpp"
-#include "decode_stage.hpp"
+#include "geometry/geometry_observation.hpp"
+#include "pipeline/decode_stage.hpp"
 namespace
 {
     using test_support::check;

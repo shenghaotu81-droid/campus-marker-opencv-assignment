@@ -1,6 +1,6 @@
 // 按白片空间邻接归组，确认三 L 一短 M 结构，输出原图坐标的粗四角。
-#include "match_quad.hpp"
-#include "contour_topology.hpp"
+#include "geometry/match_quad.hpp"
+#include "geometry/contour_topology.hpp"
 #include <algorithm>
 
 namespace mark::detector

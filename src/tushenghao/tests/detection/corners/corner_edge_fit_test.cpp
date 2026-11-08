@@ -1,5 +1,5 @@
 #include "block3_fixture.hpp"
-#include "corner_edge_fit.hpp"
+#include "corners/corner_edge_fit.hpp"
 #include "assertions.hpp"
 #include <iostream>
 #include <fstream>

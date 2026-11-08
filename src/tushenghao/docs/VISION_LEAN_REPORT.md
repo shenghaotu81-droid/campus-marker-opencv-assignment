@@ -42,7 +42,7 @@
 | F26 | exporter 删除打开/写入的防御检查、逐帧读回和无消费者的统计 getter/状态成员；只负责 MJPG 编码、release 和改名，验收另行独立解码。 |
 | F27 | run_report 迁入 app/reporting，删除 observability 库/目录和 SUMMARY_WRITE_FAILED；核实三处 64 位值字符串写法后保留，原因见第 3 节。 |
 | F28 | debug_renderer、run_console 只同步依赖类型、函数名/成员名，渲染与打印逻辑不变。 |
-| G29 | detection 全部平铺到 src/detection 一层；CMake、内部 include、测试步骤 include 同步，没有残留子目录。 |
+| G29 | detection 在 src/detection 下按 preprocess、geometry、corners、pipeline 保留一级子目录；各步骤内部直接放实现/声明，与 pose/tracking 的目录层级一致。CMake、内部 include、测试步骤 include 同步。 |
 | G30 | 帧序实现/声明合入 detector.cpp；角解析和 float 发布合入 decode_stage.cpp，声明收进已有 decode_stage.hpp。测试直接验证这些数学边界，不另造测试钩子。核心拟合/匹配/观察/排序仍独立。 |
 | G31 | preprocess 删除格式、尺寸和阈值重复检查，只保存上下文、resize 和比例；非法图像检查留在 Detector 公开入口，配置不在运行期复验。 |
 | G32 | 六个轮廓尺度共享命名常量，corner_topology 缓存六个凹凸结果；整理工作图观察排版。计算顺序和数值不变。 |
@@ -87,7 +87,7 @@ CaptureStamp::valid 中混杂身份字段必填、像素域与真实时间约束
 
 ### 3.7 其它一致性清理
 
-删除 detection_replay 中无人使用的历史 BASELINE 条件分支；测试渲染脚本不再引用已删模型配置。删除无调用者的 exporter 统计/状态接口，清除应用/测试/验证工具对 src/config 私有 include 的无用暴露。已核对目录树和依赖引用，没有空 math/observability/common/detection 子目录、悬空声明或删除文件的构建引用。
+删除 detection_replay 中无人使用的历史 BASELINE 条件分支；测试渲染脚本不再引用已删模型配置。删除无调用者的 exporter 统计/状态接口，清除应用/测试/验证工具对 src/config 私有 include 的无用暴露。已核对目录树和依赖引用，没有空 math/observability/common 目录或 detection 步骤子目录、悬空声明或删除文件的构建引用。
 
 ## 4. R/Q 初估推导与限制
 
@@ -185,7 +185,7 @@ include/vision/
   types/        五份共享值类型头文件
 src/
   config/       application、detector、pose、tracking、reader
-  detection/    单层步骤实现/声明
+  detection/    preprocess、geometry、corners、pipeline（仅一级子目录）
   pose/         estimation、io、tag、validation
   tracking/     filter、measurement、lifecycle、io
   app/          offline、export、rendering、reporting
@@ -196,3 +196,37 @@ tools/
 ```
 
 没有引入新的架构层、质量门或运行期可调预算。全长回放证明本视频下的数值/检测行为保持，不证明真实角点、位姿或速度精度；R/Q、安装映射、板端图像与时间仍需实际采集验证。现有板端验证门和数据状态未改。
+
+## 7. Detection 一级目录补充调整
+
+基线：已确认提交 `4455f5e`。按用户对 G29 的补充说明，detection 与 pose/tracking 一样保留一级步骤目录，各步骤内部不再嵌套：
+
+```text
+src/detection/
+  CMakeLists.txt
+  preprocess/   preprocess.cpp/hpp
+  geometry/     geometry_observation.cpp/hpp、match_quad.cpp/hpp、contour_topology.hpp
+  corners/      corner_edge_fit.cpp/hpp、corner_observation.cpp/hpp、screen_order.cpp
+  pipeline/     decode_stage.cpp/hpp、detector.cpp
+```
+
+仅移动这 15 个源码/头文件，同步 CMake 源文件路径、生产与测试的 include 路径，以及 flow-guide 和本报告中的当前结构说明。公开头文件、模块命名空间、函数、数据类型、配置、阈值、算法和 `TrackingResult` 协议均不改变。将 include 路径反向归一后，逐个文件与调整前内容相同。
+
+用户提供的 `docs/ref/Codex指令-视觉管线瘦身-通读第1-4节.md` 原文一并纳入提交。该文件记录初始指令，G29 的实际目录解释以本节和更新后的 flow-guide 为准。
+
+验证使用全新构建目录，命令如下：
+
+```bash
+cmake -S src/tushenghao -B /tmp/vision-lean-structure-build -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/vision-lean-structure-build -j4
+ctest --test-dir /tmp/vision-lean-structure-build --output-on-failure
+```
+
+构建和 11/11 测试通过。重新运行 1676 帧录像的检测坐标回放、正式 marker_app（初估 profile、开启 overlay）及临时完整离线驱动（空 profile、关闭 overlay），与两套留存基线比较：
+
+- 对调整前 `4455f5e`：四角文本、两组 observations.yaml/tracks.yaml、同 profile 的 overlay.avi 全部逐字节相同。
+- 对 `edc9477`：四角、位姿和叠加视频逐字节相同；两组跟踪文件只将头部协议名 `G4TrackingResult` 替换为 `TrackingResult`，其余字节相同，未对帧内容作任何归一化。
+- 数量保持 1088 检出/4352 角、1088 ESTIMATED/588 UNAVAILABLE、1088 MEASURED/588 COASTING。1676 帧全部接受，事件只有一次 TRACK_CREATED，无数值拒绝。
+- 视频独立完整解码为 1676 帧、1440×1080、MJPG、AVI FPS=70.408，与基线相同；源 FPS=70.408336，微秒帧周期同为 14203。summary 除实际运行耗时外字节相同。
+
+第 5 节所列四角、位姿、两组跟踪 SHA-256 全部保持。补充验证日志/输出位于本机 `/tmp/vision-lean-structure-validation/`；证据目录未改。检查确认 detection 根目录只保留 CMakeLists.txt 和四个非空一级子目录，没有更深层目录、转发头或悬空 include。

@@ -2,7 +2,7 @@
 #include "vision/detection/detector.hpp"
 #include <optional>
 
-#include "decode_stage.hpp"
+#include "pipeline/decode_stage.hpp"
 
 namespace mark::detector
 {

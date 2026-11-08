@@ -57,18 +57,18 @@ build/marker_app --video data/raw/marker_video.avi
 
 ## 2. Detection：从当前帧得到真实四角
 
-源码全部平铺在 `src/detection/`，命名空间为 `mark::detector`，与 `mark::pose`、`mark::tracking` 对齐。
+`src/detection/` 按步骤保留一级子目录：`preprocess/` → `geometry/` → `corners/` → `pipeline/`，各子目录内直接放实现与声明，不再嵌套。目录层级与 pose/tracking 一致，命名空间为 `mark::detector`。
 
 | 文件 | 责任 |
 |---|---|
-| detector.cpp | 公开入口、图像格式与帧序检查、尺寸上下文、结果帧号 |
-| preprocess.cpp/hpp | 工作图、原图只读视图、像素中心映射 |
-| geometry_observation.cpp/hpp | 工作图白片轮廓、边框和截断事实 |
-| match_quad.cpp/hpp、contour_topology.hpp | 白片归组、拓扑检查、粗四边形 |
-| screen_order.cpp | 屏幕 LT/RT/RB/LB 排序 |
-| corner_observation.cpp/hpp | 按需建立原图轮廓索引、粗角查真实角片 |
-| corner_edge_fit.cpp/hpp | 连续支持提取、两条 L2 直线与交点 |
-| decode_stage.cpp/hpp | 安装映射、逐角解析、float 发布和检测编排 |
+| pipeline/detector.cpp | 公开入口、图像格式与帧序检查、尺寸上下文、结果帧号 |
+| preprocess/preprocess.cpp/hpp | 工作图、原图只读视图、像素中心映射 |
+| geometry/geometry_observation.cpp/hpp | 工作图白片轮廓、边框和截断事实 |
+| geometry/match_quad.cpp/hpp、geometry/contour_topology.hpp | 白片归组、拓扑检查、粗四边形 |
+| corners/screen_order.cpp | 屏幕 LT/RT/RB/LB 排序 |
+| corners/corner_observation.cpp/hpp | 按需建立原图轮廓索引、粗角查真实角片 |
+| corners/corner_edge_fit.cpp/hpp | 连续支持提取、两条 L2 直线与交点 |
+| pipeline/decode_stage.cpp/hpp | 安装映射、逐角解析、float 发布和检测编排 |
 
 类型在 `include/vision/types/`：`detector_types.hpp` 存帧输入、检测与 `FrameResult`；`corner_types.hpp` 存共享四角类型和排序声明；`prepared_frame_types.hpp` 存工作图、坐标映射与 `WhiteComponent`。解码和公开入口共用 `FrameResult`，没有重复结果容器。所有结构成员使用下划线后缀，普通函数使用 snake_case。
 
@@ -102,7 +102,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 ## 4. Tracking：R＋位置分歧与 CV 滤波
 
-`src/tracking/` 保持 filter、measurement、lifecycle、io 步骤目录。正定检查放在 `filter/covariance_validation.*`，与卡尔曼运行期检查同属跟踪模块。检测的线段距离放在 `contour_topology.hpp`。
+`src/tracking/` 保持 filter、measurement、lifecycle、io 步骤目录。正定检查放在 `filter/covariance_validation.*`，与卡尔曼运行期检查同属跟踪模块。检测的线段距离放在 `geometry/contour_topology.hpp`。
 
 输入 `TrackingFrame{stamp_, observations_}` 只含位姿结果，不访问图像和求解器候选。适配器检查同帧、同身份、检测下标不重复、名义平移有限且正深度、实际消费的 S 有限；噪声为 `R_eff=R_profile+S`。没有 RMSE 质量准入门。
 

@@ -1,5 +1,5 @@
 // 把工作图转灰度、阈值分割，输出轮廓、边框和边界截断事实供结构匹配。
-#include "geometry_observation.hpp"
+#include "geometry/geometry_observation.hpp"
 #include <opencv2/imgproc.hpp>
 
 namespace mark::detector
