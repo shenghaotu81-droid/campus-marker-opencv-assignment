@@ -1,5 +1,5 @@
 #include "offline/offline_runner.hpp"
-#include "detector/config.hpp"
+#include "vision/config/detector_config.hpp"
 #include "block3_fixture.hpp"
 #include "assertions.hpp"
 #include <chrono>
@@ -7,17 +7,14 @@
 #include <fstream>
 #include <regex>
 #include <opencv2/calib3d.hpp>
-#ifdef VISION_TEST_TRACKING
 #include "vision/config/pose_config.hpp"
-#endif
 #include <opencv2/videoio.hpp>
-#ifdef VISION_TEST_TRACKING
 // 解析图纸并从已知透视真值生成像素；预算/profile只在本测试目录，不写回生产配置。
 void unique_chain(const std::filesystem::path &root, const std::filesystem::path &source)
 {
     const auto config = root / "unique-config";
     std::filesystem::create_directory(config);
-    for (const auto &name:{"pose.yaml", "tracking.yaml", "calibration.yaml", "marker_geometry.yaml"})
+    for (const auto &name:{"pose.yaml", "tracking.yaml", "calibration.yaml"})
         std::filesystem::copy_file(source / "config" / name, config / name);
     auto replace = [&](const char *name, const char *key, const char *value)
                    {
@@ -33,7 +30,6 @@ void unique_chain(const std::filesystem::path &root, const std::filesystem::path
     {
         std::ofstream profile(config / "profile.yaml");
         profile << R"(%YAML:1.0
-schema_version: 1
 camera_mse_m2: !!opencv-matrix
   rows: 3
   cols: 3
@@ -50,7 +46,7 @@ initial_velocity_variance_m2ps2: 4.
     test_support::check(writer.isOpened(), "perspective fixture video failed");
     for (int i = 0; i < 24; ++i)
     {
-        cv::Mat image = cv::Mat::zeros(1080, 1440, CV_8UC3);
+        cv::Mat image_ = cv::Mat::zeros(1080, 1440, CV_8UC3);
         if (i != 13 && i != 14)
             for (const auto &polygon:model.polygons)
             {
@@ -63,32 +59,32 @@ initial_velocity_variance_m2ps2: 4.
                 std::vector<cv::Point> pixels;
                 for (const auto &p:projected)
                     pixels.emplace_back(cvRound(p.x), cvRound(p.y));
-                cv::fillPoly(image, std::vector<std::vector<cv::Point> >{pixels}, {255, 255, 255});
+                cv::fillPoly(image_, std::vector<std::vector<cv::Point> >{pixels}, {255, 255, 255});
             }
-        writer.write(image);
+        writer.write(image_);
     }
     writer.release();
-    auto app = mark::loadConfig(source / "config/detector.yaml");
-    app.offline.directory = (root / "pose-run").string();
-    mark::runOffline(app, video.string(), (config / "detector.yaml").string());
-    cv::FileStorage poses((root / "pose-run/observations.yaml").string(), cv::FileStorage::READ);
-    cv::FileStorage tracks((root / "pose-run/tracks.yaml").string(), cv::FileStorage::READ);
-    test_support::check(poses["frames"].size() == 24 && tracks["frames"].size() == 24, "perspective frames missing");
+    mark::AppConfig app{mark::detector::load_detector_config(source / "config/detector.yaml"),
+                        mark::load_offline_config(source / "config/offline.yaml")};
+    app.offline_.run_directory_ = (root / "pose-run").string();
+    mark::run_offline(app, video.string(), config);
+    cv::FileStorage poses_((root / "pose-run/observations.yaml").string(), cv::FileStorage::READ);
+    cv::FileStorage tracks_((root / "pose-run/tracks.yaml").string(), cv::FileStorage::READ);
+    test_support::check(poses_["frames"].size() == 24 && tracks_["frames"].size() == 24, "perspective frames missing");
     bool velocity = false;
     for (int i = 0; i < 24; ++i)
     {
         const bool missing = i == 13 || i == 14;
-        const auto pose = poses["frames"][i]["observations"][0];
+        const auto pose = poses_["frames"][i]["observations"][0];
         test_support::check(std::string(pose["status"]) == (missing ? "UNAVAILABLE" : "ESTIMATED"), "perspective pose wrong");
-        const auto track = tracks["frames"][i]["tracks"][0];
-        test_support::check(std::string(track["state"]) == (missing ? "COASTING" : "MEASURED"), "G2 to G4 flow/coast broken");
+        const auto track = tracks_["frames"][i]["tracks"][0];
+        test_support::check(std::string(track["state"]) == (missing ? "COASTING" : "MEASURED"), "Pose to Tracking flow/coast broken");
         test_support::check(!track["position_m"].empty() && track["time_bounded"].empty() && track["qualified_for_g5"].empty(), "finite position missing/dead qualification label survived");
         velocity = velocity || !track["velocity_mps"].empty();
     }
     test_support::check(velocity, "full chain never produced apparent velocity");
 }
 
-#endif
 int main()
 {
     const auto root = std::filesystem::temp_directory_path() / ("lean-chain-" +
@@ -97,15 +93,16 @@ int main()
     try {
         const auto source = std::filesystem::path(VISION_SOURCE_ROOT);
         const auto video = root / "input.avi";
-        const auto image = fixture::scene().frame.original_image_;
-        cv::VideoWriter writer(video.string(), cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, image.size());
+        const auto image_ = fixture::scene().frame.original_image_;
+        cv::VideoWriter writer(video.string(), cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, image_.size());
         test_support::check(writer.isOpened(), "fixture video open failed");
         for (int i = 0; i < 4; ++i)
-            writer.write(i == 2 ? cv::Mat::zeros(image.size(), image.type()) : image);
+            writer.write(i == 2 ? cv::Mat::zeros(image_.size(), image_.type()) : image_);
         writer.release();
-        auto app = mark::loadConfig(source / "config/detector.yaml");
-        app.offline.directory = (root / "run").string();
-        test_support::check(mark::runOffline(app, video.string(), (source / "config/detector.yaml").string()) == 0, "offline chain failed");
+        mark::AppConfig app{mark::detector::load_detector_config(source / "config/detector.yaml"),
+                        mark::load_offline_config(source / "config/offline.yaml")};
+        app.offline_.run_directory_ = (root / "run").string();
+        test_support::check(mark::run_offline(app, video.string(), source / "config") == 0, "offline chain failed");
         cv::VideoCapture output((root / "run/overlay.avi").string());
         test_support::check(output.isOpened() &&
                             static_cast<int>(output.get(cv::CAP_PROP_FOURCC)) == cv::VideoWriter::fourcc('M', 'J', 'P', 'G'),
@@ -115,29 +112,40 @@ int main()
         while (output.read(frame))
         {
             ++count;
-            test_support::check(frame.size() == image.size(), "overlay dimensions changed");
+            test_support::check(frame.size() == image_.size(), "overlay dimensions changed");
         }
         test_support::check(count == 4, "overlay frame count differs");
         cv::FileStorage summary((root / "run/summary.yaml").string(), cv::FileStorage::READ);
         test_support::check(std::string(summary["frames"]) == "4", "summary count differs");
-#ifdef VISION_TEST_TRACKING
-        cv::FileStorage poses((root / "run/observations.yaml").string(), cv::FileStorage::READ);
-        cv::FileStorage tracks((root / "run/tracks.yaml").string(), cv::FileStorage::READ);
-        test_support::check(poses["frames"].size() == 4 && tracks["frames"].size() == 4, "stages skipped frames");
-        for (const auto &f:tracks["frames"])
+        cv::FileStorage poses_((root / "run/observations.yaml").string(), cv::FileStorage::READ);
+        cv::FileStorage tracks_((root / "run/tracks.yaml").string(), cv::FileStorage::READ);
+        test_support::check(poses_["frames"].size() == 4 && tracks_["frames"].size() == 4, "stages skipped frames");
+        test_support::check(std::string(poses_["stream_type"]) == "PoseObservations" &&
+                            std::string(tracks_["stream_type"]) == "TrackingResult", "stream protocol name differs");
+        for (const auto &f:tracks_["frames"])
             test_support::check(int(f["input_accepted"]) == 1, "tracker did not consume a frame");
-#endif
-#ifdef VISION_TEST_TRACKING
         unique_chain(root, source);
-#endif
-        bool rejected = false;
-        try {
-            mark::runOffline(app, video.string(), (source / "config/detector.yaml").string());
+        // 同目录可重复运行；视频文件名由离线配置决定。
+        app.offline_.video_filename_ = "renamed.avi";
+        mark::run_offline(app, video.string(), source / "config");
+        test_support::check(std::filesystem::exists(root / "run/renamed.avi"), "video filename ignored");
+        // 从 YAML 加载 false，确认调用方跳过编码和渲染，数据流继续落盘。
+        const auto no_overlay = root / "offline.yaml";
+        {
+            std::ofstream out(no_overlay);
+            out << "%YAML:1.0\n---\noverlay: false\n";
         }
-        catch (const std::runtime_error &) {
-            rejected = true;
+        app.offline_ = mark::load_offline_config(no_overlay);
+        app.offline_.run_directory_ = (root / "no-overlay").string();
+        mark::run_offline(app, video.string(), source / "config");
+        test_support::check(!std::filesystem::exists(root / "no-overlay/overlay.avi"), "disabled overlay written");
+        for (const auto &name : {"observations.yaml", "tracks.yaml"})
+        {
+            std::ifstream enabled(root / "run" / name), disabled(root / "no-overlay" / name);
+            test_support::check(std::string((std::istreambuf_iterator<char>(enabled)), {}) ==
+                                std::string((std::istreambuf_iterator<char>(disabled)), {}),
+                                "overlay switch changed pose or tracking");
         }
-        test_support::check(rejected, "output overwrite accepted");
         std::filesystem::remove_all(root);
         return 0;
     }

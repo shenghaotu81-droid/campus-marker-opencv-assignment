@@ -19,5 +19,4 @@ namespace mark::tracking
     };
 
     TrackingConfig load_tracking_config(const std::filesystem::path &);
-    void validate_tracking_config(const TrackingConfig &);
 }

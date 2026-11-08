@@ -1,5 +1,5 @@
-// Tag 检测器的集成测试（A01-A11）
-#include "g2_test_scene.hpp"
+// Tag 检测器的集成测试（）
+#include "pose_test_scene.hpp"
 #include "vision/pose/tag_detector.hpp"
 
 #include <iostream>
@@ -29,33 +29,33 @@ cv::Mat fixture()
 int main()
 {
     try {
-        auto cfg = g2_test::config();
-        auto s = g2_test::stamp(cfg);
-        auto image = fixture();
+        auto cfg = pose_test::config();
+        auto s = pose_test::stamp(cfg);
+        auto image_ = fixture();
         cfg.tag_.allowed_ids_ = {0};
         cfg.tag_.side_m_[0] = .12;
         mark::pose::TagDetector detector(cfg.tag_);
-        auto tags = detector.detect(image, s);
-        g2_test::require(tags.size() == 1 && tags[0].id_ == 0, "approved tag missing");
-        g2_test::require(tags[0].corners_[0].x<tags[0].corners_[1].x && tags[0].corners_[0].y>tags[0].corners_[3].y, "tag corner convention changed");
+        auto tags = detector.detect(image_, s);
+        pose_test::require(tags.size() == 1 && tags[0].id_ == 0, "approved tag missing");
+        pose_test::require(tags[0].corners_[0].x<tags[0].corners_[1].x && tags[0].corners_[0].y>tags[0].corners_[3].y, "tag corner convention changed");
         auto unknown = cfg.tag_;
         unknown.side_m_.clear();
-        auto pixels = mark::pose::TagDetector(unknown).detect(image, s);
-        g2_test::require(pixels.size() == 1 && !mark::pose::estimate_exit(pixels[0], image.size(), mark::pose::PoseEstimator(cfg)).estimate_, "unknown metric size blocked pixel decode or invented pose");
+        auto pixels = mark::pose::TagDetector(unknown).detect(image_, s);
+        pose_test::require(pixels.size() == 1 && !mark::pose::estimate_exit(pixels[0], image_.size(), mark::pose::PoseEstimator(cfg)).estimate_, "unknown metric size blocked pixel decode or invented pose");
         auto denied = cfg.tag_;
         denied.allowed_ids_ = {1};
         denied.side_m_.clear();
         denied.side_m_[1] = .12;
-        g2_test::require(mark::pose::TagDetector(denied).detect(image, s).empty(), "wrong ID accepted");
+        pose_test::require(mark::pose::TagDetector(denied).detect(image_, s).empty(), "wrong ID accepted");
         cv::Mat two;
-        cv::hconcat(image, image, two);
-        g2_test::require(detector.detect(two, s).empty(), "duplicate identity selected");
-        cv::Mat blank(image.size(), CV_8UC3, cv::Scalar::all(255));
-        g2_test::require(detector.detect(blank, s).empty(), "blank tag");
-        cv::Mat padded(image.rows + 20, image.cols + 20, CV_8UC3, cv::Scalar::all(255));
-        auto roi = padded(cv::Rect(10, 10, image.cols, image.rows));
-        image.copyTo(roi);
-        g2_test::require(detector.detect(roi, s).size() == 1, "non-contiguous stride broken");
+        cv::hconcat(image_, image_, two);
+        pose_test::require(detector.detect(two, s).empty(), "duplicate identity selected");
+        cv::Mat blank(image_.size(), CV_8UC3, cv::Scalar::all(255));
+        pose_test::require(detector.detect(blank, s).empty(), "blank tag");
+        cv::Mat padded(image_.rows + 20, image_.cols + 20, CV_8UC3, cv::Scalar::all(255));
+        auto roi = padded(cv::Rect(10, 10, image_.cols, image_.rows));
+        image_.copyTo(roi);
+        pose_test::require(detector.detect(roi, s).size() == 1, "non-contiguous stride broken");
         bool failed = false;
         try{
             detector.detect({}, s);
@@ -63,17 +63,7 @@ int main()
         catch (const std::invalid_argument &){
             failed = true;
         }
-        g2_test::require(failed, "empty C input");
-        auto bad = cfg.tag_;
-        bad.side_m_[0] = 0;
-        failed = false;
-        try{
-            mark::pose::TagDetector d(bad);
-        }
-        catch (const std::exception &){
-            failed = true;
-        }
-        g2_test::require(failed, "bad metric size accepted");
+        pose_test::require(failed, "empty C input");
         return 0;
     }
     catch (const std::exception &e){

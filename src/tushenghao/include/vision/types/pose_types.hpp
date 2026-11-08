@@ -23,14 +23,6 @@ namespace mark::pose
         std::optional<int64_t> exposure_us_;
         std::optional<double> time_uncertainty_s_;
 
-        bool valid() const
-        {
-            return !session_id_.empty() && !camera_id_.empty() && !clock_domain_.empty() &&
-                   pixel_domain_ == PixelDomain::RawDistorted && received_us_ >= 0 &&
-                   (!exposure_us_ || (*exposure_us_ >= 0 && *exposure_us_ <= received_us_)) &&
-                   (!time_uncertainty_s_ ||
-                    (std::isfinite(*time_uncertainty_s_) && *time_uncertainty_s_ >= 0));
-        }
     };
 
     struct RigidPose
@@ -42,7 +34,7 @@ namespace mark::pose
     {
         RigidPose pose_;
         double rmse_px_{};
-        // 合法其他解相对名义平移的加权二阶矩；G4把它加到profile R。
+        // 合法其他解相对名义平移的加权二阶矩；Tracking把它加到profile R。
         // 不是完整SE3协方差，也不是经过标定的后验概率。
         cv::Matx33d translation_spread_m2_{cv::Matx33d::zeros()};
     };

@@ -59,16 +59,16 @@ def main(a):
                 spread += (u*u/(u*u+v*v)) * np.outer(delta, delta)
             assert np.array_equal(spread, estimate.getNode('translation_spread_m2').mat()), (i, 'spread')
             poses[i] = (e0, t0)
-    assert data(a.before_tracks) == data(a.after_tracks), 'G4 output changed'
+    assert data(a.before_tracks) == data(a.after_tracks), 'Tracking output changed'
     assert data(a.before_raw) == data(a.after_raw), 'Detector/corners changed'
     summary, _ = tracks(a.after_tracks, poses)
     result = dict(
         baseline='a392bd4', frames=old_frames.size(), before_status=dict(old_counts),
         after_status=dict(new_counts), baseline_legal_solution_counts=dict(solution_counts),
         nominal_rvec_translation_rmse_exact=True, translation_spread_matches_old_formula_exact=True,
-        g4_stream_byte_identical=True, detection_raw_byte_identical=True,
+        tracking_stream_byte_identical=True, detection_raw_byte_identical=True,
         detections=len(poses), corners=4*len(poses), pnP_rmse_px=stats(v[0] for v in poses.values()),
-        g4=summary,
+        tracking=summary,
         limitations='Same conditional synthetic R/q/vv profile; no independent corner/pose/velocity ground truth.')
     a.output.write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps(result, indent=2))

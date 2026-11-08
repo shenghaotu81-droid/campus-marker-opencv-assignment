@@ -1,103 +1,132 @@
 # MARK 主链流程导读
 
-当前分支：`refactor/vision-lean-fixed`。本页对应单候选拟合和位姿输出收尾实现；最新改动与1676帧验证见[收尾报告](POSE_STATUS_FINALIZATION_REPORT.md)，之前156项去向见[落实快照](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)。配置schema为2，位姿输出schema为6，跟踪输出schema为2。
-
-## 先看数据怎么走
+分支：`refactor/vision-lean-fixed`。当前结构、取舍和验证见[视觉管线瘦身报告](VISION_LEAN_REPORT.md)。配置直接读取手填值；位姿输出 schema=6、跟踪输出 schema=2。
 
 ```mermaid
 flowchart TD
-    A[BGR原图与帧时间] --> B[工作图白片分割]
-    B --> C[三L一短M结构确认与四边形]
-    C --> D[屏幕排序 查安装映射]
+    A[视频 BGR 原图 帧号/FPS] --> B[工作图白片分割]
+    B --> C[三 L 一短 M 匹配 粗四边形]
+    C --> D[屏幕排序 固定安装映射]
     D --> E[当前原图四个真实角片]
-    E --> F[每角两组连续支持 各一次L2 求交]
-    F --> G[float四角发布]
-    G --> H[G2 内部IPPE 数学合法解与RMSE]
-    H --> I[可选名义估计 加权平移分歧矩阵]
-    I --> J[G4 R加位置分歧矩阵]
-    J --> K[CV预测 更新 或coast]
-    G --> O[文件与叠加视频]
-    I --> O
+    E --> F[两组连续边支持 各一次 L2 求交]
+    F --> G[float 四角发布]
+    G --> H[平面 IPPE 合法候选 重投影 RMSE]
+    H --> I[可选名义位姿 位置分歧 S]
+    I --> J[量测噪声 R_profile + S]
+    J --> K[CV 预测 更新或 coast]
+    I --> O[位姿 轨迹 汇总文件]
     K --> O
+    G --> V[可选叠加 MJPG/AVI]
+    I --> V
+    K --> V
 ```
 
-没有仿射、hypothesis、补角、候选角排名、周期回退或质量资格链。图案匹配是检测本体，仍须真的看见完整MARK；标签不能替代缺失的图案。G2两支解是平面位姿本身的歧义，与角点拟合的“单候选”不是一回事。
+## 1. 启动与配置
 
-## 1. 启动与安装核验
+从仓库根目录执行：
 
-入口`tools/apps/marker/main.cpp`只负责CLI与启动`runOffline`。`--video`/`--camera`二选一，`--config`默认指向唯一的`config/detector.yaml`。没有debug/verification配置副本。
+```bash
+cmake -S src/tushenghao -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j4
+ctest --test-dir build --output-on-failure
+build/marker_app --video data/raw/marker_video.avi
+```
 
-`src/config/`加载三个模块的配置，不替算法作质量筛选：
+依赖 C++17、OpenCV ≥4.6 和 AprilTag ≥3.3。始终构建检测、位姿和跟踪；`VISION_BUILD_TOOLS=OFF` 关闭应用/标定工具，`BUILD_TESTING=OFF` 关闭测试与验证工具。两者同时关闭时只构建算法库。
 
-- detector.yaml：工作尺寸960×720、原图/工作图白阈200、工作轮廓epsilon=2、固定排列和AVI输出路径。
-- pose.yaml：真实相机内参/畸变/分辨率、80×80mm MARK四点模型、退出Tag ID与实际边长。四角模型转换成米；115×120识别板不是PnP四角。
-- tracking.yaml：观测source/target、时间界语义和可选profile路径。profile只读R、q、初速方差；R正定，q可为0，初速方差正值。生产profile为空时启动提示一次，检测/G2照常，G4不产生数值轨迹。
+入口 `tools/apps/marker/main.cpp` 只接受 `--video VIDEO`，检查未知、缺值、重复参数和把选项误写为值的情况。配置目录固定为源树 `config/`；先分别调用 `mark::detector::load_detector_config` 和 `mark::load_offline_config`，再调用 `run_offline`。位姿和跟踪配置从同目录加载。
 
-固定排列`physical_to_screen[p]`表示物理Pp对应屏幕哪个槽：0=左上、1=右上、2=右下、3=左下，当前为[0,1,2,3]。配置/直接构造时验0…3排列；内部查表不逐帧重猜身份。
+| 配置 | 内容与消费者 |
+|---|---|
+| detector.yaml | preprocess 工作尺寸 960×720、原图白阈 200；geometry 工作白阈 200、轮廓 epsilon=2；corner 固定安装排列 |
+| offline.yaml | `run_directory: "outputs/marker"`、`video_filename: "overlay.avi"`、`overlay: true`，三者也是 C++ 默认值 |
+| pose.yaml | 相机标定路径与身份；四点平面模型、source_unit、目标身份；Tag 白名单与实际边长 |
+| calibration.yaml | K、畸变、1440×1080 分辨率与标定重投影误差 |
+| tracking.yaml | source、target、时间界语义、profile 文件路径 |
+| tracking_profile.yaml | 初估、待标定的 R、加速度 PSD q 和初速方差 |
 
-赛前核验：按比赛安装拍一张清晰图，对照实物/图纸逐个标P0…P3，检查叠加屏幕槽位与配置一致；不一致就改排列。让轨道走一遍并覆盖预期的小晃动，确认上下两带、每带左右次序没有交换。换装/换相机后重做。固定映射不支持跨90°翻转或严重透视使上下带交换；比赛面朝移动区域的规定本身不能替代这次安装核验。
+`include/vision/config/` 存放配置类型和加载声明，包含应用组合类型 `app_config.hpp`。`src/config/` 的四个 loader 只读取值；`reader/value_reader.hpp` 共享节点到 C++ 值的转换。不检查手填字段的类型、范围、未知/重复键、schema 或排列。配置文件打不开仍报告 I/O 错误。
 
-## 2. Detector：只从当前帧得到四角
+`pose.yaml` 的 `geometry.model_points: [[0,0],[80,0],[80,80],[0,80]]` 按 P0/P1/P2/P3 排列；`source_unit: "mm"` 把四点变为 `(0,0,0)`、`(.08,0,0)`、`(.08,.08,0)`、`(0,.08,0)` 米。PnP 不读取图案多边形；测试渲染图案由测试夹具保存。115×120 识别板不是四点模型。
 
-**输入边界。** `Detector::process(FrameInput)`检查非空2D BGR8、合法时间和递增帧序，避免OpenCV访问非法图像。尺寸变化重置帧上下文；同一timestamp可检测，G4另要求不同时刻才能建速度。输入图像不被修改。decode内部不再重复格式与配置预算检查。
+固定排列 `physical_to_screen[p]` 表示物理 Pp 对应屏幕哪个槽：0=左上、1=右上、2=右下、3=左下，当前为 `[0,1,2,3]`。内部直接查表，不逐帧重猜身份。
 
-**分割和坐标。** `preprocess`保留原图引用并生成工作图；`extractWhiteComponents`按工作白阈提轮廓，保存实际轮廓/跨度/截断事实。工作坐标到原图坐标用真实宽高比例，角点精修始终在原图。
+安装核验：拍清晰图，对照实物/图纸标 P0…P3，检查叠加屏幕槽位与配置一致；让轨道走一遍并覆盖预期晃动，确认上下两带和带内次序不交换。换装/换相机后重做。固定映射不支持跨 90° 翻转或使上下带交换的严重透视。
 
-**形成MARK四边形。** `matchQuads`按实测白片跨度局部归组，S片可以作空间桥，不分配模型身份；确认六边一凹的L/M及正确外凸角。四边形的四角须来自四个不同完整角片，结构是三L加一短M；短M只确认图案，不决定P编号。22/80是14mm与30mm臂长的结构分界近似，非严格投影不变量。
+`run_offline` 打开视频，保留 `INPUT_OPEN_FAILED` 与 `INPUT_FPS_INVALID`：FPS 必须有限且为正，才能生成时间戳及跟踪 dt。时间固定为 `llround(frame_id × 1e6 / fps)`，clock_domain 为 `video-fps`；没有实测曝光或时间误差界时保持未知。每帧依次检测、位姿、跟踪、写文件；无检测帧也进入后两步。
 
-轮廓简化保留原六尺度{1,.5,.75,1.25,1.5,2}，因为删减会破坏小尺寸/抖动用例。拓扑只允许直接6点或7点去掉一个冗余点，合并边须覆盖原弧；已删8点组合枚举。这里的搜索用于确认图案，角点精修没有候选枚举。缺片、错向L、矩形替M、截断或不存在四边形时，输出未检出。
+## 2. Detection：从当前帧得到真实四角
 
-**排序和身份。** `orderScreenCorners`将四点按y分上下两带、带内按x分左右，形成LT/RT/RB/LB；检查有限、非零叉积且严格凸。`decodeStage`直接查固定排列，得到物理P序的粗角。粗边直接是相邻粗角连线，不推仿射或投影图纸边。
+源码全部平铺在 `src/detection/`，命名空间为 `mark::detector`，与 `mark::pose`、`mark::tracking` 对齐。
 
-**当前原图来源。** `OriginalContourIndex`按需对原图阈值提完整轮廓，每帧最多一次；各粗角取最近真实角片轮廓。原图截断无完整支持时失败，不裁ROI再人为闭合。resolver只保证四个角不复用同一原图组件，并把各角与前/后邻粗角交给拟合器。不再复制CornerEvidence。
+| 文件 | 责任 |
+|---|---|
+| detector.cpp | 公开入口、图像格式与帧序检查、尺寸上下文、结果帧号 |
+| preprocess.cpp/hpp | 工作图、原图只读视图、像素中心映射 |
+| geometry_observation.cpp/hpp | 工作图白片轮廓、边框和截断事实 |
+| match_quad.cpp/hpp、contour_topology.hpp | 白片归组、拓扑检查、粗四边形 |
+| screen_order.cpp | 屏幕 LT/RT/RB/LB 排序 |
+| corner_observation.cpp/hpp | 按需建立原图轮廓索引、粗角查真实角片 |
+| corner_edge_fit.cpp/hpp | 连续支持提取、两条 L2 直线与交点 |
+| decode_stage.cpp/hpp | 安装映射、逐角解析、float 发布和检测编排 |
 
-**每角一次拟合。** `fitObservedCorner(contour, corner, adjacent[2], reason)`只返回一个可选double交点：
+类型在 `include/vision/types/`：`detector_types.hpp` 存帧输入、检测与 `FrameResult`；`corner_types.hpp` 存共享四角类型和排序声明；`prepared_frame_types.hpp` 存工作图、坐标映射与 `WhiteComponent`。解码和公开入口共用 `FrameResult`，没有重复结果容器。所有结构成员使用下划线后缀，普通函数使用 snake_case。
 
-1. 将四边形两条邻边单位化，取离粗角最近的轮廓点作锚点。
-2. 从锚点沿原轮廓两个方向走，两边各不足半圈，互不复用。用随角片bbox尺寸变化的四分之一探针判断这条分支对应哪条邻边；两分支须是不同边。
-3. 用±3像素局部切向按两条邻边的方向接近程度分组，只取每边第一段连续支持，不跨断点拼线。沿弧跳过初始5像素（2像素转折修剪加3像素切向半窗），尾端再修剪2像素，避免圆角和栅格转折混进直线。
-4. 每组至少两点且不重合，各调用一次`cv::fitLine(DIST_L2)`。两线求交；仅平行/机器精度不可除、非有限才无解。没有10点、14px跨度、3°、9px、13.5px、残差或extension资格门。
+**输入边界。** `Detector::process` 检查非空 2D BGR8、非负时间及递增帧号/不倒退时间，防止非法图像进入 OpenCV。尺寸变化重置上下文；相同时间戳可检测，跟踪另要求不同时间才能测速度。原图只读。preprocess 不重复检查格式或手填配置。
 
-3/2像素常量定义支持构造，仍会影响精度，不能因为不叫门就免验证；MaixCam的像素尺度、模糊与圆角需重验。没有候选分数、歧义判断、trace或周期模型。
+**分割和匹配。** `preprocess` resize 并记录真实宽高比例，使用像素中心映射引导原图搜索。`extract_white_components` 按工作白阈提取白片。`match_quads` 按实测跨度归组，S 片可作空间桥，但不分配模型身份；四个粗角必须属于四个不同完整角片，结构为三 L 加一短 M。22/80 是 14mm 与 30mm 外臂的结构分界近似，非严格投影不变量。
 
-**发布。** 四个double交点转float后，`publishFloatDetection`再检查有限、图内和凸环，因为舍入可能改变几何；随后输出屏幕顺序四角和固定P→屏幕排列。没有category、confidence、bbox、质量旗或重复Evidence。未拟合到真实四角就不发布Detection；G2/G4预测不能反馈成检测。
+轮廓简化搜索六尺度 `{1,.5,.75,1.25,1.5,2}`，由两个循环共享同一命名常量。拓扑允许直接六点或七点省去一个顶点，合并边须覆盖原弧；凹凸结果只计算一次。缺片、错向 L、矩形替 M、截断或无凸四边形时返回未检出。没有候选角搜索或周期回退。
 
-## 3. G2：内部处理多解，只输出可选名义估计
+**排序和角片。** `order_screen_corners` 按 y 分上下带、按 x 分带内左右，检查有限、非零叉积和严格凸。`decode_stage` 查固定排列得到物理角顺序；相邻粗角给出两条指导边。`OriginalContourIndex` 在需要时对整张原图提取完整轮廓，每帧最多一次；各角选择最近真实角片，截断失败，四角不复用原图组件。
 
-公开`PoseEstimator`独立校验同帧对应、下标/排列、相机和图像域、四角凸环、合法平面模型。相机配置构造时验证并克隆，热路径不反复验证不可变K。检测器可以替换，不依赖其内部Evidence。
+**每角一次拟合。** `fit_observed_corner` 以粗角最近轮廓点为锚，两方向各走不足半圈。bbox 尺度的四分之一探针区分两条边；±3 像素切向窗口按指导方向分组，只用首段连续支持。沿弧跳过初始 5 像素（2 像素转折修剪＋3 像素切向半窗），尾端修剪 2 像素。每组至少两点且不重合，各调用一次 `cv::fitLine(DIST_L2)`，两线求交；平行、机器精度不可除或非有限才失败。3/2 像素常量定义支持构造，板端像素尺度、模糊与圆角仍需重验。
 
-`solvePnPGeneric(SOLVEPNP_IPPE)`正常返回两支候选；`evaluate_pose`独立重投影，排除非有限、非正深度、不可投影的数学坏解。异常/退化或数学复核可能使合法候选减少，不能把“本片1088帧全两支”写成所有输入的保证。没有1.10px预算或0.25px差距门，也不因两解接近丢掉整帧。
+**发布。** `publish_float_detection` 将 double 交点转 float 后，再检查有限、图内和凸环，防止舍入破坏几何；输出屏幕四角及固定 P→屏幕排列。未拟合到四个真实角就不发布检测。位姿/跟踪预测不反馈成检测。
 
-候选、重投影比较、名义支选择只在G2内部。成功返回`PoseObservation.estimate_`，包含：
+## 3. Pose：可选名义估计与多解分歧
 
-- `pose_`：最低RMSE合法支的rvec、米制平移；不宣称物理唯一。
-- `rmse_px_`：该支二维欧氏重投影RMSE，供位姿量测与诊断。
-- `translation_spread_m2_`：其他合法解相对名义平移的加权二阶矩S，G4实际消费。
+`src/pose/` 保持 io、validation、estimation、tag 四个步骤目录。`PoseConfig` 保存相机、四点模型和 Tag 配置；构造求解器克隆 K/dist，防止调用方改 Mat 影响后续求解。配置不另作合法性验证。
 
-对名义支t0/e0及其他支tj/ej，`wj=e0²/(e0²+ej²)`，两误差都0时取1/2；计算先按最大误差归一化防平方溢出。`S=Σwj(tj−t0)(tj−t0)^T`。只有一合法支时S=0，双支平移相同也可S=0；零矩阵不是姿态唯一性证明。权重是连续残差模型，未经后验概率标定，也不是完整SE3协方差。
+公开边界仍检查同帧对应、检测下标、输入检测的排列、相机/图像域及像素凸环；这些是跨模块输入检查。模型非有限/非平面输入不送入求解器；不对手填四点重复检查凸性。
 
-**只有两种结果：**estimate有值或无值。C++不再存PoseStatus、selected_index或候选vector，也没有重复的成功布尔。显示和文件状态由estimate是否有值统一生成`ESTIMATED / UNAVAILABLE`。未检测到正常返回空estimate；输入非法/求解失败也不返回估计，已有短`reason`说明故障，不再多存一组失败分类资格。
+`solvePnPGeneric(SOLVEPNP_IPPE)` 产生平面候选，`evaluate_pose` 独立重投影并排除非有限、非正深度或不可投影坏解。异常/退化可使合法候选减少；没有 RMSE 资格门，也不因两解接近丢掉整帧。
 
-退出Tag通过真实后端独立解码；保留ID/重复ID与实际尺度契约。未知边长能解码像素角，但米制估计为空并说明原因。Tag看到与否不表示控制权/兑换完成。
+`PoseObservation.estimate_` 有值时包含最低 RMSE 合法支的 `pose_`、二维欧氏重投影 `rmse_px_`、位置分歧 `translation_spread_m2_`。对名义支 t0/e0 与其他支 tj/ej：
 
-## 4. G4：只接名义位置与分歧，不读求解器候选
+`wj=e0²/(e0²+ej²)`，两误差都为零时取 1/2；先按最大误差归一化防平方溢出。`S=Σwj(tj−t0)(tj−t0)^T`。
 
-输入是同帧`TrackingFrame{stamp, observations}`，不访问图像、Detector或G2求解过程。只消费estimate是否存在、名义平移、S和真实身份/时间字段；不读候选、选支索引、Unique/Ambiguous，也不再检查未用于位置滤波的RMSE。RMSE仍由G2验证和使用。
+一个合法解时 S=0，两支平移相同时也可为零；它不是唯一性证明、完整 SE3 协方差或标定后验概率。候选和选支只在求解器内部。状态由 estimate 是否有值生成 `ESTIMATED / UNAVAILABLE`，故障可附 reason。
 
-测量噪声直接是`R_eff=R_profile+S`。位置必须有限且正深度，实际消费的S必须有限；R/P的数学合法性继续由原滤波器验证。没有经验质量准入门或新增“歧义高”标签。时间上下文变化重建轨迹；重复/倒序不提交，数学异常保持上一步状态。
+退出 Tag 用真实 AprilTag 后端独立解码，检查白名单、重复身份、图像/轮廓和 C 句柄；没有实际边长时仍可返回像素角，米制估计为空。Tag 出现不代表控制权或兑换完成。
 
-**G3只消费G4输出。**接口是Measured/Coasting、必填位置/协方差P、可选速度、实测时刻/当前时刻和轨迹ID。G2的平移分歧已通过R_eff进入P，不需要G3回头读G2或挖candidates。当前没有消费独立歧义bit/分数的G3实现，因此不另造死标签；P也不冒充完整姿态歧义信息。Measured/Coasting仍分别表示实际更新与预测，不能合并。
+## 4. Tracking：R＋位置分歧与 CV 滤波
 
-CV滤波保持原位置/速度积分、过程噪声和Joseph更新。第一位置不能测速度；第二个不同时刻初始化速度。多个位置候选用NIS排序，精确平局或无轨迹时多目标不能确定身份则不硬选；没有NIS限值/高NIS重种。有限大创新也更新，不能把模型不一致直接当观测非法。
+`src/tracking/` 保持 filter、measurement、lifecycle、io 步骤目录。正定检查放在 `filter/covariance_validation.*`，与卡尔曼运行期检查同属跟踪模块。检测的线段距离放在 `contour_topology.hpp`。
 
-时间未知用名义时间，不凭空猜硬界；有实际声明的absolute_bound才使用有界P/R增广，区间重叠回名义模型而非拒更新。没有max_dt/std/qualified/predict_to预算，没有无人消费的世界坐标通用层。
+输入 `TrackingFrame{stamp_, observations_}` 只含位姿结果，不访问图像和求解器候选。适配器检查同帧、同身份、检测下标不重复、名义平移有限且正深度、实际消费的 S 有限；噪声为 `R_eff=R_profile+S`。没有 RMSE 质量准入门。
 
-有测量是Measured；没有测量则Coasting并输出有限位置/速度/P。没有靠方差或时间阈值清空有限结果的Lost分支。coast是预测，不是仍看见MARK；长时间预测不等于精度保证，下游依据last_measurement_stamp和P理解它。相机系速度包含自车运动，不是轨道的世界速度。生产profile为空则没有G4数值输出。
+时间字段保留。负时刻、曝光晚于接收、非法误差界是运行期坏数据；重复/倒序不提交，上下文变化重建轨迹。未知时间使用名义时刻，只有声明 absolute_bound 且有曝光/误差界才增广 P/R；区间重叠回名义模型。数学异常保留上一次状态。
 
-## 5. 输出与验证接口
+CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪声，通过 Joseph 更新保持协方差。R/P 正定、量测有限、除法时间间隔和计算溢出检查保留。第一位置没有测得速度；第二个不同时刻初始化速度。多位置候选按 NIS 排序，精确平局或无轨迹时无法确定多目标身份就不硬选；不设 NIS 截断门。
 
-应用写`observations.yaml`、`tracks.yaml`、`summary.yaml`和MJPG的`overlay.avi`，视频完成后全帧读回。writer只有生产应用实际调用的逐帧版本；没有生产反向reader、配置写回或“为了测试”的trace。叠加图只读，不反馈算法。
+有位置更新为 `MEASURED`；无更新为 `COASTING`，继续输出有限位置/速度/P，没有方差或超时清空有限结果的资格门。下游控制只消费轨迹、最近实测时刻和 P。coast 是预测；相机系速度包含自车运动。
 
-测试工具`tests/validation/detection_replay.cpp`只调公开Detector，`tracking_replay.cpp`自己读schema6后调用公开G4，`replay_compare.py`对比历史数据；均留在测试侧。`BUILD_TESTING=OFF`不构建测试支撑。各模块可以单独替换：分割/匹配产MatchQuad，拟合收真实轮廓和两条粗边，发布产Detection，G2产PoseObservation，G4产相机系TargetTrack，无跨模块质量预算包。
+默认 profile 为 `tracking_profile.yaml`：R=diag(2e-8,2e-8,2.5e-7) m²，q=0.5 m²/s³，初速方差=0.25 m²/s²。**初估、待标定**，纵深值还依赖尺度误差假设，推导和限制见报告。`profile: ""` 仍可明确关闭数值跟踪。作业视频没有真实位置/速度 ground truth，不能从本算法输出循环标定 R/Q。
 
-当前录像：1676帧、1088检测/4352角，1088 ESTIMATED、588 UNAVAILABLE，求解失败0；RMSE中位/P95/最大0.357573/0.690671/0.926320px。条件profile回放1088 Measured、588 Coasting；它是合成R/Q复用的诊断，不是MaixCam或真实速度精度证明。新旧名义位姿/RMSE完全一致，条件G4逐字节一致；完整证据与限制见收尾报告。
+## 5. 输出与验收
+
+| 文件 | 内容 |
+|---|---|
+| observations.yaml | 每帧名义位姿/空估计、RMSE 和位置分歧，schema=6 |
+| tracks.yaml | 每帧相机系位置、可选速度、P、最近实测时刻和轨迹状态，schema=2 |
+| summary.yaml | 帧数、检测数、位姿/跟踪/原因计数和总耗时 |
+| offline.video_filename | overlay=true 时的 MJPG/AVI 叠加视频，默认 overlay.avi |
+
+已有输出目录可复用；同名文件覆盖，保留多次视频可修改 `.avi` 文件名。overlay=false 时调用方跳过 exporter 的 open/write/finish 和渲染，前三种数据文件照常写。视频临时文件是 `<stem>.partial.avi`，关闭编码器后改名；生产不逐帧读回，验收独立解码。
+
+64 位帧号、轨迹 ID、微秒时刻与计数仍用十进制字符串写 YAML，避免 OpenCV 4.6 的 int 接口窄化或 double 丢精度。流头分别为 `PoseObservations` 和 `TrackingResult`。回放对照仅允许跟踪流头从基线协议名变为 `TrackingResult`，其余字节保持一致。
+
+`run_report.*` 和 `run_console.*` 属于 app/reporting，叠加绘制在 app/rendering；它们只消费结果，不影响算法。验证工具和夹具在 tests，不进入生产库。
+
+固定录像：1676 帧、1088 检测/4352 角，1088 ESTIMATED、588 UNAVAILABLE，1088 MEASURED、588 COASTING。相同输入/模型下，四角文本与位姿文件和 edc9477 逐字节一致；跟踪文件只允许流头协议名变化，其余字节一致，空 profile 也一致。11 项测试、视频帧数/尺寸/源帧周期/MJPG 独立解码与结构检查见[报告](VISION_LEAN_REPORT.md)。板端实测数据与精度标定不在本次范围。

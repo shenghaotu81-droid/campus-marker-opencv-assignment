@@ -1,5 +1,5 @@
 #include "vision/detection/detector.hpp"
-#include "detector/config.hpp"
+#include "vision/config/detector_config.hpp"
 #include <opencv2/videoio.hpp>
 #include <fstream>
 #include <iomanip>
@@ -9,7 +9,7 @@ int main(int argc, char **argv)
     try{
         if (argc != 4)
             return 1;
-        mark::Detector detector(mark::loadConfig(argv[1]).detector_config);
+        mark::detector::Detector detector(mark::detector::load_detector_config(argv[1]));
         cv::VideoCapture video(argv[2]);
         if (!video.isOpened())
             return 1;
@@ -17,32 +17,28 @@ int main(int argc, char **argv)
         if (!out)
             return 1;
         out << std::setprecision(17);
-        cv::Mat image;
-        uint64_t id = 0, detected = 0, corners = 0;
+        cv::Mat image_;
+        uint64_t id = 0, detected = 0, corners_ = 0;
         double fps = video.get(cv::CAP_PROP_FPS);
-        while (video.read(image))
+        while (video.read(image_))
         {
-            auto r = detector.process({image, id, std::llround(id * 1e6 / fps)});
-            out << id << ' ' << r.detections.size();
-            for (const auto &d:r.detections)
+            auto r = detector.process({image_, id, std::llround(id * 1e6 / fps)});
+            out << id << ' ' << r.detections_.size();
+            for (const auto &d:r.detections_)
             {
-#ifdef BASELINE
-                auto mapping = *d.attributes.orientation;
-#else
-                auto mapping = d.orientation;
-#endif
+                auto mapping = d.orientation_;
                 for (int i = 0; i < 4; ++i)
                 {
-                    auto p = d.corners[mapping[i]];
+                    auto p = d.corners_[mapping[i]];
                     out << ' ' << p.x << ' ' << p.y;
                 }
                 ++detected;
-                corners += 4;
+                corners_ += 4;
             }
             out << '\n';
             ++id;
         }
-        std::cout << "frames=" << id << " detected=" << detected << " corners=" << corners << '\n';
+        std::cout << "frames=" << id << " detected=" << detected << " corners=" << corners_ << '\n';
         return id ? 0 : 1;
     }
     catch (const std::exception &e){

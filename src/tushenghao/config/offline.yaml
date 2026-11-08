@@ -1,0 +1,7 @@
+%YAML:1.0
+---
+# 默认 outputs/marker；重复运行可复用目录，按需修改 AVI 文件名。
+run_directory: "outputs/marker"
+video_filename: "overlay.avi"
+# 默认 true；false 时只写 observations.yaml、tracks.yaml、summary.yaml。
+overlay: true

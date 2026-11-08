@@ -1,7 +1,7 @@
+// 把同帧、同身份的合法名义位置转为量测，基础噪声叠加位置分歧矩阵。
 #include "measurement/measurement_adapter.hpp"
 #include "filter/kalman_cv.hpp"
 #include <set>
-#include <stdexcept>
 namespace mark::tracking::detail
 {
     int64_t sample_time(const pose::CaptureStamp &s)
@@ -16,8 +16,6 @@ namespace mark::tracking::detail
 
     cv::Matx33d time_augmented_noise(const cv::Matx33d &r, const cv::Vec3d &v, const cv::Matx33d &vv, double b, double q)
     {
-        if (!std::isfinite(b) || b < 0 || !std::isfinite(q) || q < 0)
-            throw std::runtime_error("TRACK_TIME_NOISE_INVALID");
         if (b == 0)
             return r;
         return 2 * (r + b * b * 2 * (vv + v * v.t()) + cv::Matx33d::eye() * (q * b * b * b / 3));

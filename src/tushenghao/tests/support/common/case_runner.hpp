@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 namespace test_support {
-// V06：逐例执行并保留原 PASS/FAIL 格式，异常不跳过后续用例。
+// 逐例执行并保留PASS/FAIL 格式，异常不跳过后续用例。
 inline int run(const std::vector<std::pair<std::string,void(*)()>> &cases) {
     int failures=0;
     for(const auto &item:cases) {

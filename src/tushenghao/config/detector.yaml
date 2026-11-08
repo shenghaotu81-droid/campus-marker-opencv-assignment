@@ -1,6 +1,5 @@
 %YAML:1.0
 ---
-schema_version: 2
 preprocess:
   work_width: 960
   work_height: 720
@@ -8,10 +7,6 @@ preprocess:
 geometry:
   white_threshold: 200
   approximation_epsilon: 2.0
-detector:
-  corner:
-    # P0/P1/P2/P3 -> 屏幕LT/RT/RB/LB；安装后验一次。
-    physical_to_screen: [0, 1, 2, 3]
-output:
-  video_fourcc: "MJPG"
-  video_filename: "overlay.avi"
+corner:
+  # P0/P1/P2/P3 -> 屏幕LT/RT/RB/LB；安装后验一次。
+  physical_to_screen: [0, 1, 2, 3]

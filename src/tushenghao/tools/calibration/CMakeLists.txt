@@ -1,6 +1,6 @@
-# 同一标定实现同时供原 CLI 和配置负例消费；不复制源码表。
+# 同一标定实现同时供标定工具消费；不复制源码表。
 add_library(vision_calibration input/calibration_config.cpp frames/calibration_video.cpp
-    observation/calibration_detection.cpp results/calibration_result.cpp)
+    observation/calibration_detection.cpp solution/calibration_result.cpp)
 target_include_directories(vision_calibration PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(vision_calibration PUBLIC ${OpenCV_LIBS})
 target_compile_definitions(vision_calibration PRIVATE VISION_SOURCE_ROOT="${VISION_ROOT}")

@@ -1,4 +1,4 @@
-// renderDebugFrame，负责在每一帧上画调试信息（检测框、位姿、跟踪轨迹），画完再交给 exporter 写视频
+// render_debug_frame，负责在每一帧上画调试信息（检测框、位姿、跟踪轨迹），画完再交给 exporter 写视频
 #include "rendering/debug_renderer.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
@@ -7,28 +7,28 @@
 
 namespace mark
 {
-    cv::Mat renderDebugFrame(const cv::Mat &image, const FrameResult &raw,
-                             const std::vector<pose::PoseObservation> &poses,
-                             const std::vector<tracking::TargetTrack> &tracks,
-                             const pose::G2Config *config)
+    cv::Mat render_debug_frame(const cv::Mat &image_, const detector::FrameResult &raw,
+                             const std::vector<pose::PoseObservation> &poses_,
+                             const std::vector<tracking::TargetTrack> &tracks_,
+                             const pose::PoseConfig *config)
     {
-        cv::Mat out = image.clone();
+        cv::Mat out = image_.clone();
         auto text = [&](const std::string &s, int row, cv::Scalar color)
         {
             cv::putText(out, s, {12, 24 + row * 24}, cv::FONT_HERSHEY_SIMPLEX, .55, color, 1,
                         cv::LINE_AA);
         };
-        text("frame " + std::to_string(raw.frame_id), 0, {255, 255, 255});
-        for (const auto &d : raw.detections)
+        text("frame " + std::to_string(raw.frame_id_), 0, {255, 255, 255});
+        for (const auto &d : raw.detections_)
             for (int i = 0; i < 4; ++i)
             {
-                cv::line(out, d.corners[i], d.corners[(i + 1) % 4], {0, 255, 0}, 1, cv::LINE_AA);
-                cv::circle(out, d.corners[i], 3, {0, 255, 0}, -1);
-                cv::putText(out, std::to_string(i), d.corners[i], cv::FONT_HERSHEY_SIMPLEX, .5,
+                cv::line(out, d.corners_[i], d.corners_[(i + 1) % 4], {0, 255, 0}, 1, cv::LINE_AA);
+                cv::circle(out, d.corners_[i], 3, {0, 255, 0}, -1);
+                cv::putText(out, std::to_string(i), d.corners_[i], cv::FONT_HERSHEY_SIMPLEX, .5,
                             {0, 255, 0});
             }
         int row = 1;
-        for (const auto &p : poses)
+        for (const auto &p : poses_)
         {
             // 投影只使用当前有效位姿；不会把预测点作为新角点反馈给检测器。
             text(p.source_ + ": " + pose::pose_status_name(p), row++, {255, 255, 0});
@@ -42,7 +42,7 @@ namespace mark
             for (int i = 0; i < 4; ++i)
                 cv::line(out, pixels[i], pixels[(i + 1) % 4], {255, 255, 0}, 1, cv::LINE_AA);
         }
-        for (const auto &t : tracks)
+        for (const auto &t : tracks_)
         {
             std::ostringstream label;
             label << "track " << t.track_id_

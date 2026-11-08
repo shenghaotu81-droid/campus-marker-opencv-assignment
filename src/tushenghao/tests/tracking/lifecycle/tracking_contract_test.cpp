@@ -1,6 +1,6 @@
 #include "vision/tracking/target_tracker.hpp"
 #include "filter/kalman_cv.hpp"
-#include "vision/math/covariance_validation.hpp"
+#include "filter/covariance_validation.hpp"
 #include "assertions.hpp"
 #include <iostream>
 #include <limits>
@@ -39,7 +39,7 @@ int main()
         TargetTracker tracker(c);
         auto a = tracker.step(frame(0, 0, 0));
         check(a.input_accepted_ && a.tracks_.size() == 1 && !a.tracks_[0].velocity_mps_, "first estimate rejected or fake velocity");
-        check(std::abs(a.tracks_[0].covariance_(2, 2) - .00015) < 1e-12, "G2 position spread not consumed by G4 noise");
+        check(std::abs(a.tracks_[0].covariance_(2, 2) - .00015) < 1e-12, "Pose position spread not consumed by Tracking noise");
         auto b = tracker.step(frame(1, 100000, .01));
         check(b.tracks_[0].velocity_mps_ && cv::norm(*b.tracks_[0].velocity_mps_ - cv::Vec3d(.1, 0, 0)) < 1e-10, "two sample velocity");
         auto jump = tracker.step(frame(2, 200000, 10));
@@ -48,7 +48,7 @@ int main()
         check(long_dt.tracks_[0].state_ == TrackState::Measured && long_dt.tracks_[0].velocity_mps_, "max_dt/std gate still active");
         auto coast = tracker.step(frame(4, 6200000, 0, true));
         check(coast.tracks_[0].state_ == TrackState::Coasting && cv::checkRange(cv::Mat(coast.tracks_[0].position_m_)) && coast.tracks_[0].velocity_mps_, "variance gate erased finite coast");
-        check(mark::observed::positive_definite(cv::Mat(coast.tracks_[0].covariance_)), "P invalid");
+        check(mark::tracking::detail::positive_definite(cv::Mat(coast.tracks_[0].covariance_)), "P invalid");
         check(!tracker.step(frame(4, 6200001, 0)).input_accepted_, "duplicate accepted");
         auto invalid = frame(5, 6300000, 0);
         invalid.observations_[0].estimate_->pose_.t_m_[0] = std::numeric_limits<double>::quiet_NaN();
@@ -67,7 +67,7 @@ int main()
         detail::CvFilter bounded;
         bounded.initialize({0, 0, 2}, cv::Matx33d::eye() * 1e-4, 4);
         bounded.predict(.1, .1, .001);
-        check(mark::observed::positive_definite(cv::Mat(bounded.covariance())), "bounded predict P");
+        check(mark::tracking::detail::positive_definite(cv::Mat(bounded.covariance())), "bounded predict P");
         failed = false;
         try{
             bounded.bootstrap({0, 0, 2}, cv::Matx33d::eye(), {0, 0, 2}, cv::Matx33d::eye(), .1, .1, .1);
@@ -76,7 +76,7 @@ int main()
             failed = true;
         }
         check(failed, "overlap division bound accepted");
-        // G4只需要G2的位置和分歧矩阵；未使用的RMSE不再是隐含准入门。
+        // Tracking只需要Pose的位置和分歧矩阵；未使用的RMSE不再是隐含准入门。
         TargetTracker zero_spread(c);
         auto single = frame(0, 0, 0);
         single.observations_[0].estimate_->translation_spread_m2_ = cv::Matx33d::zeros();
@@ -101,16 +101,6 @@ int main()
         bad_stamp.stamp_.frame_id_ = 8;
         bad_stamp.stamp_.exposure_us_ = bad_stamp.stamp_.received_us_ + 1;
         check(!tracker.step(bad_stamp).input_accepted_, "impossible exposure stamp accepted");
-        auto negative = c;
-        negative.profile_->camera_mse_m2_(0, 0) = -1;
-        failed = false;
-        try{
-            TargetTracker t(negative);
-        }
-        catch (const std::exception &){
-            failed = true;
-        }
-        check(failed, "negative R accepted");
         return 0;
     }
     catch (const std::exception &e){

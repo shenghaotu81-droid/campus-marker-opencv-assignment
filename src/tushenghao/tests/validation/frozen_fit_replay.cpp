@@ -1,5 +1,5 @@
-// 只读冻结旧指导输入；不向生产拟合器添加trace。
-#include "corners/fitting/corner_edge_fit.hpp"
+// 只读固定指导输入；不向生产拟合器添加trace。
+#include "corner_edge_fit.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -15,11 +15,11 @@ int main(int argc, char **argv)
     {
         cv::Point2d edges[4];
         for (auto &p : edges) in >> p.x >> p.y;
-        std::vector<cv::Point> contour(n);
-        for (auto &p : contour) in >> p.x >> p.y;
+        std::vector<cv::Point> contour_(n);
+        for (auto &p : contour_) in >> p.x >> p.y;
         if (!in) return 1;
         std::string why;
-        auto fit = mark::fitObservedCorner(contour, edges[1], {edges[0], edges[3]}, why);
+        auto fit = mark::detector::fit_observed_corner(contour_, edges[1], {edges[0], edges[3]}, why);
         ++calls;
         out << frame << ' ' << index << ' ' << physical;
         if (fit) out << ' ' << fit->x << ' ' << fit->y;

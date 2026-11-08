@@ -6,36 +6,36 @@
 bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &capture,
                             CalibrationVideoInfo &info)
 {
-    info.source_path = config.video_path;
-    capture.open(config.video_path);
+    info.source_path_ = config.video_path_;
+    capture.open(config.video_path_);
 
     if (!capture.isOpened())
     {
-        std::cerr << "无法打开标定视频: " << config.video_path << std::endl;
+        std::cerr << "无法打开标定视频: " << config.video_path_ << std::endl;
 
         return false;
     }
 
-    info.width = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_WIDTH));
+    info.width_ = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_WIDTH));
 
-    info.height = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
+    info.height_ = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
 
-    info.frame_count = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
+    info.frame_count_ = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
 
     return true;
 }
 
 // 根据帧编号列表抽取图像
-bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &frame_list,
-                            std::vector<SampledFrame> &frames)
+bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &frame_list_,
+                            std::vector<SampledFrame> &frames_)
 {
     // 没有指定帧时直接跳过
-    if (frame_list.empty())
+    if (frame_list_.empty())
     {
         return true;
     }
 
-    for (int frame_index : frame_list)
+    for (int frame_index : frame_list_)
     {
         capture.set(cv::CAP_PROP_POS_FRAMES, frame_index);
 
@@ -48,7 +48,7 @@ bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &f
             return false;
         }
 
-        frames.push_back({frame_index, frame});
+        frames_.push_back({frame_index, frame});
     }
 
     return true;

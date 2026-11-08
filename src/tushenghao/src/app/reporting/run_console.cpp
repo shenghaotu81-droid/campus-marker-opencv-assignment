@@ -6,12 +6,12 @@ namespace mark
 {
     void write_run_console(std::ostream &out, const RunSummary &s)
     {
-        out << "已处理 " << s.frames << " 帧，检测 " << s.detections << " 个目标";
-        out << "，用时 " << s.elapsed_s << " 秒";
+        out << "已处理 " << s.frames_ << " 帧，检测 " << s.detections_ << " 个目标";
+        out << "，用时 " << s.elapsed_s_ << " 秒";
         out << '\n';
-        for (const auto &[name, count] : s.poses)
+        for (const auto &[name, count] : s.poses_)
             out << "位姿 " << name << ": " << count << '\n';
-        for (const auto &[name, count] : s.tracks)
+        for (const auto &[name, count] : s.tracks_)
             out << "跟踪 " << name << ": " << count << '\n';
     }
 

@@ -21,7 +21,7 @@ namespace mark::pose
         std::map<int, double> side_m_;
     };
 
-    struct G2Config
+    struct PoseConfig
     {
         CameraModel camera_;
         std::array<cv::Point3d, 4> mark_points_m_;
@@ -29,6 +29,5 @@ namespace mark::pose
         TagConfig tag_;
     };
 
-    G2Config load_pose_config(const std::filesystem::path &);
-    void validate_pose_config(const G2Config &);
+    PoseConfig load_pose_config(const std::filesystem::path &);
 }

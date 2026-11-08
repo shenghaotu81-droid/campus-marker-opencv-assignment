@@ -1,11 +1,11 @@
 %YAML:1.0
 ---
-schema_version: 2
 camera:
   calibration: "calibration.yaml"
   camera_id: "reference-maxicam-calibration"
 geometry:
-  model: "marker_geometry.yaml"
+  # P0/P1/P2/P3 的平面坐标；source_unit 指定长度单位。
+  model_points: [[0,0], [80,0], [80,80], [0,80]]
   source_unit: "mm"
   target_id: "mark-white-structure-v1"
 tag:

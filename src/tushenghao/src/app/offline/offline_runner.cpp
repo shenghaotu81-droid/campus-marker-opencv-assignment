@@ -1,147 +1,107 @@
-// 总编排
+// 视频逐帧流经检测、位姿和跟踪；输出独立记录每帧结果，叠加仅用于观察。
 #include "offline/offline_runner.hpp"
 #include "vision/pose/pose_io.hpp"
-#include "detector/config.hpp"
+#include "vision/config/detector_config.hpp"
 #include "vision/detection/detector.hpp"
 #include "rendering/debug_renderer.hpp"
 #include "reporting/run_console.hpp"
 #include "export/video_exporter.hpp"
-#ifdef VISION_HAS_POSE
 #include "vision/pose/pose_estimator.hpp"
 #include "vision/pose/tag_detector.hpp"
-#endif
-#ifdef VISION_HAS_TRACKING
 #include "vision/tracking/target_tracker.hpp"
 #include "io/tracking_io.hpp"
-#endif
 #include <chrono>
 #include <cmath>
 #include <iostream>
-#include <limits>
 #include <opencv2/videoio.hpp>
 
 namespace mark
 {
-    int runOffline(AppConfig app, const std::string &video, const std::string &config_path)
+    int run_offline(const AppConfig &app, const std::string &video,
+                    const std::filesystem::path &config_dir)
     {
         using Clock = std::chrono::steady_clock;
-        validateOfflineConfig(app);
-        const bool camera = video.rfind("camera:", 0) == 0;
-        cv::VideoCapture capture;
-        if (camera)
-            capture.open(std::stoi(video.substr(7)));
-        else
-            capture.open(video);
+        cv::VideoCapture capture(video);
         if (!capture.isOpened())
             throw std::runtime_error("INPUT_OPEN_FAILED: " + video);
         const double fps = capture.get(cv::CAP_PROP_FPS);
         if (!std::isfinite(fps) || fps <= 0)
             throw std::runtime_error("INPUT_FPS_INVALID");
-        Detector detector(app.detector_config);
-        const auto config_dir = std::filesystem::path(config_path).parent_path();
-        std::optional<pose::G2Config> pose_config;
-#ifdef VISION_HAS_POSE
-        pose_config = pose::load_pose_config(config_dir / "pose.yaml");
-        pose::PoseEstimator solver(*pose_config);
+        detector::Detector detector(app.detector_config_);
+        const auto pose_config = pose::load_pose_config(config_dir / "pose.yaml");
+        pose::PoseEstimator solver(pose_config);
         std::unique_ptr<pose::TagDetector> tag_detector;
-        if (!pose_config->tag_.allowed_ids_.empty())
-            tag_detector = std::make_unique<pose::TagDetector>(pose_config->tag_);
-#endif
-#ifdef VISION_HAS_TRACKING
+        if (!pose_config.tag_.allowed_ids_.empty())
+            tag_detector = std::make_unique<pose::TagDetector>(pose_config.tag_);
         const auto tracking_config = tracking::load_tracking_config(config_dir / "tracking.yaml");
         if (!tracking_config.profile_)
-            std::cout << "G4 profile未配置：跳过跟踪数值计算\n";
+            std::cout << "Tracking profile未配置：跳过跟踪数值计算\n";
         tracking::TargetTracker tracker(tracking_config);
-#endif
-        const std::filesystem::path directory(app.offline.directory);
-        if (!std::filesystem::create_directories(directory))
-            throw std::runtime_error("OUTPUT_DIRECTORY_EXISTS: " + directory.string());
+        const std::filesystem::path directory(app.offline_.run_directory_);
+        std::filesystem::create_directories(directory);
         VideoExporter exporter;
         RunSummary summary;
-#ifdef VISION_HAS_POSE
         cv::FileStorage observations((directory / "observations.yaml").string(),
                                      cv::FileStorage::WRITE);
-        if (!observations.isOpened())
-            throw std::runtime_error("POSE_OUTPUT_OPEN_FAILED");
         observations << "schema_version" << 6 << "stream_type" << "PoseObservations"
                      << "position_unit" << "m" << "time_unit" << "us" << "frames" << "[";
-#endif
-#ifdef VISION_HAS_TRACKING
         cv::FileStorage tracks_file((directory / "tracks.yaml").string(), cv::FileStorage::WRITE);
-        if (!tracks_file.isOpened())
-            throw std::runtime_error("TRACK_OUTPUT_OPEN_FAILED");
-        tracks_file << "schema_version" << 2 << "stream_type" << "G4TrackingResult" << "frames"
+        tracks_file << "schema_version" << 2 << "stream_type" << "TrackingResult" << "frames"
                     << "[";
-#endif
         const auto start = Clock::now();
-        cv::Mat image;
-        for (uint64_t id = 0; capture.read(image); ++id)
+        cv::Mat image_;
+        for (uint64_t id = 0; capture.read(image_); ++id)
         {
-            const long double timestamp =
-                camera
-                    ? std::chrono::duration<long double, std::micro>(Clock::now() - start).count()
-                    : static_cast<long double>(id) * 1e6L / fps;
-            if (!std::isfinite(timestamp) || timestamp > std::numeric_limits<int64_t>::max() - .5L)
-                throw std::runtime_error("INPUT_TIMESTAMP_OVERFLOW");
-            FrameInput input{image, id, std::llround(timestamp)};
+            const long double timestamp = static_cast<long double>(id) * 1e6L / fps;
+            detector::FrameInput input{image_, id, std::llround(timestamp)};
             const auto raw = detector.process(input);
             summary.add(raw);
-            std::vector<pose::PoseObservation> poses;
-            std::vector<tracking::TargetTrack> tracks;
-#ifdef VISION_HAS_POSE
+            std::vector<pose::PoseObservation> poses_;
+            std::vector<tracking::TargetTrack> tracks_;
             pose::CaptureStamp stamp;
             stamp.session_id_ = video;
-            stamp.camera_id_ = pose_config->camera_.camera_id_;
-            stamp.clock_domain_ = camera ? "host-monotonic-receive" : "video-fps";
+            stamp.camera_id_ = pose_config.camera_.camera_id_;
+            stamp.clock_domain_ = "video-fps";
             stamp.pixel_domain_ = pose::PixelDomain::RawDistorted;
             stamp.frame_id_ = id;
-            stamp.received_us_ = input.timestamp_us;
-            // 录像时间轴与相机接收时刻均不是实测曝光；曝光和时间误差保持未知。
-            for (size_t i = 0; i < std::max(size_t(1), raw.detections.size()); ++i)
-                poses.push_back(solver.estimate_mark(raw, i, image.size(), stamp));
+            stamp.received_us_ = input.timestamp_us_;
+            // 帧号/FPS 生成录像名义时间；没有曝光或时间误差的实测信息。
+            for (size_t i = 0; i < std::max(size_t(1), raw.detections_.size()); ++i)
+                poses_.push_back(solver.estimate_mark(raw, i, image_.size(), stamp));
             if (tag_detector)
-                for (const auto &tag : tag_detector->detect(image, stamp))
-                    poses.push_back(pose::estimate_exit(tag, image.size(), solver));
+                for (const auto &tag : tag_detector->detect(image_, stamp))
+                    poses_.push_back(pose::estimate_exit(tag, image_.size(), solver));
 
-            for (const auto &p : poses)
-                ++summary.poses[pose::pose_status_name(p)];
-#endif
-#ifdef VISION_HAS_TRACKING
+            for (const auto &p : poses_)
+                ++summary.poses_[pose::pose_status_name(p)];
             tracking::TrackingFrame frame;
             frame.stamp_ = stamp;
-            frame.observations_ = poses;
+            frame.observations_ = poses_;
             const auto result = tracker.step(frame); // 无检测也推进coast与协方差。
-            tracks = result.tracks_;
-            for (const auto &t : tracks)
-                ++summary.tracks[tracking::track_state_name(t.state_)];
+            tracks_ = result.tracks_;
+            for (const auto &t : tracks_)
+                ++summary.tracks_[tracking::track_state_name(t.state_)];
             for (const auto &event : result.events_)
-                ++summary.reasons[event];
+                ++summary.reasons_[event];
             tracking::write_tracking_result(tracks_file, result);
-#endif
-#ifdef VISION_HAS_POSE
             observations << "{" << "stamp";
             pose::write_capture_stamp(observations, stamp);
             observations << "observations" << "[";
-            for (const auto &p : poses)
+            for (const auto &p : poses_)
                 pose::write_pose_observation(observations, p);
             observations << "]" << "}";
-#endif
-            if (!exporter.opened())
-                exporter.open(directory, image.size(), fps, app.offline.video_fourcc);
-            exporter.write(
-                renderDebugFrame(image, raw, poses, tracks, pose_config ? &*pose_config : nullptr));
+            if (app.offline_.overlay_)
+            {
+                if (id == 0)
+                    exporter.open(directory / app.offline_.video_filename_, image_.size(), fps);
+                exporter.write(render_debug_frame(image_, raw, poses_, tracks_, &pose_config));
+            }
         }
-        if (!summary.frames)
-            throw std::runtime_error("INPUT_HAS_NO_FRAMES");
-        exporter.finish(true);
-#ifdef VISION_HAS_POSE
+        if (app.offline_.overlay_ && summary.frames_) exporter.finish();
         observations << "]";
-#endif
-#ifdef VISION_HAS_TRACKING
         tracks_file << "]";
-#endif
-        summary.elapsed_s = std::chrono::duration<double>(Clock::now() - start).count();
-        writeRunSummary(summary, (directory / "summary.yaml").string());
+        summary.elapsed_s_ = std::chrono::duration<double>(Clock::now() - start).count();
+        write_run_summary(summary, (directory / "summary.yaml").string());
         write_run_console(std::cout, summary);
         return 0;
     }

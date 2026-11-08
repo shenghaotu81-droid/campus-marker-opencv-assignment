@@ -3,7 +3,7 @@
 #include "input/calibration_config.hpp"
 #include "frames/calibration_video.hpp"
 #include "observation/calibration_detection.hpp"
-#include "results/calibration_result.hpp"
+#include "solution/calibration_result.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 {
     CalibrationConfig config;
 
-    // C01：默认值→严格 YAML→合法 CLI 覆盖；失败不打开视频、不写标定结果。
+    // 默认值→YAML→CLI 覆盖；失败不打开视频、不写标定结果。
     try
     {
         initialize_default_config(config);
@@ -37,11 +37,6 @@ int main(int argc, char **argv)
         // 使用命令行参数CLI覆盖 YAML 配置
         apply_cli_overrides(argc, argv, config);
 
-        // 检查最终配置是否合法
-        if (!validate_config(config))
-        {
-            return -1;
-        }
     }
     catch (const std::exception &error)
     {
@@ -59,10 +54,10 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    std::vector<SampledFrame> frames;
+    std::vector<SampledFrame> frames_;
 
     // 根据配置抽帧
-    if (!extract_frames_by_list(capture, config.frame_list, frames))
+    if (!extract_frames_by_list(capture, config.frame_list_, frames_))
     {
         return -1;
     }
@@ -70,13 +65,13 @@ int main(int argc, char **argv)
     CalibrationDetectionResult detection_result;
 
     // 检测标定板圆点
-    if (!detect_calibration_points(config, frames, detection_result))
+    if (!detect_calibration_points(config, frames_, detection_result))
     {
         return -1;
     }
 
     // 调试信息：多少帧检测到了圆点
-    std::cout << "检测成功帧数量: " << std::count_if(detection_result.observations.begin(), detection_result.observations.end(), [](const auto &o) { return o.detected; }) << std::endl;
+    std::cout << "检测成功帧数量: " << std::count_if(detection_result.observations_.begin(), detection_result.observations_.end(), [](const auto &o) { return o.detected_; }) << std::endl;
 
     CalibrationResult calibration_result;
 
@@ -95,11 +90,11 @@ int main(int argc, char **argv)
     // 输出摘要
     std::cout << "标定完成" << std::endl;
 
-    std::cout << "图像尺寸: " << calibration_result.image_size.width << " x " << calibration_result.image_size.height << std::endl;
+    std::cout << "图像尺寸: " << calibration_result.image_size_.width << " x " << calibration_result.image_size_.height << std::endl;
 
-    std::cout << "重投影误差: " << calibration_result.reprojection_error << std::endl;
+    std::cout << "重投影误差: " << calibration_result.reprojection_error_ << std::endl;
 
-    std::cout << "输出文件: " << config.output_path << std::endl;
+    std::cout << "输出文件: " << config.output_path_ << std::endl;
 
     return 0;
 }

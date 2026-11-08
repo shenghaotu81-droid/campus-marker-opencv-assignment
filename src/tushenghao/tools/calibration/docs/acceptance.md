@@ -25,11 +25,10 @@
 
 ## 输出
 - 文件：`src/tushenghao/config/calibration.yaml`
-- 格式：OpenCV FileStorage YAML（`%YAML:1.0` + `schema_version: 1`）
+- 格式：OpenCV FileStorage YAML（`%YAML:1.0`）
 - 内容：
   ```yaml
   %YAML:1.0
-  schema_version: 1
   camera_matrix: !!opencv-matrix
     rows: 3
     cols: 3

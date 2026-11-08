@@ -1,4 +1,3 @@
-add_executable(config_error_test config_error_test.cpp)
-target_link_libraries(config_error_test PRIVATE vision_detection mark_test_support)
-target_include_directories(config_error_test PRIVATE "${VISION_ROOT}/src/config")
-add_test(NAME config_error_test COMMAND config_error_test)
+add_executable(config_load_test config_load_test.cpp)
+target_link_libraries(config_load_test PRIVATE vision_config mark_test_support)
+add_test(NAME config_load_test COMMAND config_load_test)

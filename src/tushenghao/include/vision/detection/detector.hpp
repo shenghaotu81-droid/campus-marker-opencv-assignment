@@ -2,7 +2,7 @@
 #include <memory>
 #include "vision/config/detector_config.hpp"
 #include "vision/types/detector_types.hpp"
-namespace mark
+namespace mark::detector
 {
     class Detector
     {

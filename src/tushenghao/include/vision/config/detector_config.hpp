@@ -1,11 +1,12 @@
 #pragma once
 #include <array>
+#include <filesystem>
 
-namespace mark
+namespace mark::detector
 {
     struct PreprocessConfig
     {
-        int work_width = 960, work_height = 720, threshold = 200;
+        int work_width_ = 960, work_height_ = 720, threshold_ = 200;
     };
 
     struct GeometryConfig
@@ -20,11 +21,12 @@ namespace mark
         std::array<int, 4> physical_to_screen_{{0, 1, 2, 3}};
     };
 
-    // 库通用配置接口
+    // 检测参数由分割、几何匹配和角点解码共同使用。
     struct DetectorConfig
     {
-        PreprocessConfig preprocess;
+        PreprocessConfig preprocess_;
         GeometryConfig geometry_;
         CornerConfig corner_;
     };
+    DetectorConfig load_detector_config(const std::filesystem::path &);
 }

@@ -1,13 +1,13 @@
 #pragma once
-#include "vision/math/covariance_validation.hpp"
+#include "filter/covariance_validation.hpp"
 #include "vision/config/tracking_config.hpp"
 namespace mark::tracking::detail
 {
     struct InnovationResult
     {
-        cv::Vec3d residual;
-        cv::Matx33d S, R;
-        double score{};
+        cv::Vec3d residual_;
+        cv::Matx33d S_, R_;
+        double score_{};
     };
     class CvFilter
     {
@@ -28,5 +28,4 @@ private: Vec6 x_{Vec6::all(0)};
         Mat6 P_{Mat6::zeros()};
     };
     bool finite_vector(const cv::Vec3d &);
-    using mark::observed::positive_definite;
 }

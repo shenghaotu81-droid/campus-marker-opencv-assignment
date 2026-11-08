@@ -127,13 +127,14 @@ def generate(args):
     args.output.mkdir(parents=True, exist_ok=False)
     cal = cv2.FileStorage(str(args.source / "config/calibration.yaml"), cv2.FILE_STORAGE_READ)
     K, dist = cal.getNode("camera_matrix").mat(), cal.getNode("distortion_coefficients").mat()
-    fs = cv2.FileStorage(str(args.source / "config/marker_geometry.yaml"), cv2.FILE_STORAGE_READ)
-    pieces = fs.getNode("polygons")
-    model = []
-    for i in range(pieces.size()):
-        v = pieces.at(i).getNode("vertices")
-        model.append(np.array([[v.at(j).at(k).real() for k in range(2)]
-                               for j in range(v.size())], dtype=float))
+    # 独立测试图案用于生成像素真值，生产 PnP 只消费 pose.yaml 中的四点模型。
+    model = [np.array(points, dtype=float) for points in [
+        [[0,0], [30,0], [30,8], [8,8], [8,30], [0,30]],
+        [[80,80], [50,80], [50,72], [72,72], [72,50], [80,50]],
+        [[0,80], [30,80], [30,72], [8,72], [8,50], [0,50]],
+        [[66,0], [80,0], [80,14], [72,14], [72,8], [66,8]],
+        [[50,0], [58,0], [58,8], [50,8]],
+        [[72,22], [80,22], [80,30], [72,30]]]]
     writer = cv2.VideoWriter(str(args.output / "truth.avi"), cv2.VideoWriter_fourcc(*"MJPG"), 30, (1440, 1080))
     if not writer.isOpened():
         raise ValueError("truth video writer failed")

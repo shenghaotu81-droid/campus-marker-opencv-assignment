@@ -1,0 +1,13 @@
+%YAML:1.0
+---
+# 初估、待标定：来自像素误差/焦距/距离与运动量级推导，不是视频实测。
+# 相机坐标横向/纵深位置方差，单位 m^2；基准距离约 1 m。
+camera_mse_m2: !!opencv-matrix
+  rows: 3
+  cols: 3
+  dt: d
+  data: [2.0e-8, 0., 0., 0., 2.0e-8, 0., 0., 0., 2.5e-7]
+# RMS 加速度约 0.5–1 m/s^2、相关时间约 0.5 s，q 取 0.5 m^2/s^3。
+acceleration_psd_m2ps3: 0.5
+# 速度量级 0.5 m/s，初速标准差取 0.5 m/s。
+initial_velocity_variance_m2ps2: 0.25

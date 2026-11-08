@@ -1,14 +1,14 @@
 #include "assertions.hpp"
 #include "case_runner.hpp"
 #include "block3_fixture.hpp"
-#include "geometry/observation/geometry_observation.hpp"
-#include "pipeline/decode/decode_stage.hpp"
+#include "geometry_observation.hpp"
+#include "decode_stage.hpp"
 namespace
 {
     using test_support::check;
     auto match(const fixture::Scene &s)
     {
-        return mark::matchQuads(s.frame, mark::extractWhiteComponents(s.frame, {}), {});
+        return mark::detector::match_quads(s.frame, mark::detector::extract_white_components(s.frame, {}), {});
     }
 
     void rotations()
@@ -23,26 +23,26 @@ namespace
                     std::cerr << "scene angle=" << angle << " work=" << size << '\n';
                 check(q.size() == 1, "rotated/scaled MARK did not match uniquely");
                 for (size_t i = 0; i < 4; ++i)
-                    check(cv::norm((*mark::orderScreenCorners(q[0], order_reason))[i] - s.quad[i]) < 8, "screen corner changed");
-                auto result = mark::decodeStage(s.frame, q, fixture::cornerConfig());
-                check(result.status == mark::Status::DETECTED && result.detections.size() == 1, "quad did not publish");
+                    check(cv::norm((*mark::detector::order_screen_corners(q[0], order_reason))[i] - s.quad[i]) < 8, "screen corner changed");
+                auto result = mark::detector::decode_stage(s.frame, q, fixture::corner_config());
+                check(result.status_ == mark::detector::Status::DETECTED && result.detections_.size() == 1, "quad did not publish");
                 for (size_t i = 0; i < 4; ++i)
-                    check(cv::norm(cv::Point2d(result.detections[0].corners[result.detections[0].orientation[i]]) - s.quad[i]) < 2, "truth corner error");
+                    check(cv::norm(cv::Point2d(result.detections_[0].corners_[result.detections_[0].orientation_[i]]) - s.quad[i]) < 2, "truth corner error");
             }
     }
 
-    void changedMount()
+    void changed_mount()
     {
         auto s = fixture::scene(960, 720, 90.);
-        auto c = fixture::cornerConfig();
+        auto c = fixture::corner_config();
         c.physical_to_screen_ = {{1, 2, 3, 0}};
-        auto q = mark::matchQuads(s.frame, mark::extractWhiteComponents(s.frame, {}), {});
+        auto q = mark::detector::match_quads(s.frame, mark::detector::extract_white_components(s.frame, {}), {});
         check(q.size() == 1, "changed mount not matched");
-        auto d = mark::decodeStage(s.frame, q, c);
-        check(d.detections.size() == 1, "configured mount not published");
+        auto d = mark::detector::decode_stage(s.frame, q, c);
+        check(d.detections_.size() == 1, "configured mount not published");
         for (size_t i = 0; i < 4; ++i)
-            check(cv::norm(cv::Point2d(d.detections[0].corners[d.detections[0].orientation[i]]) - s.quad[i]) < 2, "configured mount mapping ignored");
-        check(d.detections[0].orientation == c.physical_to_screen_, "publication inferred new identity");
+            check(cv::norm(cv::Point2d(d.detections_[0].corners_[d.detections_[0].orientation_[i]]) - s.quad[i]) < 2, "configured mount mapping ignored");
+        check(d.detections_[0].orientation_ == c.physical_to_screen_, "publication inferred new identity");
     }
 
     void incomplete()
@@ -66,7 +66,7 @@ namespace
         check(match(s).empty(), "plain rectangle was MARK");
     }
 
-    void wrongL()
+    void wrong_l()
     {
         auto s = fixture::scene();
         s.frame.image_ = s.frame.image_.clone();
@@ -76,7 +76,7 @@ namespace
         check(match(s).empty(), "wrong-facing L matched as complete MARK");
     }
 
-    void optionalS()
+    void optional_s()
     {
         auto s = fixture::scene();
         s.frame.image_ = s.frame.image_.clone();
@@ -84,7 +84,7 @@ namespace
         check(match(s).size() == 1, "single missing S incorrectly became six-part completeness gate");
     }
 
-    void twoTargets()
+    void two_targets()
     {
         auto s = fixture::scene();
         cv::Mat shifted;
@@ -93,14 +93,14 @@ namespace
         cv::bitwise_or(s.frame.image_, shifted, s.frame.image_);
         auto q = match(s);
         check(q.size() == 2, "separated MARKs did not remain independent");
-        check(mark::decodeStage(s.frame, q, fixture::cornerConfig()).detections.size() == 1, "work-only fake target acquired original evidence");
+        check(mark::detector::decode_stage(s.frame, q, fixture::corner_config()).detections_.size() == 1, "work-only fake target acquired original evidence");
         s.frame.original_image_ = s.frame.original_image_.clone();
         cv::bitwise_or(s.frame.original_image_, shifted, s.frame.original_image_);
-        check(mark::decodeStage(s.frame, q, fixture::cornerConfig()).detections.size() == 2, "two real targets did not publish independently");
+        check(mark::detector::decode_stage(s.frame, q, fixture::corner_config()).detections_.size() == 2, "two real targets did not publish independently");
     }
 
 }
 int main()
 {
-    return test_support::run({{"SmallShakeScaleIdentityAndTruth", rotations}, {"ChangedMount", changedMount}, {"Incomplete", incomplete}, {"Clutter", clutter}, {"IndependentTargets", twoTargets}, {"OptionalS", optionalS}, {"WrongFacingL", wrongL}});
+    return test_support::run({{"SmallShakeScaleIdentityAndTruth", rotations}, {"ChangedMount", changed_mount}, {"Incomplete", incomplete}, {"Clutter", clutter}, {"IndependentTargets", two_targets}, {"OptionalS", optional_s}, {"WrongFacingL", wrong_l}});
 }

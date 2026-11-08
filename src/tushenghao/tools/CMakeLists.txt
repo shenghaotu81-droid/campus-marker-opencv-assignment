@@ -1,5 +1,4 @@
 if(VISION_BUILD_TOOLS OR BUILD_TESTING)
-    add_subdirectory(common)
     add_subdirectory(apps)
     add_subdirectory(calibration)
 endif()

@@ -38,7 +38,7 @@ namespace mark::pose
 // OpenCV 自带误差的口径易混淆；统一复算每点二维欧氏误差的 RMS。
         std::optional<PoseCandidate> evaluate_pose(const RigidPose &pose_,
                                                    const std::array<cv::Point3d, 4> &object,
-                                                   const std::array<cv::Point2d, 4> &image,
+                                                   const std::array<cv::Point2d, 4> &image_,
                                                    const cv::Mat &K_, const cv::Mat &dist_)
         {
             PoseCandidate out;
@@ -62,16 +62,16 @@ namespace mark::pose
             cv::projectPoints(std::vector<cv::Point3d>(object.begin(), object.end()),
                               pose_.rvec_, pose_.t_m_, K_, dist_, projected); // 3D 点按位姿投影回图像(重算误差)
             double sum = 0;
-            for (std::size_t i = 0; i < image.size(); ++i)
+            for (std::size_t i = 0; i < image_.size(); ++i)
             {
-                const double e = cv::norm(projected[i] - image[i]);
+                const double e = cv::norm(projected[i] - image_[i]);
                 if (!std::isfinite(e))
                 {
                     return {};
                 }
                 sum += e * e;
             }
-            out.rmse_px_ = std::sqrt(sum / image.size());
+            out.rmse_px_ = std::sqrt(sum / image_.size());
             if (!std::isfinite(out.rmse_px_))
                 return {};
             return out;

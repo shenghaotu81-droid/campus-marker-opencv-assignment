@@ -42,7 +42,7 @@ def main():
     idx = 0
     step = 50
 
-    # C03：随机定位后的读取失败不是正常末尾；保留已选信息并以失败退出。
+    # 随机定位后的读取失败不是正常末尾；保留已选信息并以失败退出。
     completion = "READ_ERROR"
     try:
         while True:

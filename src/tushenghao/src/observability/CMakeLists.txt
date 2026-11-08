@@ -1,3 +1,0 @@
-add_library(vision_observability reporting/run_report.cpp)
-target_link_libraries(vision_observability PUBLIC vision_types)
-target_include_directories(vision_observability PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

@@ -8,6 +8,6 @@ foreach(name corner_edge_fit_test detector_contract_test screen_order_test match
     endif()
     add_executable(${name} ${file})
     target_link_libraries(${name} PRIVATE vision_detection mark_test_support)
-    target_include_directories(${name} PRIVATE "${VISION_ROOT}/src/config" "${VISION_ROOT}/src/detection")
+    target_include_directories(${name} PRIVATE "${VISION_ROOT}/src/detection")
     add_test(NAME ${name} COMMAND ${name})
 endforeach()

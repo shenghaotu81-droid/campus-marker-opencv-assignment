@@ -1,7 +1,8 @@
 #pragma once
-#include "application/app_config.hpp"
+#include "vision/config/app_config.hpp"
 
 namespace mark
 {
-    int runOffline(AppConfig app, const std::string &video, const std::string &config_path);
+    int run_offline(const AppConfig &, const std::string &video,
+                    const std::filesystem::path &config_directory);
 }

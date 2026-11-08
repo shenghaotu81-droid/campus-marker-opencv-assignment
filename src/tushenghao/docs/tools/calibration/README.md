@@ -49,7 +49,7 @@ python3 src/tushenghao/tools/calibration/scripts/frame_picker.py data/raw/calibr
 
 CLI 可覆盖：`--video`、`--output`、`--rows`、`--cols`、`--spacing`。
 
-配置步骤先检查完整 CLI，再按默认值 → YAML → CLI 覆盖。未知选项、重复选项和缺值均报错；数值必须完整解析，禁止 `7junk`、NaN/Inf。YAML 只接受已列出的配置字段及 `schema_version`，拒绝未知/重复键和错误类型；整数原始 token 必须落在 C++ `int` 可表示范围内，避免 OpenCV 先窄化再误接受。`frame_list` 必须是非负整数序列，圆心间距必须是有限正数。配置失败返回非零，不打开视频、不写标定结果。
+配置步骤先检查完整 CLI，再按默认值 → YAML → CLI 覆盖。未知、重复和缺值选项报错；CLI 数值必须完整解析，尺寸和间距须为正，间距须有限。手填 YAML 直接读取已填写字段，不检查未知/重复键、类型、范围或 schema。文件打开与实际图像/求解失败仍报告错误。
 
 选帧器到末帧显示 `END_OF_INPUT`，仍可回看；按 `q` 以 `USER_FINISH` 正常结束。定位或解码失败返回非零并显示 `READ_ERROR`，保留失败前已选列表，但不把它描述为正常完成的选帧结果。
 
@@ -60,7 +60,7 @@ calibration_main.cpp      # 流程编排
 calibration_config.*      # 配置三层覆盖
 calibration_video.*       # 视频打开 + 按列表抽帧
 calibration_detection.*   # findCirclesGrid 检测 + 生成 3D 点
-calibration_result.*      # calibrateCamera 求解 + 写 yaml
+solution/calibration_result.* # calibrateCamera 求解 + 写 yaml
 ```
 
 ## 输出格式
@@ -69,7 +69,6 @@ calibration_result.*      # calibrateCamera 求解 + 写 yaml
 
 ```yaml
 %YAML:1.0
-schema_version: 1
 camera_matrix: !!opencv-matrix      # 3x3 内参
 distortion_coefficients: !!opencv-matrix  # 1x5 畸变
 image_width: 1440
@@ -81,4 +80,4 @@ reprojection_error: 0.095         # 重投影误差（像素）
 
 见 `docs/acceptance.md`。重投影 RMSE < 0.5px 为优秀。
 
-现行选帧只使用 `frame_list`；旧 `start_frame/end_frame` YAML 与 `--start-frame/--end-frame` CLI 明确拒绝。抽样与圆点阵观察保留源 frame_id，未检出帧记信息且不进入求解。视频尺寸由 CalibrationVideoInfo 显式传到求解结果与保存步骤，不再回写静态配置。输出 YAML 字段保持既有协议。
+选帧使用 `frame_list`；抽样与圆点阵观察保留源 frame_id，未检出帧记信息且不进入求解。视频尺寸由 CalibrationVideoInfo 传到求解与保存步骤。输出相机矩阵、畸变、尺寸和重投影误差。

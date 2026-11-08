@@ -5,19 +5,19 @@
 #include <vector>
 #include <opencv2/core.hpp>
 
-namespace mark
+namespace mark::detector
 {
     struct FrameInput
     {
-        cv::Mat image;
-        uint64_t frame_id{};
-        int64_t timestamp_us{};
+        cv::Mat image_;
+        uint64_t frame_id_{};
+        int64_t timestamp_us_{};
     };
 
     struct Detection
     {
-        std::array<cv::Point2f, 4> corners;
-        std::array<int, 4> orientation{{0, 1, 2, 3}};
+        std::array<cv::Point2f, 4> corners_;
+        std::array<int, 4> orientation_{{0, 1, 2, 3}};
     };
     enum class Status
     {
@@ -28,10 +28,10 @@ namespace mark
 
     struct FrameResult
     {
-        uint64_t frame_id{};
-        int64_t timestamp_us{};
-        Status status{Status::INVALID_INPUT};
-        std::vector<Detection> detections;
-        std::vector<std::string> diagnostics;
+        uint64_t frame_id_{};
+        int64_t timestamp_us_{};
+        Status status_{Status::INVALID_INPUT};
+        std::vector<Detection> detections_;
+        std::vector<std::string> diagnostics_;
     };
 }

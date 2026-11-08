@@ -33,7 +33,7 @@ int main(int argc, char **argv)
         if (!input.isOpened() || !out.isOpened() || int(input["schema_version"]) != 6)
             return 1;
         mark::tracking::TargetTracker tracker(mark::tracking::load_tracking_config(argv[2]));
-        out << "schema_version" << 2 << "stream_type" << "G4TrackingResult" << "frames" << "[";
+        out << "schema_version" << 2 << "stream_type" << "TrackingResult" << "frames" << "[";
         for (const auto &node:input["frames"])
         {
             mark::tracking::TrackingFrame f;
@@ -45,8 +45,8 @@ int main(int argc, char **argv)
                 o.source_ = p["source"].string();
                 o.target_id_ = p["target_id"].string();
                 o.detection_index_ = integer(p["detection_index"]);
-                const auto status = p["status"].string();
-                if (status == "ESTIMATED")
+                const auto status_ = p["status"].string();
+                if (status_ == "ESTIMATED")
                 {
                     o.estimate_.emplace();
                     const auto m = p["estimate"];
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
                     spread.copyTo(cv::Mat(o.estimate_->translation_spread_m2_, false));
                     o.estimate_->rmse_px_ = m["rmse_px"].real();
                 }
-                else if (status != "UNAVAILABLE") return 1;
+                else if (status_ != "UNAVAILABLE") return 1;
                 f.observations_.push_back(o);
             }
             auto result = tracker.step(f);

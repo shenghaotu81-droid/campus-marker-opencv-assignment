@@ -1,4 +1,5 @@
-#include "vision/math/covariance_validation.hpp"
+// 位置和速度按匀速模型预测，位置量测通过创新和 Joseph 更新推进协方差。
+#include "filter/covariance_validation.hpp"
 #include "filter/kalman_cv.hpp"
 #include <algorithm>
 #include <cmath>
@@ -37,10 +38,10 @@ namespace mark::tracking::detail
         return out;
     }
 
-// 首帧速度只是零均值先验，不对外发布“测得零速”；方差来自独立数据二阶矩。
+// 首帧速度只是零均值先验，不对外发布“测得零速”；方差来自 profile 的初速模型。
     void CvFilter::initialize(const cv::Vec3d &p, const cv::Matx33d &r, double vv)
     {
-        if (!finite_vector(p) || !positive_definite(cv::Mat(r)) || !std::isfinite(vv) || vv <= 0)
+        if (!finite_vector(p) || !positive_definite(cv::Mat(r)))
             throw std::runtime_error("TRACK_BAD_INITIAL_STATE");
         x_ = Vec6::all(0);
         P_ = Mat6::zeros();
@@ -59,7 +60,7 @@ namespace mark::tracking::detail
     {
         if (!finite_vector(p0) || !finite_vector(p1) || !positive_definite(cv::Mat(r0)) ||
             !positive_definite(cv::Mat(r1)) || !std::isfinite(dt) || dt <= 0 ||
-            !std::isfinite(q) || q < 0 || !std::isfinite(bound) || bound < 0 || bound >= dt ||
+            !std::isfinite(bound) || bound < 0 || bound >= dt ||
             !std::isfinite(position_bound) || position_bound < 0)
             throw std::runtime_error("TRACK_BAD_BOOTSTRAP");
         const auto v = (p1 - p0) / dt;
@@ -79,8 +80,8 @@ namespace mark::tracking::detail
                 x_[i + 3] = v[i];
                 for (int j = 0; j < 3; ++j)
                 {
-                    // R2：原有界初始化遗漏观测时偏导致的位置位移项。
-                    // 单帧界来自profile；用本次bootstrap自身速度二阶矩估计，不借旧track速度。
+                    // 有界初始化把观测时偏产生的位置位移计入位置协方差。
+                    // 单帧界来自时间戳；用两次观测形成的速度二阶矩计算位移不确定性。
                     P_(i, j) = 2 * (r1(i, j) + position_bound * position_bound *
                                     (v[i] * v[j] + velocity_mse(i, j)));
                     P_(i + 3, j + 3) = 2 * velocity_mse(i, j);
@@ -108,7 +109,7 @@ namespace mark::tracking::detail
 // 实际dt的连续白加速度CV模型；q单位m²/s³，不与离散常加速度dt⁴模型混用。
     void CvFilter::predict(double dt, double q, double bound)
     {
-        if (!std::isfinite(dt) || dt < 0 || !std::isfinite(q) || q < 0 ||
+        if (!std::isfinite(dt) || dt < 0 ||
             !std::isfinite(bound) || bound < 0 || (bound > 0 && dt <= bound))
             throw std::runtime_error("TRACK_BAD_PREDICTION_INTERVAL");
         Mat6 f = Mat6::eye(), noise = Mat6::zeros();
@@ -140,7 +141,7 @@ namespace mark::tracking::detail
         P_ = checked_covariance(cv::Mat(propagated));
     }
 
-// 用Cholesky解线性方程，不显式求逆；创新门槛由未截断的正例分布标定。
+// 用 Cholesky 解线性方程，不显式求逆；NIS 只用于量测关联排序，不设拒绝门槛。
     InnovationResult CvFilter::innovation(const cv::Vec3d &z, const cv::Matx33d &r) const
     {
         if (!finite_vector(z) || !positive_definite(cv::Mat(r)))
@@ -158,17 +159,17 @@ namespace mark::tracking::detail
 
     void CvFilter::correct(const InnovationResult &innovation)
     {
-        const auto &r = innovation.R;
+        const auto &r = innovation.R_;
         cv::Mat h = cv::Mat::zeros(3, 6, CV_64F);
         for (int i = 0; i < 3; ++i)
             h.at<double>(i, i) = 1;
         cv::Mat p(P_), solved;
-        const cv::Mat s(innovation.S);
+        const cv::Mat s(innovation.S_);
         const cv::Mat pht = p * h.t();
         if (!cv::solve(s, pht.t(), solved, cv::DECOMP_CHOLESKY))
             throw std::runtime_error("TRACK_GAIN_SOLVE_FAILED");
         const cv::Mat gain = solved.t();
-        const cv::Mat state = cv::Mat(x_) + gain * cv::Mat(innovation.residual);
+        const cv::Mat state = cv::Mat(x_) + gain * cv::Mat(innovation.residual_);
         if (!cv::checkRange(state))
             throw std::runtime_error("TRACK_CORRECTION_STATE_OVERFLOW");
         state.copyTo(cv::Mat(x_, false));

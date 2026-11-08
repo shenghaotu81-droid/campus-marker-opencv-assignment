@@ -12,7 +12,7 @@
 
 namespace block3_fixture_tools
 {
-    // 旧计数将轮廓回走次数当成独立支持点；按坐标精确去重，与生产门槛一致。
+    // 按坐标精确去重，轮廓回走不增加独立支持点。
     // 非有限坐标是测量输入错误，不能进入排序集合或被静默忽略。
     inline std::size_t count_unique_support_pixels(
         const std::vector<cv::Point2d>& support_arc)

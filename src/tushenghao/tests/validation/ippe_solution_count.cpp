@@ -1,7 +1,7 @@
-// 只读IPPE计数：直接调用与G2相同的求解器/数学复核，不向生产插入trace。
+// 只读IPPE计数：直接调用与Pose相同的求解器/数学复核，不向生产插入trace。
 #include "vision/detection/detector.hpp"
 #include "vision/config/pose_config.hpp"
-#include "detector/config.hpp"
+#include "vision/config/detector_config.hpp"
 #include "validation/pose_geometry.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/videoio.hpp>
@@ -16,22 +16,22 @@ int main(int argc, char **argv)
     {
         if (argc != 4) return 1;
         const std::filesystem::path config(argv[1]);
-        mark::Detector detector(mark::loadConfig(config).detector_config);
+        mark::detector::Detector detector(mark::detector::load_detector_config(config));
         const auto pose = mark::pose::load_pose_config(config.parent_path() / "pose.yaml");
         cv::VideoCapture video(argv[2]);
         std::ofstream out(argv[3]);
         if (!video.isOpened() || !out) return 1;
         const double fps = video.get(cv::CAP_PROP_FPS);
-        cv::Mat image;
-        uint64_t frame = 0, detections = 0;
+        cv::Mat image_;
+        uint64_t frame = 0, detections_ = 0;
         std::map<size_t, size_t> raw_counts, legal_counts;
-        while (video.read(image))
+        while (video.read(image_))
         {
-            auto observed = detector.process({image, frame, std::llround(frame * 1e6 / fps)});
-            for (const auto &d : observed.detections)
+            auto observed = detector.process({image_, frame, std::llround(frame * 1e6 / fps)});
+            for (const auto &d : observed.detections_)
             {
                 std::array<cv::Point2d, 4> pixels;
-                for (size_t i = 0; i < 4; ++i) pixels[i] = d.corners[d.orientation[i]];
+                for (size_t i = 0; i < 4; ++i) pixels[i] = d.corners_[d.orientation_[i]];
                 std::vector<cv::Mat> rotations, translations;
                 cv::solvePnPGeneric(std::vector<cv::Point3d>(pose.mark_points_m_.begin(), pose.mark_points_m_.end()),
                     std::vector<cv::Point2d>(pixels.begin(), pixels.end()), pose.camera_.K_, pose.camera_.dist_,
@@ -49,11 +49,11 @@ int main(int argc, char **argv)
                         pose.camera_.K_, pose.camera_.dist_));
                 }
                 out << frame << ' ' << rotations.size() << ' ' << legal << '\n';
-                ++detections; ++raw_counts[rotations.size()]; ++legal_counts[legal];
+                ++detections_; ++raw_counts[rotations.size()]; ++legal_counts[legal];
             }
             ++frame;
         }
-        std::cout << "opencv=" << CV_VERSION << " frames=" << frame << " detections=" << detections << '\n';
+        std::cout << "opencv=" << CV_VERSION << " frames=" << frame << " detections=" << detections_ << '\n';
         for (auto [count, n] : raw_counts) std::cout << "raw_solutions=" << count << " detections=" << n << '\n';
         for (auto [count, n] : legal_counts) std::cout << "legal_solutions=" << count << " detections=" << n << '\n';
         return frame ? 0 : 1;
