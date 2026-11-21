@@ -14,7 +14,7 @@
 
 ## 复现
 
-从此交付版本的仓库根目录构建（工具仅在测试构建中）：
+从位姿状态收尾交付提交 `4d4aac9` 的仓库根目录构建（工具仅在测试构建中）。以下历史比较器依赖当时的 `target_id` 和带完整时间戳元数据的轨迹流。最终精简后的回放见[修改说明](../../FINAL_LEAN_CHANGELOG.md)。
 
 ```bash
 cmake -S src/tushenghao -B /tmp/pose-repeat-build -DCMAKE_BUILD_TYPE=Release \

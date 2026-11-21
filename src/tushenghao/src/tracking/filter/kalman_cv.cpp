@@ -119,19 +119,13 @@ namespace mark::tracking::detail
 
     // 两个不同时刻才可观测速度；保留p-v交叉项，并补连续白加速度的端点速度误差。
     void CvFilter::bootstrap(const cv::Vec3d &p0, const cv::Matx33d &r0, const cv::Vec3d &p1,
-                             const cv::Matx33d &r1, double dt, double q, double bound,
-                             double position_bound)
+                             const cv::Matx33d &r1, double dt, double q)
     {
         // 验证输入
         // 验 p0、p1 （两个量测位置，速度是 (p1 - p0) / dt 算出来的）有限，r0、r1 （两个量测的噪声 R,必须正定，后面 P_ 的速度块要算 (r0 + r1) / dt²，R 不是合法协方差，P_ 就不是合法协方差）正定，dt （两帧时间间隔）有限且 > 0，bound 有限且 0 ≤ bound（时间不确定度界） < dt，position_bound（位置不确定度界,“时间不准导致的位置偏差”） 有限且 ≥ 0
-        // bound = 两帧之和：time_bound(上一帧) + time_bound(当前帧);速度 v = (p1 - p0) / dt 依赖两个时刻，所以速度的不确定度要算两帧的时间不确定度;bound 还用来算最小可能 dt（dt - bound）
-        // position_bound = 只当前帧：time_bound(当前帧);位置 x_ = p1 只来自当前帧的量测，所以位置的不确定度只跟当前帧的时间不确定度有关;时间不准 position_bound 秒，目标速度是 v，位置就可能偏掉 |v| × position_bound 米——所以它乘上速度就成了位置的界;bootstrap 的有界分支里 P_(i,j) 那项 position_bound² × (v[i]·v[j] + ...) 就来自这里（position_bound² × v²：“当前帧时间偏了 position_bound 秒，位置跟着偏 |v| × position_bound 米”的方差）
-        // 速度看两帧，位置只看当前帧；离线均为0；time_uncertainty_s_ 由板子相机驱动填
         // 有一项不过就抛 TRACK_BAD_BOOTSTRAP
         if (!finite_vector(p0) || !finite_vector(p1) || !positive_definite(cv::Mat(r0)) ||
-            !positive_definite(cv::Mat(r1)) || !std::isfinite(dt) || dt <= 0 ||
-            !std::isfinite(bound) || bound < 0 || bound >= dt || !std::isfinite(position_bound) ||
-            position_bound < 0)
+            !positive_definite(cv::Mat(r1)) || !std::isfinite(dt) || dt <= 0)
             throw std::runtime_error("TRACK_BAD_BOOTSTRAP");
 
         // 算速度:v = (p1 - p0) / dt
@@ -144,46 +138,6 @@ namespace mark::tracking::detail
         if (!finite_vector(v)) // 如果除法算出 NaN/∞（比如 dt 极小、位置差极大导致溢出），抛 TRACK_BOOTSTRAP_VELOCITY_OVERFLOW
             throw std::runtime_error("TRACK_BOOTSTRAP_VELOCITY_OVERFLOW");
 
-        // 想删掉了，毫无道理，防御性保守放大P_
-        // 有界分支(bound > 0):时间有不确定度时走的分支（离线恒为 0）
-        // 用最小可能 dt（dt - bound）限制除法误差，算 velocity_mse，再填 x_ 和 P_，最后 checked_covariance 验 P_，返回
-        if (bound > 0)
-        {
-            // 时间绝对界不是sigma。用最小可能dt限制除法误差，再用块MSE的2倍包络处理未知相关。
-            // 时间戳不准 bound 秒，真实 dt 可能小到 dt - bound；速度是位置差除以 dt，dt 越小速度越大、速度的不确定度也越大，所以用最小 dt 来算最坏情况
-            const double lower = dt - bound; // 最小可能 dt
-            // 速度的均方误差，3×3 矩阵
-            // 三项加起来，外面再乘个 2 包络未知相关
-            // cv::Matx33d::eye()：Matx::eye()，静态方法，返回单位阵（对角线 1，其余 0）；跟 zeros()、ones() 是一家；这里 eye() * (q*(dt+bound)/3) 就是把标量 q*(dt+bound)/3 放到 3×3 对角线上（三个方向的速度方差都一样）
-            // v * v.t()：外积。v 是 Vec3d（3×1 列向量），v.t() 是它的转置（1×3 行向量），两者相乘得 3×3 矩阵，第 (i,j) 项是 v[i]·v[j]；速度向量的外积，描述速度不确定度的方向结构
-            const auto velocity_mse = 2 * (2 * (r0 + r1) / (lower * lower) + // 位置量测噪声（r0、r1）传到速度上的误差（位置差除以 dt，噪声也除以 dt，方差除以 dt²）
-                                           (v * v.t()) * (bound * bound / (lower * lower))) + // 时间不确定度造成的速度误差（时间偏 bound，速度就偏 v·bound/lower）
-                                      cv::Matx33d::eye() * (q * (dt + bound) / 3); // 加速度过程噪声在时间段里的速度方差（用 dt+bound 这个最大时间，往保守算）
-
-            // 填 x_ 和 P_：位置 = p1，速度 = v
-            P_ = Mat6::zeros();
-            for (int i = 0; i < 3; ++i)
-            {
-                x_[i] = p1[i];
-                x_[i + 3] = v[i];
-                for (int j = 0; j < 3; ++j)
-                {
-                    // 有界初始化把观测时偏产生的位置位移计入位置协方差。
-                    // 单帧界来自时间戳；用两次观测形成的速度二阶矩计算位移不确定性。
-                    // P_ 位置块 = 2·(r1 + position_bound²·(v·vᵀ + velocity_mse))——r1 是第二帧量测噪声，position_bound² 那项是当前帧时间偏导致的位置位移（position_bound × v 是位移，平方是方差）
-                    P_(i, j) = 2 * (r1(i, j) + position_bound * position_bound *
-                                                   (v[i] * v[j] + velocity_mse(i, j)));
-                    // 速度块 = 2·velocity_mse
-                    P_(i + 3, j + 3) = 2 * velocity_mse(i, j);
-                    // 注意这里没有位置–速度交叉项（常规分支有），有界分支不精细建模交叉相关，直接把对角块放大 2 倍包络过去
-                }
-            }
-            // checked_covariance + return：验 P_ 是合法协方差（有限、对称、正定），然后直接返回，不走常规分支
-            P_ = checked_covariance(cv::Mat(P_));
-            return;
-        }
-
-        // 常规分支(bound == 0):离线走的分支
         // 标准处理：状态 x 由两个量测线性定义，P_ 就是把量测噪声（r0、r1）按线性变换传过去（P = A·R·Aᵀ 的展开），再补一个过程噪声项
         // x_ = [p1, v]，P_ 位置块 = r1，位置–速度交叉项 = r1/dt，速度块 = (r0+r1)/dt²，速度对角再加 q·dt/3，最后 checked_covariance 验 P_
         P_ = Mat6::zeros();
@@ -232,13 +186,12 @@ namespace mark::tracking::detail
     // 位置块 q·dt³/3、交叉项 q·dt²/2、速度块 q·dt。
     // ！！！状态方程：x_k = F·x_{k-1} + w_{k-1}，F = [I, dt·I; 0, I]，w 的协方差为 Q；E[w] = 0，Q = E[w·wᵀ]，wₖ₋₁：过程噪声——这 dt 里随机加速度对状态的扰动
     // 实际dt的连续白加速度CV模型；q单位m²/s³，不与离散常加速度dt⁴模型混用。（这里是连续白噪声模型，指数是 3、2、1）
-    void CvFilter::predict(double dt, double q, double bound)
+    void CvFilter::predict(double dt, double q)
     {
         // 验输入
         // dt 和 bound 都得有限、≥ 0；如果 bound > 0 还要求 dt > bound（不然 dt − bound 没意义）
         // 不满足就抛错
-        if (!std::isfinite(dt) || dt < 0 || !std::isfinite(bound) || bound < 0 ||
-            (bound > 0 && dt <= bound))
+        if (!std::isfinite(dt) || dt < 0)
             throw std::runtime_error("TRACK_BAD_PREDICTION_INTERVAL");
 
         // 造 F 和 Q
@@ -268,13 +221,12 @@ namespace mark::tracking::detail
        // + Q：再新加一段不确定度——这 dt 里目标自己随机加速了，哪怕之前完全确定，现在也不确定了
        // F （旧账）是“确定性的搬运”，Q（新账） 是“新加的随机性”
         Mat6 f = Mat6::eye(), noise = Mat6::zeros();
-        const double upper = dt + bound;
         for (int i = 0; i < 3; ++i)
         {
             f(i, i + 3) = dt;
-            noise(i, i) = q * upper * upper * upper / 3;
-            noise(i, i + 3) = noise(i + 3, i) = q * upper * upper / 2;
-            noise(i + 3, i + 3) = q * upper;
+            noise(i, i) = q * dt * dt * dt / 3;
+            noise(i, i + 3) = noise(i + 3, i) = q * dt * dt / 2;
+            noise(i + 3, i + 3) = q * dt;
         }
 
         // 推 P_
@@ -284,18 +236,6 @@ namespace mark::tracking::detail
         // 标准的卡尔曼预测：P_new = F·P·Fᵀ + Q。F 把旧的不确定度搬到新时刻，Q 再加上这段时间的随机加速度
         // Matx 的 operator*：Matx::operator*，矩阵乘法（按维度走）；f * P_ * f.t() 是 6×6 矩阵连乘（先 f*P_ 得 6×6，再乘 f.t()），f * x_ 是 6×6 矩阵乘 6 维向量得 6 维向量
         Mat6 propagated = f * P_ * f.t() + noise;
-        // Young 不等式那套时间不确定度处理（控制未知时偏和状态误差的相关项），类似bootstrap 的有界分支
-        if (bound > 0)
-        {
-            // Young不等式控制未知时偏与状态误差的相关项；bound/dt由量纲给出，不是经验调参。
-            Mat6 a = Mat6::zeros();
-            for (int i = 0; i < 3; ++i)
-                a(i, i + 3) = 1;
-            const double ratio = bound / dt;
-            const auto second_moment_bound = 2 * (P_ + x_ * x_.t());
-            propagated = (1 + ratio) * (f * P_ * f.t()) + noise +
-                         (1 + 1 / ratio) * bound * bound * (a * second_moment_bound * a.t());
-        }
 
         // 推 x_、验、提交 P_
         // x_ = f * x_：状态预测，新位置 = 旧位置 + 速度×dt，速度不变

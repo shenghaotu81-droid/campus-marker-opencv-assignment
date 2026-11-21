@@ -16,13 +16,9 @@ namespace pose_test
         return mark::pose::load_pose_config(std::filesystem::path(VISION_SOURCE_ROOT) / "config/pose.yaml");
     }
 
-    inline mark::pose::CaptureStamp stamp(const mark::pose::PoseConfig &c)
+    inline mark::pose::CaptureStamp stamp()
     {
         mark::pose::CaptureStamp s;
-        s.session_id_ = "fixture";
-        s.camera_id_ = c.camera_.camera_id_;
-        s.clock_domain_ = "fixture";
-        s.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
         s.frame_id_ = 1;
         s.received_us_ = 0;
         return s;

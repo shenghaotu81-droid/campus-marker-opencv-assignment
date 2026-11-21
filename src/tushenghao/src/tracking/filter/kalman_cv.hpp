@@ -24,10 +24,10 @@ namespace mark::tracking::detail
         // 第二次量测来了，用两次量测算出初始速度（位置差 / 时间差），把轨迹“确认”
         // 速度 = (p1−p0)/dt，两个不同时刻才让速度可观；P 保留 p–v 交叉项（r1/dt），速度方差加 q·dt/3；bound>0 时用 dt−bound 当最小可能 dt
         void bootstrap(const cv::Vec3d &, const cv::Matx33d &, const cv::Vec3d &,
-                       const cv::Matx33d &, double, double, double = 0, double = 0);
+                       const cv::Matx33d &, double, double);
         // 往前推 dt（预测步）
         // 匀速模型，q 单位 m²/s³；P 按 q·dt³/3、q·dt²/2 的模式增长；bound>0 时加 Young 不等式项
-        void predict(double, double, double = 0);
+        void predict(double, double);
         // 拿一个量测跟预测值比，算残差、新息协方差 S、NIS 分数；只算不改状态（const 方法）
         // 残差 = z − 预测位置；S = 位置块(P_) + R；NIS = 残差ᵀS⁻¹残差，Cholesky 解线性方程、不显式求逆；返回的 InnovationResult 带 owner/revision，防复用旧结果
         InnovationResult innovation(const cv::Vec3d &, const cv::Matx33d &) const;

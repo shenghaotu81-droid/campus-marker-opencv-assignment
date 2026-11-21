@@ -16,15 +16,8 @@ namespace mark::pose
         7. exposure_us：optional，有值 to_string，没值写 ""。
         8. time_uncertainty_s：optional，有值写 double，没值写 ""。
         */
-        fs << "{" << "session_id" << s.session_id_ << "camera_id" << s.camera_id_ << "clock_domain"
-           << s.clock_domain_ << "pixel_domain" << int(s.pixel_domain_) << "frame_id"
-           << std::to_string(s.frame_id_) << "received_us" << std::to_string(s.received_us_)
-           << "exposure_us" << (s.exposure_us_ ? std::to_string(*s.exposure_us_) : "") // 三元运算符
-           << "time_uncertainty_s";
-        if (s.time_uncertainty_s_)
-            fs << *s.time_uncertainty_s_;
-        else
-            fs << "";
+        fs << "{" << "frame_id" << std::to_string(s.frame_id_) << "received_us"
+           << std::to_string(s.received_us_);
         fs << "}"; // 关 map
     }
 
@@ -36,10 +29,9 @@ namespace mark::pose
         write_capture_stamp(fs, p.stamp_);
         // 基本字段
         // source："MARK" 或 "APRILTAG"，字符串直接写。
-        // target_id："mark-white-structure-v1" 那个，字符串直接写。
         // detection_index：to_string 转字符串写（同前 int64 ）。
         // status：pose_status_name(p)——返回 "ESTIMATED" 或 "UNAVAILABLE"（const char*，因为是字面量）
-        fs << "source" << p.source_ << "target_id" << p.target_id_ << "detection_index"
+        fs << "source" << p.source_ << "detection_index"
            << std::to_string(p.detection_index_) << "status" << pose_status_name(p);
         // estimate（可选）：
         // 有值（ESTIMATED）才写 estimate 这个子 map，里面是 rvec、t_m（都用 cv::Mat(...) 包一下写成 !!opencv-matrix）、rmse_px（double 直接写）、translation_spread_m2（S，Mat 包一下）；

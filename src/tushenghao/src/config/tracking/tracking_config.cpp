@@ -16,8 +16,6 @@ namespace mark::tracking
         // 先造个默认配置，再逐字段从 YAML 覆盖
         TrackingConfig c;
         c.source_ = config_value::text(fs["source"]);
-        c.target_class_ = config_value::text(fs["target_class"]);
-        c.stamp_uncertainty_semantics_ = config_value::text(fs["stamp_uncertainty_semantics"]);
         // YAML 套 YAML（第二个文件）
         const auto profile = config_value::text(fs["profile"]);
         if (!profile.empty())

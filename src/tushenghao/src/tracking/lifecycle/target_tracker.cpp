@@ -23,27 +23,6 @@ namespace mark::tracking
         {
             return double((static_cast<long double>(a) - b) / 1e6L); // 先转 long double 再减（防溢出、保精度），除以 1e6L（微秒→秒，L 是 long double 字面量），再转回 double
         }
-
-        // same_context(a, b)：判断两个 CaptureStamp 是不是同一个上下文：session、相机、时钟域、像素域都相同，且曝光有无一致（都有或都没有）
-        // advance 里用它检测上下文变了没变——变了就 CONTEXT_RESET（可删掉）
-        bool same_context(const pose::CaptureStamp &a, const pose::CaptureStamp &b)
-        {
-            return a.session_id_ == b.session_id_ && a.camera_id_ == b.camera_id_ &&
-                   a.clock_domain_ == b.clock_domain_ && a.pixel_domain_ == b.pixel_domain_ &&
-                   a.exposure_us_.has_value() == b.exposure_us_.has_value();
-        }
-
-        // time_bound(s, c)：取一个 stamp 的时间不确定度界
-        // 只有 stamp_uncertainty_semantics_ == "absolute_bound" 且 stamp 同时有 exposure_us_ 和 time_uncertainty_s_时，才返回 *time_uncertainty_s_（秒）；否则返回 0
-        // advance 里用它算 predict 和 time_augmented_noise 的 bound
-        double time_bound(const pose::CaptureStamp &s, const TrackingConfig &c)
-        {
-            return c.stamp_uncertainty_semantics_ == "absolute_bound" && s.exposure_us_ &&
-                           s.time_uncertainty_s_
-                       ? *s.time_uncertainty_s_
-                       : 0;
-        }
-
     }
 
     // 跟踪器的内部状态 + 干活的方法：
@@ -87,24 +66,10 @@ namespace mark::tracking
             // 防坏时间数据污染滤波时间轴
             // 时间字段来自帧输入；排除负时刻、曝光倒置和非法误差界，防止污染滤波时间轴。
             const auto &stamp = f.stamp_;
-            if (stamp.received_us_ < 0 ||     // 收到时间是负数，时间戳本身就是坏的（微秒数不可能为负）
-                (stamp.exposure_us_ &&
-                 (*stamp.exposure_us_ < 0 || *stamp.exposure_us_ > stamp.received_us_)) || // exposure_us_ 存在且 < 0 或 > received_us_——曝光发生在收到之前，曝光时间戳不可能晚于收到时间戳，否则两段时间戳自相矛盾
-                (stamp.time_uncertainty_s_ &&
-                 (!std::isfinite(*stamp.time_uncertainty_s_) || *stamp.time_uncertainty_s_ < 0))) // time_uncertainty_s_ 存在且非有限（NaN/inf）或为负——不确定度不可能是负的，也不能是 NaN
+            if (stamp.received_us_ < 0)     // 收到时间是负数，时间戳本身就是坏的（微秒数不可能为负）
             {
                 out.events_.push_back("INVALID_FRAME_STAMP");
                 return out; // 跟踪器的状态原样保留，只拒绝这帧（return）
-            }
-
-            // 上下文检查（CONTEXT_RESET）
-            // last_input_ 存在且 same_context为 false（换 session/相机/时钟域/像素域/曝光有无），说明上一条轨迹的上下文变了，没意义了：live_/confirmed_ 置 false，last_input_ 清空，记事件
-            // 不 return，继续往下走
-            if (last_input_ && !same_context(*last_input_, f.stamp_))
-            {
-                live_ = confirmed_ = false;
-                last_input_.reset();
-                out.events_.push_back("CONTEXT_RESET"); // 杀掉旧轨迹但接受这帧（不 return，继续往下走），可重建新轨迹
             }
 
             // 重复/乱序帧检查（DUPLICATE_OR_REORDERED_FRAME）
@@ -121,7 +86,6 @@ namespace mark::tracking
 
             // 接受输入
             // 先存 previous（给预测算时间界用），last_input_ 更新为这帧，input_accepted_ = true（step 据此决定提交）
-            auto previous = last_input_; // 先把上一帧的 stamp 存下来再覆盖；预测要用：时间界是上一帧和这帧两头的不确定度之和（time_bound(*previous) + time_bound(f.stamp_)）
             last_input_ = f.stamp_; // 更新
             out.input_accepted_ = true; // 标记接受（step 决定提交的开关：true 才把 candidate 移回 impl_->state_）
             // 如果没有 profile（!c.profile_），没东西可跟踪，直接 return
@@ -138,11 +102,9 @@ namespace mark::tracking
             // if (live_) 才预测——没有存活的轨迹就没东西可推（滤波器还没初始化，第一帧量测在后面才会初始化它）
             if (live_)
             {
-                double dt = elapsed(now, state_time_), // 距滤波器上次状态时间的间隔，就是这次要往前推多远
-                       bound = previous ? time_bound(*previous, c) + time_bound(f.stamp_, c) : 0; // 时间不确定度界，是上一帧和这帧两头的不确定度之和（区间的两端时间戳都不准）；没有上一帧（第一帧）就是 0
+                double dt = elapsed(now, state_time_); // 距滤波器上次状态时间的间隔，就是这次要往前推多远
                 // 把滤波器状态往前推 dt，过程噪声用 acceleration_psd_m2ps3_（q）
-                // bound 传进去是让 predict 知道时间本身有多不准；但 bound 只有比 dt 小才有意义（不确定度比间隔本身还大就没意义了），所以 bound < dt 才传 bound，否则传 0
-                filter_.predict(dt, p.acceleration_psd_m2ps3_, bound < dt ? bound : 0);
+                filter_.predict(dt, p.acceleration_psd_m2ps3_);
             }
             state_time_ = now; // 滤波器的状态时间更新为现在（不管有没有轨迹都执行——这样即使这帧没轨迹，state_time_ 也跟着帧走，下次建轨之后 dt 才算得对）
 
@@ -150,27 +112,6 @@ namespace mark::tracking
             // adapt_measurements 把这帧的位姿观测转成滤波器能用的位置量测；
             // 再对每个量测，如果有时间不确定度（b > 0），用 time_augmented_noise 把 R 放大（时间戳不准 → 目标在这段时间里动了 → 位置更不确定）
             auto measurements = detail::adapt_measurements(f, c); // 把这帧的位姿观测转成滤波器能用的位置量测（按 source/target 筛选，取位置 t_m_ 和 R）
-            // 时间不确定度放大 R（待删）
-            for (auto &m : measurements)
-            {
-                // 对每个量测，b = time_bound(...) 是这帧的时间不确定度界
-                double b = time_bound(f.stamp_, c);
-                // 如果 b > 0（时间戳不准），就把量测的 R 放大：时间戳不准 b 秒，目标在这段时间里以速度 v 在动，位置就可能偏差 v * b，所以 R 里要补上这部分不确定度
-                // 离线这块是空转的：time_uncertainty_s_ 永远是空的，b 永远是 0，if (b > 0) 永远不成立，R 原样不动
-                if (b > 0)
-                {
-                    // v 是当前速度估计（有轨迹就从滤波器取，没有就当 0），vv 是速度的协方差（有轨迹就从滤波器协方差里取速度那 3×3 块，没有就用初始速度方差）
-                    cv::Vec3d v = live_ ? filter_.velocity() : cv::Vec3d::all(0);
-                    cv::Matx33d vv = cv::Matx33d::eye() * p.initial_velocity_variance_m2ps2_;
-                    if (live_)
-                        for (int i = 0; i < 3; ++i)
-                            for (int j = 0; j < 3; ++j)
-                                vv(i, j) = filter_.covariance()(i + 3, j + 3);
-
-                    // 放大用的是 time_augmented_noise
-                    m.R_ = detail::time_augmented_noise(m.R_, v, vv, b, p.acceleration_psd_m2ps3_);
-                }
-            }
 
             // 更新
             // 没存活轨迹：恰好 1 个量测就新建轨迹（分 id、seed 滤波器、记 TRACK_CREATED，未确认）
@@ -227,10 +168,8 @@ namespace mark::tracking
                     if (!confirmed_)
                     {
                         double dt = elapsed(now, detail::sample_time(last_measurement_));
-                        double bound = time_bound(last_measurement_, c) + time_bound(f.stamp_, c); // bound 两项是时间不确定度（删掉清单上，离线恒为 0）
                         filter_.bootstrap(seed_.position_, seed_.R_, m.position_, m.R_, dt,
-                                          p.acceleration_psd_m2ps3_, bound < dt ? bound : 0,
-                                          bound < dt ? time_bound(f.stamp_, c) : 0);
+                                          p.acceleration_psd_m2ps3_);
                         confirmed_ = true;
                     }
                     else // 已确认：correct(innovation)——卡尔曼更新
@@ -314,18 +253,4 @@ namespace mark::tracking
             return out;
         }
     }
-
-    // TargetTracker::reset
-    // 把 live_、confirmed_ 置 false，last_input_ 清空
-    // 跟踪器回到“没有轨迹”的初始状态
-    void TargetTracker::reset() noexcept
-    {
-        // 没动滤波器本身和 id 计数器，只是把轨迹标记为“死了”
-        impl_->state_.live_ = impl_->state_.confirmed_ = false;
-        // std::optional::reset()：constexpr void reset() noexcept;
-        // 把 optional 里装着的值销毁掉（如果有的话），让它变回空的；之后 has_value() 是 false，跟刚默认构造出来的 optional 一个状态
-        // reset() 是 emplace() 的反操作——emplace 是往空 optional 里建一个值，reset 是把已有的值清掉；是 noexcept，保证不抛异常
-        impl_->state_.last_input_.reset();
-    }
-
 }

@@ -53,8 +53,6 @@ namespace mark::pose
         CameraModel camera_;
         // MARK 的 4 个角点在 MARK 自身平面里的 3D 坐标（米）；cv::Point3d 是 3 个 double (x, y, z)；solvePnP 的“3D 模型点”
         std::array<cv::Point3d, 4> mark_points_m_;
-        // MARK 的标识名
-        std::string mark_target_id_;
         // AprilTag 配置
         TagConfig tag_;
     };

@@ -21,8 +21,6 @@ namespace mark::tracking
         // 注意没有 const——会改 tracker 自己的状态（提交新的滤波状态）
         // 实现是“先复制再提交”：先把当前状态拷一份给 candidate，在 candidate 上推进一帧；只有这一帧的输入被接受（input_accepted_ 为真）才把 candidate 移回 impl_->state_；失败或抛异常就丢弃 candidate、保留旧状态，并返回一个带 "TRACK_MATH_REJECTED_NO_COMMIT" 事件的结果（坏帧不会毒化 tracker）
         TrackingResult step(const TrackingFrame &);
-        // 重置 tracker 状态（live_/confirmed_ 置 false，清空 last_input_）；noexcept 保证不抛异常
-        void reset() noexcept;
 
       private:
         // struct Impl; + std::unique_ptr<Impl> impl_;——和 Detector、TagDetector 一样的 pimpl 手法

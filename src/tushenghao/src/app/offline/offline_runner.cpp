@@ -84,13 +84,10 @@ namespace mark
             std::vector<tracking::TargetTrack> tracks_; // tracks_ 装这帧的跟踪结果（后面 tracker.step 的返回值赋给它）
             // 填 CaptureStamp 字段：三个字符串（session、相机、时钟域）+ 像素域 + 帧号 + 接收时间 + 两个 optional（曝光、时间误差）
             pose::CaptureStamp stamp;
-            stamp.session_id_ = video; // 录像文件名——这帧出自哪次录像
-            stamp.camera_id_ = pose_config.camera_.camera_id_; // 标定配置里的相机 ID——哪个相机拍的
-            stamp.clock_domain_ = "video-fps"; // 时间戳的时钟域——这时间是帧号/FPS 推算出来的名义时间，不是真实相机时钟，所以标成 "video-fps" 这个域
-            stamp.pixel_domain_ = pose::PixelDomain::RawDistorted; // 像素域——图像是原始带畸变的（没做去畸变），告诉 solvePnP 要用畸变系数；PixelDomain 只有两个值：Unknown（默认）和 RawDistorted
+            // 时间戳的时钟域——这时间是帧号/FPS 推算出来的名义时间，不是真实相机时钟，所以标成 "video-fps" 这个域
+            // 像素域——图像是原始带畸变的（没做去畸变），告诉 solvePnP 要用畸变系数；PixelDomain 只有两个值：Unknown（默认）和 RawDistorted
             stamp.frame_id_ = id; // 帧号
             stamp.received_us_ = input.timestamp_us_; // 算出来的名义时间戳（微秒）
-            // exposure_us_ 和 time_uncertainty_s_ 留空，后续换成相机驱动给的真实时间（曝光时刻、接收时刻），填进 CaptureStamp 的 exposure_us_ 和 time_uncertainty_s_
             // 帧号/FPS 生成录像名义时间；没有曝光或时间误差的实测信息。
 
             // 整个位姿板块

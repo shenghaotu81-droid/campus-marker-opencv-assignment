@@ -1,6 +1,6 @@
 # 视觉管线瘦身改动报告
 
-日期：2026-11-08。分支：`refactor/vision-lean-fixed`。基线：`edc9477`。
+日期：2026-11-08。分支：`refactor/vision-lean-fixed`。基线：`edc9477`。以下记录对应最终精简前的版本，当前接口及回放结果见[最终精简修改说明](FINAL_LEAN_CHANGELOG.md)。
 
 ## 1. 原则与交付范围
 

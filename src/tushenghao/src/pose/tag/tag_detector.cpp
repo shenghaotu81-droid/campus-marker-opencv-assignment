@@ -200,7 +200,6 @@ namespace mark::pose
             PoseObservation p;
             p.stamp_ = t.stamp_; // 这个 TAG 的 stamp
             p.source_ = "APRILTAG";
-            p.target_id_ = "tag36h11:" + std::to_string(t.id_); // std::string to_string(int value); 把一个数转成 string
             p.reason_ = "METRIC_SIZE_MISSING_OR_INVALID";
             // estimate_ 留空 → 这个观测是 UNAVAILABLE
             return p;
@@ -212,8 +211,7 @@ namespace mark::pose
         // （跟 MARK 的左上角原点不同，TAG 的模型是中心原点，跟 AprilTag 的约定一致）
         std::array<cv::Point3d, 4> model{{{-h, h, 0}, {h, h, 0}, {h, -h, 0}, {-h, -h, 0}}};
         // 调 estimator.estimate_planar(...)——就是 MARK 用的同一个 estimate_planar，入参是模型点、检到的角点、图像尺寸、stamp、目标 id
-        auto out = estimator.estimate_planar(model, t.corners_, size, t.stamp_,
-                                             "tag36h11:" + std::to_string(t.id_));
+        auto out = estimator.estimate_planar(model, t.corners_, size, t.stamp_);
         // 把返回的 source_ 改写成 "APRILTAG"（estimate_planar 里先填的是 "PLANAR"），然后返回
         out.source_ = "APRILTAG";
         return out;

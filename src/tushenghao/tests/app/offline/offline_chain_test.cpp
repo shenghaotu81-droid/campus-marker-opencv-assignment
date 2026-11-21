@@ -79,7 +79,7 @@ initial_velocity_variance_m2ps2: 4.
         test_support::check(std::string(pose["status"]) == (missing ? "UNAVAILABLE" : "ESTIMATED"), "perspective pose wrong");
         const auto track = tracks_["frames"][i]["tracks"][0];
         test_support::check(std::string(track["state"]) == (missing ? "COASTING" : "MEASURED"), "Pose to Tracking flow/coast broken");
-        test_support::check(!track["position_m"].empty() && track["time_bounded"].empty() && track["qualified_for_g5"].empty(), "finite position missing/dead qualification label survived");
+        test_support::check(!track["position_m"].empty() && track["qualified_for_g5"].empty(), "finite position missing/dead qualification label survived");
         velocity = velocity || !track["velocity_mps"].empty();
     }
     test_support::check(velocity, "full chain never produced apparent velocity");

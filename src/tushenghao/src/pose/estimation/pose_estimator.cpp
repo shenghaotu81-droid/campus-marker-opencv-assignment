@@ -29,44 +29,13 @@ namespace mark::pose
         PoseObservation out;
         out.stamp_ = stamp;
         out.source_ = "MARK";
-        out.target_id_ = config_.mark_target_id_;
         out.detection_index_ = index;
 
-        // 验戳：检测结果的帧号、时间戳必须跟传进来的 stamp 对上，否则 FRAME_STAMP_MISMATCH，带原因返回（没有位姿）
-        // std::optional::value_or：如果 optional 有值就返回值，否则返回括号里的默认值（回退）
-        // 约定：检测的 timestamp_us_ 必须等于 stamp 的有效采样时刻（填了 exposure_us_，那有效采样时刻就是曝光时刻，timestamp_us_ 就必须跟它一样；没填，才退回用 received_us_。对不上就 FRAME_STAMP_MISMATCH，观测直接打回）
-        if (raw.frame_id_ != stamp.frame_id_ ||
-            raw.timestamp_us_ != stamp.exposure_us_.value_or(stamp.received_us_)) // 谁造数据（FrameInput 和 stamp），谁就得保证两边的时间戳一致
-        {
-            out.reason_ = "FRAME_STAMP_MISMATCH";
-            return out;
-        }
-
         // 验状态：raw.status_ 必须是 DETECTED；NOT_DETECTED 直接返回（连原因都不写，就是“这帧没检到”）；其他状态 → DETECTION_INPUT_INVALID
-        if (raw.status_ != detector::Status::DETECTED)
-        {
-            if (raw.status_ != detector::Status::NOT_DETECTED)
-                out.reason_ = "DETECTION_INPUT_INVALID";
+        if (raw.detections_.empty())
             return out;
-        }
 
-        // 验索引：index 超出 detections_ 的个数 → DETECTION_INDEX_INVALID
-        if (index >= raw.detections_.size())
-        {
-            out.reason_ = "DETECTION_INDEX_INVALID";
-            return out;
-        }
-
-        // 验 orientation 映射：检测的 orientation_ 必须是 {0,1,2,3} 的一个排列（排完序正好是 0,1,2,3），否则 MAPPING_INVALID
         const auto &d = raw.detections_[index];
-        auto mapping = d.orientation_;
-        std::sort(mapping.begin(), mapping.end()); // 排序后应该是 0,1,2,3
-        if (mapping != std::array<int, 4>{{0, 1, 2, 3}})
-        {
-            out.reason_ = "MAPPING_INVALID";
-            return out;
-        }
-
         // 重排角点：按 orientation_ 把屏幕顺序的四个角点排成物理顺序，得到 pixels
         // pixels[i] 是模型点 mark_points_m_[i] 在图里的位置，两个数组是按同一个顺序对齐的：
         // pixels[0] ↔ 模型点 (0,0)——左上
@@ -79,7 +48,7 @@ namespace mark::pose
         
         // 核心
         // 调 estimate_planar：把模型点（80 mm 方块，米制）、重排后的像素角点、图尺寸、stamp、target id 传进去，真正算 IPPE PnP + S 的地方
-        out = estimate_planar(config_.mark_points_m_, pixels, size, stamp, config_.mark_target_id_);
+        out = estimate_planar(config_.mark_points_m_, pixels, size, stamp);
 
         // 补身份：estimate_planar 返回的观测 source_ 是 "PLANAR"，改回 "MARK"，再把 detection_index_ 补上
         out.source_ = "MARK";
@@ -94,20 +63,17 @@ namespace mark::pose
     // 输入或模型点验不过、PnP 无解，就带原因返回，没有位姿
     PoseObservation PoseEstimator::estimate_planar(const std::array<cv::Point3d, 4> &object,
                                                    const std::array<cv::Point2d, 4> &image_,
-                                                   cv::Size size, const CaptureStamp &stamp,
-                                                   const std::string &id) const
+                                                   cv::Size size, const CaptureStamp &stamp) const
     {
         // 填身份
         // stamp 拷进观测，source_ 写 "PLANAR"（注意这里不是 "MARK"，是 estimate_mark 回去之后再改回来的），target_id_ 取传进来的 id
         PoseObservation out;
         out.stamp_ = stamp;
         out.source_ = "PLANAR";
-        out.target_id_ = id;
 
         // 验输入
         // 四个条件任一不满足就 STAMP_CAMERA_OR_QUAD_INVALID：id 为空、stamp 的相机跟配置对不上、图尺寸跟配置对不上、像素四角不合法（valid_quad（角点有限、在图内、严格凸））
-        if (id.empty() || stamp.camera_id_ != config_.camera_.camera_id_ ||
-            size != config_.camera_.image_size_ || !detail::valid_quad(image_, size))
+        if (size != config_.camera_.image_size_ || !detail::valid_quad(image_, size))
         {
             out.reason_ = "STAMP_CAMERA_OR_QUAD_INVALID";
             return out;

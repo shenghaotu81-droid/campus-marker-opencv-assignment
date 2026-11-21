@@ -34,7 +34,6 @@ namespace mark::pose
         for (int i = 0; i < 4; ++i)
             c.mark_points_m_[i] = {config_value::number(points[i][0]) * scale,
                                    config_value::number(points[i][1]) * scale, 0};
-        c.mark_target_id_ = config_value::text(geometry["target_id"]);
 
         // insert() 是 set 的成员函数，插入一个元素，set 自己把它放到正确的排序位置，同时自动去重；emplace() 是 map 的成员函数，插入（就地构造）一个键值对（key-value pair）
         for (const auto &id : tag["allowed_ids"])

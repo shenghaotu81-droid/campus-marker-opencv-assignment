@@ -3,7 +3,6 @@
 #include "vision/config/pose_config.hpp"
 #include "vision/types/pose_types.hpp"
 #include <opencv2/core.hpp>
-#include <string>
 #include <array>
 
 namespace mark::pose
@@ -25,7 +24,7 @@ namespace mark::pose
         // 实现：调 cv::solvePnPGeneric(..., SOLVEPNP_IPPE)，拿到两个候选解，选 RMSE 最小的当名义解、算 S，包成 PoseObservation
         PoseObservation estimate_planar(const std::array<cv::Point3d, 4> &,
                                         const std::array<cv::Point2d, 4> &, cv::Size,
-                                        const CaptureStamp &, const std::string &) const;
+                                        const CaptureStamp &) const;
 
       private:
         // 配置直接存成成员，没有 pimpl

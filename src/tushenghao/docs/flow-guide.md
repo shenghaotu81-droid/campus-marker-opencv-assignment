@@ -1,6 +1,6 @@
 # MARK 主链流程导读
 
-分支：`refactor/vision-lean-fixed`。当前结构、取舍和验证见[视觉管线瘦身报告](VISION_LEAN_REPORT.md)。配置直接读取手填值；位姿输出 schema=6、跟踪输出 schema=2。
+当前结构见本导读，最终精简与回放对照见[修改说明](FINAL_LEAN_CHANGELOG.md)。配置直接读取手填值；位姿输出 schema=6、跟踪输出 schema=2。
 
 ```mermaid
 flowchart TD
@@ -40,9 +40,9 @@ build/marker_app --video data/raw/marker_video.avi
 |---|---|
 | detector.yaml | preprocess 工作尺寸 960×720、原图白阈 200；geometry 工作白阈 200、轮廓 epsilon=2；corner 固定安装排列 |
 | offline.yaml | `run_directory: "outputs/marker"`、`video_filename: "overlay.avi"`、`overlay: true`，三者也是 C++ 默认值 |
-| pose.yaml | 相机标定路径与身份；四点平面模型、source_unit、目标身份；Tag 白名单与实际边长 |
+| pose.yaml | 相机标定路径与身份；四点平面模型和 source_unit；Tag 白名单与实际边长 |
 | calibration.yaml | K、畸变、1440×1080 分辨率与标定重投影误差 |
-| tracking.yaml | source、target、时间界语义、profile 文件路径 |
+| tracking.yaml | source、profile 文件路径 |
 | tracking_profile.yaml | 初估、待标定的 R、加速度 PSD q 和初速方差 |
 
 `include/vision/config/` 存放配置类型和加载声明，包含应用组合类型 `app_config.hpp`。`src/config/` 的四个 loader 只读取值；`reader/value_reader.hpp` 共享节点到 C++ 值的转换。不检查手填字段的类型、范围、未知/重复键、schema 或排列。配置文件打不开仍报告 I/O 错误。
@@ -53,7 +53,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 安装核验：拍清晰图，对照实物/图纸标 P0…P3，检查叠加屏幕槽位与配置一致；让轨道走一遍并覆盖预期晃动，确认上下两带和带内次序不交换。换装/换相机后重做。固定映射不支持跨 90° 翻转或使上下带交换的严重透视。
 
-`run_offline` 打开视频，保留 `INPUT_OPEN_FAILED` 与 `INPUT_FPS_INVALID`：FPS 必须有限且为正，才能生成时间戳及跟踪 dt。时间固定为 `llround(frame_id × 1e6 / fps)`，clock_domain 为 `video-fps`；没有实测曝光或时间误差界时保持未知。每帧依次检测、位姿、跟踪、写文件；无检测帧也进入后两步。
+`run_offline` 打开视频，保留 `INPUT_OPEN_FAILED` 与 `INPUT_FPS_INVALID`：FPS 必须有限且为正，才能生成时间戳及跟踪 dt。录像名义时间为 `llround(frame_id × 1e6 / fps)`，写入 `CaptureStamp.received_us_`。每帧依次检测、位姿、跟踪、写文件；无检测帧也进入后两步。
 
 ## 2. Detection：从当前帧得到真实四角
 
@@ -61,7 +61,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 | 文件 | 责任 |
 |---|---|
-| pipeline/detector.cpp | 公开入口、图像格式与帧序检查、尺寸上下文、结果帧号 |
+| pipeline/detector.cpp | 公开入口、图像格式与帧序检查、结果帧号 |
 | preprocess/preprocess.cpp/hpp | 工作图、原图只读视图、像素中心映射 |
 | geometry/geometry_observation.cpp/hpp | 工作图白片轮廓、边框和截断事实 |
 | geometry/match_quad.cpp/hpp、geometry/contour_topology.hpp | 白片归组、拓扑检查、粗四边形 |
@@ -72,7 +72,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 类型在 `include/vision/types/`：`detector_types.hpp` 存帧输入、检测与 `FrameResult`；`corner_types.hpp` 存共享四角类型和排序声明；`prepared_frame_types.hpp` 存工作图、坐标映射与 `WhiteComponent`。解码和公开入口共用 `FrameResult`，没有重复结果容器。所有结构成员使用下划线后缀，普通函数使用 snake_case。
 
-**输入边界。** `Detector::process` 检查非空 2D BGR8、非负时间及递增帧号/不倒退时间，防止非法图像进入 OpenCV。尺寸变化重置上下文；相同时间戳可检测，跟踪另要求不同时间才能测速度。原图只读。preprocess 不重复检查格式或手填配置。
+**输入边界。** `Detector::process` 检查非空 2D BGR8、非负时间及递增帧号/不倒退时间，防止非法图像进入 OpenCV。相同时间戳可检测，跟踪另要求不同时间才能测速度。原图只读。preprocess 不重复检查格式或手填配置。
 
 **分割和匹配。** `preprocess` resize 并记录真实宽高比例，使用像素中心映射引导原图搜索。`extract_white_components` 按工作白阈提取白片。`match_quads` 按实测跨度归组，S 片可作空间桥，但不分配模型身份；四个粗角必须属于四个不同完整角片，结构为三 L 加一短 M。22/80 是 14mm 与 30mm 外臂的结构分界近似，非严格投影不变量。
 
@@ -88,7 +88,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 `src/pose/` 保持 io、validation、estimation、tag 四个步骤目录。`PoseConfig` 保存相机、四点模型和 Tag 配置；构造求解器克隆 K/dist，防止调用方改 Mat 影响后续求解。配置不另作合法性验证。
 
-公开边界仍检查同帧对应、检测下标、输入检测的排列、相机/图像域及像素凸环；这些是跨模块输入检查。模型非有限/非平面输入不送入求解器；不对手填四点重复检查凸性。
+`estimate_mark` 由调用方提供当前帧检测、有效索引和已确定的角点排列。无检测时返回空估计。平面求解检查标定图像尺寸及像素凸环。模型非有限/非平面输入不送入求解器；不对手填四点重复检查凸性。
 
 `solvePnPGeneric(SOLVEPNP_IPPE)` 产生平面候选，`evaluate_pose` 独立重投影并排除非有限、非正深度或不可投影坏解。异常/退化可使合法候选减少；没有 RMSE 资格门，也不因两解接近丢掉整帧。
 
@@ -104,9 +104,9 @@ build/marker_app --video data/raw/marker_video.avi
 
 `src/tracking/` 保持 filter、measurement、lifecycle、io 步骤目录。正定检查放在 `filter/covariance_validation.*`，与卡尔曼运行期检查同属跟踪模块。检测的线段距离放在 `geometry/contour_topology.hpp`。
 
-输入 `TrackingFrame{stamp_, observations_}` 只含位姿结果，不访问图像和求解器候选。适配器检查同帧、同身份、检测下标不重复、名义平移有限且正深度、实际消费的 S 有限；噪声为 `R_eff=R_profile+S`。没有 RMSE 质量准入门。
+输入 `TrackingFrame{stamp_, observations_}` 只含位姿结果，不访问图像和求解器候选。同帧观测由调用方归组。适配器按配置的 source 筛选，检查检测下标不重复、名义平移有限且正深度、实际消费的 S 有限；噪声为 `R_eff=R_profile+S`。没有 RMSE 质量准入门。
 
-时间字段保留。负时刻、曝光晚于接收、非法误差界是运行期坏数据；重复/倒序不提交，上下文变化重建轨迹。未知时间使用名义时刻，只有声明 absolute_bound 且有曝光/误差界才增广 P/R；区间重叠回名义模型。数学异常保留上一次状态。
+跟踪以 `received_us_` 作为采样时刻。负时刻、重复或倒序输入会被拒绝。数学异常保留上一次状态。
 
 CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪声，通过 Joseph 更新保持协方差。R/P 正定、量测有限、除法时间间隔和计算溢出检查保留。第一位置没有测得速度；第二个不同时刻初始化速度。多位置候选按 NIS 排序，精确平局或无轨迹时无法确定多目标身份就不硬选；不设 NIS 截断门。
 
@@ -125,8 +125,8 @@ CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪�
 
 已有输出目录可复用；同名文件覆盖，保留多次视频可修改 `.avi` 文件名。overlay=false 时调用方跳过 exporter 的 open/write/finish 和渲染，前三种数据文件照常写。视频临时文件是 `<stem>.partial.avi`，关闭编码器后改名；生产不逐帧读回，验收独立解码。
 
-64 位帧号、轨迹 ID、微秒时刻与计数仍用十进制字符串写 YAML，避免 OpenCV 4.6 的 int 接口窄化或 double 丢精度。流头分别为 `PoseObservations` 和 `TrackingResult`。回放对照仅允许跟踪流头从基线协议名变为 `TrackingResult`，其余字节保持一致。
+64 位帧号、轨迹 ID、微秒时刻与计数仍用十进制字符串写 YAML，避免 OpenCV 4.6 的 int 接口窄化或 double 丢精度。流头分别为 `PoseObservations` 和 `TrackingResult`。位姿流和跟踪流中的时间戳仅写 `frame_id` 和 `received_us`。
 
 `run_report.*` 和 `run_console.*` 属于 app/reporting，叠加绘制在 app/rendering；它们只消费结果，不影响算法。验证工具和夹具在 tests，不进入生产库。
 
-固定录像：1676 帧、1088 检测/4352 角，1088 ESTIMATED、588 UNAVAILABLE，1088 MEASURED、588 COASTING。相同输入/模型下，四角文本与位姿文件和 edc9477 逐字节一致；跟踪文件只允许流头协议名变化，其余字节一致，空 profile 也一致。11 项测试、视频帧数/尺寸/源帧周期/MJPG 独立解码与结构检查见[报告](VISION_LEAN_REPORT.md)。板端实测数据与精度标定不在本次范围。
+固定录像：1676 帧、1088 检测/4352 角，1088 ESTIMATED、588 UNAVAILABLE，1088 MEASURED、588 COASTING。与精简前 `3286032` 的回放对照及构建结果见[修改说明](FINAL_LEAN_CHANGELOG.md)。板端实测数据与精度标定不在本次范围。

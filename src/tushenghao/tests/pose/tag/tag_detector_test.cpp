@@ -30,7 +30,7 @@ int main()
 {
     try {
         auto cfg = pose_test::config();
-        auto s = pose_test::stamp(cfg);
+        auto s = pose_test::stamp();
         auto image_ = fixture();
         cfg.tag_.allowed_ids_ = {0};
         cfg.tag_.side_m_[0] = .12;

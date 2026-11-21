@@ -11,16 +11,8 @@ static int64_t integer(const cv::FileNode &n)
 static mark::pose::CaptureStamp stamp(const cv::FileNode &n)
 {
     mark::pose::CaptureStamp s;
-    s.session_id_ = n["session_id"].string();
-    s.camera_id_ = n["camera_id"].string();
-    s.clock_domain_ = n["clock_domain"].string();
-    s.pixel_domain_ = mark::pose::PixelDomain::RawDistorted;
     s.frame_id_ = integer(n["frame_id"]);
     s.received_us_ = integer(n["received_us"]);
-    if (n["exposure_us"].isString() && !n["exposure_us"].string().empty())
-        s.exposure_us_ = integer(n["exposure_us"]);
-    if (n["time_uncertainty_s"].isReal() || n["time_uncertainty_s"].isInt())
-        s.time_uncertainty_s_ = n["time_uncertainty_s"].real();
     return s;
 }
 
@@ -43,7 +35,6 @@ int main(int argc, char **argv)
                 mark::pose::PoseObservation o;
                 o.stamp_ = stamp(p["stamp"]);
                 o.source_ = p["source"].string();
-                o.target_id_ = p["target_id"].string();
                 o.detection_index_ = integer(p["detection_index"]);
                 const auto status_ = p["status"].string();
                 if (status_ == "ESTIMATED")

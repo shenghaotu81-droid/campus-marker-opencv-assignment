@@ -1,6 +1,6 @@
 # MARK 视觉链：构建与运行
 
-三 L＋短 M 结构匹配 → 屏幕排序与固定安装映射 → 原图两条 L2 边求角 → 平面 IPPE 名义位姿 → 相机系 CV 跟踪。当前实现与模块职责见[流程导读](docs/flow-guide.md)，改动、取舍及验证见[视觉管线瘦身报告](docs/VISION_LEAN_REPORT.md)。
+三 L＋短 M 结构匹配 → 屏幕排序与固定安装映射 → 原图两条 L2 边求角 → 平面 IPPE 名义位姿 → 相机系 CV 跟踪。当前实现与模块职责见[流程导读](docs/flow-guide.md)，最终精简及验证见[修改说明](docs/FINAL_LEAN_CHANGELOG.md)。
 
 ## 构建
 
@@ -29,7 +29,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 ## 验证与边界
 
-1676 帧录像检出 1088 帧、4352 角；位姿 1088 ESTIMATED / 588 UNAVAILABLE。相同模型参数下，四角和位姿与 edc9477 逐字节一致；跟踪仅将协议名改为 `TrackingResult`，其余字节一致。11 项测试通过；叠加视频独立解码验证 1676 帧、1440×1080、源帧周期和 MJPG。
+1676 帧录像检出 1088 帧、4352 角；位姿 1088 ESTIMATED / 588 UNAVAILABLE。与精简前 `3286032` 的逐帧输出对照见[修改说明](docs/FINAL_LEAN_CHANGELOG.md)。
 
 R=diag(2e-8,2e-8,2.5e-7) m²、q=0.5 m²/s³、初速方差=0.25 m²/s² 是**初估、待标定**，不是视频实测；默认得到 1088 MEASURED / 588 COASTING。空 profile 可关闭数值跟踪。录像没有真实位置/速度 ground truth，不能证明板端精度；coast 是预测，相机系速度包含自车运动。
 

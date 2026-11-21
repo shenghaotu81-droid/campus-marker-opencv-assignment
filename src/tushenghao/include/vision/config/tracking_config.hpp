@@ -22,10 +22,7 @@ namespace mark::tracking
     struct TrackingConfig
     {
         // source_——跟踪源，默认 "MARK"
-        // target_class_——目标类别，默认 "mark-white-structure-v1"（和 pose.yaml 里的 mark_target_id_ 是同一个串；两者可比对）
-        std::string source_{"MARK"}, target_class_{"mark-white-structure-v1"};
-        // 开关（准备删掉）；表示时间不确定度（time_uncertainty_s_，时间戳多不确定，单位秒）数值语义（"absolute_bound"，表示绝对边界，可用于R/P计算；"unknown"，表示未知,按0处理）
-        std::string stamp_uncertainty_semantics_{"unknown"};
+        std::string source_{"MARK"};
         // R/Q profile
         std::optional<TrackingProfile> profile_;
     };

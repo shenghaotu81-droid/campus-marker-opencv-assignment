@@ -10,9 +10,6 @@ namespace mark::tracking::detail
     };
 
     int64_t sample_time(const pose::CaptureStamp &);
-    bool same_sample(const pose::CaptureStamp &, const pose::CaptureStamp &);
     std::vector<PositionMeasurement> adapt_measurements(const TrackingFrame &,
                                                         const TrackingConfig &);
-    cv::Matx33d time_augmented_noise(const cv::Matx33d &, const cv::Vec3d &, const cv::Matx33d &,
-                                     double, double);
 }

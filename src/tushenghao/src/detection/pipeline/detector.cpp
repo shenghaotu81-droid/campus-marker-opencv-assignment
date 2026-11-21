@@ -46,8 +46,6 @@ namespace mark::detector
         DetectorConfig config_;
         // impl_->last_input_（上一帧的帧号/时间戳）
         std::optional<FrameStamp> last_input_;
-        // impl_->original_size_（上一帧的图尺寸）
-        std::optional<cv::Size> original_size_;
     };
 
     // 构造函数：按值拿一份配置，先在堆上建 Impl，再 impl_->config_ = std::move(config_) 把配置移进去（只在 Detector 创建时跑一次）
@@ -80,23 +78,16 @@ namespace mark::detector
             result.diagnostics_.push_back(reason_.empty() ? "INPUT_FORMAT" : reason_);
             return result;
         }  // 空图，没像素；不是二维图；不是 8 位三通道彩色图（BGR）；帧号 / 时间戳乱序（重复帧、倒退）
-        const bool size_changed = (impl_->original_size_ )&& (*(impl_->original_size_) != frame.image_.size()); // 短路： “上一帧记了尺寸吗？”（optional 当条件，有值 true，没值 false）&& “上一帧的尺寸跟这帧的不一样吗？”（frame.image_.size() 是 Mat 的函数，返回当前图的尺寸 cv::Size，两个 Size 用 != 比）
-        if (size_changed)
-            reset();  // 尺寸变了：清状态、照常处理、后面会记一笔 "INPUT_CHANGED"
-        
         result = run_decode_pipeline(frame, impl_->config_); // 调管线总调度，返回结果！
 
         // 中间 result = run_decode_pipeline(...) 赋值，开头两行被整个覆盖（里面是默认构造）掉了，帧号和时间戳变回 0；重写帧身份
         result.frame_id_ = frame.frame_id_;
         result.timestamp_us_ = frame.timestamp_us_;
-        if (size_changed)
-            result.diagnostics_.push_back("INPUT_CHANGED"); // 尺寸变了记录；放在后面怕被覆盖
         if (result.status_ == Status::INVALID_INPUT)
             reset();   // 管线失败了，清状态
         
         // 把这帧的戳和尺寸存下来，成为下一帧的“上一帧”（帧间连续关系（顺序），由 Detector 维护）
         impl_->last_input_ = stamp;
-        impl_->original_size_ = frame.image_.size();
         // 返回结果（每次的 result 只讲当前这一帧）
         return result;
     }
@@ -105,7 +96,6 @@ namespace mark::detector
     void Detector::reset() noexcept
     {
         impl_->last_input_.reset();
-        impl_->original_size_.reset();  // .reset() 是 std::optional 的函数：把 optional 清成“没有值”（空）（类比：string 的 clear()） 
     }
 
 } // namespace mark::detector
