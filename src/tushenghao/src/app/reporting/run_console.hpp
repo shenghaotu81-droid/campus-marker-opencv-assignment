@@ -5,4 +5,5 @@
 namespace mark
 {
     void write_run_console(std::ostream &, const RunSummary &);
+    
 }

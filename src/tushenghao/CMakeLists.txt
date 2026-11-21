@@ -13,8 +13,10 @@ add_subdirectory(src/detection)
 add_subdirectory(src/pose)
 add_subdirectory(src/tracking)
 add_subdirectory(src/app)
+
 if(BUILD_TESTING)
     add_subdirectory(tests/support)
 endif()
+
 add_subdirectory(tools)
 add_subdirectory(tests)

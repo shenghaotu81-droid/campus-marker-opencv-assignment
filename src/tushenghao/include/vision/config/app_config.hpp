@@ -9,7 +9,7 @@ namespace mark
     {
         std::string run_directory_{"outputs/marker"};
         std::string video_filename_{"overlay.avi"};
-        bool overlay_{true};
+        bool overlay_{true};    // 开关包在 offline_runner 的导出调用外面
     };
 
     struct AppConfig

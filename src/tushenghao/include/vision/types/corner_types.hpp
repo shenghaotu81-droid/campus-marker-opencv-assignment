@@ -6,8 +6,10 @@
 
 namespace mark::detector
 {
+    // 物理角点的浮点位置，按 LT/RT/RB/LB 排序
     using CornerPoints = std::array<cv::Point2d, 4>;
 
+    // 精修结果：成功给 4 个角点，失败给原因
     struct CornerResolution
     {
         std::optional<CornerPoints> corners_;

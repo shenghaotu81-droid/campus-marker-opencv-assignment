@@ -16,13 +16,19 @@ namespace mark::pose
 
     struct CaptureStamp
     {
-        std::string session_id_, camera_id_, clock_domain_;
+        std::string session_id_, camera_id_, clock_domain_; // "这个时间戳是按哪把尺子量的"——时间戳的时钟来源
+        // 这帧的像素坐标属于哪个"域"——是原始带畸变的图像坐标，还是别的什么
         PixelDomain pixel_domain_{PixelDomain::Unknown};
+        // 帧号：排序/去重
         uint64_t frame_id_{};
+        // 收到这帧的时刻（微秒）：离线是 frame_id / FPS 推导出来的名义值；板子上是真实到达时间
         int64_t received_us_{};
+        // 曝光发生的时刻（微秒），量测真正的时刻；离线永远是空的（视频文件没有曝光时间戳），只有板子相机才有
         std::optional<int64_t> exposure_us_;
+        // 采样时间的不确定度（秒）
+        // 用来放大 R（time_augmented_noise）和传给 predict 的 bound
+        // 离线空
         std::optional<double> time_uncertainty_s_;
-
     };
 
     struct RigidPose
@@ -49,9 +55,10 @@ namespace mark::pose
         std::string reason_;
     };
 
+    // 估计状态的字符串化：ESTIMATED / UNAVAILABLE
     inline const char *pose_status_name(const PoseObservation &p) noexcept
     {
-        return p.estimate_ ? "ESTIMATED" : "UNAVAILABLE";
+        return p.estimate_ ? "ESTIMATED" : "UNAVAILABLE"; // 现算，返回指向字符串字面量 const char[N] 的指针
     }
 
     struct TagObservation
