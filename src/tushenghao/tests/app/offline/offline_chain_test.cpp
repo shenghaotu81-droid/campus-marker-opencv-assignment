@@ -9,7 +9,7 @@
 #include <opencv2/calib3d.hpp>
 #include "vision/config/pose_config.hpp"
 #include <opencv2/videoio.hpp>
-// 解析图纸并从已知透视真值生成像素；预算/profile只在本测试目录，不写回生产配置。
+// 用已知透视生成测试画面，配置只在测试目录内生成。
 void unique_chain(const std::filesystem::path &root, const std::filesystem::path &source)
 {
     const auto config = root / "unique-config";
@@ -79,7 +79,7 @@ initial_velocity_variance_m2ps2: 4.
         test_support::check(std::string(pose["status"]) == (missing ? "UNAVAILABLE" : "ESTIMATED"), "perspective pose wrong");
         const auto track = tracks_["frames"][i]["tracks"][0];
         test_support::check(std::string(track["state"]) == (missing ? "COASTING" : "MEASURED"), "Pose to Tracking flow/coast broken");
-        test_support::check(!track["position_m"].empty() && track["qualified_for_g5"].empty(), "finite position missing/dead qualification label survived");
+        test_support::check(!track["position_m"].empty() && track["track_id"].empty() && track["qualified_for_g5"].empty(), "finite position missing or removed tracking field serialized");
         velocity = velocity || !track["velocity_mps"].empty();
     }
     test_support::check(velocity, "full chain never produced apparent velocity");

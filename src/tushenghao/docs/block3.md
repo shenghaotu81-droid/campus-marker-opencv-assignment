@@ -1,22 +1,24 @@
 # Block3当前状态与验收记录（WIP）
 
-当前算法基准为[冻结v7](evidence/block3/frozen_detector_v7.yaml)。C/H阶段及隔离均720/720，H门槛PASS；全视频1676帧中864帧产生阶段Detection。Block4/5 已合入，公共 `Detector::process()` 在预算完整时返回 DETECTED/NOT_DETECTED；人工 V/Q 等剩余验收仍未完成。
+> 历史阶段记录，旧工具和目录按 `08c5c44` 与 `004a671` 阅读。现行说明见[流程导读](flow-guide.md)。
 
-本页只描述现行实现。早期M1最近白块fallback、6/7顶点L分类、P1投影成点、删拟合以及“帧1200出框即完成”均不是当前方案。完整过程与已撤回计划保存在[历史记录](history/block3-before-final-organization.md)，各版结果见[证据索引](evidence/block3/INDEX.md)。
+当前算法基准为[冻结v7](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/evidence/block3/frozen_detector_v7.yaml)。C/H阶段及隔离均720/720，H门槛PASS；全视频1676帧中864帧产生阶段Detection。Block4/5 已合入，公共 `Detector::process()` 在预算完整时返回 DETECTED/NOT_DETECTED；人工 V/Q 等剩余验收仍未完成。
+
+本页只描述现行实现。早期M1最近白块fallback、6/7顶点L分类、P1投影成点、删拟合以及“帧1200出框即完成”均不是当前方案。完整过程与已撤回计划保存在[历史记录](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/history/block3-before-final-organization.md)，各版结果见[证据索引](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/evidence/block3/INDEX.md)。
 
 ## 现行模块与路径
 
 | 责任 | 当前文件/目录 |
 |---|---|
-| 公开接口与类型 | [detector.hpp](../include/mark/detector.hpp)、[detector_types.hpp](../include/mark/detector_types.hpp)、[detector_config.hpp](../include/mark/detector_config.hpp) |
-| 输入、原图视图与共享模型 | [preprocess.cpp](../lib/preprocess/preprocess.cpp)、[prepared_frame.hpp](../lib/core/prepared_frame.hpp)、[marker_geometry.cpp](../lib/core/marker_geometry.cpp) |
-| L多候选观察与全实测凹点父生成 | [geometry_observation.cpp](../lib/geometry/geometry_observation.cpp)、[geometry_l_topology.cpp](../lib/geometry/geometry_l_topology.cpp)、[geometry_matcher.cpp](../lib/geometry/geometry_matcher.cpp) |
-| 原三L验证与M/S补全 | [geometry_validation.cpp](../lib/geometry/geometry_validation.cpp)、[geometry_assignment_completion.cpp](../lib/geometry/geometry_assignment_completion.cpp)、[共享度量](../lib/geometry/assignment_match_metrics.hpp) |
-| 原图连续轮廓、边拟合与证据复核 | [corner_observation.cpp](../lib/corners/corner_observation.cpp)、[corner_edge_fit.cpp](../lib/corners/corner_edge_fit.cpp)、[corner_evidence_validation.cpp](../lib/corners/corner_evidence_validation.cpp) |
-| 四角调度、排序、语义、最终验证 | [corner_resolver.cpp](../lib/corners/corner_resolver.cpp)、[screen_order.cpp](../lib/corners/screen_order.cpp)、[semantic_resolver.cpp](../lib/corners/semantic_resolver.cpp)、[detection_validator.cpp](../lib/corners/detection_validator.cpp) |
-| 单一阶段入口及公共生命周期 | [decode_stage.cpp](../lib/pipeline/decode_stage.cpp)、[detector.cpp](../lib/pipeline/detector.cpp) |
-| 配置和预算 | [config.cpp](../lib/config/config.cpp)、[corner_budget.hpp](../lib/core/corner_budget.hpp)、[运行配置](../config/detector.yaml) |
-| 应用、审计与测试支持 | [app/main.cpp](../app/main.cpp)、[audit/decode_audit.cpp](../tools/audit/decode_audit.cpp)、[test_support/block3_fixture.hpp](../test_support/block3_fixture.hpp) |
+| 公开接口与类型 | [detector.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/include/mark/detector.hpp)、[detector_types.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/include/mark/detector_types.hpp)、[detector_config.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/include/mark/detector_config.hpp) |
+| 输入、原图视图与共享模型 | [preprocess.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/preprocess/preprocess.cpp)、[prepared_frame.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/core/prepared_frame.hpp)、[marker_geometry.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/core/marker_geometry.cpp) |
+| L多候选观察与全实测凹点父生成 | [geometry_observation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/geometry/geometry_observation.cpp)、[geometry_l_topology.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/geometry/geometry_l_topology.cpp)、[geometry_matcher.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/geometry/geometry_matcher.cpp) |
+| 原三L验证与M/S补全 | [geometry_validation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/geometry/geometry_validation.cpp)、[geometry_assignment_completion.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/geometry/geometry_assignment_completion.cpp)、[共享度量](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/geometry/assignment_match_metrics.hpp) |
+| 原图连续轮廓、边拟合与证据复核 | [corner_observation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/corner_observation.cpp)、[corner_edge_fit.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/corner_edge_fit.cpp)、[corner_evidence_validation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/corner_evidence_validation.cpp) |
+| 四角调度、排序、语义、最终验证 | [corner_resolver.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/corner_resolver.cpp)、[screen_order.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/screen_order.cpp)、[semantic_resolver.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/semantic_resolver.cpp)、[detection_validator.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/corners/detection_validator.cpp) |
+| 单一阶段入口及公共生命周期 | [decode_stage.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/pipeline/decode_stage.cpp)、[detector.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/pipeline/detector.cpp) |
+| 配置和预算 | [config.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/config/config.cpp)、[corner_budget.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/lib/core/corner_budget.hpp)、[运行配置](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/config/detector.yaml) |
+| 应用、审计与测试支持 | [app/main.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/app/main.cpp)、[audit/decode_audit.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/tools/audit/decode_audit.cpp)、[test_support/block3_fixture.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/08c5c44/src/tushenghao/test_support/block3_fixture.hpp) |
 
 流水线：预处理→L多候选/全凹点父生成→原三L验证→M/S补全→原图四角取证→屏幕排序/证据校验→语义归并→阶段Detection。正式模块不读工具侧实例mask和真值。
 
@@ -26,7 +28,7 @@
 
 角点由当前原图连续支持求交，不使用观测顶点直接替代四角，不补预测点、不缓存历史角。工作→原图采用像素中心映射，最终边界校验用原图size。M/S完整补全独立验证全边界、拓扑、面积与方向；缺失/错误身份不再走最近白块fallback。
 
-角点弧距上限4.131595359474918原图px来自用户批准的713组实拍逐角P99+1，合成历史1.5px并列保留；真值定位预算仍为2原图px。其他数值及审批过程见[block3_budget.md](block3_budget.md)，没有因H/未标注视频检出数重定预算。
+角点弧距上限4.131595359474918原图px来自用户批准的713组实拍逐角P99+1，合成历史1.5px并列保留；真值定位预算仍为2原图px。其他数值及审批过程见[block3_budget.md](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/block3_budget.md)，没有因H/未标注视频检出数重定预算。
 
 ## 验证结果
 
@@ -43,7 +45,7 @@
 
 原三L有效父从771增至1112帧，旧771全部保留。相对v4的591检测帧，保留581、新增283，10帧因新增未排除竞争而保守拒绝。不得通过删竞争分支增加检出数量；视频未标注，不把这些差异称为准确率/召回率改善。
 
-完整[修复报告](evidence/block3/05-L-observation-v5-v7/07-L-observation-repair.md)、[H/video分层](evidence/block3/05-L-observation-v5-v7/H-video-v7.md)、[逐帧归因](evidence/block3/05-L-observation-v5-v7/video-v7-all-frames.csv)、[H非回退](evidence/block3/05-L-observation-v5-v7/L-observation-H-nonregression.json)保留。源码目录重组后C720、H720、视频1676条除代码摘要/耗时外全部逐条相等，见[目录迁移验证](architecture/layout-reorganization-verification.json)。
+完整[修复报告](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/evidence/block3/05-L-observation-v5-v7/07-L-observation-repair.md)、[H/video分层](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/evidence/block3/05-L-observation-v5-v7/H-video-v7.md)、[逐帧归因](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/evidence/block3/05-L-observation-v5-v7/video-v7-all-frames.csv)、[H非回退](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/evidence/block3/05-L-observation-v5-v7/L-observation-H-nonregression.json)保留。源码目录重组后C720、H720、视频1676条除代码摘要/耗时外全部逐条相等，见[目录迁移验证](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/architecture/layout-reorganization-verification.json)。
 
 ## D01–D25 当前处理
 
@@ -70,4 +72,4 @@
 - 原32负例子集与封存baseline未提供；完整§9.1、模型绑定配置化、一般仿射/透视/更小目标范围未闭合。
 - 稳定层/track 已按 Block4 批准范围实现并验收；持久物理身份、空间位姿、marker_code、confidence及硬实时不在当前保证范围。
 
-目录/文档/工具整理不改变上述算法、预算及验收口径。冻结YAML和[ref/](ref/)保持原位；最新整理与构建结果见[整理验证](architecture/docs-tools-organization.md)。本次工作未commit，留用户review。
+目录/文档/工具整理不改变上述算法、预算及验收口径。冻结YAML和[ref/](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/tree/004a671/src/tushenghao/docs/ref)保持原位；最新整理与构建结果见[整理验证](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/architecture/docs-tools-organization.md)。本次工作未commit，留用户review。

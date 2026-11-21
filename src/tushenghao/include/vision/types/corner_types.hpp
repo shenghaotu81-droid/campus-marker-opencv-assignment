@@ -6,7 +6,7 @@
 
 namespace mark::detector
 {
-    // 物理角点的浮点位置，按 LT/RT/RB/LB 排序
+    // 四个像素坐标，顺序由使用它的接口约定。
     using CornerPoints = std::array<cv::Point2d, 4>;
 
     // 精修结果：成功给 4 个角点，失败给原因

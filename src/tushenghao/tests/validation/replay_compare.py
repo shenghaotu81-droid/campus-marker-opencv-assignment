@@ -37,13 +37,13 @@ def observations(path):
     return dict(statuses),out
 
 def tracks(path,poses):
-    fs=storage(path);frames=fs.getNode('frames');counts=collections.Counter();velocity=0;positions={};ids=set();residual=[];nis=[];min_eigen=math.inf;max_eigen=0
+    fs=storage(path);frames=fs.getNode('frames');counts=collections.Counter();velocity=0;positions={};residual=[];nis=[];min_eigen=math.inf;max_eigen=0
     for i in range(frames.size()):
         f=frames.at(i);tt=f.getNode('tracks')
         n=f.getNode('association_nis')
         if not n.empty():nis.append(n.real())
         for j in range(tt.size()):
-            t=tt.at(j);counts[t.getNode('state').string()]+=1;ids.add(integer(t.getNode('track_id')))
+            t=tt.at(j);counts[t.getNode('state').string()]+=1
             if not t.getNode('position_m').empty():
                 p=t.getNode('position_m').mat().reshape(3);assert np.isfinite(p).all();positions[i]=p
                 if i in poses:residual.append(float(np.linalg.norm(p-poses[i][1])))
@@ -51,7 +51,7 @@ def tracks(path,poses):
                 assert np.isfinite(t.getNode('velocity_mps').mat()).all();velocity+=1
             if not t.getNode('covariance').empty():
                 P=t.getNode('covariance').mat();assert np.isfinite(P).all();e=np.linalg.eigvalsh((P+P.T)/2);min_eigen=min(min_eigen,float(e.min()));max_eigen=max(max_eigen,float(e.max()))
-    return dict(frames=frames.size(),states=dict(counts),velocity_frames=velocity,track_ids=len(ids),position_frames=len(positions),measured_position_residual_to_nominal_pose_m=stats(residual),reported_nis=stats(nis),minimum_covariance_eigenvalue=None if min_eigen==math.inf else min_eigen,maximum_covariance_eigenvalue=max_eigen),positions
+    return dict(frames=frames.size(),states=dict(counts),velocity_frames=velocity,position_frames=len(positions),measured_position_residual_to_nominal_pose_m=stats(residual),reported_nis=stats(nis),minimum_covariance_eigenvalue=None if min_eigen==math.inf else min_eigen,maximum_covariance_eigenvalue=max_eigen),positions
 
 def main(a):
     old_status,old=observations(a.before_poses);new_status,new=observations(a.after_poses)

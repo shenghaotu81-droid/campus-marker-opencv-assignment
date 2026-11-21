@@ -1,6 +1,4 @@
-// 卡尔曼滤波：预测+更新 advance 驱动：predict → innovation → correct/bootstrap/initialize；把 position()/velocity()/covariance() 读出来装进 TargetTrack
-// 轨迹的生命周期：initialize → bootstrap → predict → innovation → correct
-// 第一帧量测来了 initialize，第二帧 bootstrap 算出速度，之后每帧先 predict 再 innovation/correct
+// 首量测初始化，下一次成功关联估计初速。轨迹随后逐帧预测，有合适量测时更新。
 #pragma once
 #include "filter/covariance_validation.hpp"
 #include "vision/config/tracking_config.hpp"
@@ -21,11 +19,11 @@ namespace mark::tracking::detail
         // 第一次量测来了，用它初始化滤波器（位置 = 量测量，速度 = 0，P 按 R 和初始速度方差设）
         // 位置 = 量测；速度 = 零均值先验（不是“测出来速度是 0”），方差 vv；P 位置块 = R，速度对角 = vv
         void initialize(const cv::Vec3d &, const cv::Matx33d &, double);
-        // 第二次量测来了，用两次量测算出初始速度（位置差 / 时间差），把轨迹“确认”
+        // 下一次成功关联后，用两次位置量测的区间差分初始化速度。
         // 初始速度为 (p1−p0)/dt，P 保留 p–v 交叉项 r1/dt，速度块对角补 q·dt/3。
         void bootstrap(const cv::Vec3d &, const cv::Matx33d &, const cv::Vec3d &,
                        const cv::Matx33d &, double, double);
-        // 往前推 dt（预测步）
+        // 预测到下一时刻。调用方保证 dt 为正且有限。
         // 连续白加速度 CV 模型的 Q 含 q·dt³/3、q·dt²/2 和 q·dt 三项，q 单位 m²/s³。
         void predict(double, double);
         // 拿一个量测跟预测值比，算残差、新息协方差 S、NIS 分数；只算不改状态（const 方法）

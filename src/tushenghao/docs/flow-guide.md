@@ -1,6 +1,6 @@
 # MARK 主链流程导读
 
-当前结构见本导读，最终精简与回放对照见[修改说明](FINAL_LEAN_CHANGELOG.md)。配置直接读取手填值；位姿输出 schema=6、跟踪输出 schema=2。
+当前结构见本导读，第三轮精简与回放对照见[修改说明](FINAL_LEAN_CHANGELOG_3.md)。配置直接读取手填值；位姿输出 schema=6、跟踪输出 schema=2。
 
 ```mermaid
 flowchart TD
@@ -9,8 +9,9 @@ flowchart TD
     C --> D[屏幕排序 固定安装映射]
     D --> E[当前原图四个真实角片]
     E --> F[两组连续边支持 各一次 L2 求交]
-    F --> G[float 四角发布]
-    G --> H[平面 IPPE 合法候选 重投影 RMSE]
+    F --> G[float 发布 屏幕 LT RT RB LB 和 orientation_]
+    G --> P[按 orientation_ 恢复物理角顺序]
+    P --> H[平面 IPPE 合法候选 重投影 RMSE]
     H --> I[可选名义位姿 位置分歧 S]
     I --> J[量测噪声 R_profile + S]
     J --> K[CV 预测 更新或 coast]
@@ -119,7 +120,7 @@ CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪�
 | 文件 | 内容 |
 |---|---|
 | observations.yaml | 每帧名义位姿/空估计、RMSE 和位置分歧，schema=6 |
-| tracks.yaml | 每帧相机系位置、可选速度、P、最近实测时刻和轨迹状态，schema=2 |
+| tracks.yaml | 每帧相机系位置、可选速度、P、最近实测时刻和轨迹状态，schema=2。单轨输出省略 ID。 |
 | summary.yaml | 帧数、检测数、位姿/跟踪/原因计数和总耗时 |
 | offline.video_filename | overlay=true 时的 MJPG/AVI 叠加视频，默认 overlay.avi |
 
@@ -129,4 +130,4 @@ CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪�
 
 `run_report.*` 和 `run_console.*` 属于 app/reporting，叠加绘制在 app/rendering；它们只消费结果，不影响算法。验证工具和夹具在 tests，不进入生产库。
 
-固定录像：1676 帧、1088 检测/4352 角，1088 ESTIMATED、588 UNAVAILABLE，1088 MEASURED、588 COASTING。与精简前 `3286032` 的回放对照及构建结果见[修改说明](FINAL_LEAN_CHANGELOG.md)。板端实测数据与精度标定不在本次范围。
+固定录像：1676 帧、1088 检测/4352 角，1088 ESTIMATED、588 UNAVAILABLE，1088 MEASURED、588 COASTING。与 `fa6d394` 的回放对照及构建结果见[第三轮修改说明](FINAL_LEAN_CHANGELOG_3.md)。板端实测数据与精度标定不在本次范围。

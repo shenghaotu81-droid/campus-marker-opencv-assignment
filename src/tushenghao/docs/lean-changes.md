@@ -1,6 +1,6 @@
 # 瘦身修改报告
 
-本报告依据 `refactor/lean` 的实际提交和本机验证编写。代码收尾提交：`4c00708658a49600e29c3b00478cb4da1cdb4061`；基线：`7a7ef662cf348589aea8d43251d1b2aaf671f45d`。只读的 [lean-report.md](lean-report.md) 与 [move-layout-draft.md](move-layout-draft.md) 未改。
+本报告依据 `refactor/lean` 的实际提交和本机验证编写。代码收尾提交：`4c00708658a49600e29c3b00478cb4da1cdb4061`；基线：`7a7ef662cf348589aea8d43251d1b2aaf671f45d`。只读的 [lean-report.md](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/lean-report.md) 与 [move-layout-draft.md](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/move-layout-draft.md) 未改。
 
 71 项中，67 项已落地，F50/F52 按裁决部分落地并保留搬家项，F25/F65 按要求不改。没有移动／重命名文件，没有新建模块 CMakeLists 或拆顶层 CMake。必要共用函数使用普通值／const 引用／显式参数；新增五个小私有／测试能力头，没有插件框架、注册表或每步一类。
 
@@ -29,7 +29,7 @@
 
 ### F01 · 完成 · 原问题：物理角身份在三个步骤分别硬编码
 
-步骤：`D11/P01/Q04`。定位：[lib/core/marker_geometry.hpp:20](../lib/core/marker_geometry.hpp#L20)；[lib/corners/corner_resolver.cpp:74](../lib/corners/corner_resolver.cpp#L74)；[lib/corners/corner_evidence_validation.cpp:34](../lib/corners/corner_evidence_validation.cpp#L34)；[lib/config/pose_config.cpp:58](../lib/config/pose_config.cpp#L58)。
+步骤：`D11/P01/Q04`。定位：[lib/core/marker_geometry.hpp:20](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/marker_geometry.hpp#L20)；[lib/corners/corner_resolver.cpp:74](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_resolver.cpp#L74)；[lib/corners/corner_evidence_validation.cpp:34](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_evidence_validation.cpp#L34)；[lib/config/pose_config.cpp:58](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/pose_config.cpp#L58)。
 
 实际：物理角片段／顶点／邻边归一个只读 ModelCornerContract；resolver、证据校验、G2 米制取点共用身份，不共用拟合结果。
 
@@ -39,7 +39,7 @@
 
 ### F02 · 完成 · 原问题：观察请求成为算法控制暗道
 
-步骤：`D09/A05/A06`。定位：[lib/pipeline/decode_stage.hpp:34](../lib/pipeline/decode_stage.hpp#L34)；[lib/pipeline/decode_stage.cpp:282](../lib/pipeline/decode_stage.cpp#L282)。
+步骤：`D09/A05/A06`。定位：[lib/pipeline/decode_stage.hpp:34](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/decode_stage.hpp#L34)；[lib/pipeline/decode_stage.cpp:282](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/decode_stage.cpp#L282)。
 
 实际：runDecodePipeline 显式接收 ExecutionScope；无 observer 同范围也执行同一算法，request.scope 只作观测标签。
 
@@ -49,7 +49,7 @@
 
 ### F03 · 完成 · 原问题：StageDetails 绑住阶段实现并复制阶段状态
 
-步骤：`D02/D03/A06/A08`。定位：[lib/pipeline/decode_stage.hpp:21](../lib/pipeline/decode_stage.hpp#L21)；[app/debug_renderer.hpp:6](../app/debug_renderer.hpp#L6)；[lib/pipeline/diagnostics_context.hpp:10](../lib/pipeline/diagnostics_context.hpp#L10)。
+步骤：`D02/D03/A06/A08`。定位：[lib/pipeline/decode_stage.hpp:21](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/decode_stage.hpp#L21)；[app/debug_renderer.hpp:6](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/debug_renderer.hpp#L6)；[lib/pipeline/diagnostics_context.hpp:10](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/diagnostics_context.hpp#L10)。
 
 实际：预处理、组件、观察、生成／验证／补全成为逐步产物；主链不回填 PreparedFrame.components_。渲染适配器只交付原图点线 RenderInput，实验 JSON 由工具编码。
 
@@ -59,7 +59,7 @@
 
 ### F04 · 完成 · 原问题：模块构造绕到全应用配置校验
 
-步骤：`Q03/T01/D01`。定位：[lib/config/config.cpp:498](../lib/config/config.cpp#L498)；[lib/pipeline/detector.cpp:38](../lib/pipeline/detector.cpp#L38)；[lib/pipeline/temporal_stabilizer.cpp:32](../lib/pipeline/temporal_stabilizer.cpp#L32)。
+步骤：`Q03/T01/D01`。定位：[lib/config/config.cpp:498](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/config.cpp#L498)；[lib/pipeline/detector.cpp:38](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/detector.cpp#L38)；[lib/pipeline/temporal_stabilizer.cpp:32](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/temporal_stabilizer.cpp#L32)。
 
 实际：校验拆成 Temporal／Detector／Observability 三个函数；总入口保留原顺序，构造器只调用自己的契约。
 
@@ -69,7 +69,7 @@
 
 ### F05 · 完成 · 原问题：config 反向依赖私有 Kalman 实现
 
-步骤：`Q05/K03`。定位：[lib/core/observed_geometry_utils.hpp:75](../lib/core/observed_geometry_utils.hpp#L75)；[lib/config/tracking_config.cpp:133](../lib/config/tracking_config.cpp#L133)；[lib/tracking/kalman_cv.hpp:44](../lib/tracking/kalman_cv.hpp#L44)。
+步骤：`Q05/K03`。定位：[lib/core/observed_geometry_utils.hpp:75](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/observed_geometry_utils.hpp#L75)；[lib/config/tracking_config.cpp:133](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/tracking_config.cpp#L133)；[lib/tracking/kalman_cv.hpp:44](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/kalman_cv.hpp#L44)。
 
 实际：正定性数学原样归低层；tracking_config 不再包含 Kalman 实现头，filter 仍使用同一数学检查。
 
@@ -79,7 +79,7 @@
 
 ### F06 · 完成 · 原问题：报告为 JSON 引号反向包含记录器
 
-步骤：`A07/A12/V03`。定位：[lib/pipeline/run_report.cpp:11](../lib/pipeline/run_report.cpp#L11)；[lib/pipeline/run_report.hpp:8](../lib/pipeline/run_report.hpp#L8)；[lib/pipeline/diagnostics_recorder.cpp:120](../lib/pipeline/diagnostics_recorder.cpp#L120)。
+步骤：`A07/A12/V03`。定位：[lib/pipeline/run_report.cpp:11](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/run_report.cpp#L11)；[lib/pipeline/run_report.hpp:8](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/run_report.hpp#L8)；[lib/pipeline/diagnostics_recorder.cpp:120](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/diagnostics_recorder.cpp#L120)。
 
 实际：JSON 转义只保留一份，归现有 run_report；报告与 recorder 显式使用，不相互包含生命周期实现。
 
@@ -89,7 +89,7 @@
 
 ### F07 · 完成 · 原问题：运行结论经可写 summary 和字符串 map 传递
 
-步骤：`A07/A11/A12`。定位：[lib/pipeline/run_report.hpp:19](../lib/pipeline/run_report.hpp#L19)；[lib/pipeline/diagnostics_recorder.cpp:755](../lib/pipeline/diagnostics_recorder.cpp#L755)；[app/run_console.cpp:117](../app/run_console.cpp#L117)。
+步骤：`A07/A11/A12`。定位：[lib/pipeline/run_report.hpp:19](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/run_report.hpp#L19)；[lib/pipeline/diagnostics_recorder.cpp:755](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/diagnostics_recorder.cpp#L755)；[app/run_console.cpp:117](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/run_console.cpp#L117)。
 
 实际：完成判断和外部开销成为 RunOutcome／RunOverhead，finishRun 显式消费；summary() 只读，console 不再解码 environment 特定键。
 
@@ -99,7 +99,7 @@
 
 ### F08 · 完成 · 原问题：const config() 仍泄漏相机可变存储
 
-步骤：`P01/P11/Q04`。定位：[lib/pose/pose_estimator.cpp:62](../lib/pose/pose_estimator.cpp#L62)；[include/mark/pose_estimator.hpp:31](../include/mark/pose_estimator.hpp#L31)。
+步骤：`P01/P11/Q04`。定位：[lib/pose/pose_estimator.cpp:62](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pose/pose_estimator.cpp#L62)；[include/mark/pose_estimator.hpp:31](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/include/mark/pose_estimator.hpp#L31)。
 
 实际：config() 改为按值深拷贝快照，K/dist clone；调用方不能通过 cv::Mat 浅别名修改估计器。
 
@@ -109,7 +109,7 @@
 
 ### F09 · 完成 · 原问题：旧图纸几何 helper 只被专属测试使用
 
-步骤：`Q04`。定位：[CMakeLists.txt:62](../CMakeLists.txt#L62)。
+步骤：`Q04`。定位：[CMakeLists.txt:62](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/CMakeLists.txt#L62)。
 
 实际：删除 core/geometry_utils.hpp/.cpp、geometry_utils_test.cpp 及登记；真实 observed_geometry_utils、模型合法性与观察验证保留。
 
@@ -119,7 +119,7 @@
 
 ### F10 · 完成 · 原问题：三个公开角点旋钮未被算法消费
 
-步骤：`Q02/D10/D12`。定位：[tests/config_error_test.cpp:464](../tests/config_error_test.cpp#L464)；[include/mark/detector_config.hpp:112](../include/mark/detector_config.hpp#L112)；[lib/config/config.cpp:157](../lib/config/config.cpp#L157)。
+步骤：`Q02/D10/D12`。定位：[tests/config_error_test.cpp:464](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tests/config_error_test.cpp#L464)；[include/mark/detector_config.hpp:112](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/include/mark/detector_config.hpp#L112)；[lib/config/config.cpp:157](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/config.cpp#L157)。
 
 实际：删除 local_search_margin_ratio、reject_truncated_corner、edge_point_distance_threshold 三个公开无效旋钮及读验写；旧键逐项拒绝，实际截断检查保留。
 
@@ -129,7 +129,7 @@
 
 ### F11 · 完成 · 原问题：未测量 simplification_error_ 恒为零
 
-步骤：`D04/A07`。定位：[lib/pipeline/diagnostics_recorder.cpp:356](../lib/pipeline/diagnostics_recorder.cpp#L356)。
+步骤：`D04/A07`。定位：[lib/pipeline/diagnostics_recorder.cpp:356](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/diagnostics_recorder.cpp#L356)。
 
 实际：删除未测却恒零的内部成员／赋值；旧记录键保留为 null，表示 unknown。
 
@@ -139,7 +139,7 @@
 
 ### F12 · 完成 · 原问题：三 L 枚举与诊断仿射的名字混淆用途
 
-步骤：`D05/V02`。定位：[lib/geometry/geometry_matcher.hpp:9](../lib/geometry/geometry_matcher.hpp#L9)。
+步骤：`D05/V02`。定位：[lib/geometry/geometry_matcher.hpp:9](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/geometry/geometry_matcher.hpp#L9)。
 
 实际：三 L 对应枚举改名 generateThreeLAssignments；首凹点仿射片段移入 parent_diagnose.cpp，名为 fitFirstConcaveAnchorAffine，生产声明删除。
 
@@ -149,7 +149,7 @@
 
 ### F13 · 完成 · 原问题：ID 查找在同帧反复线性遍历
 
-步骤：`D06/D07/D08`。定位：[lib/core/geometry_types.hpp:193](../lib/core/geometry_types.hpp#L193)。
+步骤：`D06/D07/D08`。定位：[lib/core/geometry_types.hpp:193](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/geometry_types.hpp#L193)。
 
 实际：按 ID 查观察／组件的只读函数归一处；legacy 未填来源只在该入口解释，生产与探针共用。
 
@@ -159,7 +159,7 @@
 
 ### F14 · 完成 · 原问题：同一绑定投影两次再分别验证
 
-步骤：`D07`。定位：[lib/geometry/geometry_validation.cpp:98](../lib/geometry/geometry_validation.cpp#L98)；[lib/geometry/geometry_validation.cpp:156](../lib/geometry/geometry_validation.cpp#L156)。
+步骤：`D07`。定位：[lib/geometry/geometry_validation.cpp:98](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/geometry/geometry_validation.cpp#L98)；[lib/geometry/geometry_validation.cpp:156](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/geometry/geometry_validation.cpp#L156)。
 
 实际：每绑定仅投影一次；残差先检查，面积规则消费同一投影面积／观测面积，完整性降级顺序保留。
 
@@ -169,7 +169,7 @@
 
 ### F15 · 完成 · 原问题：快速面积筛查与详细计量重复
 
-步骤：`D08`。定位：[lib/geometry/assignment_match_metrics.hpp:11](../lib/geometry/assignment_match_metrics.hpp#L11)；[lib/geometry/geometry_assignment_completion.cpp:21](../lib/geometry/geometry_assignment_completion.cpp#L21)。
+步骤：`D08`。定位：[lib/geometry/assignment_match_metrics.hpp:11](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/geometry/assignment_match_metrics.hpp#L11)；[lib/geometry/geometry_assignment_completion.cpp:21](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/geometry/geometry_assignment_completion.cpp#L21)。
 
 实际：廉价面积预筛返回已测 AreaMetric，完整计量接收该值；独立七参入口仍自行计算并检查输入。
 
@@ -179,7 +179,7 @@
 
 ### F16 · 完成 · 原问题：固定四候选之后的空集合兜底不可达
 
-步骤：`D15`。定位：[lib/corners/screen_order.cpp:651](../lib/corners/screen_order.cpp#L651)。
+步骤：`D15`。定位：[lib/corners/screen_order.cpp:651](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/screen_order.cpp#L651)。
 
 实际：删除四个候选已构造后的不可达空集合分支；真实退化／非有限／平局检查不动。
 
@@ -189,7 +189,7 @@
 
 ### F17 · 完成 · 原问题：FastRecovery 会重试完全相同的 PhaseMedian 阶段
 
-步骤：`D12/D13`。定位：[lib/corners/corner_edge_fit.cpp:750](../lib/corners/corner_edge_fit.cpp#L750)。
+步骤：`D12/D13`。定位：[lib/corners/corner_edge_fit.cpp:750](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_edge_fit.cpp#L750)。
 
 实际：13 路变为显式有序表；Fast 的第 8/9 逻辑路复用第 2/4 路同输入结果，并重放旧 stage 编号、弧及配对 trace。
 
@@ -199,7 +199,7 @@
 
 ### F18 · 完成 · 原问题：发布与时序分别实现四点 bbox
 
-步骤：`D18/T04`。定位：[lib/core/observed_geometry_utils.hpp:11](../lib/core/observed_geometry_utils.hpp#L11)；[lib/pipeline/temporal_geometry.cpp:141](../lib/pipeline/temporal_geometry.cpp#L141)；[lib/corners/detection_publication.cpp:70](../lib/corners/detection_publication.cpp#L70)。
+步骤：`D18/T04`。定位：[lib/core/observed_geometry_utils.hpp:11](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/observed_geometry_utils.hpp#L11)；[lib/pipeline/temporal_geometry.cpp:141](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/temporal_geometry.cpp#L141)；[lib/corners/detection_publication.cpp:70](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/detection_publication.cpp#L70)。
 
 实际：publication 与 temporal 共用最终 float 四角连续 bbox，原入口保留；没有改用整数 boundingRect。
 
@@ -209,7 +209,7 @@
 
 ### F19 · 完成 · 原问题：成功状态与 optional 载荷由多处独立组装
 
-步骤：`D14/D15/D17`。定位：[lib/corners/corner_types.hpp:483](../lib/corners/corner_types.hpp#L483)；[lib/corners/corner_types.hpp:485](../lib/corners/corner_types.hpp#L485)；[lib/corners/corner_types.hpp:487](../lib/corners/corner_types.hpp#L487)。
+步骤：`D14/D15/D17`。定位：[lib/corners/corner_types.hpp:483](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_types.hpp#L483)；[lib/corners/corner_types.hpp:485](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_types.hpp#L485)；[lib/corners/corner_types.hpp:487](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_types.hpp#L487)。
 
 实际：角点、排序、语义结果由统一成功／失败函数构造状态、optional 和原因；步骤接口保留。
 
@@ -219,7 +219,7 @@
 
 ### F20 · 完成 · 原问题：原图缓存具体类型穿过角点步骤边界
 
-步骤：`D10/D11`。定位：[lib/corners/corner_observation.hpp:17](../lib/corners/corner_observation.hpp#L17)；[lib/pipeline/decode_stage.cpp:57](../lib/pipeline/decode_stage.cpp#L57)；[lib/corners/corner_resolver.cpp:31](../lib/corners/corner_resolver.cpp#L31)。
+步骤：`D10/D11`。定位：[lib/corners/corner_observation.hpp:17](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_observation.hpp#L17)；[lib/pipeline/decode_stage.cpp:57](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/decode_stage.cpp#L57)；[lib/corners/corner_resolver.cpp:31](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_resolver.cpp#L31)。
 
 实际：原图观察拥有帧内惰性缓存；resolver 只接收带 frame_id 的只读轮廓查询来源，不认识具体缓存类。
 
@@ -229,7 +229,7 @@
 
 ### F21 · 完成 · 原问题：角证据协议漏掉当前线模型字段
 
-步骤：`D14/A07/V03`。定位：[tools/common/frame_record_reader.cpp:421](../tools/common/frame_record_reader.cpp#L421)；[lib/pipeline/diagnostics_recorder.cpp:254](../lib/pipeline/diagnostics_recorder.cpp#L254)；[tools/validation/path_a_verify.cpp:522](../tools/validation/path_a_verify.cpp#L522)。
+步骤：`D14/A07/V03`。定位：[tools/common/frame_record_reader.cpp:421](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/common/frame_record_reader.cpp#L421)；[lib/pipeline/diagnostics_recorder.cpp:254](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/diagnostics_recorder.cpp#L254)；[tools/validation/path_a_verify.cpp:522](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/validation/path_a_verify.cpp#L522)。
 
 实际：完整序列化线模型、参数及残差，角证据子版本为 2；path_a_verify 两处共用强类型读取，检查字段／身份／形状。
 
@@ -239,7 +239,7 @@
 
 ### F22 · 完成 · 原问题：同次关联与校正重复创新求解
 
-步骤：`K07/K08`。定位：[lib/tracking/kalman_cv.hpp:11](../lib/tracking/kalman_cv.hpp#L11)；[lib/tracking/kalman_cv.cpp:180](../lib/tracking/kalman_cv.cpp#L180)；[lib/tracking/target_tracker.cpp:304](../lib/tracking/target_tracker.cpp#L304)。
+步骤：`K07/K08`。定位：[lib/tracking/kalman_cv.hpp:11](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/kalman_cv.hpp#L11)；[lib/tracking/kalman_cv.cpp:180](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/kalman_cv.cpp#L180)；[lib/tracking/target_tracker.cpp:304](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/target_tracker.cpp#L304)。
 
 实际：同状态创新残差／S／R／评分显式传给校正；实例和版本阻止跨更新复用，独立 correct 仍校验。
 
@@ -249,7 +249,7 @@
 
 ### F23 · 完成 · 原问题：事务复制连同不可变配置一起复制
 
-步骤：`K02/K09`。定位：[lib/tracking/target_tracker.cpp:37](../lib/tracking/target_tracker.cpp#L37)；[lib/tracking/target_tracker.cpp:360](../lib/tracking/target_tracker.cpp#L360)。
+步骤：`K02/K09`。定位：[lib/tracking/target_tracker.cpp:37](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/target_tracker.cpp#L37)；[lib/tracking/target_tracker.cpp:360](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/target_tracker.cpp#L360)。
 
 实际：只读配置与可变 TrackerState 分开；只复制候选 State，输入接受后一次提交，方法显式接配置。
 
@@ -259,7 +259,7 @@
 
 ### F24 · 完成 · 原问题：同帧时间资格和同状态标准差反复计算
 
-步骤：`K04/K10`。定位：[lib/tracking/target_tracker.cpp:213](../lib/tracking/target_tracker.cpp#L213)。
+步骤：`K04/K10`。定位：[lib/tracking/target_tracker.cpp:213](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/target_tracker.cpp#L213)。
 
 实际：同帧 time_bounded 只计算一次，create／更新消费本帧已有结果。
 
@@ -269,7 +269,7 @@
 
 ### F25 · 不改 · 原问题：精度资格仍决定部分数值字段是否存在
 
-步骤：`K10/K11`。定位：[lib/tracking/target_tracker.cpp:121](../lib/tracking/target_tracker.cpp#L121)。
+步骤：`K10/K11`。定位：[lib/tracking/target_tracker.cpp:121](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/tracking/target_tracker.cpp#L121)。
 
 实际：不实施估计／资格语义变更，保留现行状态、输出及资格规则。
 
@@ -279,7 +279,7 @@
 
 ### F26 · 完成 · 原问题：export 全历史 ID 集合不能再拒绝额外状态
 
-步骤：`A07/A10`。定位：[lib/pipeline/diagnostics_recorder.cpp:703](../lib/pipeline/diagnostics_recorder.cpp#L703)。
+步骤：`A07/A10`。定位：[lib/pipeline/diagnostics_recorder.cpp:703](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/diagnostics_recorder.cpp#L703)。
 
 实际：删除 export_ids_ 成员、历史 push/find；保留单调帧号、前一待补项和重复完成检查。
 
@@ -289,7 +289,7 @@
 
 ### F27 · 完成 · 原问题：同一帧渲染证据重复核验
 
-步骤：`A08`。定位：[app/debug_renderer.cpp:26](../app/debug_renderer.cpp#L26)；[app/offline_runner.cpp:354](../app/offline_runner.cpp#L354)。
+步骤：`A08`。定位：[app/debug_renderer.cpp:26](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/debug_renderer.cpp#L26)；[app/offline_runner.cpp:354](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/offline_runner.cpp#L354)。
 
 实际：证据检查仅在适配时执行一次，结果同时交给事件记录和渲染；独立 render 入口仍自行核验。
 
@@ -299,7 +299,7 @@
 
 ### F28 · 完成 · 原问题：公开 DetectorConfig 持有应用显示配置
 
-步骤：`Q03/A03/A08`。定位：[lib/config/app_config.hpp:19](../lib/config/app_config.hpp#L19)；[lib/config/observability_config.hpp:13](../lib/config/observability_config.hpp#L13)；[lib/config/config.cpp:176](../lib/config/config.cpp#L176)。
+步骤：`Q03/A03/A08`。定位：[lib/config/app_config.hpp:19](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/app_config.hpp#L19)；[lib/config/observability_config.hpp:13](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/observability_config.hpp#L13)；[lib/config/config.cpp:176](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/config.cpp#L176)。
 
 实际：窗口归 AppConfig，held/candidates 归 RenderConfig；新 display 段只有一份值，runner 不再覆盖另一份显示配置。
 
@@ -309,7 +309,7 @@
 
 ### F29 · 完成 · 原问题：预处理与映射注释描述的流程已过时
 
-步骤：`D02`。定位：[lib/preprocess/preprocess.hpp:10](../lib/preprocess/preprocess.hpp#L10)。
+步骤：`D02`。定位：[lib/preprocess/preprocess.hpp:10](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/preprocess/preprocess.hpp#L10)。
 
 实际：纠正 PreparedFrame 是 resize 后 BGR8、后续观察才二值化，以及像素中心双向映射的注释。
 
@@ -319,7 +319,7 @@
 
 ### F30 · 完成 · 原问题：教学复述和过时 TODO 遮住实际配置契约
 
-步骤：`Q01/Q03`。定位：[lib/core/config_error.hpp:6](../lib/core/config_error.hpp#L6)。
+步骤：`Q01/Q03`。定位：[lib/core/config_error.hpp:6](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/config_error.hpp#L6)。
 
 实际：删 ConfigError 待实现 TODO、runtime_error 教学伪代码、config 调试复述及三份 YAML 过时注释；同步删改动测试处死注释。
 
@@ -329,7 +329,7 @@
 
 ### F31 · 完成 · 原问题：Skeleton 已表示完整检测实现
 
-步骤：`Q02/D01`。定位：[include/mark/detector_config.hpp:25](../include/mark/detector_config.hpp#L25)；[config/detector.yaml:27](../config/detector.yaml#L27)。
+步骤：`Q02/D01`。定位：[include/mark/detector_config.hpp:25](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/include/mark/detector_config.hpp#L25)；[config/detector.yaml:27](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/config/detector.yaml#L27)。
 
 实际：枚举／YAML／消费者直接改名 SegmentedMark；Skeleton／skeleton 只作为显式历史或拒绝用例。
 
@@ -339,7 +339,7 @@
 
 ### F32 · 完成 · 原问题：严格 CLI 解析在多个入口重复
 
-步骤：`A01/V02`。定位：[lib/core/cli_options.hpp:11](../lib/core/cli_options.hpp#L11)；[app/tracking_main.cpp:18](../app/tracking_main.cpp#L18)；[app/main.cpp:101](../app/main.cpp#L101)。
+步骤：`A01/V02`。定位：[lib/core/cli_options.hpp:11](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/cli_options.hpp#L11)；[app/tracking_main.cpp:18](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/tracking_main.cpp#L18)；[app/main.cpp:101](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/main.cpp#L101)。
 
 实际：五入口共用 key/value/flag 形状检查，允许项、起始位置、值策略和原错误上下文由入口提供；两处共用严格十进制 uint64。
 
@@ -349,7 +349,7 @@
 
 ### F33 · 完成 · 原问题：G2/G4/Detector 重复节点读取原语但策略不同
 
-步骤：`Q01/Q02`。定位：[lib/config/value_reader.hpp:9](../lib/config/value_reader.hpp#L9)；[lib/config/pose_config.cpp:18](../lib/config/pose_config.cpp#L18)；[lib/config/tracking_config.cpp:13](../lib/config/tracking_config.cpp#L13)。
+步骤：`Q01/Q02`。定位：[lib/config/value_reader.hpp:9](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/value_reader.hpp#L9)；[lib/config/pose_config.cpp:18](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/pose_config.cpp#L18)；[lib/config/tracking_config.cpp:13](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/tracking_config.cpp#L13)。
 
 实际：共享 required/text/integer/bool/number 原语；Detector 严格节点、G2 普通严格／optional 完整数值串、G4 完整数值串与空串未知明确区分。
 
@@ -359,7 +359,7 @@
 
 ### F34 · 完成 · 原问题：整数读取和写回旁路散落在长流程中
 
-步骤：`Q02/Q06`。定位：[lib/config/config.cpp:68](../lib/config/config.cpp#L68)；[lib/config/config.cpp:95](../lib/config/config.cpp#L95)。
+步骤：`Q02/Q06`。定位：[lib/config/config.cpp:68](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/config.cpp#L68)；[lib/config/config.cpp:95](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/config.cpp#L95)。
 
 实际：有符号 token 复核、uint64 精确读取和占位写回从字段装配中分出 codec；原 regex、节点交叉检查与写失败保护保留。
 
@@ -369,7 +369,7 @@
 
 ### F35 · 完成 · 原问题：空配置测试仍登记为成功目标
 
-步骤：`B04/V04`。定位：[CMakeLists.txt:62](../CMakeLists.txt#L62)。
+步骤：`B04/V04`。定位：[CMakeLists.txt:62](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/CMakeLists.txt#L62)。
 
 实际：删除无断言的 config_contract_test.cpp 及目标登记；真正坏配置、往返、构造契约全部保留。
 
@@ -379,7 +379,7 @@
 
 ### F36 · 完成 · 原问题：Tag 构造与 G2 配置重复参数校验
 
-步骤：`Q03/P03`。定位：[lib/pose/pose_geometry.cpp:14](../lib/pose/pose_geometry.cpp#L14)。
+步骤：`Q03/P03`。定位：[lib/pose/pose_geometry.cpp:14](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pose/pose_geometry.cpp#L14)。
 
 实际：两个入口共用完全相同的 Tag 数值谓词；各自错误文字、可选 margin、原生对象／family／白名单尺寸检查保留。
 
@@ -389,7 +389,7 @@
 
 ### F37 · 完成 · 原问题：未启用法向约束仍转换 Rodrigues，唯一解统计额外建表
 
-步骤：`P08/P09`。定位：[lib/pose/pose_estimator.cpp:258](../lib/pose/pose_estimator.cpp#L258)。
+步骤：`P08/P09`。定位：[lib/pose/pose_estimator.cpp:258](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pose/pose_estimator.cpp#L258)。
 
 实际：法向约束启用时才 Rodrigues；唯一性只存 eligible_count／sole_index，完整候选列表与歧义保留。
 
@@ -399,7 +399,7 @@
 
 ### F38 · 完成 · 原问题：prepare/process/take 隐藏一次调用所需状态
 
-步骤：`A05/A06`。定位：[lib/pipeline/detector.cpp:191](../lib/pipeline/detector.cpp#L191)；[app/offline_runner.cpp:298](../app/offline_runner.cpp#L298)。
+步骤：`A05/A06`。定位：[lib/pipeline/detector.cpp:191](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/detector.cpp#L191)；[app/offline_runner.cpp:298](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/offline_runner.cpp#L298)。
 
 实际：内部单次桥管理 prepare/process/take，返回结果／记录／异常及外部簿记时间；失败记录先移出再由应用保存／重抛。
 
@@ -409,7 +409,7 @@
 
 ### F39 · 完成 · 原问题：机器原因通过文字约定再反向分类
 
-步骤：`T04/A06/A12`。定位：[lib/pipeline/temporal_types.hpp:6](../lib/pipeline/temporal_types.hpp#L6)；[lib/pipeline/stabilize_stage.cpp:69](../lib/pipeline/stabilize_stage.cpp#L69)。
+步骤：`T04/A06/A12`。定位：[lib/pipeline/temporal_types.hpp:6](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/temporal_types.hpp#L6)；[lib/pipeline/stabilize_stage.cpp:69](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/stabilize_stage.cpp#L69)。
 
 实际：生产步骤显式给机器原因枚举，stabilize_stage 不再解析显示字符串；旧 reason 文本仅作编码/detail，InputChanged 控制也读类型。
 
@@ -419,7 +419,7 @@
 
 ### F40 · 完成 · 原问题：三个完整文件 fingerprint 实现重复
 
-步骤：`A02/V03`。定位：[lib/core/file_fingerprint.hpp:9](../lib/core/file_fingerprint.hpp#L9)。
+步骤：`A02/V03`。定位：[lib/core/file_fingerprint.hpp:9](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/file_fingerprint.hpp#L9)。
 
 实际：三处完整文件 FNV 共用流式字节函数，调用者给原 IO 错误上下文；结果指纹和 SHA256 协议独立。
 
@@ -429,7 +429,7 @@
 
 ### F41 · 完成 · 原问题：temporal_audit 的 overwrite flag 没有执行作用
 
-步骤：`V02`。定位：[tools/audit/temporal_audit.cpp:205](../tools/audit/temporal_audit.cpp#L205)。
+步骤：`V02`。定位：[tools/audit/temporal_audit.cpp:205](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/audit/temporal_audit.cpp#L205)。
 
 实际：删未使用的 overwrite flag 和解析变量；旧选项明确 unknown，已有目录继续拒绝覆盖。
 
@@ -439,7 +439,7 @@
 
 ### F42 · 完成 · 原问题：同一翻译单元重复 include
 
-步骤：`P12/V04`。定位：[tools/validation/pose_sensitivity.cpp:5](../tools/validation/pose_sensitivity.cpp#L5)。
+步骤：`P12/V04`。定位：[tools/validation/pose_sensitivity.cpp:5](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/validation/pose_sensitivity.cpp#L5)。
 
 实际：删除 pose_sensitivity 与 screen_order_test 的重复 include，仅静态去重。
 
@@ -449,7 +449,7 @@
 
 ### F43 · 完成 · 原问题：诊断工具复制算法前半段的执行顺序
 
-步骤：`V02/D02…D09`。定位：[lib/pipeline/decode_stage.cpp:180](../lib/pipeline/decode_stage.cpp#L180)；[tools/block3_fixture/diagnostics/video_diagnose.cpp:136](../tools/block3_fixture/diagnostics/video_diagnose.cpp#L136)。
+步骤：`V02/D02…D09`。定位：[lib/pipeline/decode_stage.cpp:180](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/decode_stage.cpp#L180)；[tools/block3_fixture/diagnostics/video_diagnose.cpp:136](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/diagnostics/video_diagnose.cpp#L136)。
 
 实际：正式链与三个诊断／验证入口共用几何步骤编排，显式选 Validated 或 Completed 产物；归因探针仍可单独调用步骤。
 
@@ -459,7 +459,7 @@
 
 ### F44 · 完成 · 原问题：parent_diagnose 把 component_id 当数组下标
 
-步骤：`V02/D03/D04`。定位：[tools/block3_fixture/diagnostics/parent_diagnose.cpp:25](../tools/block3_fixture/diagnostics/parent_diagnose.cpp#L25)。
+步骤：`V02/D03/D04`。定位：[tools/block3_fixture/diagnostics/parent_diagnose.cpp:25](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/diagnostics/parent_diagnose.cpp#L25)。
 
 实际：parent probe 按组件 ID 和观察来源位置关联，不再拿 ID 当数组下标。
 
@@ -469,7 +469,7 @@
 
 ### F45 · 完成 · 原问题：相同 gate 归因配置复制两遍
 
-步骤：`V02`。定位：[tools/block3_fixture/diagnostics/video_diagnose.cpp:85](../tools/block3_fixture/diagnostics/video_diagnose.cpp#L85)。
+步骤：`V02`。定位：[tools/block3_fixture/diagnostics/video_diagnose.cpp:85](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/diagnostics/video_diagnose.cpp#L85)。
 
 实际：两套归因 gate 从同一普通函数取得配置副本；标签、顺序、实验值保留，生产配置不回写。
 
@@ -479,7 +479,7 @@
 
 ### F46 · 完成 · 原问题：旧 candidate-config 子命令继续导出历史 recipe
 
-步骤：`V02/Q06`。定位：[tools/block3_fixture/validation/verify.cpp:289](../tools/block3_fixture/validation/verify.cpp#L289)。
+步骤：`V02/Q06`。定位：[tools/block3_fixture/validation/verify.cpp:289](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/validation/verify.cpp#L289)。
 
 实际：删除静态历史 recipe 导出实现及现行说明；--candidate-config 明确拒绝，不填新预算。
 
@@ -489,7 +489,7 @@
 
 ### F47 · 完成 · 原问题：Python 证据断言在优化模式会被整体移除
 
-步骤：`V03/V04`。定位：[tools/validation/recovery112_check.py:17](../tools/validation/recovery112_check.py#L17)；[tools/block3_fixture/reporting/summarize_video_corners.py:13](../tools/block3_fixture/reporting/summarize_video_corners.py#L13)。
+步骤：`V03/V04`。定位：[tools/validation/recovery112_check.py:17](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/validation/recovery112_check.py#L17)；[tools/block3_fixture/reporting/summarize_video_corners.py:13](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/reporting/summarize_video_corners.py#L13)。
 
 实际：四个 Python 证据工具的 28 处必要 assert 改为显式 require，条件不删。
 
@@ -499,7 +499,7 @@
 
 ### F48 · 完成 · 原问题：无有效测量时汇总崩溃或把缺失记零
 
-步骤：`V05`。定位：[tools/block3_fixture/reporting/summarize_video_corners.py:18](../tools/block3_fixture/reporting/summarize_video_corners.py#L18)。
+步骤：`V05`。定位：[tools/block3_fixture/reporting/summarize_video_corners.py:18](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/reporting/summarize_video_corners.py#L18)。
 
 实际：CSV 固定列；零样本分布和单样本方差为 null/N/A，失败行保留；物理角缺分布不给候选预算。
 
@@ -509,7 +509,7 @@
 
 ### F49 · 完成 · 原问题：112 验证驱动绑定本仓目录和历史证据
 
-步骤：`V06/B06`。定位：[tools/validation/recovery112_check.py:22](../tools/validation/recovery112_check.py#L22)；[tools/validation/recovery112_check.py:29](../tools/validation/recovery112_check.py#L29)。
+步骤：`V06/B06`。定位：[tools/validation/recovery112_check.py:22](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/validation/recovery112_check.py#L22)；[tools/validation/recovery112_check.py:29](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/validation/recovery112_check.py#L29)。
 
 实际：source_root/input_manifest/output_root/build_logs 显式输入；按冻结目标集合及全过摘要检查，新增目标不误判固定总数。
 
@@ -519,7 +519,7 @@
 
 ### F50 · 部分完成 · 原问题：夹具工具递归导入完整 detector 工程
 
-步骤：`B01/B02`。定位：[tools/block3_fixture/CMakeLists.txt:17](../tools/block3_fixture/CMakeLists.txt#L17)。
+步骤：`B01/B02`。定位：[tools/block3_fixture/CMakeLists.txt:17](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/block3_fixture/CMakeLists.txt#L17)。
 
 实际：父工程已提供 detector／synthetic 目标时直接链接，不重复导入；工具继续链接既有私有接口目标。
 
@@ -529,7 +529,7 @@
 
 ### F51 · 完成 · 原问题：全目录源码 hash 与实际目标输入不一致
 
-步骤：`B05`。定位：[CMakeLists.txt:218](../CMakeLists.txt#L218)；[app/main.cpp:115](../app/main.cpp#L115)；[tools/synth_ref/CMakeLists.txt:11](../tools/synth_ref/CMakeLists.txt#L11)。
+步骤：`B05`。定位：[CMakeLists.txt:218](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/CMakeLists.txt#L218)；[app/main.cpp:115](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/app/main.cpp#L115)；[tools/synth_ref/CMakeLists.txt:11](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/CMakeLists.txt#L11)。
 
 实际：按每目标源码、工程内双引号 include、实际链接图、CMake／模板及构建参数生成 manifest；实际 CLI 显式传自身身份，合成 core/CLI/test 分开。
 
@@ -539,7 +539,7 @@
 
 ### F52 · 部分完成 · 原问题：工具依赖和测试登记没有独立构建开关边界
 
-步骤：`B01/B04`。定位：[CMakeLists.txt:107](../CMakeLists.txt#L107)。
+步骤：`B01/B04`。定位：[CMakeLists.txt:107](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/CMakeLists.txt#L107)。
 
 实际：OpenSSL 查找紧贴实际审计目标；G2 包查找仍在既有开关内，JSON／合成依赖仍在实际工具 CMake。
 
@@ -549,7 +549,7 @@
 
 ### F53 · 完成 · 原问题：步骤头只是统一 core.hpp 的转发壳
 
-步骤：`S02…S08`。定位：[tools/synth_ref/include/synthetic_gen/core.hpp:2](../tools/synth_ref/include/synthetic_gen/core.hpp#L2)；[tools/synth_ref/include/synthetic_gen/model.hpp:48](../tools/synth_ref/include/synthetic_gen/model.hpp#L48)；[tools/synth_ref/include/synthetic_gen/grid.hpp:6](../tools/synth_ref/include/synthetic_gen/grid.hpp#L6)。
+步骤：`S02…S08`。定位：[tools/synth_ref/include/synthetic_gen/core.hpp:2](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/include/synthetic_gen/core.hpp#L2)；[tools/synth_ref/include/synthetic_gen/model.hpp:48](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/include/synthetic_gen/model.hpp#L48)；[tools/synth_ref/include/synthetic_gen/grid.hpp:6](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/include/synthetic_gen/grid.hpp#L6)。
 
 实际：八个步骤头各自拥有声明／必要类型；core.hpp 仅保留兼容聚合，消费者显式包含所用步骤。
 
@@ -559,7 +559,7 @@
 
 ### F54 · 完成 · 原问题：大 Context 和混合文件使步骤互知实现
 
-步骤：`S01/S03/S06/S07`。定位：[tools/synth_ref/src/records.cpp:155](../tools/synth_ref/src/records.cpp#L155)；[tools/synth_ref/src/transforms.cpp:35](../tools/synth_ref/src/transforms.cpp#L35)；[tools/synth_ref/src/cases.cpp:133](../tools/synth_ref/src/cases.cpp#L133)。
+步骤：`S01/S03/S06/S07`。定位：[tools/synth_ref/src/records.cpp:155](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/src/records.cpp#L155)；[tools/synth_ref/src/transforms.cpp:35](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/src/transforms.cpp#L35)；[tools/synth_ref/src/cases.cpp:133](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/src/cases.cpp#L133)。
 
 实际：私有仿射、场景、扰动、真值编码和 grid/case 核验只接所需只读切片／值；创建运行目录显式接路径。
 
@@ -569,7 +569,7 @@
 
 ### F55 · 完成 · 原问题：verify 手写另一文件函数声明
 
-步骤：`S06/S08`。定位：[tools/synth_ref/include/synthetic_gen/records.hpp:10](../tools/synth_ref/include/synthetic_gen/records.hpp#L10)。
+步骤：`S06/S08`。定位：[tools/synth_ref/include/synthetic_gen/records.hpp:10](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/include/synthetic_gen/records.hpp#L10)。
 
 实际：四个 record_* 编码声明归 records.hpp，records 与 verify 共用，verify 私自前向声明删除。
 
@@ -579,7 +579,7 @@
 
 ### F56 · 完成 · 原问题：桥接连通复核计算未使用中心
 
-步骤：`S05`。定位：[tools/synth_ref/src/cases.cpp:133](../tools/synth_ref/src/cases.cpp#L133)。
+步骤：`S05`。定位：[tools/synth_ref/src/cases.cpp:133](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/src/cases.cpp#L133)。
 
 实际：删除未使用的中心坐标局部变量，真实场景变换与样例定义保留。
 
@@ -589,7 +589,7 @@
 
 ### F57 · 完成 · 原问题：合成测试借全局 evidence_directory 和 cwd 传数据
 
-步骤：`V06/S01`。定位：[tools/synth_ref/tests/tests.cpp:13](../tools/synth_ref/tests/tests.cpp#L13)；[tools/synth_ref/src/model.cpp:354](../tools/synth_ref/src/model.cpp#L354)；[tools/synth_ref/tests/tests.cpp:14](../tools/synth_ref/tests/tests.cpp#L14)。
+步骤：`V06/S01`。定位：[tools/synth_ref/tests/tests.cpp:13](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/tests/tests.cpp#L13)；[tools/synth_ref/src/model.cpp:354](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/src/model.cpp#L354)；[tools/synth_ref/tests/tests.cpp:14](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/tests/tests.cpp#L14)。
 
 实际：证据根归 main 局部并传 workflow；loader(root) 显式定位来源，临时 cwd 切换局部 RAII 恢复。
 
@@ -599,7 +599,7 @@
 
 ### F58 · 完成 · 原问题：标定范围选项读验后未参与选帧
 
-步骤：`C01/C03`。定位：[tools/calibration/calibration_config.hpp:33](../tools/calibration/calibration_config.hpp#L33)。
+步骤：`C01/C03`。定位：[tools/calibration/calibration_config.hpp:33](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/calibration_config.hpp#L33)。
 
 实际：删除无实际选帧消费者的 start_frame/end_frame、CLI/YAML 及现行说明；旧范围键／参数明确拒绝。
 
@@ -609,7 +609,7 @@
 
 ### F59 · 完成 · 原问题：视频尺寸被回写静态配置传递
 
-步骤：`C02/C05/C06`。定位：[tools/calibration/calibration_result.hpp:13](../tools/calibration/calibration_result.hpp#L13)；[tools/calibration/calibration_video.hpp:10](../tools/calibration/calibration_video.hpp#L10)。
+步骤：`C02/C05/C06`。定位：[tools/calibration/calibration_result.hpp:13](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/calibration_result.hpp#L13)；[tools/calibration/calibration_video.hpp:10](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/calibration_video.hpp#L10)。
 
 实际：尺寸／来源由 VideoInfo 显式交给 solver，保存在结果，writer 不从静态配置回读运行尺寸。
 
@@ -619,7 +619,7 @@
 
 ### F60 · 完成 · 原问题：圆点阵失败样本丢掉来源身份
 
-步骤：`C03/C04/C05`。定位：[tools/calibration/calibration_detection.hpp:5](../tools/calibration/calibration_detection.hpp#L5)；[tools/calibration/calibration_result.cpp:44](../tools/calibration/calibration_result.cpp#L44)。
+步骤：`C03/C04/C05`。定位：[tools/calibration/calibration_detection.hpp:5](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/calibration_detection.hpp#L5)；[tools/calibration/calibration_result.cpp:44](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/calibration_result.cpp#L44)。
 
 实际：SampledFrame 保留 frame_id，所有成功／失败帧都有 BoardObservation；solver 显式筛成功点对并保留 frame_ids 映射。
 
@@ -629,7 +629,7 @@
 
 ### F61 · 完成 · 原问题：标定解析和数值合法性口径不完整
 
-步骤：`C01/Q02`。定位：[tools/calibration/calibration_config.cpp:20](../tools/calibration/calibration_config.cpp#L20)。
+步骤：`C01/Q02`。定位：[tools/calibration/calibration_config.cpp:20](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/calibration_config.cpp#L20)。
 
 实际：严格检查 YAML／CLI 未知、重复、缺值、类型和完整数值；原 token 防 FileStorage 32 位窄化，间距必须有限正值。
 
@@ -639,7 +639,7 @@
 
 ### F62 · 完成 · 原问题：选帧工具读帧失败仍返回成功
 
-步骤：`C03`。定位：[tools/calibration/scripts/frame_picker.py:26](../tools/calibration/scripts/frame_picker.py#L26)。
+步骤：`C03`。定位：[tools/calibration/scripts/frame_picker.py:26](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/scripts/frame_picker.py#L26)。
 
 实际：视频 seek/read 失败明确非零；选帧列表保留，用户结束与输入结束区分。
 
@@ -649,7 +649,7 @@
 
 ### F63 · 完成 · 原问题：活动导航仍描述没有 G2/G4 的旧系统
 
-步骤：`P01/K01/V02`。定位：[docs/INDEX.md:3](../docs/INDEX.md#L3)；[docs/dataflow-interfaces.md:88](../docs/dataflow-interfaces.md#L88)；[tools/INDEX.md:79](../tools/INDEX.md#L79)。
+步骤：`P01/K01/V02`。定位：[docs/INDEX.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/INDEX.md#L3)；[docs/dataflow-interfaces.md:88](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/dataflow-interfaces.md#L88)；[tools/INDEX.md:79](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/INDEX.md#L79)。
 
 实际：README、文档／工具索引与受牵连现行接口同步；历史审核／验收仅加状态与当前入口，不改原结论。
 
@@ -659,7 +659,7 @@
 
 ### F64 · 完成 · 原问题：timing.cpp 混装重置与所有记录枚举命名
 
-步骤：`A06/A12`。定位：[lib/core/diagnostics_types.hpp:166](../lib/core/diagnostics_types.hpp#L166)；[lib/core/timing.cpp:7](../lib/core/timing.cpp#L7)。
+步骤：`A06/A12`。定位：[lib/core/diagnostics_types.hpp:166](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/diagnostics_types.hpp#L166)；[lib/core/timing.cpp:7](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/core/timing.cpp#L7)。
 
 实际：ResetSnapshot 与记录枚举编码归现有 diagnostics_types.hpp；timing.cpp 只保留计时功能。
 
@@ -669,7 +669,7 @@
 
 ### F65 · 不改 · 原问题：公开头路径迁移需要调用方兼容决策
 
-步骤：`B02/P12`。定位：[include/mark/detector.hpp:40](../include/mark/detector.hpp#L40)。
+步骤：`B02/P12`。定位：[include/mark/detector.hpp:40](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/include/mark/detector.hpp#L40)。
 
 实际：公开 mark/*.hpp 包含路径与 namespace 保持，不进行迁移兼容层调整。
 
@@ -679,7 +679,7 @@
 
 ### F66 · 完成 · 原问题：假设组装接收未使用观察和模型
 
-步骤：`D06`。定位：[lib/geometry/geometry_matcher.hpp:12](../lib/geometry/geometry_matcher.hpp#L12)。
+步骤：`D06`。定位：[lib/geometry/geometry_matcher.hpp:12](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/geometry/geometry_matcher.hpp#L12)。
 
 实际：内部组装只收 assignments 和 affine，未读的 observations/model 参数删除；组装步骤保留。
 
@@ -689,7 +689,7 @@
 
 ### F67 · 完成 · 原问题：测试驱动重复，fixture 又互借通用入口
 
-步骤：`V04/V06`。定位：[test_support/case_runner.hpp:8](../test_support/case_runner.hpp#L8)；[test_support/assertions.hpp:6](../test_support/assertions.hpp#L6)。
+步骤：`V04/V06`。定位：[test_support/case_runner.hpp:8](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/test_support/case_runner.hpp#L8)；[test_support/assertions.hpp:6](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/test_support/assertions.hpp#L6)。
 
 实际：通用 check／case runner 归两个极小测试头，fixture 不再互借通用入口，独立 oracle／reference 保留。
 
@@ -699,7 +699,7 @@
 
 ### F68 · 完成 · 原问题：config.cpp 留有整段失效注释实现
 
-步骤：`Q01/Q03/Q06`。定位：[lib/config/config.cpp:95](../lib/config/config.cpp#L95)。
+步骤：`Q01/Q03/Q06`。定位：[lib/config/config.cpp:95](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/config/config.cpp#L95)。
 
 实际：删除 config.cpp 尾部整段注释掉的旧实现；活跃读／验／写流程保留。
 
@@ -709,7 +709,7 @@
 
 ### F69 · 完成 · 原问题：旧 temporal_record 薄包装已无消费者
 
-步骤：`V03/A07`。定位：[tools/INDEX.md:66](../tools/INDEX.md#L66)。
+步骤：`V03/A07`。定位：[tools/INDEX.md:66](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/INDEX.md#L66)。
 
 实际：删除零消费者 tools/common/temporal_record.hpp 及 CMake hash／工具索引旧行；实际 recorder 接口保留。
 
@@ -719,7 +719,7 @@
 
 ### F70 · 完成 · 原问题：同一 double 四角被连续排序复核三次
 
-步骤：`D14/D15/D17`。定位：[lib/corners/corner_resolver.hpp:18](../lib/corners/corner_resolver.hpp#L18)；[lib/pipeline/decode_stage.cpp:61](../lib/pipeline/decode_stage.cpp#L61)。
+步骤：`D14/D15/D17`。定位：[lib/corners/corner_resolver.hpp:18](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/corners/corner_resolver.hpp#L18)；[lib/pipeline/decode_stage.cpp:61](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/lib/pipeline/decode_stage.cpp#L61)。
 
 实际：resolver 交付同一 double 四角的排序结果；decode 几何验证与语义检查显式复用，主链不连续排序三次。
 
@@ -729,7 +729,7 @@
 
 ### F71 · 完成 · 原问题：测试资源定位隐含固定目录深度
 
-步骤：`Q04/V01/V06`。定位：[CMakeLists.txt:52](../CMakeLists.txt#L52)；[tests/config_error_test.cpp:1](../tests/config_error_test.cpp#L1)。
+步骤：`Q04/V01/V06`。定位：[CMakeLists.txt:52](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/CMakeLists.txt#L52)；[tests/config_error_test.cpp:1](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tests/config_error_test.cpp#L1)。
 
 实际：测试目标显式提供资源根，配置／模型／数据不再猜 __FILE__ 父目录深度；配置负例的独占 test_root 显式传到每个测试函数。
 
@@ -743,21 +743,21 @@
 
 | 文档定位 | 实际同步 |
 |---|---|
-| [README.md:5](../README.md#L5) | 快速入口链接两份交付，说明现行模式与 display 协议。 |
-| [docs/INDEX.md:3](../docs/INDEX.md#L3) | 现行阅读入口与历史验收数字的适用状态。 |
-| [docs/architecture/INDEX.md:3](../docs/architecture/INDEX.md#L3) | 把旧整理记录与现行流程入口区分。 |
-| [docs/architecture/include-dependency-analysis.md:3](../docs/architecture/include-dependency-analysis.md#L3) | 只加历史状态／现行链接，不改原依赖快照与结论。 |
-| [docs/block1.md:3](../docs/block1.md#L3) | 只加历史状态，保留当时配置、名字与验收原文。 |
-| [docs/block2.md:3](../docs/block2.md#L3) | 只加历史状态，原测试数字与验收内容不改写。 |
-| [docs/block4_budget.md:3](../docs/block4_budget.md#L3) | 只加历史状态／现行链接，原预算结论保留。 |
-| [docs/dataflow-interfaces.md:88](../docs/dataflow-interfaces.md#L88) | 同步步骤产物、模块校验、配置迁移、typed 原因、桥与运行结论。 |
-| [docs/diagnostics_schema.md:7](../docs/diagnostics_schema.md#L7) | 同步完整角证据子版本、来源／scope／运行结论和现行记录约束。 |
-| [docs/fix2_sweep_report.md:3](../docs/fix2_sweep_report.md#L3) | 只加历史状态／现行入口，旧报告和验收结论保留。 |
-| [docs/g4.md:97](../docs/g4.md#L97) | 补充内部创新／事务整理的边界，公开输出、资格和 OPEN 状态不变。 |
-| [tools/INDEX.md:17](../tools/INDEX.md#L17) | 删除失效包装入口，说明旧选项拒绝、显式输入与当前共享步骤。 |
-| [tools/calibration/README.md:50](../tools/calibration/README.md#L50) | frame_list、显式元信息／样本身份及旧范围输入拒绝。 |
-| [tools/calibration/scripts/frame_picker_README.md:67](../tools/calibration/scripts/frame_picker_README.md#L67) | 明确读失败与主动停止的区别及退出结果。 |
-| [tools/synth_ref/README.md:105](../tools/synth_ref/README.md#L105) | 显式测试根与核心／CLI／test 来源身份边界。 |
+| [README.md:5](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/README.md#L5) | 快速入口链接两份交付，说明现行模式与 display 协议。 |
+| [docs/INDEX.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/INDEX.md#L3) | 现行阅读入口与历史验收数字的适用状态。 |
+| [docs/architecture/INDEX.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/architecture/INDEX.md#L3) | 把旧整理记录与现行流程入口区分。 |
+| [docs/architecture/include-dependency-analysis.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/architecture/include-dependency-analysis.md#L3) | 只加历史状态／现行链接，不改原依赖快照与结论。 |
+| [docs/block1.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/block1.md#L3) | 只加历史状态，保留当时配置、名字与验收原文。 |
+| [docs/block2.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/block2.md#L3) | 只加历史状态，原测试数字与验收内容不改写。 |
+| [docs/block4_budget.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/block4_budget.md#L3) | 只加历史状态／现行链接，原预算结论保留。 |
+| [docs/dataflow-interfaces.md:88](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/dataflow-interfaces.md#L88) | 同步步骤产物、模块校验、配置迁移、typed 原因、桥与运行结论。 |
+| [docs/diagnostics_schema.md:7](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/diagnostics_schema.md#L7) | 同步完整角证据子版本、来源／scope／运行结论和现行记录约束。 |
+| [docs/fix2_sweep_report.md:3](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/fix2_sweep_report.md#L3) | 只加历史状态／现行入口，旧报告和验收结论保留。 |
+| [docs/g4.md:97](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/docs/g4.md#L97) | 补充内部创新／事务整理的边界，公开输出、资格和 OPEN 状态不变。 |
+| [tools/INDEX.md:17](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/INDEX.md#L17) | 删除失效包装入口，说明旧选项拒绝、显式输入与当前共享步骤。 |
+| [tools/calibration/README.md:50](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/README.md#L50) | frame_list、显式元信息／样本身份及旧范围输入拒绝。 |
+| [tools/calibration/scripts/frame_picker_README.md:67](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/calibration/scripts/frame_picker_README.md#L67) | 明确读失败与主动停止的区别及退出结果。 |
+| [tools/synth_ref/README.md:105](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/4c00708/src/tushenghao/tools/synth_ref/README.md#L105) | 显式测试根与核心／CLI／test 来源身份边界。 |
 
 最终检索全部现行 Markdown：旧名称／选项仅在明确历史状态、拒绝说明或只读历史文件中出现；没有把历史旧配方改成现行建议。lean-report.md、move-layout-draft.md、各 evidence/ref/history 原文与验收结论不改。
 
@@ -807,7 +807,7 @@ F65 公开 include 路径未动。F50 的独立向上装配、F52 的模块 BUIL
 
 ## 验证与日志附录
 
-日志、探针源码、目标 manifest、完整命令与大产物 SHA256 已另存于 Git 忽略目录 [`build/lean-validation-20261102`](../build/lean-validation-20261102)。实际路径：`/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/build/lean-validation-20261102`。历史 evidence/ref/history 原文及两份只读分析文件无 diff。大逐帧产物仍保留在 `/tmp` 并登记 `large-artifact-hashes.json`，没有制作或提交 g4-delivery.zip。
+日志、探针源码、目标 manifest、完整命令与大产物 SHA256 已另存于 Git 忽略目录 `build/lean-validation-20261102`（当时的本地忽略目录，Git 快照不含该附件）。实际路径：`/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/build/lean-validation-20261102`。历史 evidence/ref/history 原文及两份只读分析文件无 diff。大逐帧产物仍保留在 `/tmp` 并登记 `large-artifact-hashes.json`，没有制作或提交 g4-delivery.zip。
 
 ### 完整构建与全量测试
 

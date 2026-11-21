@@ -1,5 +1,7 @@
 # 位姿状态收尾验证
 
+> 此归档复现 `4d4aac9` 的候选到名义位姿变更。条件轨迹和 RAW 复用相邻的 single-candidate 归档，生成的 AVI 不在本目录单独存放。
+
 基线a392bd4；[报告](../../POSE_STATUS_FINALIZATION_REPORT.md)。新观测schema6、轨迹schema2。RAW和条件轨迹与[上一轮归档](../single-candidate/README.md)逐字节相同，本目录复用它们，不复制相同数据。日志只去掉行尾空白。
 
 - `observations.yaml.gz`：实际应用的新schema6观测，默认/条件profile两臂字节相同。

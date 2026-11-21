@@ -1,4 +1,4 @@
-// Tag 检测器的集成测试（）
+// 用 AprilTag 同库编码图验证检测器的集成接口。
 #include "pose_test_scene.hpp"
 #include "vision/pose/tag_detector.hpp"
 

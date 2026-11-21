@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cmath>
 
-// 计算平均重投影误差
+// 对所有点的二维重投影距离平方求平均，再取平方根。
 static double
 calculate_reprojection_error(const std::vector<std::vector<cv::Point3f>> &object_points_,
                              const std::vector<std::vector<cv::Point2f>> &image_points,
@@ -38,20 +38,18 @@ calculate_reprojection_error(const std::vector<std::vector<cv::Point3f>> &object
 bool run_camera_calibration(const CalibrationVideoInfo &video, const CalibrationDetectionResult &observed,
                             CalibrationResult &result)
 {
-    // 求解只接收成功点对；来源映射与求解数组按同一显式顺序建立。
+    // 仅将圆点阵检测成功的帧送入标定求解。
     std::vector<std::vector<cv::Point3f>> object_points_;
     std::vector<std::vector<cv::Point2f>> image_points;
-    result.frame_ids_.clear();
     for (const auto &observation : observed.observations_)
         if (observation.detected_)
         {
             image_points.push_back(observation.points_);
             object_points_.push_back(observed.object_points_);
-            result.frame_ids_.push_back(observation.frame_id_);
         }
     result.image_size_ = {video.width_, video.height_};
     result.source_path_ = video.source_path_;
-    if (object_points_.empty() || image_points.empty())
+    if (object_points_.empty())
     {
         std::cerr << "没有有效标定数据" << std::endl;
 

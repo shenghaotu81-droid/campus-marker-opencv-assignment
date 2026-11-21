@@ -12,7 +12,7 @@ namespace mark::pose
     {
         // 帧号：排序/去重
         uint64_t frame_id_{};
-        // 收到这帧的时刻（微秒）：离线是 frame_id / FPS 推导出来的名义值；板子上是真实到达时间
+        // 离线名义时间，单位为微秒，由帧号和 FPS 推算。
         int64_t received_us_{};
     };
 

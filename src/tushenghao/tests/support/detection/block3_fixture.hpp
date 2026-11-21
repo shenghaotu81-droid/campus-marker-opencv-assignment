@@ -10,7 +10,7 @@
 
 namespace fixture
 {
-    // 显式测试预算只用于固定断言，不代表下游控制/Tracking批准数值，严禁写回生产YAML。
+    // 使用默认角点配置。
     inline mark::detector::CornerConfig corner_config()
     {
         mark::detector::CornerConfig c;
@@ -45,7 +45,7 @@ namespace fixture
         Model geometry;
     };
 
-    // 非连续ID且打乱容器，验证ID查找而不是隐式数组下标。
+    // 按工作尺寸和旋转角生成合成场景。
     inline Scene scene(int work_width_ = 1440, int work_height_ = 1080, double angle = 0)
     {
         Scene s;
@@ -77,17 +77,6 @@ namespace fixture
         for (size_t i = 0; i < 4; ++i)
             s.quad[i] = transform(model_corners[i]);
         return s;
-    }
-
-}
-
-namespace fixture
-{
-    inline mark::detector::CornerResolution resolve(const Scene &s, const mark::detector::CornerConfig &c)
-    {
-        mark::detector::OriginalContourIndex index(s.frame);
-        (void)c;
-        return mark::detector::resolve_observed_corners(s.quad, index);
     }
 
 }

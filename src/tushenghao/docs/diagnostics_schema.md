@@ -1,5 +1,7 @@
 # Block5 诊断 schema 1
 
+> 历史接口对应 Block5 交付 `c7fffe4`。现行数据流见[流程导读](flow-guide.md)。
+
 记录版本 `record_schema_version=1` 与配置 `schema_version=1` 独立。旧 Block4 JSONL 只读适配，不回写或补造计时。
 
 ## 帧、范围与当前结果

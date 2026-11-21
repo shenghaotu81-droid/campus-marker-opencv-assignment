@@ -1,8 +1,10 @@
 # MARK 检测器数据流与接口说明
 
-本文是现行数据与接口附录；路径已同步 `refactor/lean` 的模块布局，均相对 `src/tushenghao/`。按实际执行顺序与精确定位阅读请先看 [流程导读](flow-guide.md)；旧附录行号不再冒称迁移后的精确位置。只说明数据来源、接口契约和消费关系。
+> 本文对应 `fd098ab` 的阶段附录及 `004a671` 的布局时期。现行说明见[流程导读](flow-guide.md)。
 
-配置简称：**D** = [config/detector.yaml](../config/detector.yaml)，**DD** = [config/detector_debug.yaml](../config/detector_debug.yaml)，**DV** = [config/detector_verification.yaml](../config/detector_verification.yaml)。下文算法参数表均来自 **D**，且这些算法字段在 **DD/DV** 中数值相同；未写入 YAML 而由 C++ 默认值补齐的应用参数会单独标明。
+本文是历史数据与接口附录；路径已同步 `refactor/lean` 的模块布局，均相对 `src/tushenghao/`。按实际执行顺序与精确定位阅读请先看 [流程导读](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/flow-guide.md)；旧附录行号不再冒称迁移后的精确位置。只说明数据来源、接口契约和消费关系。
+
+配置简称：**D** = [config/detector.yaml](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/fd098ab/src/tushenghao/config/detector.yaml)，**DD** = [config/detector_debug.yaml](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/fd098ab/src/tushenghao/config/detector_debug.yaml)，**DV** = [config/detector_verification.yaml](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/fd098ab/src/tushenghao/config/detector_verification.yaml)。下文算法参数表均来自 **D**，且这些算法字段在 **DD/DV** 中数值相同；未写入 YAML 而由 C++ 默认值补齐的应用参数会单独标明。
 
 ## 1. 系统概述
 
@@ -38,7 +40,7 @@ flowchart TD
 
 ### 2.1 四个固定的物理角
 
-`P0～P3` 指 MARK 自身的角，不随它在屏幕中的旋转改变。来源是 [config/marker_geometry.yaml](../config/marker_geometry.yaml) 与 [src/detection/corners/measurement/corner_resolver.cpp](../src/detection/corners/measurement/corner_resolver.cpp):87 的绑定表；边 `ei` 表示 `vi → v(i+1)`，末边回到 `v0`。
+`P0～P3` 指 MARK 自身的角，不随它在屏幕中的旋转改变。来源是 [config/marker_geometry.yaml](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/fd098ab/src/tushenghao/config/marker_geometry.yaml) 与 [src/detection/corners/measurement/corner_resolver.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/measurement/corner_resolver.cpp):87 的绑定表；边 `ei` 表示 `vi → v(i+1)`，末边回到 `v0`。
 
 | 物理角 | 对应模型白片 | 顶点、模型坐标 | 构成该角的两条外边 |
 | --- | --- | --- | --- |
@@ -53,7 +55,7 @@ flowchart TD
 
 `CornerMeasurement.physical_corners_[0..3]` 固定是 `P0/P1/P2/P3`；`Detection.corners[0..3]` 固定是 **LT/RT/RB/LB**，在图像坐标（x 向右、y 向下）形成顺时针环。
 
-屏幕排序由 [src/detection/corners/ordering/screen_order.cpp](../src/detection/corners/ordering/screen_order.cpp):509 的 `orderCycleCore` 决定：检查有效凸四边形、枚举四个循环起点、归一化后选最小方框贴合误差；能量平局用完整点序的 `(y,x)` 字典序选定，并保留平局标记。屏幕标签不能当作物理编号。
+屏幕排序由 [src/detection/corners/ordering/screen_order.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/ordering/screen_order.cpp):509 的 `orderCycleCore` 决定：检查有效凸四边形、枚举四个循环起点、归一化后选最小方框贴合误差；能量平局用完整点序的 `(y,x)` 字典序选定，并保留平局标记。屏幕标签不能当作物理编号。
 
 `Attributes.orientation` 是可选的“**物理角 → 屏幕数组下标**”排列。例如 `[1,2,3,0]` 表示 P0 在 RT 槽、P1 在 RB 槽、P2 在 LB 槽、P3 在 LT 槽。存在该属性时，物理角坐标按 `corners[orientation[p]]` 取；为空时，不能从屏幕位置补出物理身份。
 
@@ -67,13 +69,13 @@ flowchart TD
 
 ## 3. 流水线阶段详解
 
-以下按 `marker_app` 的实际 Full 流程排列。主入口 [tools/apps/marker/main.cpp](../tools/apps/marker/main.cpp):112 调用 `runOffline(..., ExecutionScope::Full, ...)`；逐帧入口是 [src/app/offline/offline_runner.cpp](../src/app/offline/offline_runner.cpp):257 的 `consume_input` 和 :293 的 `process_frame`，:324 调用公共 `Detector::process`。后续算法调用集中于 [src/detection/pipeline/execution/detector.cpp](../src/detection/pipeline/execution/detector.cpp):141 的 `runDecodePipeline` 与 :142 的 `finalizeDecodedFrame`。
+以下按 `marker_app` 的实际 Full 流程排列。主入口 [tools/apps/marker/main.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/tools/apps/marker/main.cpp):112 调用 `runOffline(..., ExecutionScope::Full, ...)`；逐帧入口是 [src/app/offline/offline_runner.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/offline/offline_runner.cpp):257 的 `consume_input` 和 :293 的 `process_frame`，:324 调用公共 `Detector::process`。后续算法调用集中于 [src/detection/pipeline/execution/detector.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/pipeline/execution/detector.cpp):141 的 `runDecodePipeline` 与 :142 的 `finalizeDecodedFrame`。
 
 计时的 `Detect` 槽覆盖白片提取到 M/S 补全；`Decode` 槽覆盖原图四角到当前检测发布；`Stabilize` 槽覆盖时序和结果装配。它们不是三个只调用一次的底层函数。
 
 ### 3.1 启动准备（每次运行一次）
 
-- **实现文件**：[src/config/detector/config.hpp](../src/config/detector/config.hpp)、[config.cpp](../src/config/detector/config.cpp)、[app_config.hpp](../src/config/application/app_config.hpp)、[observability_config.hpp](../src/config/application/observability_config.hpp)；[include/vision/config/detector_config.hpp](../include/vision/config/detector_config.hpp)、[detector.hpp](../include/vision/detection/detector.hpp)；[include/vision/types/marker_geometry.hpp](../include/vision/types/marker_geometry.hpp)、[marker_geometry.cpp](../src/config/model/marker_geometry.cpp)；`src/detection/pipeline/execution/detector.cpp`；`tools/apps/marker/main.cpp`、[offline_runner.hpp](../src/app/offline/offline_runner.hpp)/`offline_runner.cpp`。
+- **实现文件**：[src/config/detector/config.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/config/detector/config.hpp)、[config.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/config/detector/config.cpp)、[app_config.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/config/application/app_config.hpp)、[observability_config.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/config/application/observability_config.hpp)；[include/vision/config/detector_config.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/config/detector_config.hpp)、[detector.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/detection/detector.hpp)；[include/vision/types/marker_geometry.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/marker_geometry.hpp)、[marker_geometry.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/config/model/marker_geometry.cpp)；`src/detection/pipeline/execution/detector.cpp`；`tools/apps/marker/main.cpp`、[offline_runner.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/offline/offline_runner.hpp)/`offline_runner.cpp`。
 - **调用位置**：`main.cpp:75` 加载配置；`offline_runner.cpp:199` 的 `start_input` 打开视频，:226 创建 Detector；Detector 构造函数复验配置并加载模型。
 - **输入**：配置 YAML 路径、视频路径、运行目录；`AppConfig.detector_config` 是算法配置，`diagnostics/render/offline` 是应用观测和运行配置。
 - **输出**：已校验的 `DetectorConfig`、已加载的 `MarkerGeometry.polygons`（六片图纸），以及视频 FPS/预期帧数和 Detector 实例。几何文件相对路径按检测配置所在目录解析。
@@ -89,7 +91,7 @@ flowchart TD
 
 ### 3.2 读取、包装当前帧并准备诊断请求
 
-- **实现文件**：`src/app/offline/offline_runner.cpp/.hpp`；[include/vision/types/detector_types.hpp](../include/vision/types/detector_types.hpp)；[src/detection/pipeline/execution/detector_diagnostics_access.hpp](../src/detection/pipeline/execution/detector_diagnostics_access.hpp)、`src/detection/pipeline/execution/detector.cpp`。
+- **实现文件**：`src/app/offline/offline_runner.cpp/.hpp`；[include/vision/types/detector_types.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/detector_types.hpp)；[src/detection/pipeline/execution/detector_diagnostics_access.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/pipeline/execution/detector_diagnostics_access.hpp)、`src/detection/pipeline/execution/detector.cpp`。
 - **调用位置**：`offline_runner.cpp:262` 的 `capture_.read(image_)`；:299 构造 `FrameInput`；:301 构造 `DiagnosticsRequest`；:319 调用 `prepare`。
 - **输入**：视频解码出的 `cv::Mat`、从 0 开始的 `id_`、源视频 `fps_`。
 - **输出**：`FrameInput.image` 是当前原图；`frame_id` 是成功读取序号；`timestamp_us = llround(frame_id×1e6/fps)`；`time_source=Unknown`。`DiagnosticsRequest` 记录本次运行 ID、范围、计时和是否采样详情。时间戳是视频 FPS 推算值，不是捕获时钟实测。
@@ -97,7 +99,7 @@ flowchart TD
 
 ### 3.3 公共入口检查序列、尺寸和必需预算
 
-- **实现文件**：`src/detection/pipeline/execution/detector.cpp`；[frame_sequence.hpp](../src/detection/pipeline/input/frame_sequence.hpp)/[frame_sequence.cpp](../src/detection/pipeline/input/frame_sequence.cpp)；[include/vision/types/frame_stamp.hpp](../include/vision/types/frame_stamp.hpp)。
+- **实现文件**：`src/detection/pipeline/execution/detector.cpp`；[frame_sequence.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/pipeline/input/frame_sequence.hpp)/[frame_sequence.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/pipeline/input/frame_sequence.cpp)；[include/vision/types/frame_stamp.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/frame_stamp.hpp)。
 - **调用位置**：`offline_runner.cpp:324 → detector.cpp:54`；:107 校验输入，:118 检查尺寸，:123 检查预算。
 - **输入**：`FrameInput` 和实例保存的上一合法 `FrameStamp`、原图尺寸。
 - **输出**：合法输入继续；格式非法、时间戳负值、时间源非法、帧号不严格增长或时间戳回退，返回 `FrameResult.status=INVALID_INPUT` 并清历史。时间戳相等允许进入，后续平滑会按 `ZERO_DT` 回退。尺寸变化清历史后处理当前帧；同尺寸换源/重播由调用方显式 `reset(InputChanged)`。
@@ -105,7 +107,7 @@ flowchart TD
 
 ### 3.4 预处理：保存原图，生成工作图
 
-- **实现文件**：[src/detection/preprocess/preprocess.hpp](../src/detection/preprocess/preprocess.hpp)/[preprocess.cpp](../src/detection/preprocess/preprocess.cpp)；[include/vision/types/detection/prepared_image.hpp](../include/vision/types/detection/prepared_image.hpp)。
+- **实现文件**：[src/detection/preprocess/preprocess.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/preprocess/preprocess.hpp)/[preprocess.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/preprocess/preprocess.cpp)；[include/vision/types/detection/prepared_image.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/detection/prepared_image.hpp)。
 - **调用位置**：`detector.cpp:141 → decode_stage.cpp:224` 的 `preprocess(input, config.preprocess)`。
 - **输入**：`FrameInput.image/frame_id/timestamp_us`、`PreprocessConfig`。
 - **输出**：`PreparedFrame.image_` 为缩放后的 BGR8；`original_image_` 为只读原图浅引用；`scale_x_/scale_y_` 保存映射；`original_white_threshold_` 保存原图取证阈值；主链组件另作步骤输出，兼容字段 `components_` 不回填。
@@ -121,7 +123,7 @@ flowchart TD
 
 ### 3.5 工作图白片提取
 
-- **实现文件**：[src/detection/geometry/observation/geometry_observation.hpp](../src/detection/geometry/observation/geometry_observation.hpp)/[geometry_observation.cpp](../src/detection/geometry/observation/geometry_observation.cpp)；[include/vision/types/detection/geometry_types.hpp](../include/vision/types/detection/geometry_types.hpp)。
+- **实现文件**：[src/detection/geometry/observation/geometry_observation.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/observation/geometry_observation.hpp)/[geometry_observation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/observation/geometry_observation.cpp)；[include/vision/types/detection/geometry_types.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/detection/geometry_types.hpp)。
 - **调用位置**：`runGeometrySteps` 的 `extractWhiteComponents`，产物为独立 `components`；旧探针包装可显式填兼容字段。
 - **输入**：`PreparedFrame.image_`（工作图）和 `GeometryConfig`。
 - **输出**：`vector<WhiteComponent>`，每片保存帧内 ID、工作图轮廓、面积、外接框和碰边标志。灰度阈值分割使用 `RETR_EXTERNAL/CHAIN_APPROX_SIMPLE`；这里尚未赋予模型片身份。
@@ -129,7 +131,7 @@ flowchart TD
 
 ### 3.6 形状观察与 L 拓扑候选
 
-- **实现文件**：`src/detection/geometry/observation/geometry_observation.cpp/.hpp`；[geometry_l_topology.hpp](../src/detection/geometry/observation/geometry_l_topology.hpp)/[geometry_l_topology.cpp](../src/detection/geometry/observation/geometry_l_topology.cpp)；[assignment_match_metrics.hpp](../src/detection/geometry/completion/assignment_match_metrics.hpp)。
+- **实现文件**：`src/detection/geometry/observation/geometry_observation.cpp/.hpp`；[geometry_l_topology.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/observation/geometry_l_topology.hpp)/[geometry_l_topology.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/observation/geometry_l_topology.cpp)；[assignment_match_metrics.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/completion/assignment_match_metrics.hpp)。
 - **调用位置**：`decode_stage.cpp:237` 的 `observeShapes`，其中调用 `observeLTopologies`。
 - **输入**：`WhiteComponent.contour_/component_id_`。
 - **输出**：`vector<ShapeObservation>`：来源 ID、简化多边形、凸凹转折、候选类别和多个 `LTopologyCandidate`。合法 L 候选保存真实六边轮廓和唯一凹点；不能仅凭顶点数把短 M 当 L。`supported_classes_` 是搜索候选类别，不是公开 `Detection.category`。
@@ -137,7 +139,7 @@ flowchart TD
 
 ### 3.7 生成三 L 父假设
 
-- **实现文件**：[src/detection/geometry/parent/geometry_matcher.hpp](../src/detection/geometry/parent/geometry_matcher.hpp)/[geometry_matcher.cpp](../src/detection/geometry/parent/geometry_matcher.cpp)；[geometry_anchor_evidence.hpp](../src/detection/geometry/parent/geometry_anchor_evidence.hpp)/[geometry_anchor_evidence.cpp](../src/detection/geometry/parent/geometry_anchor_evidence.cpp)。
+- **实现文件**：[src/detection/geometry/parent/geometry_matcher.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/parent/geometry_matcher.hpp)/[geometry_matcher.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/parent/geometry_matcher.cpp)；[geometry_anchor_evidence.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/parent/geometry_anchor_evidence.hpp)/[geometry_anchor_evidence.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/parent/geometry_anchor_evidence.cpp)。
 - **调用位置**：`decode_stage.cpp:238` 的 `generateGeometryHypotheses`。
 - **输入**：`ShapeObservation.source_component_id_/supported_classes_/l_topology_candidates_`；`MarkerGeometry.polygons` 的三 L 锚点。
 - **输出**：`GeometryBatch.hypotheses_`。每个假设包含三个 `ComponentAssignment`、模型到工作图的仿射矩阵、未计算残差 `-1`、待验证完整性和来源证据。组合枚举三观测 L 对三模型 L 的六种排列，再通过 `collect_observed_l_anchors/fitAnchorTuple` 枚举合法实际凹点元组。生产入口不直接采用探针局部 `fitFirstConcaveAnchorAffine` 的首凹点对照路径。
@@ -145,7 +147,7 @@ flowchart TD
 
 ### 3.8 验证父几何假设
 
-- **实现文件**：[src/detection/geometry/validation/geometry_validation.hpp](../src/detection/geometry/validation/geometry_validation.hpp)/[geometry_validation.cpp](../src/detection/geometry/validation/geometry_validation.cpp)。
+- **实现文件**：[src/detection/geometry/validation/geometry_validation.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/validation/geometry_validation.hpp)/[geometry_validation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/validation/geometry_validation.cpp)。
 - **调用位置**：`decode_stage.cpp:251` 的 `validateGeometryBatch`。
 - **输入**：生成的 `GeometryBatch`、模型顶点、对应 `WhiteComponent.contour_/area_/touches_border_`。
 - **输出**：新的 `GeometryBatch`；几何残差失败的假设删除，成功假设回填实测 `validation_residual_`。面积比异常或组件碰边标为 `CLEARLY_INCOMPLETE`，其余仍是 `PENDING_VALIDATION`；不选唯一父假设，保留搜索截断标志。
@@ -153,7 +155,7 @@ flowchart TD
 
 ### 3.9 M/S 一对一对应补全
 
-- **实现文件**：[src/detection/geometry/completion/geometry_assignment_completion.hpp](../src/detection/geometry/completion/geometry_assignment_completion.hpp)/[geometry_assignment_completion.cpp](../src/detection/geometry/completion/geometry_assignment_completion.cpp)；`assignment_match_metrics.hpp`。
+- **实现文件**：[src/detection/geometry/completion/geometry_assignment_completion.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/completion/geometry_assignment_completion.hpp)/[geometry_assignment_completion.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/geometry/completion/geometry_assignment_completion.cpp)；`assignment_match_metrics.hpp`。
 - **调用位置**：`decode_stage.cpp:280` 的 `completeSegmentedAssignments`。
 - **输入**：已验证的三 L 父假设、当前白片、六片模型和 `AssignmentCompletionConfig`。
 - **输出**：`GeometryBatch.segmented_assignments_ready_=true`，以及绑定 `L0/L2/L3/M1/S1a/S1b` 的分支。用完整边界、凹凸拓扑、方向和相对面积验证 M/S；同一白片不能占两个身份。已有 M/S 绑定也复验；父仿射和三 L 残差不重新估计。ready 表示补全阶段已执行，不保证有分支。
@@ -174,7 +176,7 @@ flowchart TD
 
 ### 3.10 对每个假设、每个物理角回查原图并拟合
 
-- **实现文件**：[src/detection/pipeline/decode/decode_stage.hpp](../src/detection/pipeline/decode/decode_stage.hpp)/[decode_stage.cpp](../src/detection/pipeline/decode/decode_stage.cpp)；[src/detection/corners/measurement/corner_resolver.hpp](../src/detection/corners/measurement/corner_resolver.hpp)/`corner_resolver.cpp`；[corner_observation.hpp](../src/detection/corners/observation/corner_observation.hpp)/[corner_observation.cpp](../src/detection/corners/observation/corner_observation.cpp)；[corner_edge_fit.hpp](../src/detection/corners/fitting/corner_edge_fit.hpp)/[corner_edge_fit.cpp](../src/detection/corners/fitting/corner_edge_fit.cpp)；[periodic_line_fit.hpp](../src/detection/corners/fitting/periodic_line_fit.hpp)/[periodic_line_fit.cpp](../src/detection/corners/fitting/periodic_line_fit.cpp)；[src/config/detector/corner_budget_validation.hpp](../src/config/detector/corner_budget_validation.hpp)。
+- **实现文件**：[src/detection/pipeline/decode/decode_stage.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/pipeline/decode/decode_stage.hpp)/[decode_stage.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/pipeline/decode/decode_stage.cpp)；[src/detection/corners/measurement/corner_resolver.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/measurement/corner_resolver.hpp)/`corner_resolver.cpp`；[corner_observation.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/observation/corner_observation.hpp)/[corner_observation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/observation/corner_observation.cpp)；[corner_edge_fit.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/fitting/corner_edge_fit.hpp)/[corner_edge_fit.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/fitting/corner_edge_fit.cpp)；[periodic_line_fit.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/fitting/periodic_line_fit.hpp)/[periodic_line_fit.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/fitting/periodic_line_fit.cpp)；[src/config/detector/corner_budget_validation.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/config/detector/corner_budget_validation.hpp)。
 - **调用位置**：`decode_stage.cpp:49` 建立本次 decode 的 `OriginalContourIndex`；:53 遍历假设，:85 调用 `resolveObservedCorners`。resolver 对 P0～P3 依次执行 `index.observe → 模型边投影到原图 → fitObservedEdgePair`，不是先量完所有轮廓再统一拟合。
 - **输入**：原图/阈值/像素中心映射、显式组件列表与 OriginalContourSource；`GeometryHypothesis.assignments_/affine_transform_`；物理角绑定和 `CornerConfig`。
 - **输出**：成功为 `CornerResolution.measurement_`，内含原图 `P0～P3` 四点和四份 `CornerEvidence`；任一角失败，整个 measurement 为空并附原因。
@@ -202,7 +204,7 @@ flowchart TD
 
 ### 3.11 四角屏幕排序
 
-- **实现文件**：`src/detection/corners/ordering/screen_order.cpp`、[screen_order.hpp](../src/detection/corners/ordering/screen_order.hpp)、[corner_types.hpp](../include/vision/types/detection/corner_types.hpp)。
+- **实现文件**：`src/detection/corners/ordering/screen_order.cpp`、[screen_order.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/ordering/screen_order.hpp)、[corner_types.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/detection/corner_types.hpp)。
 - **调用位置**：`decode_stage.cpp:102` 的 `orderScreenCorners`；resolver 返回前也用同一入口检查四角是否成有效环。
 - **输入**：`CornerMeasurement.physical_corners_`（P0～P3，原图 double 坐标）。
 - **输出**：`ScreenOrderResult.screen_order_`，包含 `screen_points_`（LT/RT/RB/LB）、`physical_to_screen_`（P → 屏幕下标）和 `screen_order_tie_`；失败时为空并附原因。
@@ -210,7 +212,7 @@ flowchart TD
 
 ### 3.12 四角证据与最终几何校验
 
-- **实现文件**：[src/detection/corners/validation/detection_validator.hpp](../src/detection/corners/validation/detection_validator.hpp)/[detection_validator.cpp](../src/detection/corners/validation/detection_validator.cpp)；[corner_evidence_validation.hpp](../src/detection/corners/validation/corner_evidence_validation.hpp)/[corner_evidence_validation.cpp](../src/detection/corners/validation/corner_evidence_validation.cpp)；`periodic_line_fit.cpp/.hpp`。
+- **实现文件**：[src/detection/corners/validation/detection_validator.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/validation/detection_validator.hpp)/[detection_validator.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/validation/detection_validator.cpp)；[corner_evidence_validation.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/validation/corner_evidence_validation.hpp)/[corner_evidence_validation.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/validation/corner_evidence_validation.cpp)；`periodic_line_fit.cpp/.hpp`。
 - **调用位置**：`decode_stage.cpp:93` 检查证据属于当前帧；:110 调用 `validateDetectionGeometry`，内部逐角调用 `validateCornerEvidence`。
 - **输入**：`CornerMeasurement.physical_corners_/evidence_`、`ScreenOrder`、`frame.original_image_.size()`；这里传原图尺寸。
 - **输出**：`DetectionValidation.valid_/rejection_reason_`，不另造角点。通过后才将 measurement 放入本帧待归并集合。
@@ -221,7 +223,7 @@ flowchart TD
 
 ### 3.13 多假设语义归并
 
-- **实现文件**：[src/detection/corners/semantics/semantic_resolver.hpp](../src/detection/corners/semantics/semantic_resolver.hpp)/[semantic_resolver.cpp](../src/detection/corners/semantics/semantic_resolver.cpp)。
+- **实现文件**：[src/detection/corners/semantics/semantic_resolver.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/semantics/semantic_resolver.hpp)/[semantic_resolver.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/semantics/semantic_resolver.cpp)。
 - **调用位置**：`decode_stage.cpp:132` 的 `resolveSemantics(measurements, search_truncated, config)`。
 - **输入**：所有通过前述检查的 `CornerMeasurement` 和 `GeometryBatch.resource_truncated_` 传来的 `search_truncated`。
 - **输出**：`SemanticResolution.geometry_consistent_`、`orientation_unique_`、`retained_measurements_`、`rejection_reason_`。先比较无标签循环四点集合；一致时选择四角 `evidence.error_` 总和最小的已有测量，残差平局按稳定来源 ID 选择，不平均点。再判断物理对应是否一致；截断搜索强制使方向不唯一。
@@ -230,7 +232,7 @@ flowchart TD
 
 ### 3.14 float 发布当前 Detection
 
-- **实现文件**：[src/detection/corners/publication/detection_publication.hpp](../src/detection/corners/publication/detection_publication.hpp)/[detection_publication.cpp](../src/detection/corners/publication/detection_publication.cpp)；`screen_order.cpp/.hpp`。
+- **实现文件**：[src/detection/corners/publication/detection_publication.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/publication/detection_publication.hpp)/[detection_publication.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/corners/publication/detection_publication.cpp)；`screen_order.cpp/.hpp`。
 - **调用位置**：`decode_stage.cpp:147` 的 `publishFloatDetection`；:159 提交整个 `pending` 集合。
 - **输入**：归并保留的 `CornerMeasurement`、`orientation_unique_`、原图尺寸。
 - **输出**：`optional<Detection>`；先把物理 double 点转 float，再按舍入后的点重新排序，得到 `corners` 和该四角的 `bbox`。只有方向唯一才填 `attributes.orientation`。`category=Unknown`、`confidence/marker_code=nullopt`、`quality_flags=0`。
@@ -238,7 +240,7 @@ flowchart TD
 
 ### 3.15 当前目标选择、平滑及 FrameResult 装配
 
-- **实现文件**：[src/detection/temporal/assembly/stabilize_stage.hpp](../src/detection/temporal/assembly/stabilize_stage.hpp)/[stabilize_stage.cpp](../src/detection/temporal/assembly/stabilize_stage.cpp)；[temporal_stabilizer.hpp](../src/detection/temporal/stabilization/temporal_stabilizer.hpp)/[temporal_stabilizer.cpp](../src/detection/temporal/stabilization/temporal_stabilizer.cpp)；[temporal_geometry.hpp](../src/detection/temporal/correspondence/temporal_geometry.hpp)/[temporal_geometry.cpp](../src/detection/temporal/correspondence/temporal_geometry.cpp)；[temporal_types.hpp](../include/vision/types/detection/temporal_types.hpp)；[display_history.hpp](../src/detection/temporal/display/display_history.hpp)/[display_history.cpp](../src/detection/temporal/display/display_history.cpp)。
+- **实现文件**：[src/detection/temporal/assembly/stabilize_stage.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/assembly/stabilize_stage.hpp)/[stabilize_stage.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/assembly/stabilize_stage.cpp)；[temporal_stabilizer.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/stabilization/temporal_stabilizer.hpp)/[temporal_stabilizer.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/stabilization/temporal_stabilizer.cpp)；[temporal_geometry.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/correspondence/temporal_geometry.hpp)/[temporal_geometry.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/correspondence/temporal_geometry.cpp)；[temporal_types.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/detection/temporal_types.hpp)；[display_history.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/display/display_history.hpp)/[display_history.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/detection/temporal/display/display_history.cpp)。
 - **调用位置**：`detector.cpp:142 → finalizeDecodedFrame`；`stabilize_stage.cpp:60` 调用 `temporal.update`，:105 调用 `display.update(std::nullopt, stamp)`。
 - **输入**：`DecodeStageResult.status/detections/diagnostics`、当前 `FrameStamp`、原图尺寸，以及实例的选择参考、平滑和显示文字历史。
 - **输出**：`FrameResult.detections` 保留本次原始结果；`tracks` 当前最多一项，`detection_index` 引用本次检测，`result` 为当前 raw 或通过限制检查的平滑点；`display_state` 在生产路径为空，因为没有当前语义文字输入。
@@ -263,7 +265,7 @@ flowchart TD
 
 ### 3.16 返回公共结果并取出同次调用的 FrameRecord
 
-- **实现文件**：[include/vision/observability/frame_record.hpp](../include/vision/observability/frame_record.hpp)、[timing.hpp](../src/observability/timing/timing.hpp)/[timing.cpp](../src/observability/timing/timing.cpp)；[src/observability/context/diagnostics_context.hpp](../src/observability/context/diagnostics_context.hpp)/[diagnostics_context.cpp](../src/observability/context/diagnostics_context.cpp)；`detector.cpp`、`detector_diagnostics_access.hpp`、`src/app/offline/offline_runner.cpp`。
+- **实现文件**：[include/vision/observability/frame_record.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/observability/frame_record.hpp)、[timing.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/timing/timing.hpp)/[timing.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/timing/timing.cpp)；[src/observability/context/diagnostics_context.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/context/diagnostics_context.hpp)/[diagnostics_context.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/context/diagnostics_context.cpp)；`detector.cpp`、`detector_diagnostics_access.hpp`、`src/app/offline/offline_runner.cpp`。
 - **调用位置**：`detector.cpp:63` 开始记录、:99 的 `context.output` 观察返回值；局部 Completion 析构收尾。App 在 `offline_runner.cpp:335` 调用 `take`，:336 用完整公共调用耗时替换 ProcessTotal，:371 填 Capture 槽。
 - **输入**：各阶段现成载荷、计时/事件和最终 `FrameResult`；不重新运行算法。
 - **输出**：`FrameRecord` 含帧身份、时间来源、尺寸、阶段计时、阶段数量、原因、reset 快照；只有选中详情帧复制 `output` 和 `StageDetails`。`FrameResult.diagnostics` 仍是公共字符串列表，与该记录不是同一个接口。
@@ -282,7 +284,7 @@ flowchart TD
 
 ### 3.17 渲染与等待
 
-- **实现文件**：[src/app/rendering/debug_renderer.hpp](../src/app/rendering/debug_renderer.hpp)/[debug_renderer.cpp](../src/app/rendering/debug_renderer.cpp)；[display_session.hpp](../src/app/display/display_session.hpp)/[display_session.cpp](../src/app/display/display_session.cpp)；[display_probe.cpp](../tools/apps/display/display_probe.cpp)；`offline_runner.cpp`。
+- **实现文件**：[src/app/rendering/debug_renderer.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/rendering/debug_renderer.hpp)/[debug_renderer.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/rendering/debug_renderer.cpp)；[display_session.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/display/display_session.hpp)/[display_session.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/display/display_session.cpp)；[display_probe.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/tools/apps/display/display_probe.cpp)；`offline_runner.cpp`。
 - **调用位置**：`offline_runner.cpp:360 → render_and_wait`；:389 调用 `renderDebugFrame`。baseline 模式 :381 直接跳过渲染。
 - **输入**：当前原图、`FrameResult`、同帧 `FrameRecord`、`RenderConfig`。
 - **输出**：原图 clone 上的当前 `cv::Mat overlay` 和 Visualize/Wait 计时；只在 `DETECTED` 且帧号一致时画 raw/stable 四角。无方向属性显示 UNKNOWN；历史文字若存在，只画文字及来源/年龄。渲染不改输入像素或检测结果。
@@ -305,7 +307,7 @@ D 的 raw/stable 默认开关不导致 baseline 绘图；该模式整个渲染�
 
 ### 3.18 逐帧记录和可选图像/视频导出
 
-- **实现文件**：[src/observability/recording/diagnostics_recorder.hpp](../src/observability/recording/diagnostics_recorder.hpp)/[diagnostics_recorder.cpp](../src/observability/recording/diagnostics_recorder.cpp)；[run_report.hpp](../src/observability/reporting/run_report.hpp)/[run_report.cpp](../src/observability/reporting/run_report.cpp)；[src/app/export/video_exporter.hpp](../src/app/export/video_exporter.hpp)/[video_exporter.cpp](../src/app/export/video_exporter.cpp)；`offline_runner.cpp`。
+- **实现文件**：[src/observability/recording/diagnostics_recorder.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/recording/diagnostics_recorder.hpp)/[diagnostics_recorder.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/recording/diagnostics_recorder.cpp)；[run_report.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/reporting/run_report.hpp)/[run_report.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/observability/reporting/run_report.cpp)；[src/app/export/video_exporter.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/export/video_exporter.hpp)/[video_exporter.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/export/video_exporter.cpp)；`offline_runner.cpp`。
 - **调用位置**：`offline_runner.cpp:359` 更新结果指纹；:361 进入 `export_frame`；:432 写选中帧图片；:443 写视频；:444 提交记录；:446 单独补 Export 完成计时。
 - **输入**：`FrameRecord`、当前原图和 overlay、`FrameResult`、运行目录。
 - **输出**：所有提交帧进入 `RunSummary`，选中详情帧进入 `frames.jsonl`；Export 完成值进入 `export_timings.jsonl`，不会递归塞回正在计时的本帧 JSON。启用证据图片时写 original/overlay PNG；视频逐帧写 `overlay.partial.mp4`。
@@ -314,7 +316,7 @@ D 的 raw/stable 默认开关不导致 baseline 绘图；该模式整个渲染�
 
 ### 3.19 输入结束与运行级收尾（每次运行一次）
 
-- **实现文件**：[src/app/completion/input_completion.hpp](../src/app/completion/input_completion.hpp)/[input_completion.cpp](../src/app/completion/input_completion.cpp)；`offline_runner.cpp`、`video_exporter.cpp/.hpp`、`run_report.cpp/.hpp`、[run_console.hpp](../src/app/reporting/run_console.hpp)/[run_console.cpp](../src/app/reporting/run_console.cpp)。
+- **实现文件**：[src/app/completion/input_completion.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/completion/input_completion.hpp)/[input_completion.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/completion/input_completion.cpp)；`offline_runner.cpp`、`video_exporter.cpp/.hpp`、`run_report.cpp/.hpp`、[run_console.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/reporting/run_console.hpp)/[run_console.cpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/src/app/reporting/run_console.cpp)。
 - **调用位置**：`offline_runner.cpp:457` 的 `finish_run`；:460 调用 `evaluate_input_completion`。
 - **输入**：成功读取数、预期数、用户停止标志、审计子集剩余项以及已累计的 `RunSummary`。
 - **输出**：`InputCompletion` 明确覆盖是否验证、不完整及原因；写 manifest、summary 和补充导出耗时，必要时写 `INCOMPLETE.json`；异常失败由 recorder 留 `FAILED.json`。视频关闭后读回核验帧数/尺寸/源帧周期，完整输入才将 partial 文件发布为 `overlay.mp4`。
@@ -327,7 +329,7 @@ D 的 raw/stable 默认开关不导致 baseline 绘图；该模式整个渲染�
 
 ### 4.1 Detection：一个当前几何检测
 
-定义：[include/vision/types/detector_types.hpp](../include/vision/types/detector_types.hpp):82。创建者：`publishFloatDetection`；稳定层复制为另一个 Detection 后仅更新稳定几何与映射。
+定义：[include/vision/types/detector_types.hpp](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/include/vision/types/detector_types.hpp):82。创建者：`publishFloatDetection`；稳定层复制为另一个 Detection 后仅更新稳定几何与映射。
 
 | 字段及类型 | 含义、当前装什么 | 谁填充 | 下游谁用 |
 | --- | --- | --- | --- |
@@ -887,9 +889,9 @@ loadMarkerGeometry 校验版本和必需节点；独立的 `validateMarkerGeomet
 
 提示要求参考的 `src/tushenghao/submissions/REPORT.md` 在当前工作区不存在；**其 §1 内容及与当前代码的逐项差异未确认**。本文采用中文系统概述、执行阶段和逐字段接口表，事实依据当前源码及配置，不猜测该报告内容。现有 112 文档可说明历史路径命名，但当前路由仍以 `corner_edge_fit.cpp` 为准。
 
-当前 `src/detection` 只输出二维检测／时序结果，不隐式读取相机标定或调用 PnP。独立 `pose_app` 从现行 G2 配置读取 K/dist 与单位，消费 raw 点对做平面位姿求解；其来源、坐标和现行空预算见 [G2](g2.md)。这不代表真实尺寸／硬件确认已经通过，检测与位姿入口之间没有暗接。
+当前 `src/detection` 只输出二维检测／时序结果，不隐式读取相机标定或调用 PnP。独立 `pose_app` 从现行 G2 配置读取 K/dist 与单位，消费 raw 点对做平面位姿求解；其来源、坐标和现行空预算见 [G2](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/g2.md)。这不代表真实尺寸／硬件确认已经通过，检测与位姿入口之间没有暗接。
 
-`MarkCategory` 当前只有 Unknown，后续类别全集、marker_code 编码方案和 confidence 的评分定义**未确认**；严格方向输出差异的后续修复方案同样**未确认**。历史“112 恢复”的性能／检出率结论保留原时点；本轮布局的实际验证见 [重构记录](restructure-changes.md)，不将字节一致性回归当作新增硬件验收。
+`MarkCategory` 当前只有 Unknown，后续类别全集、marker_code 编码方案和 confidence 的评分定义**未确认**；严格方向输出差异的后续修复方案同样**未确认**。历史“112 恢复”的性能／检出率结论保留原时点；本轮布局的实际验证见 [重构记录](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/restructure-changes.md)，不将字节一致性回归当作新增硬件验收。
 
 主链角点步骤同时交付同一 double 四角的 ScreenOrder，几何验证和语义归并显式复用；独立 resolver/semantic 入口仍自行核验，float 发布仍另作排序。成功／失败工厂统一状态、optional 与拒绝原因。绑定验证每次只投影一次，面积检查消费同一投影计量；M/S 廉价面积筛查把已算面积交给完整计量，独立计量入口保留坏输入检查。身份查找统一由 geometry_types.hpp 的只读函数按 ID 处理，重复所查 ID 的原拒绝与旧 fixture 未填来源的入口解释保持。
 

@@ -18,8 +18,7 @@ int main()
         const auto spread = p.estimate_->translation_spread_m2_;
         require(cv::checkRange(cv::Mat(spread)) && cv::norm(cv::Mat(spread - spread.t())) == 0,
                 "translation spread is not finite/symmetric");
-        mark::detector::FrameResult absent; absent.frame_id_ = stamp.frame_id_; absent.timestamp_us_ = stamp.received_us_;
-        absent.status_ = mark::detector::Status::NOT_DETECTED;
+        mark::detector::FrameResult absent;
         require(!solver.estimate_mark(absent, 0, cfg.camera_.image_size_, stamp).estimate_,
                 "missing target conflated with estimate or solver failure");
         auto noisy = xy;

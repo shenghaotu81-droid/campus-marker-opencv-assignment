@@ -1,6 +1,8 @@
 # 视觉瘦身与 match-only 文档索引
 
-当前最新：[G2位姿状态与输出收尾报告](POSE_STATUS_FINALIZATION_REPORT.md)、[flow-guide](flow-guide.md)。G2仅有“有估计/无估计”，候选留在内部；G4接名义平移和分歧矩阵，G3只看G4输出。位姿文件schema6。
+> 保留 `4d4aac9` 位姿收尾及更早阶段的索引。现行入口见[文档索引](INDEX.md)。
+
+当时入口：[G2位姿状态与输出收尾报告](POSE_STATUS_FINALIZATION_REPORT.md)、[flow-guide](flow-guide.md)。G2仅有“有估计/无估计”，候选留在内部；G4接名义平移和分歧矩阵，G3只看G4输出。位姿文件schema6。
 
 上一轮交付（a392bd4快照）：[单候选拟合与156项瘦身报告](SINGLE_CANDIDATE_SLIMMING_REPORT.md)、[逐项落实表](THRESHOLD_GATE_LABEL_IMPLEMENTATION.md)、[flow-guide](flow-guide.md)、[规则v2](MATCH_ONLY_RULES.md)。1676帧：1088检测/4352角、PnP RMSE中位/P95/最大0.357573/0.690671/0.926320px。G2保留两解并给名义测量，G4联合改为接收Ambiguous并消费分歧；不再沿用1.10/0.25/Unique-only资格。生产profile为空，条件回放不等于实测速度标定。
 

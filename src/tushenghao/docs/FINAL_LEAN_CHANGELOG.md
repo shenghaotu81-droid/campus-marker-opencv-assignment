@@ -57,4 +57,4 @@
 | 期望输出 | SHA-256 |
 |---|---|
 | [observations.yaml.gz](validation/final-lean/observations.yaml.gz) | `5286f978ce96dc23ee8f626e654c547099f6481c5a9049e95f7772c85d10d2b8` |
-| [tracks.yaml.gz](validation/final-lean/tracks.yaml.gz) | `5ffe3ad9d3a28827eb29dfb71df7880043443dea8f157f519b9adc1842fec2e2` |
+| [tracks.yaml.gz](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/7f818ec/src/tushenghao/docs/validation/final-lean/tracks.yaml.gz) | `5ffe3ad9d3a28827eb29dfb71df7880043443dea8f157f519b9adc1842fec2e2` |

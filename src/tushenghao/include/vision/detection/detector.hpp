@@ -28,6 +28,6 @@ namespace mark::detector
         // 头文件只露一个指针，真正的实现藏在 detector.cpp 里
         // 好处：改内部实现不用重新编译所有包含这个头文件的地方（编译防火墙）；代价：多一次堆分配和一层指针间接
         struct Impl;  // 保存配置和上一帧的帧号及时间戳，用于检查帧序。
-        std::unique_ptr<Impl> impl_; // 构造函数体：impl_ = std::make_unique<Impl>() 先在堆上建 Impl，再 impl_->config_ = std::move(config_) 把配置移进去
+        std::unique_ptr<Impl> impl_;
     };
 }

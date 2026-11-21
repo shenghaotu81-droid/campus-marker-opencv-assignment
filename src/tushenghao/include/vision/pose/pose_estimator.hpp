@@ -22,7 +22,7 @@ namespace mark::pose
                                       const CaptureStamp &) const;
         // 通用平面位姿核心（IPPE）
         // 参数为四个米制模型点、四个像素角点、图像尺寸和帧戳。
-        // 实现：调 cv::solvePnPGeneric(..., SOLVEPNP_IPPE)，拿到两个候选解，选 RMSE 最小的当名义解、算 S，包成 PoseObservation
+        // 最多取得两个候选，逐个复核后选择名义解并计算位置分歧。
         PoseObservation estimate_planar(const std::array<cv::Point3d, 4> &,
                                         const std::array<cv::Point2d, 4> &, cv::Size,
                                         const CaptureStamp &) const;

@@ -4,6 +4,6 @@
 
 namespace mark::tracking::detail
 {
-    // 工具函数：检查矩阵是不是正定（用来验算 P 的正定性，不通过就抛 TRACK_COVARIANCE_NOT_POSITIVE_DEFINITE）
+    // 矩阵有限、近似对称且严格正定时返回 true。
     bool positive_definite(const cv::Mat &);
 }

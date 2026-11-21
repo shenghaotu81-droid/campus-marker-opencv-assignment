@@ -1,4 +1,4 @@
-// 只读IPPE计数：直接调用与Pose相同的求解器/数学复核，不向生产插入trace。
+// 独立调用 OpenCV IPPE 和生产几何复核，统计录像中的候选数。
 #include "vision/detection/detector.hpp"
 #include "vision/config/pose_config.hpp"
 #include "vision/config/detector_config.hpp"

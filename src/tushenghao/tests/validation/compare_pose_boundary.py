@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare a392bd4's candidate stream with the current single-estimate boundary."""
+"""Compare a392bd4 with the schema-6 pose boundary archived at 4d4aac9."""
 import argparse
 import collections
 import gzip

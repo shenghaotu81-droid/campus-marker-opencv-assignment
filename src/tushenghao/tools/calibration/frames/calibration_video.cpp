@@ -20,8 +20,6 @@ bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &c
 
     info.height_ = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
 
-    info.frame_count_ = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
-
     return true;
 }
 
@@ -29,12 +27,6 @@ bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &c
 bool extract_frames_by_list(cv::VideoCapture &capture, const std::vector<int> &frame_list_,
                             std::vector<SampledFrame> &frames_)
 {
-    // 没有指定帧时直接跳过
-    if (frame_list_.empty())
-    {
-        return true;
-    }
-
     for (int frame_index : frame_list_)
     {
         capture.set(cv::CAP_PROP_POS_FRAMES, frame_index);

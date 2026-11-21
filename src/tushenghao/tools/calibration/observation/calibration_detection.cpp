@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-// 根据标定板参数生成3D世界坐标点(static 表示它只在这个文件里用，不对外暴露)
+// 按行列和间距生成板坐标系中的平面点。
 static std::vector<cv::Point3f> create_object_points(const CalibrationConfig &config)
 {
     std::vector<cv::Point3f> object_points_;
