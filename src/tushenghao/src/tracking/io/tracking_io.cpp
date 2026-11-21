@@ -35,8 +35,8 @@ namespace mark::tracking
     state: MEASURED
     state_time_us: "1700000000000000"
     last_measurement_stamp:
-      frame_id: 42
-      received_us: 1700000000000000
+      frame_id: "42"
+      received_us: "1700000000000000"
     position_m: !!opencv-matrix
       rows: 3
       cols: 1

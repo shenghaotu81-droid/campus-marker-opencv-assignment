@@ -13,8 +13,7 @@ namespace mark::tracking
         return s == TrackState::Measured ? "MEASURED" : "COASTING";
     }
 
-    // 匿名 namespace 里三个小 helper
-    // 只给这个文件内部用（State::advance 调它们）
+    // elapsed 只供本文件的 State::advance 使用。
     namespace
     {
         // elapsed(a, b)：算两个时间戳（微秒，int64_t）的差，返回秒（double）
@@ -28,7 +27,7 @@ namespace mark::tracking
     // 跟踪器的内部状态 + 干活的方法：
     // filter_：卡尔曼滤波器（detail::CvFilter）；live_ / confirmed_：轨迹是否存活、是否已确认；id_ / next_id_：当前 track id 和下一个 id 的计数器；
     // state_time_、last_input_、last_measurement_、seed_：时间轴和最近的输入/量测；
-    // advance(f, config)：每帧真正推进的方法（预测/更新、状态机、NIS 门都在里面）
+    // advance 按帧推进状态。多个量测按 NIS 排序，最小分数平局时跳过更新。
     struct State
     {
         // State 的成员
@@ -36,7 +35,7 @@ namespace mark::tracking
         // 存着轨迹的状态估计（位置+速度，6 维）和协方差 P
         // predict 推进它，correct/bootstrap/initialize 更新它
         detail::CvFilter filter_;
-        // live_（默认 false）——有没有存活的轨迹；false = 没轨迹（还没见过量测，或被 reset 了）；true = 正在跟一条轨迹
+        // live_ 初始为 false，建轨后为 true。
         // confirmed_（默认 false）——轨迹确不确认；第一帧量测建轨时 live_ = true、confirmed_ = false；第二帧量测 bootstrap 算出速度后才置 true；只有确认了的轨迹才对外报速度
         bool live_ = false, confirmed_ = false;
         // id_（默认 0）——当前轨迹的编号，建轨时 id_ = next_id_++ 分配
@@ -44,9 +43,7 @@ namespace mark::tracking
         uint64_t id_ = 0, next_id_ = 1;
         // state_time_（默认 0）——滤波器当前状态的时间（微秒，采样时间）；predict 算 dt 靠它（dt = now - state_time_），每帧更新为 now
         int64_t state_time_ = 0;  // 滤波器自己的时钟
-        // last_input_（optional<CaptureStamp>）——上一帧输入的 stamp
-        // 给 same_context 检查和重复/乱序检查用
-        // 还没处理过任何帧时是空的；reset和 CONTEXT_RESET 会把它清空
+        // 上一帧被接受的帧戳，用于检查重复和乱序。首次接受输入前为空。
         std::optional<pose::CaptureStamp> last_input_; // 上一个被接受的输入帧的完整 stamp；每帧被接受就更新，不管有没有量测
         // last_measurement_（CaptureStamp）——上一次有量测那帧的 stamp（也就是上次真正更新滤波器的那帧，不是只预测）
         // bootstrap 算 dt 用它（种子量测到当前量测的时间差），输出的 TargetTrack 里也记它
@@ -62,9 +59,7 @@ namespace mark::tracking
             out.input_stamp_ = f.stamp_; // 先记录结果的帧身份（无论接受/拒绝）
 
             // 时间戳校验（INVALID_FRAME_STAMP）
-            // 验帧的时间字段：received 为负、曝光时间戳晚于 received、时间不确定度非有限或为负，任一成立就拒绝这一帧，记事件直接 return（不接受输入、不建轨迹）
-            // 防坏时间数据污染滤波时间轴
-            // 时间字段来自帧输入；排除负时刻、曝光倒置和非法误差界，防止污染滤波时间轴。
+            // 拒绝负的 received_us_，避免坏数据进入滤波时间轴。
             const auto &stamp = f.stamp_;
             if (stamp.received_us_ < 0)     // 收到时间是负数，时间戳本身就是坏的（微秒数不可能为负）
             {
@@ -73,19 +68,17 @@ namespace mark::tracking
             }
 
             // 重复/乱序帧检查（DUPLICATE_OR_REORDERED_FRAME）
-            // last_input_存在且帧号没递增、采样时间没递增、或 received 时间倒退，拒绝这一帧，记事件直接 return
-            // 波按时间顺序推进，乱序帧会搞坏时间轴。
+            // 帧号和采样时刻都必须严格递增。
             if (last_input_ &&  // last_input_ 存在才检查（第一帧没有上一帧，直接放行）
                 (f.stamp_.frame_id_ <= last_input_->frame_id_ || // 帧号没递增；等于就是重复帧（同一帧来了两次），小于就是乱序（后面的帧先到了）；帧号应该是严格递增的
-                 detail::sample_time(f.stamp_) <= detail::sample_time(*last_input_) ||  // 采样时间没递增；sample_time 是量测的有效时刻（有曝光时间戳就用曝光的，没有就用 received；滤波器用的时间——predict 的 dt、bootstrap 的 dt 用它算的）；等于说明量测时刻没前进（dt = 0，没新信息），小于说明时间倒流了
-                 f.stamp_.received_us_ < last_input_->received_us_))  // 收到时间倒退了；帧到达的顺序乱了
+                 detail::sample_time(f.stamp_) <= detail::sample_time(*last_input_))) // 采样时刻使用 received_us_。
             {
                 out.events_.push_back("DUPLICATE_OR_REORDERED_FRAME");
                 return out; // 这帧等于没来过，状态原样保留
             }
 
             // 接受输入
-            // 先存 previous（给预测算时间界用），last_input_ 更新为这帧，input_accepted_ = true（step 据此决定提交）
+            // 记录当前输入，并标记接受，由 step 决定是否提交。
             last_input_ = f.stamp_; // 更新
             out.input_accepted_ = true; // 标记接受（step 决定提交的开关：true 才把 candidate 移回 impl_->state_）
             // 如果没有 profile（!c.profile_），没东西可跟踪，直接 return
@@ -96,7 +89,7 @@ namespace mark::tracking
             // 预测
             // 有存活轨迹才做：filter_.predict(dt, ...) 把滤波器状态推到这帧的时间
             // 只要 live_ 是 true，每帧都 predict——有量测是"predict + correct"，没量测是"只 predict、不 correct"，也就是 coast 往前滑
-            // dt 是距上次状态时间的间隔，时间不确定度（bound）也传进去；state_time_ 更新为现在
+            // dt 从上次状态时刻算起，预测后将 state_time_ 更新到当前时刻。
             const auto &p = *c.profile_; // 取跟踪配置（R/Q 参数那些）
             const auto now = detail::sample_time(f.stamp_); // 这帧的采样时间（量测的有效时刻）
             // if (live_) 才预测——没有存活的轨迹就没东西可推（滤波器还没初始化，第一帧量测在后面才会初始化它）
@@ -108,10 +101,8 @@ namespace mark::tracking
             }
             state_time_ = now; // 滤波器的状态时间更新为现在（不管有没有轨迹都执行——这样即使这帧没轨迹，state_time_ 也跟着帧走，下次建轨之后 dt 才算得对）
 
-            // 适配量测 + 时间不确定度放大 R
-            // adapt_measurements 把这帧的位姿观测转成滤波器能用的位置量测；
-            // 再对每个量测，如果有时间不确定度（b > 0），用 time_augmented_noise 把 R 放大（时间戳不准 → 目标在这段时间里动了 → 位置更不确定）
-            auto measurements = detail::adapt_measurements(f, c); // 把这帧的位姿观测转成滤波器能用的位置量测（按 source/target 筛选，取位置 t_m_ 和 R）
+            // 按来源筛选位姿观测并转成位置量测及噪声 R。
+            auto measurements = detail::adapt_measurements(f, c);
 
             // 更新
             // 没存活轨迹：恰好 1 个量测就新建轨迹（分 id、seed 滤波器、记 TRACK_CREATED，未确认）
@@ -234,7 +225,7 @@ namespace mark::tracking
         try
         {
             // 状态跨帧保持的逻辑
-            // 把当前 state_ 拷一份叫 candidate，在副本上调 advance（真正的每帧推进——预测/更新、状态机、NIS 门）
+            // 在状态副本上推进预测和量测更新。NIS 最小分数平局时跳过更新。
             auto candidate = impl_->state_; // 拷副本（把当前状态拷一份）
             auto out = candidate.advance(f, impl_->config_); // 在副本上推进（预测/更新、NIS、状态机），不碰原状态
             // 只有 out.input_accepted_ 是 true，才把副本移回 impl_->state_，这一帧的推进才算生效；否则副本直接丢掉（结果输出照常，但是是空的），跟踪器保持旧状态

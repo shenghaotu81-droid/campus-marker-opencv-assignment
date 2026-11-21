@@ -36,7 +36,6 @@ namespace mark::pose
         cv::Mat K_, dist_;
         // image_size_就是标定时的图像尺寸（宽×高），标定数据和图像尺寸（分辨率）需绑定
         cv::Size image_size_;
-        std::string camera_id_;
     };
 
     struct TagConfig

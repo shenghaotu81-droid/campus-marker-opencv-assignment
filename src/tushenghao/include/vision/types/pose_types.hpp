@@ -8,12 +8,6 @@
 
 namespace mark::pose
 {
-    enum class PixelDomain
-    {
-        Unknown,
-        RawDistorted
-    };
-
     struct CaptureStamp
     {
         // 帧号：排序/去重

@@ -27,7 +27,6 @@ namespace mark::pose
         cal["distortion_coefficients"] >> c.camera_.dist_;
         c.camera_.image_size_ = {config_value::integer(cal["image_width"]),
                                  config_value::integer(cal["image_height"])};
-        c.camera_.camera_id_ = config_value::text(camera["camera_id"]);
 
         const double scale = config_value::text(geometry["source_unit"]) == "mm" ? 0.001 : 1.0;
         const auto points = geometry["model_points"];

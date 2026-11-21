@@ -1,15 +1,13 @@
-// 把同帧、同身份的合法名义位置转为量测，基础噪声叠加位置分歧矩阵。
+// 按来源筛选合法名义位置，量测噪声为基础 R 加位姿求解给出的位置分歧 S。
 #include "measurement/measurement_adapter.hpp"
 #include "filter/kalman_cv.hpp"
 #include <set>
 
 namespace mark::tracking::detail
 {
-    // 返回这一帧量测的有效时刻（微秒，int64_t）
-    // 滤波器要的是“量测发生在什么时候”，不是“帧什么时候到”
+    // 量测使用 received_us_ 作为采样时刻。离线值由帧号和 FPS 推算。
     int64_t sample_time(const pose::CaptureStamp &s)
     {
-        // 没有就退回 received_us_——帧收到的时刻(离线：帧号推导出来的名义时间)
         return s.received_us_;
     }
 
@@ -19,7 +17,7 @@ namespace mark::tracking::detail
     {
         std::vector<PositionMeasurement> out;
         std::set<size_t> seen, duplicates;
-        // 第一遍找重复：扫一遍观测，把符合 source/target/有估计的那些的 detection_index_ 记下来
+        // 先在来源匹配且有估计的观测中标记重复检测索引。
         for (const auto &p : f.observations_)
             if (p.source_ == c.source_ && p.estimate_)
                 // std::set::insert：std::pair<iterator, bool> insert(const value_type& val);
@@ -28,7 +26,7 @@ namespace mark::tracking::detail
                     // 同一个 detection_index_ 出现两次，说明同一帧里同一个检测被重复报了，两次都记进 duplicates——第二遍里这两个都会被丢掉（同一个东西报两次，宁可都不要）
                     duplicates.insert(p.detection_index_);
 
-        // 第二遍筛选 + 组装：每个观测过五道关，任何一道不过就 continue 跳过
+        // 再排除来源不匹配和索引重复的观测，校验估计后组装量测。
         for (const auto &p : f.observations_)
         {
             // source_ 必须是 "MARK"（TAG 的观测在这里就被滤掉了，不进卡尔曼）
@@ -43,7 +41,7 @@ namespace mark::tracking::detail
                 measurement->pose_.t_m_[2] <= 0 ||
                 !cv::checkRange(cv::Mat(measurement->translation_spread_m2_)))
                 continue;
-            // 过关的就组装成量测推入 out：位置取 t_m_，R 取 camera_mse_m2_ + translation_spread_m2_——也就是 YAML 里的 R 加上 检测块 算出来的 S（待删）
+            // 量测位置取 t_m_。噪声为 R_profile + S，其中 S 由位姿求解计算。
             out.push_back({measurement->pose_.t_m_,
                            c.profile_->camera_mse_m2_ + measurement->translation_spread_m2_});
         }

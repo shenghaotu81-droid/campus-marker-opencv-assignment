@@ -3,7 +3,7 @@
 /*  大致流程：
 校验输入（图是不是空的、是不是 2 维、是不是 CV_8UC3 的彩色图；帧号和时间戳顺不顺）；校验不过就 reset() 并返回一个带原因的 INVALID_INPUT
 校验过了就调 run_decode_pipeline(frame, config_)->decode_stage.cpp（核心：管线总调度）->decode_stage.cpp 里调 preprocess/preprocess.cpp（预处理（缩放、二值化））;geometry/match_quad.cpp（多尺度四边形匹配）;corners/ （角点拟合，排序）
-最后更新状态（记下这帧的帧号/时间戳和图尺寸）再返回
+最后记录这帧的帧号和时间戳，再返回检测结果。
 */
 #include "vision/detection/detector.hpp"
 #include "decode_stage.hpp" // 辅助编辑器找路径
@@ -49,7 +49,7 @@ namespace mark::detector
     };
 
     // 构造函数：按值拿一份配置，先在堆上建 Impl，再 impl_->config_ = std::move(config_) 把配置移进去（只在 Detector 创建时跑一次）
-    Detector::Detector(DetectorConfig config_) : impl_(std::make_unique<Impl>())   // 在堆上新建一个 Impl（成员全是默认值：config_ 默认、last_input_ 空、original_size_ 空），返回一个 unique_ptr 拥有它
+    Detector::Detector(DetectorConfig config_) : impl_(std::make_unique<Impl>())   // 创建 Impl，上一帧状态初始为空。
     {
         impl_->config_ = std::move(config_);  // 传进来(按值传进来（拷贝进来）)时复制一次（调用者传左值就复制，传右值就移动），进来之后再 move 一次进成员
     }
@@ -86,13 +86,13 @@ namespace mark::detector
         if (result.status_ == Status::INVALID_INPUT)
             reset();   // 管线失败了，清状态
         
-        // 把这帧的戳和尺寸存下来，成为下一帧的“上一帧”（帧间连续关系（顺序），由 Detector 维护）
+        // 保存这帧的帧号和时间戳，用于检查下一帧的顺序。
         impl_->last_input_ = stamp;
         // 返回结果（每次的 result 只讲当前这一帧）
         return result;
     }
 
-    // 重置内部状态（noexcept保证不抛错）；校验失败、尺寸变了、管线失败时清状态（清掉之后，下一帧就当没有上一帧（跟第一帧一样），坏帧不会连锁污染）
+    // 清空上一帧状态，后续输入重新建立帧序基准。
     void Detector::reset() noexcept
     {
         impl_->last_input_.reset();

@@ -40,7 +40,7 @@ build/marker_app --video data/raw/marker_video.avi
 |---|---|
 | detector.yaml | preprocess 工作尺寸 960×720、原图白阈 200；geometry 工作白阈 200、轮廓 epsilon=2；corner 固定安装排列 |
 | offline.yaml | `run_directory: "outputs/marker"`、`video_filename: "overlay.avi"`、`overlay: true`，三者也是 C++ 默认值 |
-| pose.yaml | 相机标定路径与身份；四点平面模型和 source_unit；Tag 白名单与实际边长 |
+| pose.yaml | 相机标定路径；四点平面模型和 source_unit；Tag 白名单与实际边长 |
 | calibration.yaml | K、畸变、1440×1080 分辨率与标定重投影误差 |
 | tracking.yaml | source、profile 文件路径 |
 | tracking_profile.yaml | 初估、待标定的 R、加速度 PSD q 和初速方差 |
@@ -88,7 +88,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 `src/pose/` 保持 io、validation、estimation、tag 四个步骤目录。`PoseConfig` 保存相机、四点模型和 Tag 配置；构造求解器克隆 K/dist，防止调用方改 Mat 影响后续求解。配置不另作合法性验证。
 
-`estimate_mark` 由调用方提供当前帧检测、有效索引和已确定的角点排列。无检测时返回空估计。平面求解检查标定图像尺寸及像素凸环。模型非有限/非平面输入不送入求解器；不对手填四点重复检查凸性。
+`estimate_mark` 由调用方提供当前帧检测、有效索引和已确定的角点排列。无检测时返回空估计。平面求解检查标定图像尺寸及像素凸环，校验失败时报告 `IMAGE_SIZE_OR_QUAD_INVALID`。模型非有限/非平面输入不送入求解器；不对手填四点重复检查凸性。
 
 `solvePnPGeneric(SOLVEPNP_IPPE)` 产生平面候选，`evaluate_pose` 独立重投影并排除非有限、非正深度或不可投影坏解。异常/退化可使合法候选减少；没有 RMSE 资格门，也不因两解接近丢掉整帧。
 

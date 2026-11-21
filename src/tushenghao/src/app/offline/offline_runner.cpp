@@ -68,7 +68,7 @@ namespace mark
         // 正式进入帧循环部分（处理每一帧）！！！
         for (uint64_t id = 0; capture.read(image_); ++id)  // read() 读一帧 + 判断要不要继续
         {
-            // 精确推断时间戳，单位是微秒（us）（用帧号和 FPS 算出来的名义时间；后续换成相机驱动给的真实时间（曝光时刻、接收时刻），填进 CaptureStamp 的 exposure_us_ 和 time_uncertainty_s_）
+            // 用帧号和 FPS 推算录像名义时间，单位为微秒。
             // 用 long double（扩展精度浮点，比 double 精度高）是为了让这一步的分数部分算得准，下一行再用 std::llround 四舍五入成整数微秒（llround 是“round to long long”，取最接近的整数）
             const long double timestamp = static_cast<long double>(id) * 1e6L / fps; 
             // 聚合初始化FrameInput（cv::Mat（头部（行数、列数、类型、一个指向像素数据的指针）+像素数据（存在堆上，带引用计数））复制浅拷贝，只复制头部（几十个字节）并把引用计数 +1，两个 Mat 的数据指针指向同一块像素（共享））
@@ -82,10 +82,9 @@ namespace mark
             // 两个空向量：每帧都在循环里重新声明，帧帧清空，不跨帧带状态
             std::vector<pose::PoseObservation> poses_; // poses_ 装这帧的位姿观测（MARK 的 estimate_mark + TAG 的 estimate_exit 往里塞）
             std::vector<tracking::TargetTrack> tracks_; // tracks_ 装这帧的跟踪结果（后面 tracker.step 的返回值赋给它）
-            // 填 CaptureStamp 字段：三个字符串（session、相机、时钟域）+ 像素域 + 帧号 + 接收时间 + 两个 optional（曝光、时间误差）
+            // 写入当前帧号和名义接收时间。
             pose::CaptureStamp stamp;
-            // 时间戳的时钟域——这时间是帧号/FPS 推算出来的名义时间，不是真实相机时钟，所以标成 "video-fps" 这个域
-            // 像素域——图像是原始带畸变的（没做去畸变），告诉 solvePnP 要用畸变系数；PixelDomain 只有两个值：Unknown（默认）和 RawDistorted
+            // 位姿求解使用原始畸变图像上的角点及标定畸变系数。
             stamp.frame_id_ = id; // 帧号
             stamp.received_us_ = input.timestamp_us_; // 算出来的名义时间戳（微秒）
             // 帧号/FPS 生成录像名义时间；没有曝光或时间误差的实测信息。
@@ -118,7 +117,7 @@ namespace mark
             // tracker 是 setup 里建好的 TargetTracker
             // 有量测就预测+更新，没量测就只预测（coast）——状态往前推、协方差 P 变大，但不更新
             // 检测断档几帧，跟踪不会停，只会越来越不确定
-            const auto result = tracker.step(frame); // 无检测也推进coast与协方差。注意：result 里除了 tracks_，还有个 events_（诊断事件，比如 NIS 拒绝），后续这两样汇总进 summary：按跟踪状态（MEASURED / COASTING / LOST）计数进 summary.tracks_，按事件字符串计数进 summary.reasons_
+            const auto result = tracker.step(frame); // 无量测时仍推进已有轨迹和协方差。
             // important:滤波之后的位置（平滑过的）+ 速度（推算出来的）+ 协方差 P（可信度）
             tracks_ = result.tracks_; // 这帧的跟踪结果（TargetTrack 列表，每条有 track_id、状态、位置、协方差、可选的速度），存进 tracks_ 供后面画 overlay 用
 
@@ -126,7 +125,7 @@ namespace mark
             // 把这帧的跟踪状态（MEASURED / COASTING）数进 summary.tracks_、诊断事件数进 summary.reasons_，然后把这帧的 TrackingResult 写进 tracks.yaml
             // 汇总跟踪结果：每帧的跟踪状态计数（MEASURED / COASTING）和事件计数（诊断原因）
             // 跟踪计数：
-            // 按跟踪状态（MEASURED / COASTING / LOST（已经删掉））计数进 summary.tracks_，按事件（result.events_ 里的诊断字符串，比如 NIS 拒绝之类）计数进 summary.reasons_
+            // 按 MEASURED、COASTING 汇总轨迹，并按事件字符串计数。NIS 关联平局时跳过量测更新。
             for (const auto &t : tracks_) // 状态计数
                 // summary.tracks_ 是 map<string, 计数>，operator[] 按状态名取计数（没有就默认建个 0），++ 加一
                 // track_state_name和 pose_status_name 一样，返回 const char*（"MEASURED" / "COASTING"），因为返回的是字符串字面量

@@ -2,26 +2,16 @@
 
 namespace mark::pose
 {
-    // 把一个 CaptureStamp 写成一个 YAML map，字段有值就写值，没值（optional 为空）就写空字符串 ""
+    // 将 CaptureStamp 写成 YAML map。帧号与接收时间均为十进制字符串。
     void write_capture_stamp(cv::FileStorage &fs, const CaptureStamp &s)
     {
-        // 开 map + 写字段
-        /*
-        1. session_id：s.session_id_，字符串，直接写。
-        2. camera_id：s.camera_id_，字符串，直接写。
-        3. clock_domain：s.clock_domain_，字符串，直接写。
-        4. pixel_domain：int(s.pixel_domain_)——这是个 enum，强转成 int 再写（0/1 这样的数字）。
-        5. frame_id：std::to_string(s.frame_id_)，int64 转字符串。
-        6. received_us：std::to_string(s.received_us_)，int64 转字符串。
-        7. exposure_us：optional，有值 to_string，没值写 ""。
-        8. time_uncertainty_s：optional，有值写 double，没值写 ""。
-        */
         fs << "{" << "frame_id" << std::to_string(s.frame_id_) << "received_us"
            << std::to_string(s.received_us_);
         fs << "}"; // 关 map
     }
 
-    // 把一条 PoseObservation 写成一个 YAML map——stamp、source、target_id、detection_index、status 是每条都有；estimate（位姿估计）只有 ESTIMATED 的才有；reason（失败原因）只有非空才写
+    // YAML map 每条写入 stamp、source、detection_index 和 status。
+    // 有名义解时写 estimate，原因非空时写 reason。
     void write_pose_observation(cv::FileStorage &fs, const PoseObservation &p)
     {
         // 开 map + 写 stamp：打开 map，"stamp" key，调 write_capture_stamp 写这条观测的 CaptureStamp
@@ -41,7 +31,7 @@ namespace mark::pose
                << cv::Mat(m->pose_.t_m_) << "rmse_px" << m->rmse_px_ << "translation_spread_m2"
                << cv::Mat(m->translation_spread_m2_) << "}"; // m-> 这里是 optional 的 operator->——m 本身是 optional，m->pose_ 就是取它里面装的那个 PoseEstimate 再取 pose_
         // reason（可选）
-        // 失败原因字符串，非空才写（UNAVAILABLE 的观测才有，比如 "STAMP_CAMERA_OR_QUAD_INVALID"；ESTIMATED 的 reason 是空的，不写）
+        // 失败原因字符串，非空才写（UNAVAILABLE 的观测才有，比如 "IMAGE_SIZE_OR_QUAD_INVALID"；ESTIMATED 的 reason 是空的，不写）
         if (!p.reason_.empty())
             fs << "reason" << p.reason_;
         fs << "}"; // 关 map

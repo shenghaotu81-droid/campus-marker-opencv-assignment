@@ -54,8 +54,7 @@ namespace mark::tracking::detail
             // 输入是 cv::Mat（因为 bootstrap 里 P_ 是 Mat6，传进来时先包成 Mat），输出是定长 Mat6，跟 P_的类型对上。
             // Mat::copyTo：void Mat::copyTo(OutputArray m) const，把矩阵数据拷到目标里
             // 这里目标是 cv::Mat(result, false)——一个指向 result（Mat6）存储的 Mat 头（不拷数据，只包一下），所以 copyTo 是把 symmetric 的数据写进 result 的 6×6 存储里
-            // cv::Mat 从 Matx 构造的签名：Mat(const Matx<_Tp, m, n>& m, bool copyData = false);
-            // copyData 控制拷不拷贝数据：false（默认）：Mat 头只指向 Matx 已有的存储，不拷数据；true：Mat 自己另开一块内存，把 Matx 的数据拷过去，两边独立
+            // Matx 转 Mat 时，copyData 默认 true，拷贝数据。显式 false 让 Mat 头共享 Matx 的存储。
             // 把 symmetric 的数据拷进 result 的存储里：靠 Mat 头跟 result 共享内存，copyTo 写 Mat 头就等于写 result。
             // Matx → Mat 可以，Mat → Matx 不可以；用copyTo()手动转换（绕过 Matx 没有转换构造这个限制，用 Mat 的机制完成拷贝）
             symmetric.copyTo(cv::Mat(result, false));
@@ -91,8 +90,7 @@ namespace mark::tracking::detail
     void CvFilter::initialize(const cv::Vec3d &p, const cv::Matx33d &r, double vv)
     {
         // 先验算：p 必须有限、r 必须是正定矩阵，否则抛 TRACK_BAD_INITIAL_STATE
-        // cv::Mat(r)——用 Matx 造一个 Mat 头 template<typename _Tp, int m, int n> Mat(const Matx<_Tp, m, n>& m);
-        // 造一个 cv::Mat 的头，指向 r（Matx33d）的数据，不拷数据；Mat 是通用矩阵类型，Matx 是固定尺寸类型，这个构造就是让通用 Mat 的代码能读固定尺寸 Matx 的数据
+        // cv::Mat(r) 按默认 copyData=true 将 Matx33d 拷入 Mat，供正定性检查使用。
         if (!finite_vector(p) || !positive_definite(cv::Mat(r))) // 防坏数据的门——拿坏的量测初始化，滤波器一开始就是错的
             throw std::runtime_error("TRACK_BAD_INITIAL_STATE");
 
@@ -122,7 +120,7 @@ namespace mark::tracking::detail
                              const cv::Matx33d &r1, double dt, double q)
     {
         // 验证输入
-        // 验 p0、p1 （两个量测位置，速度是 (p1 - p0) / dt 算出来的）有限，r0、r1 （两个量测的噪声 R,必须正定，后面 P_ 的速度块要算 (r0 + r1) / dt²，R 不是合法协方差，P_ 就不是合法协方差）正定，dt （两帧时间间隔）有限且 > 0，bound 有限且 0 ≤ bound（时间不确定度界） < dt，position_bound（位置不确定度界,“时间不准导致的位置偏差”） 有限且 ≥ 0
+        // p0、p1 必须有限，r0、r1 必须正定，dt 必须有限且大于零。
         // 有一项不过就抛 TRACK_BAD_BOOTSTRAP
         if (!finite_vector(p0) || !finite_vector(p1) || !positive_definite(cv::Mat(r0)) ||
             !positive_definite(cv::Mat(r1)) || !std::isfinite(dt) || dt <= 0)
@@ -189,7 +187,7 @@ namespace mark::tracking::detail
     void CvFilter::predict(double dt, double q)
     {
         // 验输入
-        // dt 和 bound 都得有限、≥ 0；如果 bound > 0 还要求 dt > bound（不然 dt − bound 没意义）
+        // dt 必须有限且非负。
         // 不满足就抛错
         if (!std::isfinite(dt) || dt < 0)
             throw std::runtime_error("TRACK_BAD_PREDICTION_INTERVAL");
@@ -205,7 +203,7 @@ namespace mark::tracking::detail
         F 是确定性的，没有随机性，纯粹是匀速模型的运动学
         用处：推状态：x_ = f * x_，新位置 = 旧位置 + 速度×dt；推协方差：propagated = f * P_ * f.t() + noise，f * P_ * f.t()（F·P·Fᵀ），意思是“旧的不确定度按 F 搬到新时刻”（位置的不确定度会因为速度的不确定度而长大（速度不准，dt 时间后位置就更不准））
         */
-        // Q（叫 noise）：连续白噪声加速度的过程噪声，三个块分别是 q·dt³/3、q·dt²/2、q·dt；这里用的是（删） upper = dt + bound（时间不准时往大了算）；bound = 0 时 upper = dt，就是标准 Q
+        // 连续白加速度过程噪声 Q 的位置、位置–速度交叉、速度块依次使用 q·dt³/3、q·dt²/2、q·dt。
         // Q——过程噪声：模型之外的“随机乱动”；Q（代码里叫 noise）是这 dt 里真实状态自己随机变了多少，由白噪声加速度模型定；三个块都是 q 和 dt 积分出来的
         /*
         速度块 q·dt：速度变化 Δv = ∫₀^dt a(t)dt，权重全是 1，Var = q·∫₀^dt 1 dt = q·dt
@@ -357,7 +355,7 @@ namespace mark::tracking::detail
         // 算卡尔曼增益 K：K = P·Hᵀ·S⁻¹
         // 这里不显式求 S⁻¹：pht = P·Hᵀ（6×3），solve(S, pht.t(), solved) 解 S·X = H·P 得 solved = S⁻¹·H·P，再转置 gain = solved.t() = P·Hᵀ·S⁻¹
         // Cholesky 解，失败抛 TRACK_GAIN_SOLVE_FAILED
-        // 把Matx包成Mat构造：template<typename _Tp, int m, int n> Mat(const Matx<_Tp, m, n>& m, bool copyData = false); 默认 copyData = false，所以 不拷贝，只包一层 Mat 头、共享 P_ 的存储
+        // cv::Mat p(P_) 和 cv::Mat s(innovation.S_) 都按默认 copyData=true 拷贝各自的 Matx。
         cv::Mat p(P_), solved;
         const cv::Mat s(innovation.S_);
         const cv::Mat pht = p * h.t();
@@ -369,7 +367,7 @@ namespace mark::tracking::detail
 
         // 更新状态 x：x = x⁻ + K·残差
         // 这里x_ 是预测的 x⁻：predict 先跑完，x_ 已经被更新成预测值 x⁻ = F·x，P_ 也成了 P⁻；innovation 是 const 方法，不改 x_，它用 position()（读的 x_ 的位置部分，也就是 x⁻ 的位置）算残差 z − H·x⁻；correct 里的 cv::Mat(x_) 读到的就是 x⁻，state = x⁻ + K·残差 算出来的是更新后的 x̂，最后 copyTo 把 x̂ 写回 x_
-        // checkRange 验有限，溢出抛错；copyTo 写回 x_（false 是关键）
+        // cv::Mat(x_) 默认拷贝 Vec 预测值。校验有限后，通过 cv::Mat(x_, false) 共享 Vec 存储，供 copyTo 写回。
         const cv::Mat state = cv::Mat(x_) + gain * cv::Mat(innovation.residual_);
         if (!cv::checkRange(state))
             throw std::runtime_error("TRACK_CORRECTION_STATE_OVERFLOW");

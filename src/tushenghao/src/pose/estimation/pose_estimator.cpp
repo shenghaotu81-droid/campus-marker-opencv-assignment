@@ -25,13 +25,13 @@ namespace mark::pose
     PoseObservation PoseEstimator::estimate_mark(const detector::FrameResult &raw, size_t index,
                                                  cv::Size size, const CaptureStamp &stamp) const
     {
-        // 填身份：把 stamp 拷进观测，source_ 写 "MARK"，target_id_从配置取，detection_index_ 记下是第几个检测
+        // 为 MARK 观测填帧戳、来源和检测索引。
         PoseObservation out;
         out.stamp_ = stamp;
         out.source_ = "MARK";
         out.detection_index_ = index;
 
-        // 验状态：raw.status_ 必须是 DETECTED；NOT_DETECTED 直接返回（连原因都不写，就是“这帧没检到”）；其他状态 → DETECTION_INPUT_INVALID
+        // 没有检测时返回空估计，原因留空。
         if (raw.detections_.empty())
             return out;
 
@@ -47,13 +47,13 @@ namespace mark::pose
             pixels[i] = d.corners_[d.orientation_[i]];
         
         // 核心
-        // 调 estimate_planar：把模型点（80 mm 方块，米制）、重排后的像素角点、图尺寸、stamp、target id 传进去，真正算 IPPE PnP + S 的地方
+        // 将米制模型点、重排后的像素角点、图像尺寸和帧戳交给平面求解，计算名义位姿和位置分歧 S。
         out = estimate_planar(config_.mark_points_m_, pixels, size, stamp);
 
         // 补身份：estimate_planar 返回的观测 source_ 是 "PLANAR"，改回 "MARK"，再把 detection_index_ 补上
         out.source_ = "MARK";
         out.detection_index_ = index;
-        // 其他字段（stamp_、target_id_、estimate_、reason_）都已经在 estimate_planar 里填好了
+        // 帧戳、估计和失败原因由 estimate_planar 填写。
         // 返回结果
         return out;
     }
@@ -66,16 +66,16 @@ namespace mark::pose
                                                    cv::Size size, const CaptureStamp &stamp) const
     {
         // 填身份
-        // stamp 拷进观测，source_ 写 "PLANAR"（注意这里不是 "MARK"，是 estimate_mark 回去之后再改回来的），target_id_ 取传进来的 id
+        // 保存帧戳并标明通用平面求解来源，MARK 包装入口会设为 MARK。
         PoseObservation out;
         out.stamp_ = stamp;
         out.source_ = "PLANAR";
 
         // 验输入
-        // 四个条件任一不满足就 STAMP_CAMERA_OR_QUAD_INVALID：id 为空、stamp 的相机跟配置对不上、图尺寸跟配置对不上、像素四角不合法（valid_quad（角点有限、在图内、严格凸））
+        // 图像尺寸必须与标定一致，像素四边形须有限、在图内且严格凸。
         if (size != config_.camera_.image_size_ || !detail::valid_quad(image_, size))
         {
-            out.reason_ = "STAMP_CAMERA_OR_QUAD_INVALID";
+            out.reason_ = "IMAGE_SIZE_OR_QUAD_INVALID";
             return out;
         }
 

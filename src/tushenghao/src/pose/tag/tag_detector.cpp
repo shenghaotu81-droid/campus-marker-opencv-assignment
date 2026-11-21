@@ -210,7 +210,7 @@ namespace mark::pose
         // model 是 TAG 在自身坐标系里的四个角点：一个边长 2h、中心在原点的正方形，z 都是 0；对应：逆时针对逆时针
         // （跟 MARK 的左上角原点不同，TAG 的模型是中心原点，跟 AprilTag 的约定一致）
         std::array<cv::Point3d, 4> model{{{-h, h, 0}, {h, h, 0}, {h, -h, 0}, {-h, -h, 0}}};
-        // 调 estimator.estimate_planar(...)——就是 MARK 用的同一个 estimate_planar，入参是模型点、检到的角点、图像尺寸、stamp、目标 id
+        // 将 Tag 模型点、检测角点、图像尺寸和帧戳交给通用平面位姿求解。
         auto out = estimator.estimate_planar(model, t.corners_, size, t.stamp_);
         // 把返回的 source_ 改写成 "APRILTAG"（estimate_planar 里先填的是 "PLANAR"），然后返回
         out.source_ = "APRILTAG";
