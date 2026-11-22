@@ -74,6 +74,6 @@ reprojection_error: 0.095         # 重投影误差（像素）
 
 ## 验收标准
 
-完整检查项见[标定工具验收标准](../../../tools/calibration/docs/acceptance.md)。重投影 RMSE < 0.5 px 为优秀。
+完整检查项见[标定工具验收标准](docs/acceptance.md)。重投影 RMSE < 0.5 px 为优秀。
 
 选帧使用 `frame_list`；抽样与圆点阵观察保留源 frame_id，未检出帧记信息且不进入求解。视频尺寸由 CalibrationVideoInfo 传到求解与保存步骤。输出相机矩阵、畸变、尺寸和重投影误差。

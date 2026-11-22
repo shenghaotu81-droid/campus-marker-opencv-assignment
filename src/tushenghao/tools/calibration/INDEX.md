@@ -12,4 +12,4 @@
 | ippe_solution_count | 用当前检测链统计录像中的 IPPE 候选。 |
 | tracking_replay | `build/tracking_replay observations.yaml src/tushenghao/config/tracking.yaml tracks.yaml` |
 
-详见[相机标定](calibration/README.md)和[标定视频选帧](calibration/frame_picker.md)。
+详见[相机标定](README.md)和[标定视频选帧](frame_picker.md)。

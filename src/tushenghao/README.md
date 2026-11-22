@@ -29,6 +29,6 @@ build/marker_app --video data/raw/marker_video.avi
 
 ## 使用边界
 
-R=diag(2e-8,2e-8,2.5e-7) m²、q=0.5 m²/s³、初速方差=0.25 m²/s² 是**初估、待标定**，依据见[调参与标定](docs/final/tuning-calibration.md)。空 profile 可关闭数值跟踪。录像没有真实位置/速度 ground truth，不能证明板端精度；coast 是预测，相机系速度包含自车运动。
+R=diag(2e-8,2e-8,2.5e-7) m²、q=0.5 m²/s³、初速方差=0.25 m²/s² 是**初估、待标定**，依据见[调参与标定](docs/tuning-calibration.md)。空 profile 可关闭数值跟踪。录像没有真实位置/速度 ground truth，不能证明板端精度；coast 是预测，相机系速度包含自车运动。
 
 固定安装映射需赛前按实物核验，不支持跨 90° 翻转或上下带交换。核验步骤、输出字段、标定工具及图纸见[文档索引](docs/INDEX.md)。
