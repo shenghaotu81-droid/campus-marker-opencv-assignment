@@ -1,7 +1,0 @@
-run=explicit-expectation frames=10 fingerprint=bdb9310d3b2f538f incomplete=1
-运行结果：不完整
-帧数：读取 10，处理 10；检测 6，未检测 4
-执行范围：full；覆盖：full_input
-完整性：实际读取帧数与期待数不一致（FRAME_COUNT_MISMATCH）
-耗时：处理平均 61.051 ms，p95 188.942 ms；运行总耗时 0.647 s
-瓶颈阶段（已测样本平均值）：语义解码 59.486 ms

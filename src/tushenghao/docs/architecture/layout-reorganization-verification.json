@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "generated_from_actual_tree": true,
-  "unresolved_quoted_includes": [],
-  "source_files": 241,
-  "edges": 562,
-  "note": "运行验证以 restructure-changes 与保留日志为准，不重写历史验收结论"
-}

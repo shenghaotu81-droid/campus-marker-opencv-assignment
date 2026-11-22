@@ -1,8 +1,0 @@
-{
-  "source_root": "/tmp/campus-final-fixes-clean-20261006-164404",
-  "input_sha256": "aa1219a7a7b702ea1265be8752853a267c982a651afa0f7846f516f9517c9ac7",
-  "source_copied_without_build_artifacts": true,
-  "scope": "path_relocation_using_host_dependencies",
-  "clean_linux": "UNVERIFIED",
-  "user_decision": "No clean environment available; keep G-CLEAN unverified and review dependency/command completeness."
-}

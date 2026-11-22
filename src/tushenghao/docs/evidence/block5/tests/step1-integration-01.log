@@ -1,3 +1,0 @@
-PASS I01_internal_access
-PASS I02_early_status
-FAIL I03_R07_reset_isolation: reset crossed instances

@@ -1,4 +1,4 @@
-# 相机标定工具（calibration_tool）
+# 相机标定工具
 
 离线相机标定工具：用 7x7 圆点阵标定板视频求解相机内参 K 和畸变系数 dist，输出给 `solvePnP` 使用。
 
@@ -17,9 +17,7 @@ cmake --build build/release --target calibration_tool
 python3 src/tushenghao/tools/calibration/scripts/frame_picker.py data/raw/calibration_video.avi
 ```
 
-按键：`n`/`p`（或左右方向键）±50 帧，`j`/`k` ±1 帧，`s` 标记，`d` 撤销，`q` 退出并打印 `frame_list`。
-
-选帧标准：49 个圆点全可见、清晰无模糊、角度/位置/距离尽量散开。
+操作按键和选帧标准见[选帧说明](frame_picker.md)。
 
 ### 2. 填配置
 
@@ -51,8 +49,6 @@ CLI 可覆盖：`--video`、`--output`、`--rows`、`--cols`、`--spacing`。
 
 配置步骤先检查完整 CLI，再按默认值 → YAML → CLI 覆盖。未知、重复和缺值选项报错；CLI 数值必须完整解析，尺寸和间距须为正，间距须有限。手填 YAML 直接读取已填写字段，不检查未知/重复键、类型、范围或 schema。文件打开与实际图像/求解失败仍报告错误。
 
-选帧器到末帧显示 `END_OF_INPUT`，仍可回看；按 `q` 以 `USER_FINISH` 正常结束。定位或解码失败返回非零并显示 `READ_ERROR`，保留失败前已选列表，但不把它描述为正常完成的选帧结果。
-
 ## 模块结构
 
 ```
@@ -78,6 +74,6 @@ reprojection_error: 0.095         # 重投影误差（像素）
 
 ## 验收标准
 
-见 `docs/acceptance.md`。重投影 RMSE < 0.5px 为优秀。
+完整检查项见[标定工具验收标准](../../../tools/calibration/docs/acceptance.md)。重投影 RMSE < 0.5 px 为优秀。
 
 选帧使用 `frame_list`；抽样与圆点阵观察保留源 frame_id，未检出帧记信息且不进入求解。视频尺寸由 CalibrationVideoInfo 传到求解与保存步骤。输出相机矩阵、畸变、尺寸和重投影误差。

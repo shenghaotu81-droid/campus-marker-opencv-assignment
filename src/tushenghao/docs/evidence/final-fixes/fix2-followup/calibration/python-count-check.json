@@ -1,9 +1,0 @@
-{
-  "empty": true,
-  "retraces": true,
-  "ten_visits_nine_pixels_rejected": true,
-  "ten_unique_pixels_accepted": true,
-  "finite_coordinates_not_merged": true,
-  "nonfinite_rejected": true,
-  "threshold": 10
-}

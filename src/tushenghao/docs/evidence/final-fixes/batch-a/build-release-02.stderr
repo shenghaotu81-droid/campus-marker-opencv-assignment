@@ -1,9 +1,0 @@
-/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/tests/geometry_matcher_test.cpp: In function ‘void {anonymous}::real_three_l()’:
-/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/tests/geometry_matcher_test.cpp:12:62: error: ‘struct mark::DetectorConfig’ has no member named ‘geometry’; did you mean ‘geometry_’?
-   12 |     auto config=observability_fixture::app().detector_config.geometry;
-      |                                                              ^~~~~~~~
-      |                                                              geometry_
-gmake[2]: *** [CMakeFiles/geometry_matcher_test.dir/build.make:76: CMakeFiles/geometry_matcher_test.dir/tests/geometry_matcher_test.cpp.o] Error 1
-gmake[1]: *** [CMakeFiles/Makefile2:642: CMakeFiles/geometry_matcher_test.dir/all] Error 2
-gmake[1]: *** Waiting for unfinished jobs....
-gmake: *** [Makefile:101: all] Error 2

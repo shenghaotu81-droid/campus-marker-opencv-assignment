@@ -1,7 +1,0 @@
-run=verification-debug frames=1676 fingerprint=0d2d2e63aef753bc incomplete=0
-运行结果：完整
-帧数：读取 1676，处理 1676；检测 976，未检测 700
-执行范围：full；覆盖：full_input
-完整性：完整（COMPLETE）
-耗时：处理平均 1150.827 ms，p95 3033.708 ms；运行总耗时 1932.013 s
-瓶颈阶段（已测样本平均值）：语义解码 1148.871 ms

@@ -1,6 +1,0 @@
-{
-  "production_source": "src/tushenghao/lib/corners/corner_edge_fit.cpp",
-  "source_sha256": "ce1beffbc4543021eee68fab524ee4177f2da4c61f577b42a5a7dc34591f2225",
-  "raw_measurement": "Only remove the mean-residual rejection to measure that variable; other frozen gates and ambiguity protection remain. No Detection is published.",
-  "unit_pixel_weight": "Keep every raw support point in the evidence, but fit and compute mean with each distinct pixel weighted once. Same 0.5 threshold, all other gates unchanged. An analysis control, not an implementation."
-}

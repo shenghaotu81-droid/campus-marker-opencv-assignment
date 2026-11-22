@@ -1,6 +1,0 @@
-frame_id,reason,original,evidence,evidence_json,baseline_record,old_raw_corners_orientation,measurements,user_review
-2,"new_success",frame-2-original.png,frame-2-evidence.png,frame-2-evidence.json,"/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/final-fixes/path-a/baseline/frames.jsonl","[]",1,PENDING
-1039,"scope_observation",frame-1039-original.png,frame-1039-evidence.png,frame-1039-evidence.json,"/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/final-fixes/path-a/baseline/frames.jsonl","[]",0,PENDING
-1045,"new_success",frame-1045-original.png,frame-1045-evidence.png,frame-1045-evidence.json,"/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/final-fixes/path-a/baseline/frames.jsonl","[]",1,PENDING
-1500,"scope_observation",frame-1500-original.png,frame-1500-evidence.png,frame-1500-evidence.json,"/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/final-fixes/path-a/baseline/frames.jsonl","[]",0,PENDING
-1573,"scope_observation",frame-1573-original.png,frame-1573-evidence.png,frame-1573-evidence.json,"/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/final-fixes/path-a/baseline/frames.jsonl","[]",0,PENDING

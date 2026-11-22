@@ -1,8 +1,0 @@
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/tushenghao/projects/campus-marker-opencv-assignment/build/final-fixes-path-a-release
-[ 87%] Built target mark_detector
-[ 93%] Built target mark_frame_record_reader
-[ 96%] Building CXX object CMakeFiles/path_a_verify.dir/tools/validation/path_a_verify.cpp.o
-[100%] Linking CXX executable path_a_verify
-[100%] Built target path_a_verify

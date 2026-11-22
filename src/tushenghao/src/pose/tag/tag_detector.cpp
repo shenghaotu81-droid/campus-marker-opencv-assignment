@@ -31,7 +31,7 @@ namespace mark::pose
             detector_->nthreads = 1;
             detector_->quad_decimate = 1;
             detector_->quad_sigma = 0;
-            // quad_decimate 为 1 时，此选项不起作用。
+            // quad_decimate 为 1 时，refine_edges 不起作用。
             detector_->refine_edges = true;
             detector_->decode_sharpening = 0.25;
 

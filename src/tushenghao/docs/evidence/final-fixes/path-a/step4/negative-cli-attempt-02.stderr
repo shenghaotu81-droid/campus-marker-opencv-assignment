@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/docs/evidence/final-fixes/path-a/step4/negative_cli_attempt_02.py", line 46, in <module>
-    (out/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n');assert all(x['matched'] for x in rows),'CLI negative mismatch'
-                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: CLI negative mismatch

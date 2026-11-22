@@ -1,1 +1,0 @@
-{"coverage":"full_input","result":"PASS","frames":"1676","old_fingerprint":"0d2d2e63aef753bc","new_fingerprint":"0d2d2e63aef753bc","excluded_fields":["timing","runmeta","new observation events","geometry/parent detailed trace only","new measurement_error_px separately checked against original mean-residual sum"],"failure_indices":[],"minimal_differences":[]}

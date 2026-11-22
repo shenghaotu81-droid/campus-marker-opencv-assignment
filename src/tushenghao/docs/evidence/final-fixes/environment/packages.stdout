@@ -1,4 +1,0 @@
-build-essential	12.10ubuntu1
-cmake	3.28.3-1build7
-libopencv-dev	4.6.0+dfsg-13.1ubuntu1
-libssl-dev:amd64	3.0.13-0ubuntu3.16

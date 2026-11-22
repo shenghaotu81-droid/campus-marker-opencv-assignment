@@ -1,7 +1,0 @@
-run=truncated-final frames=41 fingerprint=59f35bafeecfc470 incomplete=1
-运行结果：不完整
-帧数：读取 41，处理 41；检测 22，未检测 19
-执行范围：full；覆盖：full_input
-完整性：实际读取帧数与期待数不一致（FRAME_COUNT_MISMATCH）
-耗时：处理平均 2070.355 ms，p95 4833.488 ms；运行总耗时 85.035 s
-瓶颈阶段（已测样本平均值）：语义解码 2067.456 ms

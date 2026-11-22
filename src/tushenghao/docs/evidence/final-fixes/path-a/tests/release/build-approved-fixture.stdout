@@ -1,4 +1,0 @@
-[ 93%] Built target mark_detector
-[ 96%] Building CXX object CMakeFiles/manual_validation_check.dir/tests/manual_validation_check.cpp.o
-[100%] Linking CXX executable manual_validation_check
-[100%] Built target manual_validation_check

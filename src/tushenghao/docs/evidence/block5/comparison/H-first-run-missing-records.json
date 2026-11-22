@@ -1,6 +1,0 @@
-{
-  "command_log": "tests/step7-H-run-01.log",
-  "tool_reported": "720/720 PASS",
-  "accepted": false,
-  "reason": "首次执行未建立comparison目录；旧工具不检查输出stream，缺逐帧产物；补建目录后重跑02"
-}

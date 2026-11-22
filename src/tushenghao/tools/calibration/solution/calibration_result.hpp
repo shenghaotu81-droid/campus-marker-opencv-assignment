@@ -11,7 +11,6 @@
 struct CalibrationResult
 {
     cv::Size image_size_;
-    std::string source_path_;
 
     // 相机内参矩阵
     cv::Mat camera_matrix_;

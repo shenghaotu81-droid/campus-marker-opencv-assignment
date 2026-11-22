@@ -1,9 +1,0 @@
-PASS RoundedL
-PASS ShortM
-PASS NoisyL
-PASS AllConcaveAnchors
-PASS OriginalConcaveAnchors
-PASS AnchorResource
-PASS StableIds
-PASS WindingAndRectangle
-PASS BrightnessBoundary

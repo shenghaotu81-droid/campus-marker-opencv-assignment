@@ -1,6 +1,6 @@
 # MARK 主链流程导读
 
-当前结构见本导读，第三轮精简与回放对照见[修改说明](FINAL_LEAN_CHANGELOG_3.md)。配置直接读取手填值；位姿输出 schema=6、跟踪输出 schema=2。
+配置直接读取手填值。位姿输出 schema=6，跟踪输出 schema=2。几何和滤波推导见[API 与推导](final/api-derivations.md)。
 
 ```mermaid
 flowchart TD
@@ -48,7 +48,9 @@ build/marker_app --video data/raw/marker_video.avi
 
 `include/vision/config/` 存放配置类型和加载声明，包含应用组合类型 `app_config.hpp`。`src/config/` 的四个 loader 只读取值；`reader/value_reader.hpp` 共享节点到 C++ 值的转换。不检查手填字段的类型、范围、未知/重复键、schema 或排列。配置文件打不开仍报告 I/O 错误。
 
-`pose.yaml` 的 `geometry.model_points: [[0,0],[80,0],[80,80],[0,80]]` 按 P0/P1/P2/P3 排列；`source_unit: "mm"` 把四点变为 `(0,0,0)`、`(.08,0,0)`、`(.08,.08,0)`、`(0,.08,0)` 米。PnP 不读取图案多边形；测试渲染图案由测试夹具保存。115×120 识别板不是四点模型。
+`pose.yaml` 的 `geometry.model_points: [[0,0],[80,0],[80,80],[0,80]]` 按 P0/P1/P2/P3 排列；`source_unit: "mm"` 把四点变为 `(0,0,0)`、`(.08,0,0)`、`(.08,.08,0)`、`(0,.08,0)` 米。PnP 不读取图案多边形；测试渲染图案由测试夹具保存。识别板宽 115 mm、高 120 mm，PnP 使用其中 80×80 mm 白色 MARK 的结构角。图纸见[MARK 尺寸示意图](assets/marker_dimensions.jpg)。
+
+P0、P2、P3 分别取模型左上、右下、左下 L 片的外侧边交点。P1 取模型右上短 M 片外侧上边与外侧右边的交点。S 片只参与空间连接。每帧检测使用当前图像的完整角片和原图支持，缺失时报告未检出。
 
 固定排列 `physical_to_screen[p]` 表示物理 Pp 对应屏幕哪个槽：0=左上、1=右上、2=右下、3=左下，当前为 `[0,1,2,3]`。内部直接查表，不逐帧重猜身份。
 
@@ -81,7 +83,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 **排序和角片。** `order_screen_corners` 按 y 分上下带、按 x 分带内左右，检查有限、非零叉积和严格凸。`decode_stage` 查固定排列得到物理角顺序；相邻粗角给出两条指导边。`OriginalContourIndex` 在需要时对整张原图提取完整轮廓，每帧最多一次；各角选择最近真实角片，截断失败，四角不复用原图组件。
 
-**每角一次拟合。** `fit_observed_corner` 以粗角最近轮廓点为锚，两方向各走不足半圈。bbox 尺度的四分之一探针区分两条边；±3 像素切向窗口按指导方向分组，只用首段连续支持。沿弧跳过初始 5 像素（2 像素转折修剪＋3 像素切向半窗），尾端修剪 2 像素。每组至少两点且不重合，各调用一次 `cv::fitLine(DIST_L2)`，两线求交；平行、机器精度不可除或非有限才失败。3/2 像素常量定义支持构造，板端像素尺度、模糊与圆角仍需重验。
+**每角一次拟合。** `fit_observed_corner` 以粗角最近轮廓点为锚，两方向各走不足半圈。bbox 尺度的四分之一探针区分两条边；前后各 3 个轮廓索引的切向窗口按指导方向分组，只用首段连续支持。沿弧跳过初始 5 像素，尾端修剪 2 像素。每组至少两点且不重合，各调用一次 `cv::fitLine(DIST_L2)`，两线求交；平行、机器精度不可除或非有限才失败。切向窗和弧长修剪常量定义支持构造，板端像素尺度、模糊与圆角仍需重验。
 
 **发布。** `publish_float_detection` 将 double 交点转 float 后，再检查有限、图内和凸环，防止舍入破坏几何；输出屏幕四角及固定 P→屏幕排列。未拟合到四个真实角就不发布检测。位姿/跟踪预测不反馈成检测。
 
@@ -89,7 +91,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 `src/pose/` 保持 io、validation、estimation、tag 四个步骤目录。`PoseConfig` 保存相机、四点模型和 Tag 配置；构造求解器克隆 K/dist，防止调用方改 Mat 影响后续求解。配置不另作合法性验证。
 
-`estimate_mark` 由调用方提供当前帧检测、有效索引和已确定的角点排列。无检测时返回空估计。平面求解检查标定图像尺寸及像素凸环，校验失败时报告 `IMAGE_SIZE_OR_QUAD_INVALID`。模型非有限/非平面输入不送入求解器；不对手填四点重复检查凸性。
+`estimate_mark` 由调用方提供当前帧检测、有效索引和已确定的角点排列。无检测时返回空估计。平面求解检查标定图像尺寸及像素凸环，校验失败时报告 `IMAGE_SIZE_OR_QUAD_INVALID`。模型由配置生成共面点，求解前检查平面内坐标有限。发布时的屏幕排序可能改变凸环顺序，因此位姿按安装映射取点后仍复核像素四边形。
 
 `solvePnPGeneric(SOLVEPNP_IPPE)` 产生平面候选，`evaluate_pose` 独立重投影并排除非有限、非正深度或不可投影坏解。异常/退化可使合法候选减少；没有 RMSE 资格门，也不因两解接近丢掉整帧。
 
@@ -113,9 +115,9 @@ CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪�
 
 有位置更新为 `MEASURED`；无更新为 `COASTING`，继续输出有限位置/速度/P，没有方差或超时清空有限结果的资格门。下游控制只消费轨迹、最近实测时刻和 P。coast 是预测；相机系速度包含自车运动。
 
-默认 profile 为 `tracking_profile.yaml`：R=diag(2e-8,2e-8,2.5e-7) m²，q=0.5 m²/s³，初速方差=0.25 m²/s²。**初估、待标定**，纵深值还依赖尺度误差假设，推导和限制见报告。`profile: ""` 仍可明确关闭数值跟踪。作业视频没有真实位置/速度 ground truth，不能从本算法输出循环标定 R/Q。
+默认 profile 为 `tracking_profile.yaml`：R=diag(2e-8,2e-8,2.5e-7) m²，q=0.5 m²/s³，初速方差=0.25 m²/s²。**初估、待标定**，纵深值还依赖尺度误差假设，推导和限制见[调参与标定](final/tuning-calibration.md)。`profile: ""` 仍可明确关闭数值跟踪。作业视频没有真实位置/速度 ground truth，不能从本算法输出循环标定 R/Q。
 
-## 5. 输出与验收
+## 5. 输出
 
 | 文件 | 内容 |
 |---|---|
@@ -126,8 +128,6 @@ CV 使用连续白加速度模型，按实际 dt 积分位置/速度/过程噪�
 
 已有输出目录可复用；同名文件覆盖，保留多次视频可修改 `.avi` 文件名。overlay=false 时调用方跳过 exporter 的 open/write/finish 和渲染，前三种数据文件照常写。视频临时文件是 `<stem>.partial.avi`，关闭编码器后改名；生产不逐帧读回，验收独立解码。
 
-64 位帧号、轨迹 ID、微秒时刻与计数仍用十进制字符串写 YAML，避免 OpenCV 4.6 的 int 接口窄化或 double 丢精度。流头分别为 `PoseObservations` 和 `TrackingResult`。位姿流和跟踪流中的时间戳仅写 `frame_id` 和 `received_us`。
+64 位帧号、微秒时刻与计数用十进制字符串写 YAML，避免 OpenCV 4.6 的 int 接口窄化或 double 丢精度。流头分别为 `PoseObservations` 和 `TrackingResult`。位姿流和跟踪流中的时间戳仅写 `frame_id` 和 `received_us`。
 
 `run_report.*` 和 `run_console.*` 属于 app/reporting，叠加绘制在 app/rendering；它们只消费结果，不影响算法。验证工具和夹具在 tests，不进入生产库。
-
-固定录像：1676 帧、1088 检测/4352 角，1088 ESTIMATED、588 UNAVAILABLE，1088 MEASURED、588 COASTING。与 `fa6d394` 的回放对照及构建结果见[第三轮修改说明](FINAL_LEAN_CHANGELOG_3.md)。板端实测数据与精度标定不在本次范围。

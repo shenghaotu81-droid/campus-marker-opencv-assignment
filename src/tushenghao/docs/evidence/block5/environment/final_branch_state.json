@@ -1,7 +1,0 @@
-{
-  "read_at": "2026-10-06T13:11:09.932365+08:00",
-  "HEAD": "ref: refs/heads/feat/observability",
-  "branch": "refs/heads/feat/observability",
-  "head_hash": "b9cccd4a86ac5959a8c67559cde1d399ba29e046",
-  "method": "direct file reads; no Git process"
-}

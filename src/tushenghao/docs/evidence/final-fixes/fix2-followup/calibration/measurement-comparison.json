@@ -1,9 +1,0 @@
-{
-  "cases": 12,
-  "arcs": 96,
-  "visits": 4164,
-  "unique_pixels": 4164,
-  "no_repeats_in_small_C": true,
-  "original_support_sequences_unchanged": true,
-  "all_noncount_fields_exactly_unchanged_excluding_source_hash": true
-}

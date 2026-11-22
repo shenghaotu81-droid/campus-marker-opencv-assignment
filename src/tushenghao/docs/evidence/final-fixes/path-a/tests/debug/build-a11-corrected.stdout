@@ -1,4 +1,0 @@
-[ 93%] Built target mark_detector
-[ 96%] Building CXX object CMakeFiles/path_a_competition_test.dir/tests/path_a_competition_test.cpp.o
-[100%] Linking CXX executable path_a_competition_test
-[100%] Built target path_a_competition_test

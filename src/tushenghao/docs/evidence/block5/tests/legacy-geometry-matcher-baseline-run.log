@@ -1,1 +1,0 @@
-geometry_matcher_original_baseline: src/tushenghao/tests/geometry_matcher_test.cpp:134: int main(): Assertion `!batch.hypotheses_.empty()' failed.

@@ -1,1 +1,0 @@
-{"result":"PASS","frames":"1676","old_fingerprint":"c1785fb03a54ed25","new_fingerprint":"e49c5e13caa4d348","excluded_fields":["timing","runmeta","new observation events","geometry/parent detailed trace only","new measurement_error_px separately checked against original mean-residual sum"],"failure_indices":[],"minimal_differences":[]}

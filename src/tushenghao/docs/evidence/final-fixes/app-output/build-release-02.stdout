@@ -1,5 +1,0 @@
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/tushenghao/projects/campus-marker-opencv-assignment/build/final-fixes-release
-[  2%] Built target marker_display_probe
-[  3%] Building CXX object CMakeFiles/mark_detector.dir/lib/config/config.cpp.o

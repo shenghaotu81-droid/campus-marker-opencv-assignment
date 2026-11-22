@@ -1,6 +1,0 @@
-{
-  "production_source": "src/tushenghao/lib/corners/corner_edge_fit.cpp",
-  "production_source_sha256": "ce1beffbc4543021eee68fab524ee4177f2da4c61f577b42a5a7dc34591f2225",
-  "changes": "Rename audit entry point; collect arc identity counts and pre-final-gate pair metrics. All decisions and candidate enumeration unchanged. Verify diagnostic equality for all 112 failed corners.",
-  "purpose": "Read-only root-cause analysis, not a deployed fix"
-}

@@ -1,6 +1,0 @@
-PASS RoundedCornerDoesNotCrash
-PASS ParallelEdgesFail
-PASS RemoteIntersectionFails
-PASS SplitRoundedBoundary
-PASS FragmentedVideoBoundary
-PASS ManySimplifiedSegments

@@ -1,7 +1,0 @@
-run=debug frames=10 fingerprint=bdb9310d3b2f538f incomplete=0
-运行结果：完整
-帧数：读取 10，处理 10；检测 6，未检测 4
-执行范围：full；覆盖：full_input
-完整性：完整（COMPLETE）
-耗时：处理平均 64.611 ms，p95 194.567 ms；运行总耗时 0.680 s
-瓶颈阶段（已测样本平均值）：语义解码 63.255 ms

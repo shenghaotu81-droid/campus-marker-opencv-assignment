@@ -1,8 +1,0 @@
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/tushenghao/projects/campus-marker-opencv-assignment/build/block3-repair
-[  4%] Building CXX object CMakeFiles/mark_detector.dir/geometry_validation.cpp.o
-[  9%] Linking CXX static library libmark_detector.a
-[ 90%] Built target mark_detector
-[ 95%] Linking CXX executable geometry_l_topology_test
-[100%] Built target geometry_l_topology_test

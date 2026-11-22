@@ -19,7 +19,7 @@
 │   └── camera/
 ├── src/
 │   └── tushenghao/
-│       └── docs/          # 规则、报告、素材与验证记录
+│       └── docs/          # 视觉管线说明、工具用法与素材
 └── submissions/
 ```
 

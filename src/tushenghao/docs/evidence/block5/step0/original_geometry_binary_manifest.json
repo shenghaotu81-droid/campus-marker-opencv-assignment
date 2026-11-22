@@ -1,9 +1,0 @@
-{
-  "path": "step0/original-geometry-matcher-assert-linux-x86_64",
-  "size": "612328",
-  "sha256": "d9cb43aeb7f2cf0078690120c1ee46e067f239cad9b0bab9b3ab7d717be3c72b",
-  "platform": "Linux x86_64; GCC13.3; OpenCV4.6",
-  "source": "unchanged geometry_matcher_test.cpp; original baseline static library",
-  "purpose": "保留原基线同一Debug assert的实际失败复现；不是普通新构建二进制",
-  "compile_and_failure": "comparison/legacy_debug_failure.json"
-}

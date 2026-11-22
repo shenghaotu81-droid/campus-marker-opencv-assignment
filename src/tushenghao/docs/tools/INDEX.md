@@ -12,10 +12,4 @@
 | ippe_solution_count | 用当前检测链统计录像中的 IPPE 候选。 |
 | tracking_replay | `build/tracking_replay observations.yaml src/tushenghao/config/tracking.yaml tracks.yaml` |
 
-## 历史工具
-
-历史工具按以下版本复现。旧路径和命令的详细索引在 [布局整理提交](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/blob/004a671/src/tushenghao/docs/tools/INDEX.md)。
-
-- [Block3 冻结实现](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/tree/08c5c44/src/tushenghao/tools)。
-- [Block4 时序审计](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/tree/9b68daa/src/tushenghao/tools)。
-- [Block5 可观测性工具](https://github.com/shenghaotu81-droid/campus-marker-opencv-assignment/tree/c7fffe4/src/tushenghao/tools)。
+详见[相机标定](calibration/README.md)和[标定视频选帧](calibration/frame_picker.md)。

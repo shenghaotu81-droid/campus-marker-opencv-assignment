@@ -20,6 +20,7 @@ namespace mark::detector
                 std::vector<cv::Point> simple;
                 cv::approxPolyDP(component.contour_, simple, epsilon, true);
 
+                // 简化顶点来自原轮廓，因此回查时一定能找到。
                 for (const auto &p : corner_topology_polygons(component.contour_, simple, epsilon))
                 {
                     std::array<double, 6> turns;

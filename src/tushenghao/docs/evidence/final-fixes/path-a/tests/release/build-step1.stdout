@@ -1,8 +1,0 @@
-[  6%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_observation.cpp.o
-[  6%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_l_topology.cpp.o
-[  9%] Building CXX object CMakeFiles/mark_detector.dir/lib/geometry/geometry_anchor_evidence.cpp.o
-[ 12%] Linking CXX static library libmark_detector.a
-[ 93%] Built target mark_detector
-[ 96%] Building CXX object CMakeFiles/geometry_anchor_evidence_test.dir/tests/geometry_anchor_evidence_test.cpp.o
-[100%] Linking CXX executable geometry_anchor_evidence_test
-[100%] Built target geometry_anchor_evidence_test

@@ -1,6 +1,0 @@
-run=disabled-video frames=10 fingerprint=bdb9310d3b2f538f incomplete=0
-运行结果：完整
-帧数：读取 10，处理 10；检测 6，未检测 4
-执行范围：full；覆盖：full_input
-完整性：完整（COMPLETE）
-阶段计时未启用；瓶颈阶段不可判定

@@ -1,4 +1,0 @@
-[ 92%] Built target mark_detector
-[ 96%] Building CXX object CMakeFiles/block3_contract_regression_test.dir/tests/block3_contract_regression_test.cpp.o
-[100%] Linking CXX executable block3_contract_regression_test
-[100%] Built target block3_contract_regression_test

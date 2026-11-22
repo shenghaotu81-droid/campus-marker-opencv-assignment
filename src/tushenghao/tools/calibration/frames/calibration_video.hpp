@@ -9,8 +9,6 @@
 // 标定视频基本信息
 struct CalibrationVideoInfo
 {
-    std::string source_path_;
-
     // 视频宽度
     int width_ = 0;
 

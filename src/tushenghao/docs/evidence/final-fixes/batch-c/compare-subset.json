@@ -1,1 +1,0 @@
-{"coverage":"compared_records_only","result":"PASS","frames":"3","old_fingerprint":"a4fbd1d4f71cef7f","new_fingerprint":"a4fbd1d4f71cef7f","excluded_fields":["timing","runmeta","new observation events","geometry/parent detailed trace only","new measurement_error_px separately checked against original mean-residual sum"],"failure_indices":[],"minimal_differences":[]}

@@ -1,4 +1,0 @@
-simplified_vertices=51 endpoint_count=118 candidate_upper=13806
-contour_points=160 segment_begins=133,94 segment_ends=0,130
-mean_line_residuals=0,0.499464 corner_error=1.43718 support_sizes=24,31
-iterations=100 mean_ms=8.55824 p99_ms=9.38878 max_ms=9.48688

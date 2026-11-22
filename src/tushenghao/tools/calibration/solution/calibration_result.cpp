@@ -48,7 +48,6 @@ bool run_camera_calibration(const CalibrationVideoInfo &video, const Calibration
             object_points_.push_back(observed.object_points_);
         }
     result.image_size_ = {video.width_, video.height_};
-    result.source_path_ = video.source_path_;
     if (object_points_.empty())
     {
         std::cerr << "没有有效标定数据" << std::endl;

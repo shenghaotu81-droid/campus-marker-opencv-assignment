@@ -6,7 +6,6 @@
 bool open_calibration_video(const CalibrationConfig &config, cv::VideoCapture &capture,
                             CalibrationVideoInfo &info)
 {
-    info.source_path_ = config.video_path_;
     capture.open(config.video_path_);
 
     if (!capture.isOpened())

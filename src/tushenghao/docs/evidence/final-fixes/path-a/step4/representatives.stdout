@@ -1,7 +1,0 @@
-run=representatives frames=5 fingerprint=69e925b1a6ddcaf4 incomplete=0
-运行结果：完整
-帧数：读取 1676，处理 5；检测 2，未检测 3
-执行范围：decode；覆盖：explicit_subset
-完整性：显式子集完成（EXPLICIT_SUBSET）
-耗时：当前范围无公共处理总计样本；运行总耗时 1.704 s
-瓶颈阶段（已测样本平均值）：语义解码 85.665 ms

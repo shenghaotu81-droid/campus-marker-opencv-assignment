@@ -1,7 +1,0 @@
-both-empty PASS 1 FAIL: empty run comparison refused
-missing-frame PASS 1 FAIL: record frame count mismatch
-duplicate-frame PASS 1 FAIL: duplicate frame_id
-missing-details PASS 1 FAIL: EVIDENCE_DETAILS_MISSING
-forged-support FAIL 1 FAIL: OpenCV(4.6.0) ./modules/core/src/persistence_yml.cpp:764: error: (-212:Parsing error) parseValue in function '(14): Incorrect indentation'
-changed-budget PASS 1 FAIL: algorithm config mismatch: geometry
-old-success-to-empty FAIL 1 FAIL: OpenCV(4.6.0) ./modules/core/src/persistence_yml.cpp:764: error: (-212:Parsing error) parseValue in function '(14): Incorrect indentation'

@@ -1,6 +1,0 @@
-{
-  "clang_format": "clang-format version 18.1.8",
-  "libclang_python_package": "18.1.1",
-  "libclang_library": "/tmp/fix2-followup-development-tools/clang/native",
-  "install_scope": "/tmp/fix2-followup-development-tools，开发期临时依赖"
-}

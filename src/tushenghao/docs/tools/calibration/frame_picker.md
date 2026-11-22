@@ -4,7 +4,7 @@
 
 ## 用途
 
-从标定视频（6966 帧）中手动挑选 20-30 个高质量帧，
+从标定视频中手动挑选 20–30 个高质量帧，
 用于相机标定。选出的帧号填入 `calibration_input.yaml` 的 `frame_list`。
 
 ## 运行
@@ -31,7 +31,7 @@ python3 src/tushenghao/tools/calibration/scripts/frame_picker.py data/raw/calibr
 | `d` | 删除上一个标记 |
 | `q` | 退出并输出帧号列表 |
 
-## 选帧标准（来自 acceptance.md）
+## 选帧标准
 
 每个选中的帧必须满足：
 
@@ -66,9 +66,7 @@ frame_list: [120, 345, 678, 1024, 1450, 1890, 2230, ...]
 
 正常读到末帧时会显示 `END_OF_INPUT`，工具仍允许回看，不自动退出；按 `q` 后显示 `USER_FINISH` 并返回成功。任何目标帧定位或解码失败都显示 `READ_ERROR`、返回非零，随后输出的列表仅为失败前已选信息。视频没有可靠总帧数时不猜测“正常末尾”。
 
-把输出的 `frame_list` 复制到
-`src/tushenghao/tools/calibration/configs/calibration_input.yaml`，
-替换原来的空列表 `frame_list: []`。
+用输出的 `frame_list` 替换标定配置中的帧列表，随后运行[相机标定工具](README.md)。
 
 ## 注意事项
 

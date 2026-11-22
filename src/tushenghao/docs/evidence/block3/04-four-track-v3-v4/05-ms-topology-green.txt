@@ -1,8 +1,0 @@
-PASS six_pieces
-PASS existing_bindings
-PASS duplicates
-PASS wrong_shape
-PASS skipped_topology
-PASS video_topology
-PASS resource_boundary
-PASS stage_output

@@ -1,6 +1,0 @@
-PASS RoundedCornerDoesNotCrash
-PASS ParallelEdgesFail
-PASS RemoteIntersectionFails
-PASS SplitRoundedBoundary
-FAIL FragmentedVideoBoundary: NO_VALID_ADJACENT_EDGES: polygon=51,eligible_arcs=3,direction_or_position_arc=22,discontinuous_arc=1,short_or_residual_arc=76
-FAIL ManySimplifiedSegments: NO_VALID_ADJACENT_EDGES: polygon=49,eligible_arcs=2,direction_or_position_arc=5,short_or_residual_arc=91

@@ -1,5 +1,0 @@
-{
-  "result": "PASS_REPRODUCED_EXISTING_FAILURE",
-  "exit_code": -6,
-  "stderr": "original-geometry-matcher-assert-linux-x86_64: src/tushenghao/tests/geometry_matcher_test.cpp:134: int main(): Assertion `!batch.hypotheses_.empty()' failed.\n"
-}

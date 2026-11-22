@@ -1,6 +1,6 @@
 # MARK 视觉链：构建与运行
 
-三 L＋短 M 结构匹配 → 屏幕排序与固定安装映射 → 原图两条 L2 边求角 → 平面 IPPE 名义位姿 → 相机系 CV 跟踪。当前实现与模块职责见[流程导读](docs/flow-guide.md)，最终精简及验证见[第三轮修改说明](docs/FINAL_LEAN_CHANGELOG_3.md)。
+三 L＋短 M 结构匹配 → 屏幕排序与固定安装映射 → 原图两条 L2 边求角 → 平面 IPPE 名义位姿 → 相机系 CV 跟踪。构建之外的运行细节见[流程导读](docs/flow-guide.md)。
 
 ## 构建
 
@@ -27,10 +27,8 @@ build/marker_app --video data/raw/marker_video.avi
 
 配置直接读取手填值，不检查字段类型/范围/schema。终端输入、视频读取、跨模块输入和运行期数值安全检查保留。资源路径相对配置目录解析，输出目录相对运行工作目录解析。
 
-## 验证与边界
+## 使用边界
 
-1676 帧录像检出 1088 帧、4352 角；位姿 1088 ESTIMATED / 588 UNAVAILABLE。与 `fa6d394` 的逐帧输出对照见[第三轮修改说明](docs/FINAL_LEAN_CHANGELOG_3.md)。
+R=diag(2e-8,2e-8,2.5e-7) m²、q=0.5 m²/s³、初速方差=0.25 m²/s² 是**初估、待标定**，依据见[调参与标定](docs/final/tuning-calibration.md)。空 profile 可关闭数值跟踪。录像没有真实位置/速度 ground truth，不能证明板端精度；coast 是预测，相机系速度包含自车运动。
 
-R=diag(2e-8,2e-8,2.5e-7) m²、q=0.5 m²/s³、初速方差=0.25 m²/s² 是**初估、待标定**，不是视频实测；默认得到 1088 MEASURED / 588 COASTING。空 profile 可关闭数值跟踪。录像没有真实位置/速度 ground truth，不能证明板端精度；coast 是预测，相机系速度包含自车运动。
-
-固定安装映射需赛前按实物核验，不支持跨 90° 翻转或上下带交换。详细核验步骤、PnP 多解分歧和输出字段见 flow-guide。历史资料按各报告的基线理解，资料入口见[文档索引](docs/INDEX.md)。
+固定安装映射需赛前按实物核验，不支持跨 90° 翻转或上下带交换。核验步骤、输出字段、标定工具及图纸见[文档索引](docs/INDEX.md)。

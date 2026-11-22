@@ -1,7 +1,0 @@
-{"frame_id":0,"display":{"value":"A","source_frame_id":0,"age":0,"held":false}}
-{"frame_id":1,"display":{"value":"A","source_frame_id":0,"age":1,"held":true}}
-{"frame_id":2,"display":{"value":"A","source_frame_id":0,"age":2,"held":true}}
-{"frame_id":3,"display":{"value":"A","source_frame_id":0,"age":3,"held":true}}
-{"frame_id":4,"display":{"value":"A","source_frame_id":0,"age":4,"held":true}}
-{"frame_id":5,"display":{"value":"A","source_frame_id":0,"age":5,"held":true}}
-{"frame_id":6,"display":null}

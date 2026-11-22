@@ -1,5 +1,0 @@
-PASS RoundedCornerDoesNotCrash
-PASS ParallelEdgesFail
-PASS RemoteIntersectionFails
-FAIL SplitRoundedBoundary: NO_VALID_ADJACENT_EDGES: polygon=9,eligible_arcs=4,connection=11,nonconvex=1,short_or_residual_arc=5
-exit=1

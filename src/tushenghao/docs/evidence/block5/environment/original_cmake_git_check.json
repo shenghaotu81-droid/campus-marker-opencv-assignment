@@ -1,8 +1,0 @@
-{
-  "index_blob": "ab4b6da5a0f1d5d1f7cd29186c5de88822543896",
-  "source_sha256": "c2a039022105e14dd88d6b34bcc69f64abf3a756eb2cd096939943d1ca0848bd",
-  "matching_lines": [
-    "# 旧configure偷偷调用Git；改由调用方提供标签，真实工作树另以源hash标识。"
-  ],
-  "note": "原始CMake仅注释引用Git，无Git执行调用；最终CMake也不调用Git。偏差仅初查两次只读Git命令。"
-}

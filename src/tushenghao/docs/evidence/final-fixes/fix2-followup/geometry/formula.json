@@ -1,1 +1,0 @@
-{"unit":"working_image_px","per_part":"mean(abs(pointPolygonTest(observed_complete_contour,projected_model_vertex,true)))","aggregation":"maximum_over_verified_parent_assignments","generated_unmeasured":-1.0,"comparison":"residual > existing max_validation_residual_","public_layout_changed":false}

@@ -1,8 +1,0 @@
-/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/tests/path_a_competition_test.cpp: In function ‘void {anonymous}::a10()’:
-/home/tushenghao/projects/campus-marker-opencv-assignment/src/tushenghao/tests/path_a_competition_test.cpp:25:289: error: ‘struct mark::ScreenOrderResult’ has no member named ‘order_’
-   25 | void a10(){auto c=chain();for(auto& h:c.batch.hypotheses_)sources(c,h);for(auto& m:c.decoded.measurements){auto order=orderScreenCorners(m.physical_corners_,c.config.corner_);check(order.status_==ScreenOrderStatus::SUCCESS,"screen order invalid");auto v=validateDetectionGeometry(m,order.order_,c.scene.frame.original_image_.size(),c.config.corner_);check(v.valid_,v.rejection_reason_);for(auto& e:m.evidence_)check(e.original_observation_&&e.frame_id_==c.scene.frame.frame_id_&&std::any_of(c.scene.frame.components_.begin(),c.scene.frame.components_.end(),[&](auto& w){return w.component_id_==e.component_id_;}),"noncurrent evidence");}}
-      |                                                                                                                                                                                                                                                                                                 ^~~~~~
-gmake[2]: *** [CMakeFiles/path_a_competition_test.dir/build.make:76: CMakeFiles/path_a_competition_test.dir/tests/path_a_competition_test.cpp.o] Error 1
-gmake[1]: *** [CMakeFiles/Makefile2:860: CMakeFiles/path_a_competition_test.dir/all] Error 2
-gmake[1]: *** Waiting for unfinished jobs....
-gmake: *** [Makefile:101: all] Error 2

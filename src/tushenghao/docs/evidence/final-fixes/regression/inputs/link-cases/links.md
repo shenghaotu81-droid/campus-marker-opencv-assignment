@@ -1,5 +1,0 @@
-[encoded](two%20words.md)
-[spaces](<two words.md>)
-[anchor](two%20words.md#heading)
-[web](https://example.com/absent)
-[page](#local)

@@ -1,8 +1,0 @@
-{
-  "run": "app-baseline-01",
-  "issue": "有效配置marker_geometry_path仍为相对CWD路径，重载时会再次拼run目录",
-  "performance_samples_are_real": true,
-  "formal_final_acceptance": false,
-  "fix": "runner将已解析model路径规范为绝对路径，在导出前生效；verify核实际文件和配置重载model",
-  "earlier_check": "baseline-check-01验证器未验证重载模型文件，PASS保留但不作为最终验收"
-}

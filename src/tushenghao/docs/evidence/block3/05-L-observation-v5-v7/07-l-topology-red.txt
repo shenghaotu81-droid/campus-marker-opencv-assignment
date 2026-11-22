@@ -1,3 +1,0 @@
-FAIL RoundedL: actual L excluded by vertex-count class
-FAIL ShortM: short M impersonates L
-FAIL AllConcaveAnchors: all observed concave anchors not enumerated

@@ -1,8 +1,0 @@
-{
-  "result": "PASS",
-  "app_exit_code": 1,
-  "FAILED_present": true,
-  "summary_absent": true,
-  "no_fake_success_line": true,
-  "chinese_failure_present": true
-}

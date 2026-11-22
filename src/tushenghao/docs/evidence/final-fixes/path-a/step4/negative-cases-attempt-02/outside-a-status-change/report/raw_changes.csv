@@ -1,2 +1,0 @@
-frame_id,status_changed,corners_changed,orientation_changed,other_fields_changed,old_raw,new_raw
-0,1,1,1,1,"[{""bbox"":[864,326.4780578613281,193,188.52194213867188],""category"":0,""confidence"":null,""corners"":[[864.9677124023438,326.4780578613281],[1057,327],[1057,515],[864,514]],""marker_code"":null,""orientation"":[0,1,2,3],""quality_flags"":0}]","[]"

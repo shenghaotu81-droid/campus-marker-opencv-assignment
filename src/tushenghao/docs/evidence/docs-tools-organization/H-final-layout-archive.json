@@ -1,7 +1,0 @@
-{
-  "source": "build/final-docs-tools-H.jsonl",
-  "archive": "H-final-layout.jsonl.gz",
-  "records": 720,
-  "raw_sha256": "6f57818560b76dbe21116acf3c4fe2c4599762238f06c0c57ba18859d73a7fa7",
-  "gzip_sha256": "f376392e0b58540a07b30f1287d193c58420f345cbb3de690d237118331d4b08"
-}
