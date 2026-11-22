@@ -9,7 +9,7 @@
 
 ## 输入数据
 
-- 视频：`data/raw/calibration_video.avi`
+- 视频：`src/tushenghao/docs/homework-setup/data/raw/calibration_video.avi`
 - 分辨率：1440x1080
 - 总帧数：6966
 

@@ -18,7 +18,7 @@ ctest --test-dir build --output-on-failure
 ## 运行
 
 ```bash
-build/marker_app --video data/raw/marker_video.avi
+build/marker_app --video src/tushenghao/docs/homework-setup/data/raw/marker_video.avi
 ```
 
 命令行只接受 `--video VIDEO`。固定读取源树 `config/`：detector.yaml 是检测参数，pose.yaml 是内参引用/四点模型/Tag 配置，tracking.yaml 引用 tracking_profile.yaml；offline.yaml 单独配置输出目录、AVI 文件名和 overlay 开关。

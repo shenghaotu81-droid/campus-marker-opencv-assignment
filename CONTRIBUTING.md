@@ -27,7 +27,7 @@ cmake --build build/your-id --parallel
 
 个人项目应支持上述独立构建方式，无需修改仓库根目录或其他同学的文件。构建产物放在 `build/your-id/`，不要提交到 Git。仓库不提供现成的 `CMakeLists.txt`，由同学自行编写。
 
-在个人 `README.md` 中补充实际可执行文件路径、输入视频参数和输出位置，保证运行命令可直接复现。测试视频为 `data/raw/marker_video.avi`，标定视频为 `data/raw/calibration_video.avi`；从仓库根目录运行时使用这些相对路径。
+在个人 `README.md` 中补充实际可执行文件路径、输入视频参数和输出位置，保证运行命令可直接复现。测试视频为 `src/tushenghao/docs/homework-setup/data/raw/marker_video.avi`，标定视频为 `src/tushenghao/docs/homework-setup/data/raw/calibration_video.avi`；从仓库根目录运行时使用这些相对路径。
 
 ## 评审前自查
 

@@ -13,13 +13,10 @@
 ├── ASSIGNMENT.md
 ├── CONTRIBUTING.md
 ├── LICENSE
-├── data/
-│   ├── README.md
-│   ├── raw/
-│   └── camera/
 ├── src/
 │   └── tushenghao/
-│       └── docs/          # 视觉管线说明、工具用法与素材
+│       └── docs/
+│           └── homework-setup/  # 作业素材、视频和采集设置
 └── submissions/
 ```
 

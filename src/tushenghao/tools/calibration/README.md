@@ -14,7 +14,7 @@ cmake --build build/release --target calibration_tool
 ### 1. 选帧
 
 ```bash
-python3 src/tushenghao/tools/calibration/scripts/frame_picker.py data/raw/calibration_video.avi
+python3 src/tushenghao/tools/calibration/scripts/frame_picker.py src/tushenghao/docs/homework-setup/data/raw/calibration_video.avi
 ```
 
 操作按键和选帧标准见[选帧说明](frame_picker.md)。

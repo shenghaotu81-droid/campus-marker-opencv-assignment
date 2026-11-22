@@ -30,7 +30,7 @@ flowchart TD
 cmake -S src/tushenghao -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j4
 ctest --test-dir build --output-on-failure
-build/marker_app --video data/raw/marker_video.avi
+build/marker_app --video src/tushenghao/docs/homework-setup/data/raw/marker_video.avi
 ```
 
 依赖 C++17、OpenCV ≥4.6 和 AprilTag ≥3.3。始终构建检测、位姿和跟踪；`VISION_BUILD_TOOLS=OFF` 关闭应用/标定工具，`BUILD_TESTING=OFF` 关闭测试与验证工具。两者同时关闭时只构建算法库。
@@ -48,7 +48,7 @@ build/marker_app --video data/raw/marker_video.avi
 
 `include/vision/config/` 存放配置类型和加载声明，包含应用组合类型 `app_config.hpp`。`src/config/` 的四个 loader 只读取值；`reader/value_reader.hpp` 共享节点到 C++ 值的转换。不检查手填字段的类型、范围、未知/重复键、schema 或排列。配置文件打不开仍报告 I/O 错误。
 
-`pose.yaml` 的 `geometry.model_points: [[0,0],[80,0],[80,80],[0,80]]` 按 P0/P1/P2/P3 排列；`source_unit: "mm"` 把四点变为 `(0,0,0)`、`(.08,0,0)`、`(.08,.08,0)`、`(0,.08,0)` 米。PnP 不读取图案多边形；测试渲染图案由测试夹具保存。识别板宽 115 mm、高 120 mm，PnP 使用其中 80×80 mm 白色 MARK 的结构角。图纸见[MARK 尺寸示意图](assets/marker_dimensions.jpg)。
+`pose.yaml` 的 `geometry.model_points: [[0,0],[80,0],[80,80],[0,80]]` 按 P0/P1/P2/P3 排列；`source_unit: "mm"` 把四点变为 `(0,0,0)`、`(.08,0,0)`、`(.08,.08,0)`、`(0,.08,0)` 米。PnP 不读取图案多边形；测试渲染图案由测试夹具保存。识别板宽 115 mm、高 120 mm，PnP 使用其中 80×80 mm 白色 MARK 的结构角。图纸见[MARK 尺寸示意图](homework-setup/assets/marker_dimensions.jpg)。
 
 P0、P2、P3 分别取模型左上、右下、左下 L 片的外侧边交点。P1 取模型右上短 M 片外侧上边与外侧右边的交点。S 片只参与空间连接。每帧检测使用当前图像的完整角片和原图支持，缺失时报告未检出。
 

@@ -20,7 +20,7 @@
 
 ## 3. 鼓励挑战：相机标定与位姿估计
 
-完成必做目标后，可使用 `data/raw/calibration_video.avi` 尝试相机标定，并进一步完成标志物的位姿估计（例如基于已知几何尺寸的 PnP）。挑战部分必须说明：
+完成必做目标后，可使用 `src/tushenghao/docs/homework-setup/data/raw/calibration_video.avi` 尝试相机标定，并进一步完成标志物的位姿估计（例如基于已知几何尺寸的 PnP）。挑战部分必须说明：
 
 - 标定板类型、方格尺寸和使用的帧；
 - 相机内参矩阵和畸变系数的来源；

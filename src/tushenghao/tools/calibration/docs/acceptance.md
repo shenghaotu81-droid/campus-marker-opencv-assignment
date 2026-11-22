@@ -8,10 +8,10 @@
 - 检测函数：`cv::findCirclesGrid`（`CALIB_CB_SYMMETRIC_GRID`）
 
 ## 输入数据
-- 视频：`data/raw/calibration_video.avi`
+- 视频：`src/tushenghao/docs/homework-setup/data/raw/calibration_video.avi`
 - 分辨率：1440x1080
 - 总帧数：6966（约 70.4 FPS）
-- 采集设置：曝光 10000，增益 16.0114（见 `data/camera/capture_settings.yaml`）
+- 采集设置：曝光 10000，增益 16.0114（见 `src/tushenghao/docs/homework-setup/data/camera/capture_settings.yaml`）
 
 ## 帧选择要求
 - 训练集：20-30 帧

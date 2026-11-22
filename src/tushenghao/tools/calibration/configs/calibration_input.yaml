@@ -1,7 +1,7 @@
 %YAML:1.0
 
 
-video_path: "data/raw/calibration_video.avi"
+video_path: "src/tushenghao/docs/homework-setup/data/raw/calibration_video.avi"
 
 board_rows: 7
 board_cols: 7
